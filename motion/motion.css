@@ -6,6 +6,13 @@
  * los CSS originales del sitio.
  */
 
+/* ScrollToPlugin controla el desplazamiento. GSAP advierte que
+   scroll-behavior:smooth nativo entra en conflicto con el plugin. */
+html,
+body {
+    scroll-behavior: auto !important;
+}
+
 /* El CSS legacy usa transition: all sobre .sumar. GSAP controla
    transform, así que evitamos una segunda interpolación CSS. */
 .sushiShop .productoShop .sumar {
@@ -16,7 +23,7 @@
 }
 
 /* Reduced motion: cualquier transform introducido por esta capa
-   queda neutralizado. */
+   queda neutralizado. El scroll entre secciones pasa a ser inmediato. */
 @media (prefers-reduced-motion: reduce) {
     .sushiShop .productoShop .sumar {
         transform: none !important;
