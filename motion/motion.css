@@ -4,6 +4,7 @@
  * Motion, interaction-state resets and overrides live here.
  * Original shop styles stay untouched.
  * UX motion audit: restrained, interruptible and content-first.
+ * Product-card reveal state is controlled in motion.js; CSS never pre-hides it.
  */
 
 :root {
