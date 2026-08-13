@@ -22,6 +22,20 @@ body {
 }
 
 /*
+ * Product reveal must never alter image/card geometry. motion.js may still
+ * write a legacy y transform while fading, but this layer neutralizes it so
+ * imgLiquid never enters/leaves a transformed compositor surface. The visual
+ * reveal is therefore opacity-only: no scale, translate or apparent resize.
+ */
+.sushiShop .listadoShop .productoShop,
+.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
+.sushiShop .listadoShop .productoShop .imgLiquid,
+.sushiShop .listadoShop .productoShop .imgShop {
+    -webkit-transform: none !important;
+    transform: none !important;
+}
+
+/*
  * Category navigation has no entrance animation. The legacy stylesheet uses
  * transition: all; this layer limits interaction feedback to bounded colors.
  */
