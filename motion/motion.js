@@ -12,10 +12,12 @@
         cartList: 0.18,
         cartStagger: 0.028,
         cartFollow: 0.14,
-        cartSettle: 0.20,
         badgeUp: 0.07,
         badgeDown: 0.10,
-        dropdown: 0.16
+        dropdown: 0.16,
+        indicatorNear: 0.18,
+        indicatorFar: 0.40,
+        indicatorDistance: 680
     };
 
     var SCROLL = {
@@ -29,6 +31,8 @@
     var EASE = {
         enter: 'power2.out',
         follow: 'power3.out',
+        indicatorLead: 'power3.out',
+        indicatorSettle: 'power2.inOut',
         scroll: 'power2.inOut'
     };
 
@@ -87,8 +91,8 @@
         }
 
         /*
-         * La navegación entre categorías es motion funcional y funciona en
-         * todos los breakpoints. No hay animación de entrada en nav/banner.
+         * No hay animación de entrada en banner/nav. La navegación conserva
+         * solamente motion funcional: ScrollTo + indicador activo compartido.
          */
         setupSectionNavigation(gsap, ScrollTrigger);
 
@@ -105,10 +109,6 @@
             var reduceMotion = !!context.conditions.reduceMotion;
             var badgeObservers = [];
 
-            /*
-             * El carrito tiene motion de scroll por requisito. La amplitud
-             * baja con el viewport para conservar legibilidad y estabilidad.
-             */
             var cartProfile = desktop ? {
                 maxLag: 14,
                 velocityScale: 0.0032
@@ -133,10 +133,6 @@
                 reduceMotion
             );
 
-            /*
-             * Confirmación del carrito: el badge pulsa solo cuando cambia.
-             * Reduced motion conserva feedback sin movimiento posicional.
-             */
             gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
                 gsap.set(badge, { transformOrigin: '50% 50%' });
 
@@ -178,7 +174,6 @@
                 badgeObservers.push(observer);
             });
 
-            /* Dropdown: transición de interacción, nunca animación de inicio. */
             if (window.jQuery) {
                 window.jQuery(document)
                     .off('shown.bs.dropdown.scUxMotion')
@@ -238,9 +233,7 @@
     }
 
     /*
-     * Única animación de entrada del contenido: las filas de productos del
-     * carrito. Cada superficie de carrito se anima una sola vez, incluso si
-     * el legacy reemplaza la tabla al cambiar cantidades.
+     * Única animación de entrada del contenido: filas de producto del carrito.
      */
     function setupCartListMotion(gsap, ScrollTrigger, reduceMotion) {
         var animatedRoots = new WeakSet();
@@ -347,12 +340,8 @@
     }
 
     /*
-     * Scroll motion del carrito:
-     * - sticky queda en el wrapper .carritoFixed;
-     * - se anima el contenido interno, no el elemento sticky;
-     * - getVelocity() determina dirección/intensidad;
-     * - quickTo() retargetea en cada frame sin crear tweens acumulados;
-     * - al parar, vuelve a y:0 en 200ms.
+     * Motion obligatorio del carrito durante scroll. El wrapper sticky nunca
+     * recibe transform; solo se desplaza su superficie visual interna.
      */
     function setupCartScrollMotion(gsap, ScrollTrigger, profile, reduceMotion) {
         var entries = [];
@@ -491,7 +480,6 @@
         var scroller = document.scrollingElement || document.documentElement;
         var activeTween = null;
         var activeTarget = null;
-        var sectionTargets = [];
         var sectionMetrics = [];
         var stickyMarkerOffset = 0;
         var clampUnit = gsap.utils.clamp(0, 1);
@@ -514,6 +502,257 @@
             }
 
             return document.getElementById(id) || document.getElementsByName(id)[0] || null;
+        }
+
+        /*
+         * Un único indicador por barra. La geometría se anima solo con x/scaleX
+         * para no provocar layout. El mismo elemento se estira y se traslada.
+         */
+        var categoryIndicator = createCategoryIndicator();
+
+        function createCategoryIndicator() {
+            var entries = [];
+            var rootSelector = [
+                '.wrapp-nav-tabsTopShop .nav-tabsTopShop',
+                '.wtopShopMenuMobile .topShopMenuMobile .nav-tabs',
+                '.topShopMenuMobileScroller .nav-tabsTopShop'
+            ].join(', ');
+
+            function rootEntry(root) {
+                for (var i = 0; i < entries.length; i += 1) {
+                    if (entries[i].root === root) return entries[i];
+                }
+
+                var indicator = document.createElement('span');
+                indicator.className = 'sc-category-indicator';
+                indicator.setAttribute('aria-hidden', 'true');
+
+                root.classList.add('sc-category-motion-root');
+                root.appendChild(indicator);
+
+                var entry = {
+                    root: root,
+                    indicator: indicator,
+                    timeline: null,
+                    initialized: false
+                };
+
+                entries.push(entry);
+                return entry;
+            }
+
+            function pruneAndDiscover() {
+                entries = entries.filter(function (entry) {
+                    if (document.documentElement.contains(entry.root)) return true;
+                    if (entry.timeline) entry.timeline.kill();
+                    return false;
+                });
+
+                Array.prototype.forEach.call(
+                    document.querySelectorAll(rootSelector),
+                    function (root) {
+                        if (!root.querySelector('a.anchorLink, a.anchorLinkSub')) return;
+                        rootEntry(root);
+                    }
+                );
+            }
+
+            function isVisibleLink(link) {
+                if (!link) return false;
+                var rect = link.getBoundingClientRect();
+                return rect.width > 1 &&
+                    rect.height > 1 &&
+                    (link.offsetParent !== null || link.getClientRects().length > 0);
+            }
+
+            function linkForTarget(root, target) {
+                var links = root.querySelectorAll('a.anchorLink[href^="#"], a.anchorLinkSub[href^="#"]');
+                var hiddenMatch = null;
+
+                for (var i = 0; i < links.length; i += 1) {
+                    if (resolveAnchorTarget(links[i].getAttribute('href')) !== target) continue;
+                    if (isVisibleLink(links[i])) return links[i];
+                    hiddenMatch = links[i];
+                }
+
+                /*
+                 * Si la sección activa es una subcategoría dentro de un dropdown
+                 * cerrado, la línea queda bajo su categoría padre visible.
+                 */
+                if (hiddenMatch) {
+                    var parentItem = hiddenMatch.closest ?
+                        hiddenMatch.closest('.nav-top-li') :
+                        null;
+
+                    if (parentItem && root.contains(parentItem)) {
+                        var parentLinks = parentItem.querySelectorAll('a.anchorLink');
+                        for (var j = 0; j < parentLinks.length; j += 1) {
+                            if (isVisibleLink(parentLinks[j])) return parentLinks[j];
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            function geometry(entry, link) {
+                var rootRect = entry.root.getBoundingClientRect();
+                var linkRect = link.getBoundingClientRect();
+                var localScale = 1;
+
+                /*
+                 * El legacy escala .nav-tabsTopShop a 0.8 en algunos anchos.
+                 * Convertimos viewport px a coordenadas locales para que la línea
+                 * no reciba el scale dos veces.
+                 */
+                if (entry.root.offsetWidth > 0 && rootRect.width > 0) {
+                    localScale = rootRect.width / entry.root.offsetWidth;
+                }
+
+                if (!isFinite(localScale) || localScale <= 0) localScale = 1;
+
+                var x = (linkRect.left - rootRect.left) / localScale +
+                    (entry.root.scrollLeft || 0);
+                var width = linkRect.width / localScale;
+                var inset = Math.min(2, Math.max(0, width * 0.04));
+
+                return {
+                    x: x + inset,
+                    width: Math.max(8, width - inset * 2)
+                };
+            }
+
+            function durationForDistance(distance) {
+                var progress = clampUnit(distance / MOTION.indicatorDistance);
+                var shaped = Math.pow(progress, 0.58);
+
+                return MOTION.indicatorNear +
+                    (MOTION.indicatorFar - MOTION.indicatorNear) * shaped;
+            }
+
+            function moveEntry(entry, link, animate) {
+                var target = geometry(entry, link);
+                if (!target) return;
+
+                if (entry.timeline) {
+                    entry.timeline.kill();
+                    entry.timeline = null;
+                }
+
+                var currentX = Number(gsap.getProperty(entry.indicator, 'x')) || 0;
+                var currentWidth = Math.abs(Number(gsap.getProperty(entry.indicator, 'scaleX'))) || 1;
+
+                if (!entry.initialized || !animate || prefersReducedMotion()) {
+                    gsap.set(entry.indicator, {
+                        x: target.x,
+                        scaleX: target.width,
+                        autoAlpha: 1,
+                        transformOrigin: '0% 50%'
+                    });
+                    entry.initialized = true;
+                    return;
+                }
+
+                var currentCenter = currentX + currentWidth / 2;
+                var targetCenter = target.x + target.width / 2;
+                var delta = targetCenter - currentCenter;
+                var distance = Math.abs(delta);
+
+                if (distance < 1 && Math.abs(target.width - currentWidth) < 1) {
+                    gsap.set(entry.indicator, {
+                        x: target.x,
+                        scaleX: target.width
+                    });
+                    return;
+                }
+
+                /*
+                 * Distancias largas tardan algo más, pero de forma sublineal:
+                 * la velocidad media crece con la distancia. El primer tramo
+                 * adelanta el borde líder y ensancha la línea; el segundo hace
+                 * que el borde rezagado alcance el destino.
+                 */
+                var duration = durationForDistance(distance);
+                var stretch = gsap.utils.clamp(
+                    8,
+                    72,
+                    distance * 0.16 + Math.abs(target.width - currentWidth) * 0.20
+                );
+                var leadDuration = duration * 0.46;
+                var settleDuration = duration - leadDuration;
+                var stageX;
+                var stageWidth;
+
+                if (delta >= 0) {
+                    stageX = target.x - Math.min(stretch * 0.70, distance * 0.36);
+                    stageWidth = target.width + stretch;
+                } else {
+                    stageX = target.x - Math.min(stretch * 0.30, distance * 0.22);
+                    stageWidth = target.width + stretch;
+                }
+
+                entry.timeline = gsap.timeline({
+                    defaults: {
+                        overwrite: 'auto'
+                    },
+                    onComplete: function () {
+                        entry.timeline = null;
+                    }
+                });
+
+                entry.timeline
+                    .to(entry.indicator, {
+                        x: stageX,
+                        scaleX: stageWidth,
+                        duration: leadDuration,
+                        ease: EASE.indicatorLead
+                    }, 0)
+                    .to(entry.indicator, {
+                        x: target.x,
+                        scaleX: target.width,
+                        duration: settleDuration,
+                        ease: EASE.indicatorSettle
+                    });
+            }
+
+            function move(target, animate) {
+                if (!target) return;
+                pruneAndDiscover();
+
+                entries.forEach(function (entry) {
+                    var link = linkForTarget(entry.root, target);
+                    if (!link) return;
+                    moveEntry(entry, link, animate);
+                });
+            }
+
+            function refresh(target) {
+                if (!target) return;
+                pruneAndDiscover();
+
+                entries.forEach(function (entry) {
+                    var link = linkForTarget(entry.root, target);
+                    if (!link) return;
+                    moveEntry(entry, link, false);
+                });
+            }
+
+            function destroy() {
+                entries.forEach(function (entry) {
+                    if (entry.timeline) entry.timeline.kill();
+                    if (entry.indicator.parentNode) {
+                        entry.indicator.parentNode.removeChild(entry.indicator);
+                    }
+                    entry.root.classList.remove('sc-category-motion-root');
+                });
+                entries = [];
+            }
+
+            return {
+                move: move,
+                refresh: refresh,
+                destroy: destroy
+            };
         }
 
         function getDocumentTop(element) {
@@ -583,7 +822,7 @@
         }
 
         function refreshSectionMetrics() {
-            sectionTargets = collectSectionTargets();
+            var sectionTargets = collectSectionTargets();
             stickyMarkerOffset = getStickyOffset() + 2;
 
             sectionMetrics = sectionTargets.map(function (target) {
@@ -592,6 +831,10 @@
                     top: getDocumentTop(target)
                 };
             });
+
+            if (activeTarget) {
+                categoryIndicator.refresh(activeTarget);
+            }
 
             syncActiveSectionFromScroll();
         }
@@ -630,7 +873,9 @@
         }
 
         function setActiveSection(target) {
-            if (!target || target === activeTarget) return;
+            if (!target) return;
+
+            var changed = target !== activeTarget;
             activeTarget = target;
 
             Array.prototype.forEach.call(
@@ -659,6 +904,8 @@
                     }
                 }
             });
+
+            categoryIndicator.move(target, changed);
         }
 
         function syncActiveSectionFromScroll() {
@@ -765,7 +1012,6 @@
         }
 
         function scrollToSection(target, href, keyboardTriggered) {
-            /* Retarget duro: corta primero y cambia de dirección en el acto. */
             stopSectionTween(false);
             setActiveSection(target);
 
@@ -823,10 +1069,6 @@
             activeTween = tween;
         }
 
-        /*
-         * Un solo tracker de scroll mantiene la orientación de categoría sin
-         * crear un trigger por producto ni leer layouts en cada frame.
-         */
         var sectionTracker = ScrollTrigger.create({
             start: 0,
             end: 'max',
@@ -888,6 +1130,7 @@
         window.addEventListener('beforeunload', function () {
             stopSectionTween(false);
             sectionTracker.kill();
+            categoryIndicator.destroy();
         }, { once: true });
     }
 
