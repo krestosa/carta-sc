@@ -98,6 +98,8 @@
         }, function (context) {
             var desktop = context.conditions.desktop;
             var reduceMotion = context.conditions.reduceMotion;
+            var plusCleanups = [];
+            var badgeObservers = [];
 
             if (reduceMotion) return;
 
@@ -191,6 +193,13 @@
                 plus.addEventListener('pointerup', release, { passive: true });
                 plus.addEventListener('pointercancel', release, { passive: true });
                 plus.addEventListener('pointerleave', release, { passive: true });
+
+                plusCleanups.push(function () {
+                    plus.removeEventListener('pointerdown', press);
+                    plus.removeEventListener('pointerup', release);
+                    plus.removeEventListener('pointercancel', release);
+                    plus.removeEventListener('pointerleave', release);
+                });
             });
 
             gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
@@ -216,10 +225,7 @@
                     characterData: true,
                     subtree: true
                 });
-
-                context.add(function () {
-                    observer.disconnect();
-                });
+                badgeObservers.push(observer);
             });
 
             if (window.jQuery) {
@@ -242,6 +248,8 @@
             }
 
             return function () {
+                plusCleanups.forEach(function (cleanup) { cleanup(); });
+                badgeObservers.forEach(function (observer) { observer.disconnect(); });
                 if (window.jQuery) {
                     window.jQuery(document).off('shown.bs.dropdown.scUxMotion');
                 }
@@ -376,12 +384,6 @@
 
             var mappedDistance = clampDistance(distance);
             var cruiseSpeed = mapSpeed(mappedDistance);
-
-            /*
-             * Solo desaceleramos en los ultimos ~190 px. Antes de eso el
-             * movimiento conserva toda la velocidad correspondiente a la
-             * distancia. power2.out evita una frenada lineal/mecanica.
-             */
             var brakeProgress = clampUnit(distance / SCROLL.brakeDistance);
             var brakeFactor = 1 - Math.pow(1 - brakeProgress, 2);
             return cruiseSpeed * brakeFactor;
@@ -497,11 +499,6 @@
                 inertial.active = true;
             }
 
-            /*
-             * Retarget puro: no matamos ni recreamos un tween. La velocidad
-             * actual sigue viva y el controlador reacciona inmediatamente al
-             * nuevo destino, acelerando o frenando segun la nueva distancia.
-             */
             inertial.targetY = targetY;
             inertial.href = href;
             inertial.focusTarget = target;
