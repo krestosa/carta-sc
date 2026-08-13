@@ -54,46 +54,44 @@
     max-height: 370px;
 }*/
 
-/* GSAP compositor isolation.
-   Keep the product frame fixed and animate only an internal media layer. */
+/* GSAP hover rendering: fixed frame + real image texture. */
 .sushiShop .productoShop .imgShop {
     position: relative;
     overflow: hidden;
     isolation: isolate;
 }
 
-.sushiShop .productoShop .sc-gsap-media {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
+.sushiShop .productoShop .sc-gsap-media-img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain;
+    object-position: 50% 50%;
+    opacity: 1 !important;
+    visibility: visible !important;
     pointer-events: none;
-    transform: translate3d(0, 0, 0) scale(1);
+    user-select: none;
+    image-rendering: auto;
     transform-origin: 50% 50%;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
 }
 
-/* Only keep nearby/interacted media hot on the compositor. */
-.sushiShop .productoShop.sc-gsap-near .sc-gsap-media,
-.sushiShop .productoShop.sc-gsap-hot .sc-gsap-media {
-    will-change: transform;
-}
-
-/* The legacy stylesheet uses transition: all here. Do not let CSS
-   re-interpolate GSAP's per-frame transform writes. */
+/* Legacy CSS uses transition: all on this control. Do not let CSS
+   re-interpolate transforms that GSAP owns. */
 .sushiShop .productoShop .sumar {
     transition-property: background-color, border-color, color !important;
     -webkit-transition-property: background-color, border-color, color !important;
     transform-origin: 50% 50%;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sushiShop .productoShop .sc-gsap-media,
+    .sushiShop .productoShop .sc-gsap-media-img,
     .sushiShop .productoShop .sumar {
         transform: none !important;
-        will-change: auto !important;
     }
 }
