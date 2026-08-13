@@ -1,0 +1,24 @@
+/*
+ * SushiClub motion layer
+ * ------------------------------------------------------------
+ * Archivo dedicado exclusivamente a animaciones UX, resets y
+ * overrides relacionados con motion. No agregar estas reglas a
+ * los CSS originales del sitio.
+ */
+
+/* El CSS legacy usa transition: all sobre .sumar. GSAP controla
+   transform, así que evitamos una segunda interpolación CSS. */
+.sushiShop .productoShop .sumar {
+    transform-origin: 50% 50%;
+    touch-action: manipulation;
+    transition-property: background-color, border-color, color !important;
+    -webkit-transition-property: background-color, border-color, color !important;
+}
+
+/* Reduced motion: cualquier transform introducido por esta capa
+   queda neutralizado. */
+@media (prefers-reduced-motion: reduce) {
+    .sushiShop .productoShop .sumar {
+        transform: none !important;
+    }
+}
