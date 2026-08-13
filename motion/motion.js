@@ -19,17 +19,17 @@
     };
 
     var SCROLL = {
-        minDuration: 0.075,
-        maxDuration: 0.45,
-        nearSpeed: 4200,
-        farSpeed: 26000,
+        minDuration: 0.10,
+        maxDuration: 0.65,
+        nearSpeed: 3000,
+        farSpeed: 18000,
         speedDistance: 7000
     };
 
     var EASE = {
         enter: 'power2.out',
         reveal: 'power2.out',
-        scroll: 'back.out(1.05)'
+        scroll: 'power2.inOut'
     };
 
     function loadScript(src, id, done) {
@@ -99,7 +99,6 @@
             var plusCleanups = [];
             var badgeObservers = [];
             var safetyTimer = null;
-
             var cards = gsap.utils.toArray('.productoShop');
 
             if (reduceMotion) {
@@ -126,35 +125,25 @@
 
             gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion').forEach(function (heading) {
                 var rect = heading.getBoundingClientRect();
+                var vars = {
+                    autoAlpha: 1,
+                    y: 0,
+                    duration: MOTION.heading,
+                    ease: EASE.reveal,
+                    clearProps: 'transform,opacity,visibility'
+                };
 
-                if (rect.top <= window.innerHeight * 0.92) {
-                    gsap.fromTo(heading,
-                        { autoAlpha: 0, y: desktop ? 9 : 7 },
-                        {
-                            autoAlpha: 1,
-                            y: 0,
-                            duration: MOTION.heading,
-                            ease: EASE.reveal,
-                            clearProps: 'transform,opacity,visibility'
-                        }
-                    );
-                    return;
+                if (rect.top > window.innerHeight * 0.92) {
+                    vars.scrollTrigger = {
+                        trigger: heading,
+                        start: 'clamp(top 90%)',
+                        once: true
+                    };
                 }
 
                 gsap.fromTo(heading,
                     { autoAlpha: 0, y: desktop ? 9 : 7 },
-                    {
-                        autoAlpha: 1,
-                        y: 0,
-                        duration: MOTION.heading,
-                        ease: EASE.reveal,
-                        clearProps: 'transform,opacity,visibility',
-                        scrollTrigger: {
-                            trigger: heading,
-                            start: 'clamp(top 90%)',
-                            once: true
-                        }
-                    }
+                    vars
                 );
             });
 
@@ -164,12 +153,6 @@
 
                 cards.forEach(function (card) {
                     var rect = card.getBoundingClientRect();
-
-                    /*
-                     * Nunca ocultamos productos que ya están dentro o muy cerca
-                     * del viewport al inicializar. Así el contenido principal no
-                     * depende de que ScrollTrigger alcance a disparar un batch.
-                     */
                     if (rect.top <= window.innerHeight * 0.94) {
                         initialCards.push(card);
                     } else {
@@ -179,10 +162,7 @@
 
                 if (initialCards.length) {
                     gsap.fromTo(initialCards,
-                        {
-                            autoAlpha: 0,
-                            y: desktop ? 10 : 7
-                        },
+                        { autoAlpha: 0, y: desktop ? 10 : 7 },
                         {
                             autoAlpha: 1,
                             y: 0,
@@ -230,11 +210,6 @@
                     });
                 }
 
-                /*
-                 * Fallback: después de la carga, cualquier card que ya debería
-                 * estar visible pero siga oculta se libera. Evita un catálogo
-                 * vacío ante cambios tardíos de altura por imágenes/plugins.
-                 */
                 safetyTimer = window.setTimeout(function () {
                     cards.forEach(function (card) {
                         var rect = card.getBoundingClientRect();
@@ -312,7 +287,6 @@
                     characterData: true,
                     subtree: true
                 });
-
                 badgeObservers.push(observer);
             });
 
@@ -411,7 +385,6 @@
             selectors.forEach(function (selector) {
                 visibleElements(selector).forEach(function (element) {
                     var style = window.getComputedStyle(element);
-
                     if (style.position !== 'fixed' && style.position !== 'sticky') return;
 
                     var rect = element.getBoundingClientRect();
@@ -555,7 +528,6 @@
 
         function stopSectionTween() {
             if (!activeTween) return;
-
             activeTween.kill();
             activeTween = null;
             ScrollTrigger.update();
@@ -580,10 +552,6 @@
         }
 
         function scrollToSection(target, href, keyboardTriggered) {
-            /*
-             * Retarget duro: corta el movimiento anterior antes de medir
-             * el nuevo recorrido. No conserva velocidad ni dirección previa.
-             */
             stopSectionTween();
 
             var currentY = scroller.scrollTop || 0;
@@ -610,11 +578,6 @@
                 return;
             }
 
-            /*
-             * La velocidad se decide con la distancia TOP->TOP entre la
-             * sección actual y la de destino. La duración usa solamente la
-             * distancia física que queda por recorrer desde el scroll actual.
-             */
             var sectionDistance = logicalSectionDistance(target, currentY);
             var duration = durationForTravel(actualDistance, sectionDistance);
 
@@ -648,7 +611,6 @@
 
         window.addEventListener('keydown', function (event) {
             var keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
-
             if (keys.indexOf(event.key) !== -1) {
                 stopSectionTween();
             }
@@ -666,7 +628,6 @@
 
             var href = link.getAttribute('href');
             var target = resolveAnchorTarget(href);
-
             if (!target) return;
 
             event.preventDefault();
@@ -677,15 +638,12 @@
         document.addEventListener('change', function (event) {
             var select = event.target;
 
-            if (!select ||
-                !select.matches ||
-                !select.matches('.JSgoMenu')) {
+            if (!select || !select.matches || !select.matches('.JSgoMenu')) {
                 return;
             }
 
             var href = select.value;
             var target = resolveAnchorTarget(href);
-
             if (!target) return;
 
             event.preventDefault();
