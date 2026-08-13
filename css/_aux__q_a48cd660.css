@@ -1,0 +1,55 @@
+.genericDescrip{
+	text-align: center;
+}
+
+.subtitulo{
+/*	margin-left: 27%;*/
+    margin-top: 1.5% !important;
+    font-size: 18px !important;
+}
+
+.head4{
+	text-align: center;
+	color: #bba555;
+	font-size: 21px;
+}
+
+.botonF{
+    text-align: center;
+}
+
+.botonF input{
+   color: white;
+   padding: 2% 15% 2% 15%;
+   font-size: 15px;
+}
+
+.checks{
+    font-size: 15px;
+}
+
+.checks1{
+    margin: 3%;
+    margin-left: 23%;
+}
+
+.linea{
+	width: 68%;
+    margin-left: 16%;
+}
+
+.nacimiento{
+	text-align: center;
+    padding: 3%;
+}
+
+.nacimiento2{
+    padding: 1.7% 24% 1.5% 4%;
+    border: 1.5px solid #ddd;
+    color: #ddd;
+}
+
+/*.contenedor{
+	height: calc(90vh);
+    max-height: 370px;
+}*/

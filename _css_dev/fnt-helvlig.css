@@ -1,0 +1,16 @@
+@font-face {
+	font-family: 'hln';
+	src: url('../fonts/hnl.eot');
+	src: url('../fonts/hnl__2.eot') format('embedded-opentype'),
+	url('../fonts/hnl.woff') format('woff'),
+	url('../fonts/hnl.ttf') format('truetype'),
+	url('../fonts/hnl.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+	@font-face {
+		font-family: 'hln';
+		src: url('../fonts/hnl.svg') format('svg');
+	}
+}
