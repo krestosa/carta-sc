@@ -303,4 +303,19 @@ function noFoto(){
 	$('.panel-body p:empty:not([class])').remove()
 }
 
+/* Dedicated UX motion layer. Kept separate from legacy map/shop logic. */
+(function () {
+	if (window.__scUxMotionRequested) return;
+	window.__scUxMotionRequested = true;
+
+	var css = document.createElement('link');
+	css.rel = 'stylesheet';
+	css.href = 'css/motion-ux.css';
+	document.head.appendChild(css);
+
+	var script = document.createElement('script');
+	script.src = 'js/animations-gsap.js';
+	script.async = true;
+	document.head.appendChild(script);
+})();
 
