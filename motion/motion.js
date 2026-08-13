@@ -9,6 +9,9 @@
     var SCROLL_TO_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
 
     var MOTION = {
+        productInitial: 0.28,
+        productReveal: 0.34,
+        productStagger: 0.030,
         cartList: 0.18,
         cartStagger: 0.028,
         cartFollow: 0.14,
@@ -90,10 +93,6 @@
             ScrollToPlugin.config({ autoKill: true });
         }
 
-        /*
-         * No hay animación de entrada en banner/nav. La navegación conserva
-         * solamente motion funcional: ScrollTo + indicador activo compartido.
-         */
         setupSectionNavigation(gsap, ScrollTrigger);
 
         var mm = gsap.matchMedia();
@@ -109,6 +108,23 @@
             var reduceMotion = !!context.conditions.reduceMotion;
             var badgeObservers = [];
 
+            var productProfile = desktop ? {
+                initialY: 8,
+                revealY: 12,
+                batchMax: 8,
+                start: 'clamp(top 91%)'
+            } : tablet ? {
+                initialY: 7,
+                revealY: 10,
+                batchMax: 6,
+                start: 'clamp(top 92%)'
+            } : {
+                initialY: 6,
+                revealY: 8,
+                batchMax: 4,
+                start: 'clamp(top 93%)'
+            };
+
             var cartProfile = desktop ? {
                 maxLag: 14,
                 velocityScale: 0.0032
@@ -120,18 +136,9 @@
                 velocityScale: 0.0024
             };
 
-            var cleanupCartList = setupCartListMotion(
-                gsap,
-                ScrollTrigger,
-                reduceMotion
-            );
-
-            var cleanupCartScroll = setupCartScrollMotion(
-                gsap,
-                ScrollTrigger,
-                cartProfile,
-                reduceMotion
-            );
+            var cleanupProductReveal = setupProductReveal(gsap, ScrollTrigger, productProfile, reduceMotion);
+            var cleanupCartList = setupCartListMotion(gsap, ScrollTrigger, reduceMotion);
+            var cleanupCartScroll = setupCartScrollMotion(gsap, ScrollTrigger, cartProfile, reduceMotion);
 
             gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
                 gsap.set(badge, { transformOrigin: '50% 50%' });
@@ -202,6 +209,7 @@
             }
 
             return function () {
+                cleanupProductReveal();
                 cleanupCartList();
                 cleanupCartScroll();
 
@@ -232,9 +240,132 @@
         }
     }
 
-    /*
-     * Única animación de entrada del contenido: filas de producto del carrito.
-     */
+    function setupProductReveal(gsap, ScrollTrigger, profile, reduceMotion) {
+        var cards = gsap.utils.toArray('.listadoShop .productoShop');
+        var batchTriggers = [];
+        var safetyTimer = null;
+
+        function noop() {}
+
+        if (!cards.length) return noop;
+
+        if (reduceMotion) {
+            gsap.set(cards, { clearProps: 'transform,opacity,visibility' });
+            return noop;
+        }
+
+        var initialCards = [];
+        var deferredCards = [];
+
+        cards.forEach(function (card) {
+            var rect = card.getBoundingClientRect();
+
+            if (rect.bottom < -20) {
+                gsap.set(card, {
+                    autoAlpha: 1,
+                    y: 0,
+                    clearProps: 'transform,opacity,visibility'
+                });
+                return;
+            }
+
+            if (rect.top <= window.innerHeight * 0.96) {
+                initialCards.push(card);
+            } else {
+                deferredCards.push(card);
+            }
+        });
+
+        if (initialCards.length) {
+            gsap.fromTo(initialCards,
+                {
+                    autoAlpha: 0,
+                    y: profile.initialY
+                },
+                {
+                    autoAlpha: 1,
+                    y: 0,
+                    duration: MOTION.productInitial,
+                    stagger: 0.024,
+                    ease: EASE.enter,
+                    overwrite: 'auto',
+                    onComplete: function () {
+                        initialCards.forEach(function (card) {
+                            gsap.set(card, { clearProps: 'transform,opacity,visibility' });
+                        });
+                    }
+                }
+            );
+        }
+
+        function revealBatch(batch) {
+            gsap.to(batch, {
+                autoAlpha: 1,
+                y: 0,
+                duration: MOTION.productReveal,
+                stagger: MOTION.productStagger,
+                ease: EASE.enter,
+                overwrite: 'auto',
+                onComplete: function () {
+                    batch.forEach(function (card) {
+                        gsap.set(card, { clearProps: 'transform,opacity,visibility' });
+                    });
+                }
+            });
+        }
+
+        if (deferredCards.length) {
+            gsap.set(deferredCards, {
+                autoAlpha: 0,
+                y: profile.revealY
+            });
+
+            batchTriggers = ScrollTrigger.batch(deferredCards, {
+                start: profile.start,
+                once: true,
+                interval: 0.06,
+                batchMax: profile.batchMax,
+                onEnter: revealBatch,
+                onEnterBack: revealBatch
+            }) || [];
+
+            safetyTimer = window.setTimeout(function () {
+                deferredCards.forEach(function (card) {
+                    var rect = card.getBoundingClientRect();
+                    var style = window.getComputedStyle(card);
+                    var opacity = parseFloat(style.opacity);
+
+                    if (rect.top <= window.innerHeight * 1.03 &&
+                        rect.bottom >= -30 &&
+                        (style.visibility === 'hidden' || opacity < 0.05)) {
+                        gsap.killTweensOf(card);
+                        gsap.to(card, {
+                            autoAlpha: 1,
+                            y: 0,
+                            duration: 0.20,
+                            ease: EASE.enter,
+                            overwrite: true,
+                            clearProps: 'transform,opacity,visibility'
+                        });
+                    }
+                });
+
+                ScrollTrigger.refresh();
+            }, 900);
+        }
+
+        return function () {
+            if (safetyTimer) window.clearTimeout(safetyTimer);
+
+            batchTriggers.forEach(function (trigger) {
+                if (trigger && trigger.kill) trigger.kill();
+            });
+
+            gsap.killTweensOf(cards);
+            gsap.set(cards, { clearProps: 'transform,opacity,visibility' });
+        };
+    }
+
     function setupCartListMotion(gsap, ScrollTrigger, reduceMotion) {
         var animatedRoots = new WeakSet();
         var observer = null;
@@ -285,10 +416,7 @@
                 }
 
                 gsap.fromTo(rows,
-                    {
-                        autoAlpha: 0,
-                        y: 4
-                    },
+                    { autoAlpha: 0, y: 4 },
                     {
                         autoAlpha: 1,
                         y: 0,
@@ -326,10 +454,7 @@
                 }
             });
 
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+            observer.observe(document.body, { childList: true, subtree: true });
         }
 
         return function () {
@@ -339,10 +464,6 @@
         };
     }
 
-    /*
-     * Motion obligatorio del carrito durante scroll. El wrapper sticky nunca
-     * recibe transform; solo se desplaza su superficie visual interna.
-     */
     function setupCartScrollMotion(gsap, ScrollTrigger, profile, reduceMotion) {
         var entries = [];
         var observer = null;
@@ -418,10 +539,7 @@
                 }
             });
 
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+            observer.observe(document.body, { childList: true, subtree: true });
         }
 
         if (reduceMotion) {
@@ -440,9 +558,7 @@
             end: 'max',
             onUpdate: function (self) {
                 var velocity = self.getVelocity();
-                var lag = Math.abs(velocity) < 55 ?
-                    0 :
-                    clampLag(velocity * profile.velocityScale);
+                var lag = Math.abs(velocity) < 55 ? 0 : clampLag(velocity * profile.velocityScale);
 
                 moveCartTo(lag);
 
@@ -462,10 +578,7 @@
 
             entries.forEach(function (entry) {
                 gsap.killTweensOf(entry.target);
-                gsap.set(entry.target, {
-                    y: 0,
-                    clearProps: 'transform'
-                });
+                gsap.set(entry.target, { y: 0, clearProps: 'transform' });
                 entry.target.classList.remove('sc-cart-scroll-motion');
             });
         };
@@ -504,10 +617,6 @@
             return document.getElementById(id) || document.getElementsByName(id)[0] || null;
         }
 
-        /*
-         * Un único indicador por barra. La geometría se anima solo con x/scaleX
-         * para no provocar layout. El mismo elemento se estira y se traslada.
-         */
         var categoryIndicator = createCategoryIndicator();
 
         function createCategoryIndicator() {
@@ -548,13 +657,10 @@
                     return false;
                 });
 
-                Array.prototype.forEach.call(
-                    document.querySelectorAll(rootSelector),
-                    function (root) {
-                        if (!root.querySelector('a.anchorLink, a.anchorLinkSub')) return;
-                        rootEntry(root);
-                    }
-                );
+                Array.prototype.forEach.call(document.querySelectorAll(rootSelector), function (root) {
+                    if (!root.querySelector('a.anchorLink, a.anchorLinkSub')) return;
+                    rootEntry(root);
+                });
             }
 
             function isVisibleLink(link) {
@@ -575,14 +681,8 @@
                     hiddenMatch = links[i];
                 }
 
-                /*
-                 * Si la sección activa es una subcategoría dentro de un dropdown
-                 * cerrado, la línea queda bajo su categoría padre visible.
-                 */
                 if (hiddenMatch) {
-                    var parentItem = hiddenMatch.closest ?
-                        hiddenMatch.closest('.nav-top-li') :
-                        null;
+                    var parentItem = hiddenMatch.closest ? hiddenMatch.closest('.nav-top-li') : null;
 
                     if (parentItem && root.contains(parentItem)) {
                         var parentLinks = parentItem.querySelectorAll('a.anchorLink');
@@ -600,11 +700,6 @@
                 var linkRect = link.getBoundingClientRect();
                 var localScale = 1;
 
-                /*
-                 * El legacy escala .nav-tabsTopShop a 0.8 en algunos anchos.
-                 * Convertimos viewport px a coordenadas locales para que la línea
-                 * no reciba el scale dos veces.
-                 */
                 if (entry.root.offsetWidth > 0 && rootRect.width > 0) {
                     localScale = rootRect.width / entry.root.offsetWidth;
                 }
@@ -659,19 +754,10 @@
                 var distance = Math.abs(delta);
 
                 if (distance < 1 && Math.abs(target.width - currentWidth) < 1) {
-                    gsap.set(entry.indicator, {
-                        x: target.x,
-                        scaleX: target.width
-                    });
+                    gsap.set(entry.indicator, { x: target.x, scaleX: target.width });
                     return;
                 }
 
-                /*
-                 * Distancias largas tardan algo más, pero de forma sublineal:
-                 * la velocidad media crece con la distancia. El primer tramo
-                 * adelanta el borde líder y ensancha la línea; el segundo hace
-                 * que el borde rezagado alcance el destino.
-                 */
                 var duration = durationForDistance(distance);
                 var stretch = gsap.utils.clamp(
                     8,
@@ -692,9 +778,7 @@
                 }
 
                 entry.timeline = gsap.timeline({
-                    defaults: {
-                        overwrite: 'auto'
-                    },
+                    defaults: { overwrite: 'auto' },
                     onComplete: function () {
                         entry.timeline = null;
                     }
@@ -1097,10 +1181,7 @@
             if (event.button && event.button !== 0) return;
             if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-            var link = event.target.closest ?
-                event.target.closest('a.anchorLink, a.anchorLinkSub') :
-                null;
-
+            var link = event.target.closest ? event.target.closest('a.anchorLink, a.anchorLinkSub') : null;
             if (!link) return;
 
             var href = link.getAttribute('href');
@@ -1114,10 +1195,7 @@
 
         document.addEventListener('change', function (event) {
             var select = event.target;
-
-            if (!select || !select.matches || !select.matches('.JSgoMenu')) {
-                return;
-            }
+            if (!select || !select.matches || !select.matches('.JSgoMenu')) return;
 
             var href = select.value;
             var target = resolveAnchorTarget(href);
