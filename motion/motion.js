@@ -9,8 +9,10 @@
     var SCROLL_TO_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
 
     var MOTION = {
-        header: 0.18,
-        heading: 0.22,
+        cartList: 0.18,
+        cartStagger: 0.028,
+        cartFollow: 0.14,
+        cartSettle: 0.20,
         badgeUp: 0.07,
         badgeDown: 0.10,
         dropdown: 0.16
@@ -26,6 +28,7 @@
 
     var EASE = {
         enter: 'power2.out',
+        follow: 'power3.out',
         scroll: 'power2.inOut'
     };
 
@@ -84,8 +87,8 @@
         }
 
         /*
-         * Navegación = motion funcional: desplazamiento espacial + orientación.
-         * Se mantiene fuera de matchMedia para funcionar en todos los anchos.
+         * La navegación entre categorías es motion funcional y funciona en
+         * todos los breakpoints. No hay animación de entrada en nav/banner.
          */
         setupSectionNavigation(gsap, ScrollTrigger);
 
@@ -102,78 +105,58 @@
             var reduceMotion = !!context.conditions.reduceMotion;
             var badgeObservers = [];
 
-            var profile = desktop ? {
-                headingY: 6,
-                headingStart: 'clamp(top 91%)'
+            /*
+             * El carrito tiene motion de scroll por requisito. La amplitud
+             * baja con el viewport para conservar legibilidad y estabilidad.
+             */
+            var cartProfile = desktop ? {
+                maxLag: 14,
+                velocityScale: 0.0032
             } : tablet ? {
-                headingY: 5,
-                headingStart: 'clamp(top 92%)'
+                maxLag: 10,
+                velocityScale: 0.0028
             } : {
-                headingY: 4,
-                headingStart: 'clamp(top 93%)'
+                maxLag: 8,
+                velocityScale: 0.0024
             };
 
-            var headings = gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion');
+            var cleanupCartList = setupCartListMotion(
+                gsap,
+                ScrollTrigger,
+                reduceMotion
+            );
+
+            var cleanupCartScroll = setupCartScrollMotion(
+                gsap,
+                ScrollTrigger,
+                cartProfile,
+                reduceMotion
+            );
 
             /*
-             * El catálogo es contenido funcional y de alta frecuencia: las
-             * cards no se ocultan ni se animan. El movimiento queda en la
-             * estructura (header/títulos) y en feedback de acciones.
+             * Confirmación del carrito: el badge pulsa solo cuando cambia.
+             * Reduced motion conserva feedback sin movimiento posicional.
              */
-
-            if (reduceMotion) {
-                gsap.set(headings, {
-                    clearProps: 'transform,opacity,visibility'
-                });
-                return;
-            }
-
-            var header = visibleElements('.brandOnlyMobile, .topBar, .topShop');
-            if (header.length) {
-                gsap.fromTo(header,
-                    { autoAlpha: 0, y: -2 },
-                    {
-                        autoAlpha: 1,
-                        y: 0,
-                        duration: MOTION.header,
-                        stagger: 0.015,
-                        ease: EASE.enter,
-                        clearProps: 'transform,opacity,visibility'
-                    }
-                );
-            }
-
-            headings.forEach(function (heading) {
-                var rect = heading.getBoundingClientRect();
-                var vars = {
-                    autoAlpha: 1,
-                    y: 0,
-                    duration: MOTION.heading,
-                    ease: EASE.enter,
-                    clearProps: 'transform,opacity,visibility'
-                };
-
-                if (rect.top > window.innerHeight * 0.94) {
-                    vars.immediateRender = false;
-                    vars.scrollTrigger = {
-                        trigger: heading,
-                        start: profile.headingStart,
-                        once: true
-                    };
-                }
-
-                gsap.fromTo(heading,
-                    { autoAlpha: 0, y: profile.headingY },
-                    vars
-                );
-            });
-
-            /* Confirmación ocasional: pulsa solo cuando cambia el badge. */
             gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
                 gsap.set(badge, { transformOrigin: '50% 50%' });
 
                 var observer = new MutationObserver(function () {
                     gsap.killTweensOf(badge);
+
+                    if (reduceMotion) {
+                        gsap.fromTo(badge,
+                            { autoAlpha: 0.72 },
+                            {
+                                autoAlpha: 1,
+                                duration: 0.12,
+                                ease: EASE.enter,
+                                overwrite: true,
+                                clearProps: 'opacity,visibility'
+                            }
+                        );
+                        return;
+                    }
+
                     gsap.timeline()
                         .to(badge, {
                             scale: 1.08,
@@ -195,7 +178,7 @@
                 badgeObservers.push(observer);
             });
 
-            /* Bootstrap dropdowns: puente corto, sin rebote ni escala. */
+            /* Dropdown: transición de interacción, nunca animación de inicio. */
             if (window.jQuery) {
                 window.jQuery(document)
                     .off('shown.bs.dropdown.scUxMotion')
@@ -207,11 +190,14 @@
                         if (!menu) return;
 
                         gsap.fromTo(menu,
-                            { autoAlpha: 0, y: -3 },
+                            {
+                                autoAlpha: 0,
+                                y: reduceMotion ? 0 : -3
+                            },
                             {
                                 autoAlpha: 1,
                                 y: 0,
-                                duration: MOTION.dropdown,
+                                duration: reduceMotion ? 0.12 : MOTION.dropdown,
                                 ease: EASE.enter,
                                 overwrite: true,
                                 clearProps: 'transform,opacity,visibility'
@@ -221,6 +207,9 @@
             }
 
             return function () {
+                cleanupCartList();
+                cleanupCartScroll();
+
                 badgeObservers.forEach(function (observer) {
                     observer.disconnect();
                 });
@@ -246,6 +235,251 @@
         if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(refreshTriggers).catch(function () {});
         }
+    }
+
+    /*
+     * Única animación de entrada del contenido: las filas de productos del
+     * carrito. Cada superficie de carrito se anima una sola vez, incluso si
+     * el legacy reemplaza la tabla al cambiar cantidades.
+     */
+    function setupCartListMotion(gsap, ScrollTrigger, reduceMotion) {
+        var animatedRoots = new WeakSet();
+        var observer = null;
+        var rafId = 0;
+        var refreshTimer = null;
+
+        function cartRoot(table) {
+            return table.closest('.carritoFixedContent, .carritoBox, .shop_carrito') || table;
+        }
+
+        function productRows(table) {
+            return Array.prototype.filter.call(
+                table.querySelectorAll('tr'),
+                function (row) {
+                    if (row.matches('.total, .subtotal, .ahorro')) return false;
+                    return row.offsetParent !== null || row.getClientRects().length > 0;
+                }
+            );
+        }
+
+        function animatePendingLists() {
+            rafId = 0;
+            var animatedAny = false;
+
+            gsap.utils.toArray('.carritoTable').forEach(function (table) {
+                var root = cartRoot(table);
+                if (animatedRoots.has(root)) return;
+
+                var rows = productRows(table);
+                if (!rows.length) return;
+
+                animatedRoots.add(root);
+                animatedAny = true;
+
+                if (reduceMotion) {
+                    gsap.fromTo(rows,
+                        { autoAlpha: 0 },
+                        {
+                            autoAlpha: 1,
+                            duration: 0.12,
+                            stagger: 0.018,
+                            ease: EASE.enter,
+                            overwrite: 'auto',
+                            clearProps: 'opacity,visibility'
+                        }
+                    );
+                    return;
+                }
+
+                gsap.fromTo(rows,
+                    {
+                        autoAlpha: 0,
+                        y: 4
+                    },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: MOTION.cartList,
+                        stagger: MOTION.cartStagger,
+                        ease: EASE.enter,
+                        overwrite: 'auto',
+                        clearProps: 'transform,opacity,visibility'
+                    }
+                );
+            });
+
+            if (animatedAny) {
+                if (refreshTimer) window.clearTimeout(refreshTimer);
+                refreshTimer = window.setTimeout(function () {
+                    ScrollTrigger.refresh();
+                }, 80);
+            }
+        }
+
+        function scheduleScan() {
+            if (rafId) return;
+            rafId = window.requestAnimationFrame(animatePendingLists);
+        }
+
+        animatePendingLists();
+
+        if (document.body) {
+            observer = new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i += 1) {
+                    if (mutations[i].addedNodes && mutations[i].addedNodes.length) {
+                        scheduleScan();
+                        break;
+                    }
+                }
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        return function () {
+            if (observer) observer.disconnect();
+            if (rafId) window.cancelAnimationFrame(rafId);
+            if (refreshTimer) window.clearTimeout(refreshTimer);
+        };
+    }
+
+    /*
+     * Scroll motion del carrito:
+     * - sticky queda en el wrapper .carritoFixed;
+     * - se anima el contenido interno, no el elemento sticky;
+     * - getVelocity() determina dirección/intensidad;
+     * - quickTo() retargetea en cada frame sin crear tweens acumulados;
+     * - al parar, vuelve a y:0 en 200ms.
+     */
+    function setupCartScrollMotion(gsap, ScrollTrigger, profile, reduceMotion) {
+        var entries = [];
+        var observer = null;
+        var rafId = 0;
+        var settleTimer = null;
+        var clampLag = gsap.utils.clamp(-profile.maxLag, profile.maxLag);
+
+        function targetForWrapper(wrapper) {
+            return wrapper.querySelector('.carritoBox') ||
+                wrapper.querySelector('.shop_carrito') ||
+                wrapper.firstElementChild ||
+                wrapper;
+        }
+
+        function hasTarget(target) {
+            for (var i = 0; i < entries.length; i += 1) {
+                if (entries[i].target === target) return true;
+            }
+            return false;
+        }
+
+        function discoverTargets() {
+            rafId = 0;
+
+            entries = entries.filter(function (entry) {
+                if (document.documentElement.contains(entry.target)) return true;
+                entry.target.classList.remove('sc-cart-scroll-motion');
+                return false;
+            });
+
+            gsap.utils.toArray('.carritoFixed').forEach(function (wrapper) {
+                var target = targetForWrapper(wrapper);
+                if (!target || hasTarget(target)) return;
+
+                target.classList.add('sc-cart-scroll-motion');
+
+                entries.push({
+                    target: target,
+                    moveTo: reduceMotion ? null : gsap.quickTo(target, 'y', {
+                        duration: MOTION.cartFollow,
+                        ease: EASE.follow,
+                        overwrite: 'auto'
+                    })
+                });
+            });
+        }
+
+        function scheduleDiscover() {
+            if (rafId) return;
+            rafId = window.requestAnimationFrame(discoverTargets);
+        }
+
+        function moveCartTo(value) {
+            for (var i = 0; i < entries.length; i += 1) {
+                if (entries[i].moveTo) entries[i].moveTo(value);
+            }
+        }
+
+        function settleCart() {
+            settleTimer = null;
+            moveCartTo(0);
+        }
+
+        discoverTargets();
+
+        if (document.body) {
+            observer = new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i += 1) {
+                    if (mutations[i].addedNodes && mutations[i].addedNodes.length) {
+                        scheduleDiscover();
+                        break;
+                    }
+                }
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        if (reduceMotion) {
+            return function () {
+                if (observer) observer.disconnect();
+                if (rafId) window.cancelAnimationFrame(rafId);
+
+                entries.forEach(function (entry) {
+                    entry.target.classList.remove('sc-cart-scroll-motion');
+                });
+            };
+        }
+
+        var tracker = ScrollTrigger.create({
+            start: 0,
+            end: 'max',
+            onUpdate: function (self) {
+                var velocity = self.getVelocity();
+                var lag = Math.abs(velocity) < 55 ?
+                    0 :
+                    clampLag(velocity * profile.velocityScale);
+
+                moveCartTo(lag);
+
+                if (settleTimer) window.clearTimeout(settleTimer);
+                settleTimer = window.setTimeout(settleCart, 70);
+            },
+            onRefresh: function () {
+                moveCartTo(0);
+            }
+        });
+
+        return function () {
+            if (observer) observer.disconnect();
+            if (rafId) window.cancelAnimationFrame(rafId);
+            if (settleTimer) window.clearTimeout(settleTimer);
+            tracker.kill();
+
+            entries.forEach(function (entry) {
+                gsap.killTweensOf(entry.target);
+                gsap.set(entry.target, {
+                    y: 0,
+                    clearProps: 'transform'
+                });
+                entry.target.classList.remove('sc-cart-scroll-motion');
+            });
+        };
     }
 
     function setupSectionNavigation(gsap, ScrollTrigger) {
