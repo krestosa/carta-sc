@@ -9,13 +9,11 @@
     var SCROLL_TO_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
 
     var MOTION = {
-        header: 0.20,
-        heading: 0.32,
-        reveal: 0.40,
-        stagger: 0.032,
-        pressIn: 0.07,
-        pressOut: 0.12,
-        dropdown: 0.18
+        header: 0.18,
+        heading: 0.22,
+        badgeUp: 0.07,
+        badgeDown: 0.10,
+        dropdown: 0.16
     };
 
     var SCROLL = {
@@ -28,7 +26,6 @@
 
     var EASE = {
         enter: 'power2.out',
-        reveal: 'power2.out',
         scroll: 'power2.inOut'
     };
 
@@ -87,58 +84,45 @@
         }
 
         /*
-         * La navegación de secciones no depende de breakpoint.
-         * El mismo ScrollTo funciona en mobile, tablet y desktop.
+         * Navegación = motion funcional: desplazamiento espacial + orientación.
+         * Se mantiene fuera de matchMedia para funcionar en todos los anchos.
          */
         setupSectionNavigation(gsap, ScrollTrigger);
 
         var mm = gsap.matchMedia();
 
-        /*
-         * Estos tres rangos cubren el viewport completo sin huecos:
-         * mobile  <= 767
-         * tablet  768 - 992
-         * desktop >= 993
-         *
-         * Al cambiar de rango GSAP revierte automáticamente el contexto
-         * anterior y construye el perfil nuevo sin duplicar ScrollTriggers.
-         */
         mm.add({
             mobile: '(max-width: 767px)',
             tablet: '(min-width: 768px) and (max-width: 992px)',
             desktop: '(min-width: 993px)',
             reduceMotion: '(prefers-reduced-motion: reduce)'
         }, function (context) {
-            var mobile = !!context.conditions.mobile;
             var tablet = !!context.conditions.tablet;
             var desktop = !!context.conditions.desktop;
             var reduceMotion = !!context.conditions.reduceMotion;
+            var badgeObservers = [];
 
             var profile = desktop ? {
-                headingY: 9,
-                initialCardY: 10,
-                cardY: 12,
-                batchMax: 8
+                headingY: 6,
+                headingStart: 'clamp(top 91%)'
             } : tablet ? {
-                headingY: 8,
-                initialCardY: 8,
-                cardY: 10,
-                batchMax: 6
+                headingY: 5,
+                headingStart: 'clamp(top 92%)'
             } : {
-                headingY: 7,
-                initialCardY: 7,
-                cardY: 9,
-                batchMax: 4
+                headingY: 4,
+                headingStart: 'clamp(top 93%)'
             };
 
-            var plusCleanups = [];
-            var badgeObservers = [];
-            var safetyTimer = null;
-            var cards = gsap.utils.toArray('.productoShop');
             var headings = gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion');
 
+            /*
+             * El catálogo es contenido funcional y de alta frecuencia: las
+             * cards no se ocultan ni se animan. El movimiento queda en la
+             * estructura (header/títulos) y en feedback de acciones.
+             */
+
             if (reduceMotion) {
-                gsap.set(cards.concat(headings), {
+                gsap.set(headings, {
                     clearProps: 'transform,opacity,visibility'
                 });
                 return;
@@ -147,12 +131,12 @@
             var header = visibleElements('.brandOnlyMobile, .topBar, .topShop');
             if (header.length) {
                 gsap.fromTo(header,
-                    { autoAlpha: 0, y: -3 },
+                    { autoAlpha: 0, y: -2 },
                     {
                         autoAlpha: 1,
                         y: 0,
                         duration: MOTION.header,
-                        stagger: 0.02,
+                        stagger: 0.015,
                         ease: EASE.enter,
                         clearProps: 'transform,opacity,visibility'
                     }
@@ -165,14 +149,15 @@
                     autoAlpha: 1,
                     y: 0,
                     duration: MOTION.heading,
-                    ease: EASE.reveal,
+                    ease: EASE.enter,
                     clearProps: 'transform,opacity,visibility'
                 };
 
-                if (rect.top > window.innerHeight * 0.92) {
+                if (rect.top > window.innerHeight * 0.94) {
+                    vars.immediateRender = false;
                     vars.scrollTrigger = {
                         trigger: heading,
-                        start: 'clamp(top 90%)',
+                        start: profile.headingStart,
                         once: true
                     };
                 }
@@ -183,136 +168,7 @@
                 );
             });
 
-            if (cards.length) {
-                var initialCards = [];
-                var deferredCards = [];
-
-                cards.forEach(function (card) {
-                    var rect = card.getBoundingClientRect();
-
-                    if (rect.top <= window.innerHeight * 0.94) {
-                        initialCards.push(card);
-                    } else {
-                        deferredCards.push(card);
-                    }
-                });
-
-                /* Productos ya presentes al cargar: aparecen siempre. */
-                if (initialCards.length) {
-                    gsap.fromTo(initialCards,
-                        {
-                            autoAlpha: 0,
-                            y: profile.initialCardY
-                        },
-                        {
-                            autoAlpha: 1,
-                            y: 0,
-                            duration: 0.32,
-                            stagger: 0.025,
-                            ease: EASE.reveal,
-                            overwrite: 'auto',
-                            onComplete: function () {
-                                initialCards.forEach(function (card) {
-                                    gsap.set(card, {
-                                        clearProps: 'transform,opacity,visibility'
-                                    });
-                                });
-                            }
-                        }
-                    );
-                }
-
-                /* Productos fuera del viewport: reveal por ScrollTrigger. */
-                if (deferredCards.length) {
-                    gsap.set(deferredCards, {
-                        autoAlpha: 0,
-                        y: profile.cardY
-                    });
-
-                    ScrollTrigger.batch(deferredCards, {
-                        start: 'clamp(top 90%)',
-                        once: true,
-                        interval: 0.07,
-                        batchMax: profile.batchMax,
-                        onEnter: function (batch) {
-                            gsap.to(batch, {
-                                autoAlpha: 1,
-                                y: 0,
-                                duration: MOTION.reveal,
-                                stagger: MOTION.stagger,
-                                ease: EASE.reveal,
-                                overwrite: 'auto',
-                                onComplete: function () {
-                                    batch.forEach(function (card) {
-                                        gsap.set(card, {
-                                            clearProps: 'transform,opacity,visibility'
-                                        });
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-
-                /*
-                 * Fallback de layout tardío (imgLiquid/imágenes/etc.).
-                 * Ningún producto que ya debería verse puede quedar oculto.
-                 */
-                safetyTimer = window.setTimeout(function () {
-                    cards.forEach(function (card) {
-                        var rect = card.getBoundingClientRect();
-                        var style = window.getComputedStyle(card);
-                        var opacity = parseFloat(style.opacity);
-
-                        if (rect.top <= window.innerHeight * 1.05 &&
-                            rect.bottom >= -40 &&
-                            (style.visibility === 'hidden' || opacity < 0.05)) {
-                            gsap.killTweensOf(card);
-                            gsap.set(card, {
-                                autoAlpha: 1,
-                                y: 0,
-                                clearProps: 'transform,opacity,visibility'
-                            });
-                        }
-                    });
-                    ScrollTrigger.refresh();
-                }, 900);
-            }
-
-            gsap.utils.toArray('.productoShop .sumar').forEach(function (plus) {
-                gsap.set(plus, { transformOrigin: '50% 50%' });
-
-                function press() {
-                    gsap.to(plus, {
-                        scale: 0.94,
-                        duration: MOTION.pressIn,
-                        ease: EASE.enter,
-                        overwrite: 'auto'
-                    });
-                }
-
-                function release() {
-                    gsap.to(plus, {
-                        scale: 1,
-                        duration: MOTION.pressOut,
-                        ease: EASE.enter,
-                        overwrite: 'auto'
-                    });
-                }
-
-                plus.addEventListener('pointerdown', press, { passive: true });
-                plus.addEventListener('pointerup', release, { passive: true });
-                plus.addEventListener('pointercancel', release, { passive: true });
-                plus.addEventListener('pointerleave', release, { passive: true });
-
-                plusCleanups.push(function () {
-                    plus.removeEventListener('pointerdown', press);
-                    plus.removeEventListener('pointerup', release);
-                    plus.removeEventListener('pointercancel', release);
-                    plus.removeEventListener('pointerleave', release);
-                });
-            });
-
+            /* Confirmación ocasional: pulsa solo cuando cambia el badge. */
             gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
                 gsap.set(badge, { transformOrigin: '50% 50%' });
 
@@ -320,13 +176,13 @@
                     gsap.killTweensOf(badge);
                     gsap.timeline()
                         .to(badge, {
-                            scale: 1.10,
-                            duration: 0.08,
+                            scale: 1.08,
+                            duration: MOTION.badgeUp,
                             ease: EASE.enter
                         })
                         .to(badge, {
                             scale: 1,
-                            duration: 0.10,
+                            duration: MOTION.badgeDown,
                             ease: EASE.enter
                         });
                 });
@@ -339,6 +195,7 @@
                 badgeObservers.push(observer);
             });
 
+            /* Bootstrap dropdowns: puente corto, sin rebote ni escala. */
             if (window.jQuery) {
                 window.jQuery(document)
                     .off('shown.bs.dropdown.scUxMotion')
@@ -364,9 +221,9 @@
             }
 
             return function () {
-                if (safetyTimer) window.clearTimeout(safetyTimer);
-                plusCleanups.forEach(function (cleanup) { cleanup(); });
-                badgeObservers.forEach(function (observer) { observer.disconnect(); });
+                badgeObservers.forEach(function (observer) {
+                    observer.disconnect();
+                });
 
                 if (window.jQuery) {
                     window.jQuery(document).off('shown.bs.dropdown.scUxMotion');
@@ -385,6 +242,10 @@
         } else {
             window.addEventListener('load', refreshTriggers, { once: true });
         }
+
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(refreshTriggers).catch(function () {});
+        }
     }
 
     function setupSectionNavigation(gsap, ScrollTrigger) {
@@ -395,6 +256,10 @@
 
         var scroller = document.scrollingElement || document.documentElement;
         var activeTween = null;
+        var activeTarget = null;
+        var sectionTargets = [];
+        var sectionMetrics = [];
+        var stickyMarkerOffset = 0;
         var clampUnit = gsap.utils.clamp(0, 1);
         var clampDuration = gsap.utils.clamp(SCROLL.minDuration, SCROLL.maxDuration);
 
@@ -483,30 +348,88 @@
             return targets;
         }
 
-        function currentSectionTop(currentY) {
-            var targets = collectSectionTargets();
-            if (!targets.length) return currentY;
+        function refreshSectionMetrics() {
+            sectionTargets = collectSectionTargets();
+            stickyMarkerOffset = getStickyOffset() + 2;
 
-            var markerY = currentY + getStickyOffset() + 2;
-            var current = null;
+            sectionMetrics = sectionTargets.map(function (target) {
+                return {
+                    target: target,
+                    top: getDocumentTop(target)
+                };
+            });
 
-            for (var i = 0; i < targets.length; i += 1) {
-                var top = getDocumentTop(targets[i]);
+            syncActiveSectionFromScroll();
+        }
 
-                if (top <= markerY) {
-                    current = targets[i];
+        function currentSectionTarget(currentY) {
+            if (!sectionMetrics.length) return null;
+
+            var markerY = currentY + stickyMarkerOffset;
+            var current = sectionMetrics[0].target;
+
+            for (var i = 0; i < sectionMetrics.length; i += 1) {
+                if (sectionMetrics[i].top <= markerY) {
+                    current = sectionMetrics[i].target;
                 } else {
                     break;
                 }
             }
 
-            return current ? getDocumentTop(current) : currentY;
+            return current;
+        }
+
+        function targetTopFromMetrics(target) {
+            for (var i = 0; i < sectionMetrics.length; i += 1) {
+                if (sectionMetrics[i].target === target) return sectionMetrics[i].top;
+            }
+            return getDocumentTop(target);
         }
 
         function logicalSectionDistance(target, currentY) {
-            var sourceTop = currentSectionTop(currentY);
-            var targetTop = getDocumentTop(target);
-            return Math.abs(targetTop - sourceTop);
+            var source = currentSectionTarget(currentY);
+            if (!source) return Math.abs(getDocumentTop(target) - currentY);
+
+            return Math.abs(
+                targetTopFromMetrics(target) - targetTopFromMetrics(source)
+            );
+        }
+
+        function setActiveSection(target) {
+            if (!target || target === activeTarget) return;
+            activeTarget = target;
+
+            Array.prototype.forEach.call(
+                document.querySelectorAll('a.anchorLink[href^="#"], a.anchorLinkSub[href^="#"]'),
+                function (link) {
+                    var isCurrent = resolveAnchorTarget(link.getAttribute('href')) === target;
+                    link.classList.toggle('sc-motion-current', isCurrent);
+
+                    if (isCurrent) {
+                        link.setAttribute('aria-current', 'location');
+                    } else if (link.getAttribute('aria-current') === 'location') {
+                        link.removeAttribute('aria-current');
+                    }
+                }
+            );
+
+            Array.prototype.forEach.call(document.querySelectorAll('.JSgoMenu'), function (select) {
+                var options = select.options || [];
+
+                for (var i = 0; i < options.length; i += 1) {
+                    if (resolveAnchorTarget(options[i].value) === target) {
+                        if (select.value !== options[i].value) {
+                            select.value = options[i].value;
+                        }
+                        break;
+                    }
+                }
+            });
+        }
+
+        function syncActiveSectionFromScroll() {
+            if (activeTween) return;
+            setActiveSection(currentSectionTarget(scroller.scrollTop || 0));
         }
 
         function speedForSectionDistance(sectionDistance) {
@@ -575,11 +498,17 @@
             }
         }
 
-        function stopSectionTween() {
-            if (!activeTween) return;
-            activeTween.kill();
-            activeTween = null;
-            ScrollTrigger.update();
+        function stopSectionTween(syncAfterStop) {
+            if (activeTween) {
+                var tween = activeTween;
+                activeTween = null;
+                tween.kill();
+                ScrollTrigger.update();
+            }
+
+            if (syncAfterStop !== false) {
+                syncActiveSectionFromScroll();
+            }
         }
 
         function finishSectionScroll(targetY, href, target, keyboardTriggered) {
@@ -593,6 +522,7 @@
             });
 
             ScrollTrigger.update();
+            setActiveSection(target);
             updateHash(href);
 
             if (keyboardTriggered) {
@@ -601,8 +531,9 @@
         }
 
         function scrollToSection(target, href, keyboardTriggered) {
-            /* Retarget duro: corta primero, mide después. */
-            stopSectionTween();
+            /* Retarget duro: corta primero y cambia de dirección en el acto. */
+            stopSectionTween(false);
+            setActiveSection(target);
 
             var currentY = scroller.scrollTop || 0;
             var targetY = getTargetY(target);
@@ -620,6 +551,7 @@
                         autoKill: true
                     }
                 });
+                setActiveSection(target);
                 updateHash(href);
 
                 if (keyboardTriggered) {
@@ -649,6 +581,7 @@
                 onInterrupt: function () {
                     if (activeTween === tween) {
                         activeTween = null;
+                        syncActiveSectionFromScroll();
                     }
                 }
             });
@@ -656,13 +589,31 @@
             activeTween = tween;
         }
 
-        window.addEventListener('wheel', stopSectionTween, { passive: true });
-        window.addEventListener('touchstart', stopSectionTween, { passive: true });
+        /*
+         * Un solo tracker de scroll mantiene la orientación de categoría sin
+         * crear un trigger por producto ni leer layouts en cada frame.
+         */
+        var sectionTracker = ScrollTrigger.create({
+            start: 0,
+            end: 'max',
+            onUpdate: syncActiveSectionFromScroll,
+            onRefresh: refreshSectionMetrics
+        });
+
+        refreshSectionMetrics();
+
+        window.addEventListener('wheel', function () {
+            stopSectionTween(true);
+        }, { passive: true });
+
+        window.addEventListener('touchstart', function () {
+            stopSectionTween(true);
+        }, { passive: true });
 
         window.addEventListener('keydown', function (event) {
             var keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
             if (keys.indexOf(event.key) !== -1) {
-                stopSectionTween();
+                stopSectionTween(true);
             }
         });
 
@@ -701,7 +652,8 @@
         });
 
         window.addEventListener('beforeunload', function () {
-            stopSectionTween();
+            stopSectionTween(false);
+            sectionTracker.kill();
         }, { once: true });
     }
 
