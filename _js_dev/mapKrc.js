@@ -110,4 +110,12 @@ function krc_mapear (id, mapObj, dir, obj){
 	return this
 }
 
-
+/* Load the dedicated GSAP motion layer without changing the static snapshot markup. */
+(function () {
+	if (window.__scGsapMotionRequested) return;
+	window.__scGsapMotionRequested = true;
+	var script = document.createElement('script');
+	script.src = 'js/animations-gsap.js';
+	script.async = true;
+	document.head.appendChild(script);
+})();
