@@ -53,3 +53,161 @@
 	height: calc(90vh);
     max-height: 370px;
 }*/
+
+/* Motion layer — based on emilkowalski/skills animation principles. */
+:root {
+    --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --sc-motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --sc-motion-press: 120ms;
+    --sc-motion-fast: 140ms;
+    --sc-motion-ui: 180ms;
+    --sc-motion-enter: 240ms;
+}
+
+/* Keep transforms isolated from text/layout calculations. */
+.productoShop > a,
+.nav-tabsTopShop .anchorLink,
+.nav-tabsTopShop .anchorLinkSub,
+.socialTop a,
+.sumar {
+    backface-visibility: hidden;
+}
+
+.sumar,
+.socialTop a {
+    display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* First-load hierarchy: small stagger, never blocks interaction. */
+    .brandOnlyMobile {
+        animation: sc-enter-y var(--sc-motion-enter) var(--sc-motion-ease-out) both;
+    }
+
+    .topBar {
+        animation: sc-enter-y var(--sc-motion-enter) var(--sc-motion-ease-out) 30ms both;
+    }
+
+    .topShop {
+        animation: sc-enter-y var(--sc-motion-enter) var(--sc-motion-ease-out) 60ms both;
+    }
+
+    /* Bootstrap/fancybox-era dropdowns otherwise appear abruptly. */
+    .open > .dropdown-menu {
+        animation: sc-dropdown-in var(--sc-motion-ui) var(--sc-motion-ease-out) both;
+    }
+
+    /* Press feedback remains subtle enough for repeated product browsing. */
+    .productoShop > a,
+    .nav-tabsTopShop .anchorLink,
+    .nav-tabsTopShop .anchorLinkSub {
+        transition: transform var(--sc-motion-press) var(--sc-motion-ease-out);
+    }
+
+    .productoShop > a:active {
+        transform: scale(0.985);
+    }
+
+    .nav-tabsTopShop .anchorLink:active,
+    .nav-tabsTopShop .anchorLinkSub:active {
+        transform: scale(0.98);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    /* Product cards: near-imperceptible lift plus image response. */
+    .productoShop > a {
+        transition: transform var(--sc-motion-ui) var(--sc-motion-ease-out);
+    }
+
+    .productoShop > a:hover {
+        transform: translate3d(0, -2px, 0);
+    }
+
+    .productoShop > a .imgShop {
+        transition: transform var(--sc-motion-ui) var(--sc-motion-ease-out);
+        transform-origin: center center;
+    }
+
+    .productoShop > a:hover .imgShop {
+        transform: scale(1.015);
+    }
+
+    .productoShop > a .sumar {
+        transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out);
+    }
+
+    .productoShop > a:hover .sumar {
+        transform: scale(1.08);
+    }
+
+    /* Category navigation gets feedback without slowing scanning. */
+    .nav-tabsTopShop .anchorLink,
+    .nav-tabsTopShop .anchorLinkSub {
+        transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out);
+    }
+
+    .nav-tabsTopShop .anchorLink:hover,
+    .nav-tabsTopShop .anchorLinkSub:hover {
+        transform: translate3d(0, -1px, 0);
+    }
+
+    /* Social icons are low-frequency, decorative controls: tiny scale only. */
+    .socialTop a {
+        transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out);
+    }
+
+    .socialTop a:hover {
+        transform: scale(1.05);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* Preserve state legibility while removing positional movement. */
+    .brandOnlyMobile,
+    .topBar,
+    .topShop {
+        animation: sc-fade-in 160ms var(--sc-motion-ease-out) both;
+    }
+
+    .open > .dropdown-menu {
+        animation: sc-fade-in 140ms var(--sc-motion-ease-out) both;
+    }
+
+    .productoShop > a,
+    .productoShop > a .imgShop,
+    .productoShop > a .sumar,
+    .nav-tabsTopShop .anchorLink,
+    .nav-tabsTopShop .anchorLinkSub,
+    .socialTop a {
+        transition: opacity 120ms ease;
+        transform: none !important;
+    }
+}
+
+@keyframes sc-enter-y {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes sc-dropdown-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -6px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes sc-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
