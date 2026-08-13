@@ -21,9 +21,9 @@ body {
 }
 
 /*
- * High-frequency category navigation: keep state changes crisp and bounded.
- * The legacy stylesheet uses transition: all; this layer limits it to the
- * properties that actually communicate hover/current state.
+ * High-frequency category navigation: no entrance animation. State changes
+ * stay crisp and bounded. The legacy stylesheet uses transition: all; this
+ * layer limits it to the properties that communicate hover/current state.
  */
 .sushiShop .wrapp-nav-tabsTopShop li a,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
@@ -94,6 +94,17 @@ body {
     transform: scale(0.97);
 }
 
+/*
+ * The sticky wrapper remains untouched. JS adds this class only to the
+ * cart's inner visual surface while ScrollTrigger/quickTo drives its small
+ * velocity-based follow motion.
+ */
+.sushiShop .sc-cart-scroll-motion {
+    -webkit-transform-origin: 50% 0%;
+    transform-origin: 50% 0%;
+    will-change: transform;
+}
+
 /* Keyboard focus must remain visible even where legacy hover styles dominate. */
 .sushiShop .wrapp-nav-tabsTopShop a:focus-visible,
 .sushiShop .wtopShopMenuMobile a:focus-visible,
@@ -113,8 +124,13 @@ body {
     }
 
     .sushiShop .productoShop .sumar,
-    .sushiShop .productoShop .sumar:active {
+    .sushiShop .productoShop .sumar:active,
+    .sushiShop .sc-cart-scroll-motion {
         -webkit-transform: none !important;
         transform: none !important;
+    }
+
+    .sushiShop .sc-cart-scroll-motion {
+        will-change: auto;
     }
 }
