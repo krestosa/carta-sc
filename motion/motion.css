@@ -14,19 +14,11 @@
     --sc-motion-ui: 180ms;
 }
 
-/* ScrollToPlugin owns vertical navigation. Native smooth scrolling would
-   compound the interpolation and make retargeting feel delayed. */
 html,
 body {
     scroll-behavior: auto !important;
 }
 
-/*
- * Product reveal must never alter image/card geometry. motion.js may still
- * write a legacy y transform while fading, but this layer neutralizes it so
- * imgLiquid never enters/leaves a transformed compositor surface. The visual
- * reveal is therefore opacity-only: no scale, translate or apparent resize.
- */
 .sushiShop .listadoShop .productoShop,
 .sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
 .sushiShop .listadoShop .productoShop .imgLiquid,
@@ -35,10 +27,6 @@ body {
     transform: none !important;
 }
 
-/*
- * Category navigation has no entrance animation. The legacy stylesheet uses
- * transition: all; this layer limits interaction feedback to bounded colors.
- */
 .sushiShop .wrapp-nav-tabsTopShop li a,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
     -webkit-transition: color var(--sc-motion-fast) var(--sc-motion-ease-out),
@@ -47,10 +35,6 @@ body {
         background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
 }
 
-/*
- * The current category is represented by one physical underline per nav bar.
- * The active link itself never lights up; JS moves/scales the same line.
- */
 .sushiShop .wrapp-nav-tabsTopShop a.anchorLink.sc-motion-current,
 .sushiShop .wrapp-nav-tabsTopShop a.anchorLinkSub.sc-motion-current,
 .sushiShop .wtopShopMenuMobile a.anchorLink.sc-motion-current,
@@ -69,12 +53,13 @@ body {
     left: 0;
     bottom: 0;
     width: 1px;
-    height: 1px;
+    height: 2px;
     margin: 0;
     padding: 0;
     border: 0;
-    border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.96);
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
     pointer-events: none;
     opacity: 0;
     z-index: 4;
@@ -82,13 +67,11 @@ body {
     transform: translate3d(0, 0, 0) scaleX(1);
     -webkit-transform-origin: 0 50%;
     transform-origin: 0 50%;
+    -webkit-transition: none !important;
+    transition: none !important;
     will-change: transform;
 }
 
-/*
- * Custom category pull-down: replace the legacy 20px travel + transition:all
- * with a short spatial cue. Exit is intentionally faster than enter.
- */
 .sushiShop .topPullDown {
     -webkit-transform: translateY(-6px);
     transform: translateY(-6px);
@@ -111,11 +94,6 @@ body {
     transition-delay: 0ms !important;
 }
 
-/*
- * Add-product feedback is a frequent action, so it stays near-imperceptible.
- * CSS :active is cheaper and more interruptible than attaching a GSAP tween
- * to every product button.
- */
 .sushiShop .productoShop .sumar {
     -webkit-transform-origin: 50% 50%;
     transform-origin: 50% 50%;
@@ -135,18 +113,12 @@ body {
     transform: scale(0.97);
 }
 
-/*
- * The sticky wrapper remains untouched. JS adds this class only to the
- * cart's inner visual surface while ScrollTrigger/quickTo drives its small
- * velocity-based follow motion.
- */
 .sushiShop .sc-cart-scroll-motion {
     -webkit-transform-origin: 50% 0%;
     transform-origin: 50% 0%;
     will-change: transform;
 }
 
-/* Keyboard focus must remain visible even where legacy hover styles dominate. */
 .sushiShop .wrapp-nav-tabsTopShop a:focus-visible,
 .sushiShop .wtopShopMenuMobile a:focus-visible,
 .sushiShop .productoShop .sumar:focus-visible {
@@ -154,7 +126,6 @@ body {
     outline-offset: 3px;
 }
 
-/* Reduced motion keeps state feedback but removes positional movement. */
 @media (prefers-reduced-motion: reduce) {
     .sushiShop .topPullDown,
     .sushiShop .topPullDown.open {
