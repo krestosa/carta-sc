@@ -57,223 +57,225 @@
 
         mm.add({
             desktop: '(min-width: 993px)',
-            mobile: '(max-width: 992px)',
             touch: '(hover: none), (pointer: coarse)',
             reduceMotion: '(prefers-reduced-motion: reduce)'
         }, function (context) {
             var conditions = context.conditions || {};
-            var reduceMotion = !!conditions.reduceMotion;
             var desktop = !!conditions.desktop;
             var touch = !!conditions.touch;
-            var visibleHeader = visibleElements('.brandOnlyMobile, .topBar');
-            var visibleTopShop = visibleElements('.topShop');
+            var reduceMotion = !!conditions.reduceMotion;
+            var header = visibleElements('.brandOnlyMobile, .topBar, .topShop');
 
             if (reduceMotion) {
-                gsap.set([
-                    '.brandOnlyMobile',
-                    '.topBar',
-                    '.topShop',
-                    '.titleShopSeccion',
-                    '.productoShop'
-                ], { clearProps: 'transform' });
+                gsap.set('.titleShopSeccion, .productoShop, .productoShop .imgShop', {
+                    clearProps: 'transform,opacity,visibility'
+                });
 
-                gsap.fromTo(
-                    visibleHeader.concat(visibleTopShop),
-                    { autoAlpha: 0 },
-                    { autoAlpha: 1, duration: 0.2, stagger: 0.03, ease: 'power1.out' }
-                );
-
+                if (header.length) {
+                    gsap.fromTo(header,
+                        { autoAlpha: 0 },
+                        {
+                            autoAlpha: 1,
+                            duration: 0.22,
+                            stagger: 0.025,
+                            ease: 'power1.out'
+                        }
+                    );
+                }
                 return;
             }
 
-            /* Page entrance: layered rather than everything arriving at once. */
-            var entrance = gsap.timeline({ defaults: { ease: 'power3.out' } });
-            if (visibleHeader.length) {
-                entrance.fromTo(
-                    visibleHeader,
-                    { autoAlpha: 0, y: -18 },
-                    { autoAlpha: 1, y: 0, duration: 0.65, stagger: 0.08 },
-                    0
-                );
-            }
-            if (visibleTopShop.length) {
-                entrance.fromTo(
-                    visibleTopShop,
-                    { autoAlpha: 0, y: -12 },
-                    { autoAlpha: 1, y: 0, duration: 0.55 },
-                    0.12
-                );
-            }
-
-            /* Section headings reveal first and establish hierarchy. */
-            gsap.utils.toArray('.titleShopSeccion').forEach(function (heading) {
-                gsap.fromTo(heading,
-                    { autoAlpha: 0, y: 28 },
+            /* Initial chrome: soft, short and almost imperceptible. */
+            if (header.length) {
+                gsap.fromTo(header,
+                    { autoAlpha: 0, y: -10 },
                     {
                         autoAlpha: 1,
                         y: 0,
-                        duration: 0.68,
+                        duration: 0.72,
+                        stagger: 0.06,
                         ease: 'power3.out',
-                        scrollTrigger: {
-                            trigger: heading,
-                            start: 'top 90%',
-                            once: true
-                        }
+                        clearProps: 'transform'
                     }
                 );
-            });
+            }
 
-            /* Product groups reveal as a sequence, not as isolated pop-ins. */
-            gsap.utils.toArray('.listadoShop').forEach(function (group) {
-                var cards = group.querySelectorAll('.productoShop');
-                if (!cards.length) return;
-
-                gsap.fromTo(cards,
-                    {
-                        autoAlpha: 0,
-                        y: desktop ? 42 : 24,
-                        scale: 0.985
-                    },
+            /* Section titles: gentle reveal as they enter the viewport. */
+            gsap.utils.toArray('.titleShopSeccion').forEach(function (heading) {
+                gsap.fromTo(heading,
+                    { autoAlpha: 0, y: desktop ? 22 : 16 },
                     {
                         autoAlpha: 1,
                         y: 0,
-                        scale: 1,
-                        duration: desktop ? 0.62 : 0.48,
-                        stagger: desktop ? 0.065 : 0.045,
+                        duration: desktop ? 0.92 : 0.78,
                         ease: 'power3.out',
                         clearProps: 'transform',
                         scrollTrigger: {
-                            trigger: group,
-                            start: 'top 88%',
+                            trigger: heading,
+                            start: 'top 91%',
                             once: true
                         }
                     }
                 );
             });
 
-            /* Subtle image settle gives the reveals a more GSAP-like physical finish. */
+            /* Product reveal: opacity + small vertical travel, batched by what enters the viewport. */
+            var cards = gsap.utils.toArray('.productoShop');
+            if (cards.length) {
+                gsap.set(cards, {
+                    autoAlpha: 0,
+                    y: desktop ? 28 : 18,
+                    force3D: true
+                });
+
+                ScrollTrigger.batch(cards, {
+                    start: 'top 93%',
+                    once: true,
+                    interval: 0.12,
+                    batchMax: desktop ? 6 : 3,
+                    onEnter: function (batch) {
+                        gsap.to(batch, {
+                            autoAlpha: 1,
+                            y: 0,
+                            duration: desktop ? 0.92 : 0.76,
+                            stagger: desktop ? 0.075 : 0.055,
+                            ease: 'power3.out',
+                            overwrite: 'auto',
+                            clearProps: 'transform'
+                        });
+                    }
+                });
+            }
+
+            /* Image content follows the card with an even softer settle. */
             gsap.utils.toArray('.productoShop .imgShop').forEach(function (image) {
                 gsap.fromTo(image,
-                    { scale: 1.035 },
+                    { autoAlpha: 0.82, y: desktop ? 10 : 6 },
                     {
-                        scale: 1,
-                        duration: 0.9,
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: desktop ? 1.05 : 0.88,
                         ease: 'power3.out',
+                        clearProps: 'transform,opacity,visibility',
                         scrollTrigger: {
                             trigger: image,
-                            start: 'top 92%',
+                            start: 'top 94%',
                             once: true
                         }
                     }
                 );
             });
 
-            /* Desktop hover: springy but controlled. Touch devices never get fake hover motion. */
+            /* Desktop hover remains subtle; scroll reveal stays the main motion language. */
             if (!touch) {
                 gsap.utils.toArray('.productoShop').forEach(function (card) {
                     var image = card.querySelector('.imgShop');
                     var plus = card.querySelector('.sumar');
 
-                    function enter() {
+                    card.addEventListener('mouseenter', function () {
                         gsap.to(card, {
-                            y: -6,
-                            scale: 1.008,
-                            duration: 0.34,
+                            y: -3,
+                            duration: 0.38,
                             ease: 'power3.out',
                             overwrite: 'auto'
                         });
+
                         if (image) {
                             gsap.to(image, {
-                                scale: 1.035,
-                                duration: 0.5,
+                                scale: 1.015,
+                                duration: 0.55,
                                 ease: 'power3.out',
                                 overwrite: 'auto'
                             });
                         }
+
                         if (plus) {
                             gsap.to(plus, {
-                                rotation: 90,
-                                scale: 1.12,
-                                duration: 0.32,
-                                ease: 'back.out(1.7)',
+                                scale: 1.06,
+                                duration: 0.34,
+                                ease: 'power2.out',
                                 overwrite: 'auto'
                             });
                         }
-                    }
+                    });
 
-                    function leave() {
+                    card.addEventListener('mouseleave', function () {
                         gsap.to(card, {
                             y: 0,
-                            scale: 1,
-                            duration: 0.46,
+                            duration: 0.5,
                             ease: 'power3.out',
                             overwrite: 'auto'
                         });
+
                         if (image) {
                             gsap.to(image, {
                                 scale: 1,
-                                duration: 0.52,
+                                duration: 0.62,
                                 ease: 'power3.out',
                                 overwrite: 'auto'
                             });
                         }
+
                         if (plus) {
                             gsap.to(plus, {
-                                rotation: 0,
                                 scale: 1,
-                                duration: 0.4,
+                                duration: 0.42,
                                 ease: 'power3.out',
                                 overwrite: 'auto'
                             });
                         }
-                    }
+                    });
 
-                    card.addEventListener('mouseenter', enter);
-                    card.addEventListener('mouseleave', leave);
                     card.addEventListener('pointerdown', function () {
                         gsap.to(card, {
-                            scale: 0.99,
-                            duration: 0.11,
+                            scale: 0.992,
+                            duration: 0.12,
                             ease: 'power2.out',
                             overwrite: 'auto'
                         });
                     });
-                    card.addEventListener('pointerup', enter);
-                });
 
-                gsap.utils.toArray('.nav-tabsTopShop .anchorLink, .nav-tabsTopShop .anchorLinkSub').forEach(function (link) {
-                    link.addEventListener('mouseenter', function () {
-                        gsap.to(link, { y: -2, duration: 0.22, ease: 'power3.out', overwrite: 'auto' });
-                    });
-                    link.addEventListener('mouseleave', function () {
-                        gsap.to(link, { y: 0, duration: 0.3, ease: 'power3.out', overwrite: 'auto' });
+                    card.addEventListener('pointerup', function () {
+                        gsap.to(card, {
+                            scale: 1,
+                            duration: 0.3,
+                            ease: 'power3.out',
+                            overwrite: 'auto'
+                        });
                     });
                 });
             }
 
-            /* Bootstrap dropdowns get a directional entrance from their trigger. */
+            /* Dropdowns: fade + tiny displacement, no bounce. */
             if (window.jQuery) {
                 window.jQuery(document).on('shown.bs.dropdown.scMotion', function (event) {
                     var menu = window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];
                     if (!menu) return;
+
                     gsap.fromTo(menu,
-                        { autoAlpha: 0, y: -10, scale: 0.985, transformOrigin: '50% 0%' },
-                        { autoAlpha: 1, y: 0, scale: 1, duration: 0.28, ease: 'power3.out', overwrite: true }
+                        { autoAlpha: 0, y: -6 },
+                        {
+                            autoAlpha: 1,
+                            y: 0,
+                            duration: 0.34,
+                            ease: 'power3.out',
+                            overwrite: true,
+                            clearProps: 'transform'
+                        }
                     );
                 });
             }
 
-            /* Give ScrollTrigger one refresh after images/layout settle. */
-            if (document.readyState === 'complete') {
+            function refreshTriggers() {
                 window.setTimeout(function () {
                     ScrollTrigger.refresh();
-                }, 80);
+                }, 120);
+            }
+
+            if (document.readyState === 'complete') {
+                refreshTriggers();
             } else {
-                window.addEventListener('load', function () {
-                    window.setTimeout(function () {
-                        ScrollTrigger.refresh();
-                    }, 80);
-                }, { once: true });
+                window.addEventListener('load', refreshTriggers, { once: true });
             }
 
             return function () {
