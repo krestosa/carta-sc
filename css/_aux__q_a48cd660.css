@@ -53,3 +53,47 @@
 	height: calc(90vh);
     max-height: 370px;
 }*/
+
+/* GSAP compositor isolation.
+   Keep the product frame fixed and animate only an internal media layer. */
+.sushiShop .productoShop .imgShop {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.sushiShop .productoShop .sc-gsap-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    transform: translate3d(0, 0, 0) scale(1);
+    transform-origin: 50% 50%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Only keep nearby/interacted media hot on the compositor. */
+.sushiShop .productoShop.sc-gsap-near .sc-gsap-media,
+.sushiShop .productoShop.sc-gsap-hot .sc-gsap-media {
+    will-change: transform;
+}
+
+/* The legacy stylesheet uses transition: all here. Do not let CSS
+   re-interpolate GSAP's per-frame transform writes. */
+.sushiShop .productoShop .sumar {
+    transition-property: background-color, border-color, color !important;
+    -webkit-transition-property: background-color, border-color, color !important;
+    transform-origin: 50% 50%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sushiShop .productoShop .sc-gsap-media,
+    .sushiShop .productoShop .sumar {
+        transform: none !important;
+        will-change: auto !important;
+    }
+}
