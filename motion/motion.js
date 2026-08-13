@@ -17,23 +17,19 @@
     };
 
     var SCROLL = {
-        nearSpeed: 1300,
-        farSpeed: 10500,
-        maxDistance: 6500,
-        brakeDistance: 190,
-        responseNear: 15,
-        responseFar: 25,
-        reverseResponse: 32,
-        inheritVelocity: 0.72,
-        maxVelocity: 12000,
-        arrivalDistance: 0.65,
-        arrivalVelocity: 20
+        minDuration: 0.10,
+        maxDuration: 0.68,
+        durationDistance: 7000,
+        inheritVelocity: 0.82,
+        reverseVelocityFactor: 0.32,
+        maxInheritedVelocity: 14000
     };
 
     var EASE = {
         enter: 'power2.out',
         exit: 'power2.in',
-        reveal: 'power2.out'
+        reveal: 'power2.out',
+        scroll: 'back.out(1.08)'
     };
 
     function loadScript(src, id, done) {
@@ -278,11 +274,9 @@
         var scroller = document.scrollingElement || document.documentElement;
         InertiaPlugin.track(scroller, 'scrollTop');
 
-        var clampVelocity = gsap.utils.clamp(-SCROLL.maxVelocity, SCROLL.maxVelocity);
-        var clampDistance = gsap.utils.clamp(0, SCROLL.maxDistance);
-        var mapSpeed = gsap.utils.mapRange(0, SCROLL.maxDistance, SCROLL.nearSpeed, SCROLL.farSpeed);
-        var mapResponse = gsap.utils.mapRange(0, SCROLL.maxDistance, SCROLL.responseNear, SCROLL.responseFar);
+        var activeTween = null;
         var clampUnit = gsap.utils.clamp(0, 1);
+        var clampInheritedVelocity = gsap.utils.clamp(-SCROLL.maxInheritedVelocity, SCROLL.maxInheritedVelocity);
 
         function prefersReducedMotion() {
             return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -369,111 +363,57 @@
             }
         }
 
-        var inertial = {
-            active: false,
-            position: scroller.scrollTop || 0,
-            velocity: 0,
-            targetY: scroller.scrollTop || 0,
-            href: '',
-            focusTarget: null,
-            keyboardTriggered: false
-        };
+        function durationForDistance(distance) {
+            if (distance <= 1) return 0;
 
-        function desiredSpeedForDistance(distance) {
-            if (distance <= 0) return 0;
-
-            var mappedDistance = clampDistance(distance);
-            var cruiseSpeed = mapSpeed(mappedDistance);
-            var brakeProgress = clampUnit(distance / SCROLL.brakeDistance);
-            var brakeFactor = 1 - Math.pow(1 - brakeProgress, 2);
-            return cruiseSpeed * brakeFactor;
+            var progress = clampUnit(distance / SCROLL.durationDistance);
+            return SCROLL.minDuration + (SCROLL.maxDuration - SCROLL.minDuration) * progress;
         }
 
-        function responsivenessForDistance(distance, directionChanged) {
-            if (directionChanged) return SCROLL.reverseResponse;
-            return mapResponse(clampDistance(distance));
+        function currentTrackedVelocity() {
+            var velocity = 0;
+            try {
+                velocity = InertiaPlugin.getVelocity(scroller, 'scrollTop') || 0;
+            } catch (error) {
+                velocity = 0;
+            }
+            return clampInheritedVelocity(velocity * SCROLL.inheritVelocity);
         }
 
-        function finishInertialScroll() {
-            inertial.active = false;
-            inertial.velocity = 0;
-            inertial.position = inertial.targetY;
+        function stopSectionTween() {
+            if (!activeTween) return;
+            activeTween.kill();
+            activeTween = null;
+        }
+
+        function finishSectionScroll(targetY, href, target, keyboardTriggered) {
+            activeTween = null;
 
             gsap.set(window, {
                 scrollTo: {
-                    y: inertial.targetY,
+                    y: targetY,
                     autoKill: false
                 }
             });
 
-            updateHash(inertial.href);
-            if (inertial.keyboardTriggered && inertial.focusTarget) {
-                focusSectionForKeyboard(inertial.focusTarget);
-            }
-
-            inertial.focusTarget = null;
-            inertial.keyboardTriggered = false;
-        }
-
-        function stopInertialScroll() {
-            if (!inertial.active) return;
-            inertial.active = false;
-            inertial.position = scroller.scrollTop || 0;
-            inertial.targetY = inertial.position;
-            inertial.velocity = 0;
-            inertial.href = '';
-            inertial.focusTarget = null;
-            inertial.keyboardTriggered = false;
-        }
-
-        function tick(time, deltaTime) {
-            if (!inertial.active) return;
-
-            var dt = Math.min(Math.max(deltaTime / 1000, 0.001), 0.032);
-            var currentY = scroller.scrollTop || 0;
-
-            if (Math.abs(currentY - inertial.position) > 80) {
-                inertial.position = currentY;
-            }
-
-            var remaining = inertial.targetY - inertial.position;
-            var distance = Math.abs(remaining);
-
-            if (distance < SCROLL.arrivalDistance && Math.abs(inertial.velocity) < SCROLL.arrivalVelocity) {
-                finishInertialScroll();
-                return;
-            }
-
-            var direction = remaining === 0 ? 0 : (remaining > 0 ? 1 : -1);
-            var velocityDirection = inertial.velocity === 0 ? direction : (inertial.velocity > 0 ? 1 : -1);
-            var directionChanged = direction !== 0 && velocityDirection !== direction;
-            var desiredVelocity = direction * desiredSpeedForDistance(distance);
-            var response = responsivenessForDistance(distance, directionChanged);
-            var blend = 1 - Math.exp(-response * dt);
-
-            inertial.velocity += (desiredVelocity - inertial.velocity) * blend;
-            inertial.velocity = clampVelocity(inertial.velocity);
-
-            var nextY = inertial.position + inertial.velocity * dt;
-            var nextRemaining = inertial.targetY - nextY;
-
-            if ((remaining > 0 && nextRemaining <= 0) || (remaining < 0 && nextRemaining >= 0)) {
-                inertial.position = inertial.targetY;
-                finishInertialScroll();
-                return;
-            }
-
-            inertial.position = nextY;
-            scroller.scrollTop = nextY;
             ScrollTrigger.update();
+            updateHash(href);
+            if (keyboardTriggered) focusSectionForKeyboard(target);
         }
-
-        gsap.ticker.add(tick);
 
         function scrollToSection(target, href, keyboardTriggered) {
             var targetY = getTargetY(target);
+            var currentY = scroller.scrollTop || 0;
+            var delta = targetY - currentY;
+            var distance = Math.abs(delta);
+
+            if (distance < 1) {
+                finishSectionScroll(targetY, href, target, keyboardTriggered);
+                return;
+            }
 
             if (prefersReducedMotion()) {
+                stopSectionTween();
                 gsap.set(window, {
                     scrollTo: {
                         y: targetY,
@@ -485,31 +425,44 @@
                 return;
             }
 
-            if (!inertial.active) {
-                inertial.position = scroller.scrollTop || 0;
+            var direction = delta > 0 ? 1 : -1;
+            var inheritedVelocity = currentTrackedVelocity();
+            var inheritedDirection = inheritedVelocity === 0 ? direction : (inheritedVelocity > 0 ? 1 : -1);
 
-                var trackedVelocity = 0;
-                try {
-                    trackedVelocity = InertiaPlugin.getVelocity(scroller, 'scrollTop') || 0;
-                } catch (error) {
-                    trackedVelocity = 0;
-                }
-
-                inertial.velocity = clampVelocity(trackedVelocity * SCROLL.inheritVelocity);
-                inertial.active = true;
+            if (inheritedDirection !== direction) {
+                inheritedVelocity *= SCROLL.reverseVelocityFactor;
             }
 
-            inertial.targetY = targetY;
-            inertial.href = href;
-            inertial.focusTarget = target;
-            inertial.keyboardTriggered = keyboardTriggered;
+            stopSectionTween();
+
+            var duration = durationForDistance(distance);
+            var tween = gsap.to(scroller, {
+                duration: duration,
+                inertia: {
+                    scrollTop: {
+                        velocity: inheritedVelocity,
+                        end: targetY
+                    }
+                },
+                ease: EASE.scroll,
+                overwrite: 'auto',
+                onUpdate: function () {
+                    ScrollTrigger.update();
+                },
+                onComplete: function () {
+                    if (activeTween !== tween) return;
+                    finishSectionScroll(targetY, href, target, keyboardTriggered);
+                }
+            });
+
+            activeTween = tween;
         }
 
-        window.addEventListener('wheel', stopInertialScroll, { passive: true });
-        window.addEventListener('touchstart', stopInertialScroll, { passive: true });
+        window.addEventListener('wheel', stopSectionTween, { passive: true });
+        window.addEventListener('touchstart', stopSectionTween, { passive: true });
         window.addEventListener('keydown', function (event) {
             var keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
-            if (keys.indexOf(event.key) !== -1) stopInertialScroll();
+            if (keys.indexOf(event.key) !== -1) stopSectionTween();
         });
 
         document.addEventListener('click', function (event) {
@@ -541,7 +494,7 @@
         });
 
         window.addEventListener('beforeunload', function () {
-            gsap.ticker.remove(tick);
+            stopSectionTween();
             InertiaPlugin.untrack(scroller, 'scrollTop');
         }, { once: true });
     }
