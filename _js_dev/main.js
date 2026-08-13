@@ -303,19 +303,18 @@ function noFoto(){
 	$('.panel-body p:empty:not([class])').remove()
 }
 
-/* Dedicated UX motion layer. Kept separate from legacy map/shop logic. */
+/* Dedicated motion bootstrap. Do not add animation logic here. */
 (function () {
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
 	var css = document.createElement('link');
 	css.rel = 'stylesheet';
-	css.href = 'css/motion-ux.css';
+	css.href = 'motion/motion.css';
 	document.head.appendChild(css);
 
 	var script = document.createElement('script');
-	script.src = 'js/animations-gsap.js';
+	script.src = 'motion/motion.js';
 	script.async = true;
 	document.head.appendChild(script);
 })();
-
