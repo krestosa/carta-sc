@@ -53,7 +53,7 @@
         var ScrollTrigger = window.ScrollTrigger;
 
         gsap.registerPlugin(ScrollTrigger);
-        gsap.config({ force3D: true, nullTargetWarn: false });
+        gsap.config({ nullTargetWarn: false });
         ScrollTrigger.config({ limitCallbacks: true });
 
         var mm = gsap.matchMedia();
@@ -69,67 +69,48 @@
             var reduceMotion = !!conditions.reduceMotion;
             var header = visibleElements('.brandOnlyMobile, .topBar, .topShop');
             var cards = gsap.utils.toArray('.productoShop');
+            var cleanupFns = [];
 
-            function copyBackgroundStyle(source, target) {
-                var computed = window.getComputedStyle(source);
-                target.style.backgroundImage = computed.backgroundImage;
-                target.style.backgroundSize = computed.backgroundSize;
-                target.style.backgroundPosition = computed.backgroundPosition;
-                target.style.backgroundRepeat = computed.backgroundRepeat;
-                target.style.backgroundColor = computed.backgroundColor;
-            }
-
-            function ensureMediaLayer(card) {
+            function makeRealImageLayer(card) {
                 var frame = card.querySelector('.imgShop');
                 if (!frame) return null;
 
-                var existing = frame.querySelector('.sc-gsap-media');
+                var existing = frame.querySelector('.sc-gsap-media-img');
                 if (existing) return existing;
 
-                var layer = document.createElement('div');
-                layer.className = 'sc-gsap-media';
-                copyBackgroundStyle(frame, layer);
-                frame.appendChild(layer);
+                var source = frame.querySelector('img[src]');
+                if (!source || !source.getAttribute('src')) return null;
 
-                gsap.set(layer, {
+                var image = source.cloneNode(false);
+                image.className = 'sc-gsap-media-img';
+                image.removeAttribute('style');
+                image.setAttribute('alt', '');
+                image.setAttribute('aria-hidden', 'true');
+                image.setAttribute('draggable', 'false');
+                image.decoding = 'async';
+
+                frame.appendChild(image);
+
+                gsap.set(image, {
                     scale: 1,
-                    x: 0,
-                    y: 0,
-                    force3D: true,
-                    transformOrigin: '50% 50%'
+                    transformOrigin: '50% 50%',
+                    force3D: false
                 });
 
-                return layer;
+                function activateImage() {
+                    if (!image.naturalWidth) return;
+                    frame.classList.add('sc-gsap-img-ready');
+                    frame.style.backgroundImage = 'none';
+                }
+
+                if (image.complete && image.naturalWidth) {
+                    activateImage();
+                } else {
+                    image.addEventListener('load', activateImage, { once: true });
+                }
+
+                return image;
             }
-
-            function setupNearbyCompositorHints() {
-                if (!finePointer || !('IntersectionObserver' in window)) return;
-
-                var observer = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        if (entry.isIntersecting) {
-                            ensureMediaLayer(entry.target);
-                            entry.target.classList.add('sc-gsap-near');
-                        } else {
-                            entry.target.classList.remove('sc-gsap-near');
-                        }
-                    });
-                }, {
-                    root: null,
-                    rootMargin: '420px 0px 420px 0px',
-                    threshold: 0
-                });
-
-                cards.forEach(function (card) {
-                    observer.observe(card);
-                });
-
-                return function () {
-                    observer.disconnect();
-                };
-            }
-
-            var disconnectNearbyObserver = setupNearbyCompositorHints();
 
             if (reduceMotion) {
                 gsap.set('.titleShopSeccion, .productoShop, .productoShop .imgShop', {
@@ -148,12 +129,10 @@
                     );
                 }
 
-                return function () {
-                    if (disconnectNearbyObserver) disconnectNearbyObserver();
-                };
+                return;
             }
 
-            /* Soft initial entrance. */
+            /* Header: soft entrance only. */
             if (header.length) {
                 gsap.fromTo(header,
                     { autoAlpha: 0, y: -8 },
@@ -168,7 +147,7 @@
                 );
             }
 
-            /* Smooth reveal-on-scroll for section titles. */
+            /* Titles reveal gently when entering the viewport. */
             gsap.utils.toArray('.titleShopSeccion').forEach(function (heading) {
                 gsap.fromTo(heading,
                     { autoAlpha: 0, y: desktop ? 20 : 14 },
@@ -187,12 +166,11 @@
                 );
             });
 
-            /* Product reveal is compositor-only: opacity + translateY. */
+            /* Product reveal: opacity + translate only. */
             if (cards.length) {
                 gsap.set(cards, {
                     autoAlpha: 0,
-                    y: desktop ? 26 : 17,
-                    force3D: true
+                    y: desktop ? 26 : 17
                 });
 
                 ScrollTrigger.batch(cards, {
@@ -208,7 +186,6 @@
                             stagger: desktop ? 0.068 : 0.052,
                             ease: 'power3.out',
                             overwrite: 'auto',
-                            force3D: true,
                             onComplete: function () {
                                 batch.forEach(function (card) {
                                     gsap.set(card, { clearProps: 'transform' });
@@ -219,10 +196,10 @@
                 });
             }
 
-            /* Image content gets only a tiny opacity/vertical settle on reveal. */
-            gsap.utils.toArray('.productoShop .imgShop').forEach(function (image) {
-                gsap.fromTo(image,
-                    { autoAlpha: 0.88, y: desktop ? 7 : 5 },
+            /* Image frame reveal. Never scale the frame itself. */
+            gsap.utils.toArray('.productoShop .imgShop').forEach(function (frame) {
+                gsap.fromTo(frame,
+                    { autoAlpha: 0.9, y: desktop ? 7 : 5 },
                     {
                         autoAlpha: 1,
                         y: 0,
@@ -230,7 +207,7 @@
                         ease: 'power3.out',
                         clearProps: 'transform,opacity,visibility',
                         scrollTrigger: {
-                            trigger: image,
+                            trigger: frame,
                             start: 'top 94%',
                             once: true
                         }
@@ -239,79 +216,70 @@
             });
 
             /*
-             * Fine-pointer hover: the card geometry NEVER scales.
-             * A dedicated inner background layer is scaled instead, clipped by .imgShop.
-             * quickTo() continuously retargets from the current value, so rapid enter/leave
-             * never restarts an animation or produces stepping.
+             * Hover implementation:
+             * - Animate a real <img>, never a CSS background.
+             * - Keep the product/card/frame geometry fixed.
+             * - force3D:false avoids forcing the scale onto a 3D raster layer.
+             * - One paused tween is played/reversed, so no new tween is created
+             *   and no retargeting occurs while the pointer is stable.
              */
             if (finePointer) {
                 cards.forEach(function (card) {
+                    var media = makeRealImageLayer(card);
                     var plus = card.querySelector('.sumar');
-                    var hotTimer = null;
-                    var mediaScaleTo = null;
-                    var plusScaleTo = null;
+                    if (!media) return;
 
+                    var hoverTween = gsap.to(media, {
+                        scale: 1.02,
+                        duration: 0.62,
+                        ease: 'power2.out',
+                        paused: true,
+                        force3D: false,
+                        transformOrigin: '50% 50%',
+                        overwrite: false
+                    });
+
+                    var plusTween = null;
                     if (plus) {
                         gsap.set(plus, {
                             scale: 1,
-                            force3D: true,
-                            transformOrigin: '50% 50%'
+                            transformOrigin: '50% 50%',
+                            force3D: false
                         });
-                        plusScaleTo = gsap.quickTo(plus, 'scale', {
-                            duration: 0.48,
-                            ease: 'power2.out'
+
+                        plusTween = gsap.to(plus, {
+                            scale: 1.04,
+                            duration: 0.42,
+                            ease: 'power2.out',
+                            paused: true,
+                            force3D: false,
+                            overwrite: false
                         });
                     }
 
-                    function prepareHotLayer() {
-                        var media = ensureMediaLayer(card);
-                        if (!media) return null;
-
-                        if (!mediaScaleTo) {
-                            mediaScaleTo = gsap.quickTo(media, 'scale', {
-                                duration: 0.72,
-                                ease: 'power2.out'
-                            });
-                        }
-
-                        card.classList.add('sc-gsap-hot');
-                        if (hotTimer) {
-                            window.clearTimeout(hotTimer);
-                            hotTimer = null;
-                        }
-
-                        return media;
+                    function onEnter() {
+                        hoverTween.play();
+                        if (plusTween) plusTween.play();
                     }
 
-                    function enter() {
-                        if (!prepareHotLayer()) return;
-                        mediaScaleTo(1.018);
-                        if (plusScaleTo) plusScaleTo(1.045);
+                    function onLeave() {
+                        hoverTween.reverse();
+                        if (plusTween) plusTween.reverse();
                     }
 
-                    function leave() {
-                        if (mediaScaleTo) mediaScaleTo(1);
-                        if (plusScaleTo) plusScaleTo(1);
+                    card.addEventListener('pointerenter', onEnter, { passive: true });
+                    card.addEventListener('pointerleave', onLeave, { passive: true });
 
-                        hotTimer = window.setTimeout(function () {
-                            card.classList.remove('sc-gsap-hot');
-                        }, 760);
-                    }
-
-                    card.addEventListener('pointerenter', enter, { passive: true });
-                    card.addEventListener('pointerleave', leave, { passive: true });
-
-                    card.addEventListener('pointerdown', function () {
-                        if (plusScaleTo) plusScaleTo(0.985);
-                    }, { passive: true });
-
-                    card.addEventListener('pointerup', function () {
-                        if (plusScaleTo) plusScaleTo(1.045);
-                    }, { passive: true });
+                    cleanupFns.push(function () {
+                        card.removeEventListener('pointerenter', onEnter);
+                        card.removeEventListener('pointerleave', onLeave);
+                        hoverTween.kill();
+                        if (plusTween) plusTween.kill();
+                    });
                 });
             }
 
-            /* Dropdowns stay understated and compositor-only. */
+            /* Dropdowns: small compositor-friendly reveal. */
             if (window.jQuery) {
                 window.jQuery(document).on('shown.bs.dropdown.scMotion', function (event) {
                     var menu = window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];
@@ -344,7 +312,7 @@
             }
 
             return function () {
-                if (disconnectNearbyObserver) disconnectNearbyObserver();
+                cleanupFns.forEach(function (fn) { fn(); });
                 if (window.jQuery) {
                     window.jQuery(document).off('.scMotion');
                 }
