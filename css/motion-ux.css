@@ -1,13 +1,2 @@
-/* UX motion support only. No card/image hover animation. */
-.sushiShop .productoShop .sumar {
-    transform-origin: 50% 50%;
-    touch-action: manipulation;
-    transition-property: background-color, border-color, color !important;
-    -webkit-transition-property: background-color, border-color, color !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .sushiShop .productoShop .sumar {
-        transform: none !important;
-    }
-}
+/* Bridge estable hacia la capa dedicada de motion. No agregar reglas aqui. */
+@import url("../motion/motion.css");
