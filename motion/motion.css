@@ -3,8 +3,6 @@
  * ------------------------------------------------------------
  * Motion, interaction-state resets and overrides live here.
  * Original shop styles stay untouched.
- * UX motion audit: restrained, interruptible and content-first.
- * Product-card reveal state is controlled in motion.js; CSS never pre-hides it.
  */
 
 :root {
@@ -19,7 +17,21 @@ body {
     scroll-behavior: auto !important;
 }
 
-.sushiShop .listadoShop .productoShop,
+/* Product cards move from below without transforms, so imgLiquid geometry and
+   rasterization stay unchanged during both initial and scroll reveals. */
+.sushiShop .listadoShop .productoShop {
+    position: relative;
+    top: 0;
+    -webkit-transform: none !important;
+    transform: none !important;
+    -webkit-transition: top 340ms var(--sc-motion-ease-out) !important;
+    transition: top 340ms var(--sc-motion-ease-out) !important;
+}
+
+.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {
+    top: 10px;
+}
+
 .sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
 .sushiShop .listadoShop .productoShop .imgLiquid,
 .sushiShop .listadoShop .productoShop .imgShop {
@@ -127,7 +139,19 @@ body {
     outline-offset: 3px;
 }
 
+@media (max-width: 992px) {
+    .sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {
+        top: 8px;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .sushiShop .listadoShop .productoShop {
+        top: 0 !important;
+        -webkit-transition: none !important;
+        transition: none !important;
+    }
+
     .sushiShop .topPullDown,
     .sushiShop .topPullDown.open {
         -webkit-transform: none !important;
