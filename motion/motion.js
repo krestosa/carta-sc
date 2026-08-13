@@ -86,23 +86,59 @@
             ScrollToPlugin.config({ autoKill: true });
         }
 
+        /*
+         * La navegación de secciones no depende de breakpoint.
+         * El mismo ScrollTo funciona en mobile, tablet y desktop.
+         */
         setupSectionNavigation(gsap, ScrollTrigger);
 
         var mm = gsap.matchMedia();
 
+        /*
+         * Estos tres rangos cubren el viewport completo sin huecos:
+         * mobile  <= 767
+         * tablet  768 - 992
+         * desktop >= 993
+         *
+         * Al cambiar de rango GSAP revierte automáticamente el contexto
+         * anterior y construye el perfil nuevo sin duplicar ScrollTriggers.
+         */
         mm.add({
+            mobile: '(max-width: 767px)',
+            tablet: '(min-width: 768px) and (max-width: 992px)',
             desktop: '(min-width: 993px)',
             reduceMotion: '(prefers-reduced-motion: reduce)'
         }, function (context) {
+            var mobile = !!context.conditions.mobile;
+            var tablet = !!context.conditions.tablet;
             var desktop = !!context.conditions.desktop;
             var reduceMotion = !!context.conditions.reduceMotion;
+
+            var profile = desktop ? {
+                headingY: 9,
+                initialCardY: 10,
+                cardY: 12,
+                batchMax: 8
+            } : tablet ? {
+                headingY: 8,
+                initialCardY: 8,
+                cardY: 10,
+                batchMax: 6
+            } : {
+                headingY: 7,
+                initialCardY: 7,
+                cardY: 9,
+                batchMax: 4
+            };
+
             var plusCleanups = [];
             var badgeObservers = [];
             var safetyTimer = null;
             var cards = gsap.utils.toArray('.productoShop');
+            var headings = gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion');
 
             if (reduceMotion) {
-                gsap.set(cards.concat(gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion')), {
+                gsap.set(cards.concat(headings), {
                     clearProps: 'transform,opacity,visibility'
                 });
                 return;
@@ -123,7 +159,7 @@
                 );
             }
 
-            gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion').forEach(function (heading) {
+            headings.forEach(function (heading) {
                 var rect = heading.getBoundingClientRect();
                 var vars = {
                     autoAlpha: 1,
@@ -142,7 +178,7 @@
                 }
 
                 gsap.fromTo(heading,
-                    { autoAlpha: 0, y: desktop ? 9 : 7 },
+                    { autoAlpha: 0, y: profile.headingY },
                     vars
                 );
             });
@@ -153,6 +189,7 @@
 
                 cards.forEach(function (card) {
                     var rect = card.getBoundingClientRect();
+
                     if (rect.top <= window.innerHeight * 0.94) {
                         initialCards.push(card);
                     } else {
@@ -160,9 +197,13 @@
                     }
                 });
 
+                /* Productos ya presentes al cargar: aparecen siempre. */
                 if (initialCards.length) {
                     gsap.fromTo(initialCards,
-                        { autoAlpha: 0, y: desktop ? 10 : 7 },
+                        {
+                            autoAlpha: 0,
+                            y: profile.initialCardY
+                        },
                         {
                             autoAlpha: 1,
                             y: 0,
@@ -172,26 +213,27 @@
                             overwrite: 'auto',
                             onComplete: function () {
                                 initialCards.forEach(function (card) {
-                                    gsap.set(card, { clearProps: 'transform,opacity,visibility' });
+                                    gsap.set(card, {
+                                        clearProps: 'transform,opacity,visibility'
+                                    });
                                 });
                             }
                         }
                     );
                 }
 
+                /* Productos fuera del viewport: reveal por ScrollTrigger. */
                 if (deferredCards.length) {
                     gsap.set(deferredCards, {
                         autoAlpha: 0,
-                        y: desktop ? 12 : 9
+                        y: profile.cardY
                     });
 
                     ScrollTrigger.batch(deferredCards, {
                         start: 'clamp(top 90%)',
                         once: true,
                         interval: 0.07,
-                        batchMax: function () {
-                            return window.innerWidth >= 993 ? 8 : 4;
-                        },
+                        batchMax: profile.batchMax,
                         onEnter: function (batch) {
                             gsap.to(batch, {
                                 autoAlpha: 1,
@@ -202,7 +244,9 @@
                                 overwrite: 'auto',
                                 onComplete: function () {
                                     batch.forEach(function (card) {
-                                        gsap.set(card, { clearProps: 'transform,opacity,visibility' });
+                                        gsap.set(card, {
+                                            clearProps: 'transform,opacity,visibility'
+                                        });
                                     });
                                 }
                             });
@@ -210,14 +254,19 @@
                     });
                 }
 
+                /*
+                 * Fallback de layout tardío (imgLiquid/imágenes/etc.).
+                 * Ningún producto que ya debería verse puede quedar oculto.
+                 */
                 safetyTimer = window.setTimeout(function () {
                     cards.forEach(function (card) {
                         var rect = card.getBoundingClientRect();
                         var style = window.getComputedStyle(card);
+                        var opacity = parseFloat(style.opacity);
 
                         if (rect.top <= window.innerHeight * 1.05 &&
                             rect.bottom >= -40 &&
-                            (style.visibility === 'hidden' || parseFloat(style.opacity) < 0.05)) {
+                            (style.visibility === 'hidden' || opacity < 0.05)) {
                             gsap.killTweensOf(card);
                             gsap.set(card, {
                                 autoAlpha: 1,
@@ -552,6 +601,7 @@
         }
 
         function scrollToSection(target, href, keyboardTriggered) {
+            /* Retarget duro: corta primero, mide después. */
             stopSectionTween();
 
             var currentY = scroller.scrollTop || 0;
