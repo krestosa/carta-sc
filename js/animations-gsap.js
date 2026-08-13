@@ -40,6 +40,12 @@
         }
     }
 
+    function visibleElements(selector) {
+        return Array.prototype.filter.call(document.querySelectorAll(selector), function (element) {
+            return element.offsetParent !== null || element.getClientRects().length > 0;
+        });
+    }
+
     function initMotion() {
         if (!window.gsap || !window.ScrollTrigger) return;
 
@@ -51,6 +57,7 @@
 
         mm.add({
             desktop: '(min-width: 993px)',
+            mobile: '(max-width: 992px)',
             touch: '(hover: none), (pointer: coarse)',
             reduceMotion: '(prefers-reduced-motion: reduce)'
         }, function (context) {
@@ -58,6 +65,8 @@
             var reduceMotion = !!conditions.reduceMotion;
             var desktop = !!conditions.desktop;
             var touch = !!conditions.touch;
+            var visibleHeader = visibleElements('.brandOnlyMobile, .topBar');
+            var visibleTopShop = visibleElements('.topShop');
 
             if (reduceMotion) {
                 gsap.set([
@@ -69,7 +78,7 @@
                 ], { clearProps: 'transform' });
 
                 gsap.fromTo(
-                    '.topBar, .topShop, .brandOnlyMobile',
+                    visibleHeader.concat(visibleTopShop),
                     { autoAlpha: 0 },
                     { autoAlpha: 1, duration: 0.2, stagger: 0.03, ease: 'power1.out' }
                 );
@@ -79,17 +88,22 @@
 
             /* Page entrance: layered rather than everything arriving at once. */
             var entrance = gsap.timeline({ defaults: { ease: 'power3.out' } });
-            entrance
-                .fromTo('.brandOnlyMobile:visible, .topBar:visible',
+            if (visibleHeader.length) {
+                entrance.fromTo(
+                    visibleHeader,
                     { autoAlpha: 0, y: -18 },
                     { autoAlpha: 1, y: 0, duration: 0.65, stagger: 0.08 },
                     0
-                )
-                .fromTo('.topShop:visible',
+                );
+            }
+            if (visibleTopShop.length) {
+                entrance.fromTo(
+                    visibleTopShop,
                     { autoAlpha: 0, y: -12 },
                     { autoAlpha: 1, y: 0, duration: 0.55 },
                     0.12
                 );
+            }
 
             /* Section headings reveal first and establish hierarchy. */
             gsap.utils.toArray('.titleShopSeccion').forEach(function (heading) {
@@ -217,7 +231,12 @@
                     card.addEventListener('mouseenter', enter);
                     card.addEventListener('mouseleave', leave);
                     card.addEventListener('pointerdown', function () {
-                        gsap.to(card, { scale: 0.99, duration: 0.11, ease: 'power2.out', overwrite: 'auto' });
+                        gsap.to(card, {
+                            scale: 0.99,
+                            duration: 0.11,
+                            ease: 'power2.out',
+                            overwrite: 'auto'
+                        });
                     });
                     card.addEventListener('pointerup', enter);
                 });
@@ -245,11 +264,17 @@
             }
 
             /* Give ScrollTrigger one refresh after images/layout settle. */
-            window.addEventListener('load', function () {
+            if (document.readyState === 'complete') {
                 window.setTimeout(function () {
                     ScrollTrigger.refresh();
                 }, 80);
-            }, { once: true });
+            } else {
+                window.addEventListener('load', function () {
+                    window.setTimeout(function () {
+                        ScrollTrigger.refresh();
+                    }, 80);
+                }, { once: true });
+            }
 
             return function () {
                 if (window.jQuery) {
