@@ -7,7 +7,6 @@
     var GSAP_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js';
     var SCROLL_TRIGGER_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js';
     var SCROLL_TO_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
-    var INERTIA_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/InertiaPlugin.min.js';
 
     var MOTION = {
         instant: 0.10,
@@ -17,19 +16,18 @@
     };
 
     var SCROLL = {
-        minDuration: 0.10,
-        maxDuration: 0.68,
-        durationDistance: 7000,
-        inheritVelocity: 0.82,
-        reverseVelocityFactor: 0.32,
-        maxInheritedVelocity: 14000
+        minDuration: 0.075,
+        maxDuration: 0.45,
+        nearSpeed: 4200,
+        farSpeed: 26000,
+        speedDistance: 7000
     };
 
     var EASE = {
         enter: 'power2.out',
         exit: 'power2.in',
         reveal: 'power2.out',
-        scroll: 'back.out(1.08)'
+        scroll: 'back.out(1.05)'
     };
 
     function loadScript(src, id, done) {
@@ -72,20 +70,19 @@
     }
 
     function initMotion() {
-        if (!window.gsap || !window.ScrollTrigger || !window.ScrollToPlugin || !window.InertiaPlugin) return;
+        if (!window.gsap || !window.ScrollTrigger || !window.ScrollToPlugin) return;
 
         var gsap = window.gsap;
         var ScrollTrigger = window.ScrollTrigger;
         var ScrollToPlugin = window.ScrollToPlugin;
-        var InertiaPlugin = window.InertiaPlugin;
 
-        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, InertiaPlugin);
+        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
         ScrollTrigger.config({ limitCallbacks: true });
         if (ScrollToPlugin.config) {
             ScrollToPlugin.config({ autoKill: true });
         }
 
-        setupSectionNavigation(gsap, ScrollTrigger, InertiaPlugin);
+        setupSectionNavigation(gsap, ScrollTrigger);
 
         var mm = gsap.matchMedia();
         mm.add({
@@ -225,22 +222,24 @@
             });
 
             if (window.jQuery) {
-                window.jQuery(document).off('shown.bs.dropdown.scUxMotion').on('shown.bs.dropdown.scUxMotion', function (event) {
-                    var menu = window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];
-                    if (!menu) return;
+                window.jQuery(document)
+                    .off('shown.bs.dropdown.scUxMotion')
+                    .on('shown.bs.dropdown.scUxMotion', function (event) {
+                        var menu = window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];
+                        if (!menu) return;
 
-                    gsap.fromTo(menu,
-                        { autoAlpha: 0, y: -4 },
-                        {
-                            autoAlpha: 1,
-                            y: 0,
-                            duration: 0.20,
-                            ease: EASE.enter,
-                            overwrite: true,
-                            clearProps: 'transform,opacity,visibility'
-                        }
-                    );
-                });
+                        gsap.fromTo(menu,
+                            { autoAlpha: 0, y: -4 },
+                            {
+                                autoAlpha: 1,
+                                y: 0,
+                                duration: 0.20,
+                                ease: EASE.enter,
+                                overwrite: true,
+                                clearProps: 'transform,opacity,visibility'
+                            }
+                        );
+                    });
             }
 
             return function () {
@@ -265,18 +264,16 @@
         }
     }
 
-    function setupSectionNavigation(gsap, ScrollTrigger, InertiaPlugin) {
+    function setupSectionNavigation(gsap, ScrollTrigger) {
         if (window.jQuery) {
             window.jQuery('a.anchorLink, a.anchorLinkSub').off('click');
             window.jQuery('.JSgoMenu').off('change');
         }
 
         var scroller = document.scrollingElement || document.documentElement;
-        InertiaPlugin.track(scroller, 'scrollTop');
-
         var activeTween = null;
         var clampUnit = gsap.utils.clamp(0, 1);
-        var clampInheritedVelocity = gsap.utils.clamp(-SCROLL.maxInheritedVelocity, SCROLL.maxInheritedVelocity);
+        var clampDuration = gsap.utils.clamp(SCROLL.minDuration, SCROLL.maxDuration);
 
         function prefersReducedMotion() {
             return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -294,6 +291,10 @@
             }
 
             return document.getElementById(id) || document.getElementsByName(id)[0] || null;
+        }
+
+        function getDocumentTop(element) {
+            return element.getBoundingClientRect().top + (window.pageYOffset || scroller.scrollTop || 0);
         }
 
         function getStickyOffset() {
@@ -323,9 +324,81 @@
         }
 
         function getTargetY(target) {
-            var y = target.getBoundingClientRect().top + window.pageYOffset - getStickyOffset();
+            var y = getDocumentTop(target) - getStickyOffset();
             var maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
             return Math.max(0, Math.min(maxY, y));
+        }
+
+        function collectSectionTargets() {
+            var targets = [];
+
+            function addTarget(target) {
+                if (!target || targets.indexOf(target) !== -1) return;
+                targets.push(target);
+            }
+
+            Array.prototype.forEach.call(
+                document.querySelectorAll('a.anchorLink[href^="#"], a.anchorLinkSub[href^="#"]'),
+                function (link) {
+                    addTarget(resolveAnchorTarget(link.getAttribute('href')));
+                }
+            );
+
+            Array.prototype.forEach.call(
+                document.querySelectorAll('.JSgoMenu option[value^="#"]'),
+                function (option) {
+                    addTarget(resolveAnchorTarget(option.value));
+                }
+            );
+
+            targets.sort(function (a, b) {
+                return getDocumentTop(a) - getDocumentTop(b);
+            });
+
+            return targets;
+        }
+
+        function currentSectionTop(currentY) {
+            var targets = collectSectionTargets();
+            if (!targets.length) return currentY;
+
+            var markerY = currentY + getStickyOffset() + 2;
+            var current = null;
+
+            for (var i = 0; i < targets.length; i += 1) {
+                var top = getDocumentTop(targets[i]);
+                if (top <= markerY) {
+                    current = targets[i];
+                } else {
+                    break;
+                }
+            }
+
+            return current ? getDocumentTop(current) : currentY;
+        }
+
+        function logicalSectionDistance(target, currentY) {
+            var sourceTop = currentSectionTop(currentY);
+            var targetTop = getDocumentTop(target);
+            return Math.abs(targetTop - sourceTop);
+        }
+
+        function speedForSectionDistance(sectionDistance) {
+            var progress = clampUnit(sectionDistance / SCROLL.speedDistance);
+
+            /*
+             * Cuanto mas lejos estan los TOPS de las secciones, mayor es la
+             * velocidad de crucero. La curva sube rapido y luego satura.
+             */
+            var acceleratedProgress = 1 - Math.pow(1 - progress, 2.2);
+            return SCROLL.nearSpeed + (SCROLL.farSpeed - SCROLL.nearSpeed) * acceleratedProgress;
+        }
+
+        function durationForTravel(actualDistance, sectionDistance) {
+            if (actualDistance <= 1) return 0;
+
+            var speed = speedForSectionDistance(sectionDistance);
+            return clampDuration(actualDistance / speed);
         }
 
         function closeSectionMenus() {
@@ -363,27 +436,11 @@
             }
         }
 
-        function durationForDistance(distance) {
-            if (distance <= 1) return 0;
-
-            var progress = clampUnit(distance / SCROLL.durationDistance);
-            return SCROLL.minDuration + (SCROLL.maxDuration - SCROLL.minDuration) * progress;
-        }
-
-        function currentTrackedVelocity() {
-            var velocity = 0;
-            try {
-                velocity = InertiaPlugin.getVelocity(scroller, 'scrollTop') || 0;
-            } catch (error) {
-                velocity = 0;
-            }
-            return clampInheritedVelocity(velocity * SCROLL.inheritVelocity);
-        }
-
         function stopSectionTween() {
             if (!activeTween) return;
             activeTween.kill();
             activeTween = null;
+            ScrollTrigger.update();
         }
 
         function finishSectionScroll(targetY, href, target, keyboardTriggered) {
@@ -402,18 +459,22 @@
         }
 
         function scrollToSection(target, href, keyboardTriggered) {
-            var targetY = getTargetY(target);
-            var currentY = scroller.scrollTop || 0;
-            var delta = targetY - currentY;
-            var distance = Math.abs(delta);
+            /*
+             * Retarget duro: el movimiento anterior se corta primero.
+             * No se hereda velocidad ni direccion del tween anterior.
+             */
+            stopSectionTween();
 
-            if (distance < 1) {
+            var currentY = scroller.scrollTop || 0;
+            var targetY = getTargetY(target);
+            var actualDistance = Math.abs(targetY - currentY);
+
+            if (actualDistance < 1) {
                 finishSectionScroll(targetY, href, target, keyboardTriggered);
                 return;
             }
 
             if (prefersReducedMotion()) {
-                stopSectionTween();
                 gsap.set(window, {
                     scrollTo: {
                         y: targetY,
@@ -425,33 +486,30 @@
                 return;
             }
 
-            var direction = delta > 0 ? 1 : -1;
-            var inheritedVelocity = currentTrackedVelocity();
-            var inheritedDirection = inheritedVelocity === 0 ? direction : (inheritedVelocity > 0 ? 1 : -1);
+            /*
+             * La velocidad se decide con la distancia TOP->TOP entre secciones.
+             * El tiempo final usa la distancia que realmente queda por recorrer.
+             */
+            var sectionDistance = logicalSectionDistance(target, currentY);
+            var duration = durationForTravel(actualDistance, sectionDistance);
 
-            if (inheritedDirection !== direction) {
-                inheritedVelocity *= SCROLL.reverseVelocityFactor;
-            }
-
-            stopSectionTween();
-
-            var duration = durationForDistance(distance);
-            var tween = gsap.to(scroller, {
+            var tween = gsap.to(window, {
                 duration: duration,
-                inertia: {
-                    scrollTop: {
-                        velocity: inheritedVelocity,
-                        end: targetY
-                    }
+                scrollTo: {
+                    y: targetY,
+                    autoKill: true
                 },
                 ease: EASE.scroll,
-                overwrite: 'auto',
+                overwrite: true,
                 onUpdate: function () {
                     ScrollTrigger.update();
                 },
                 onComplete: function () {
                     if (activeTween !== tween) return;
                     finishSectionScroll(targetY, href, target, keyboardTriggered);
+                },
+                onInterrupt: function () {
+                    if (activeTween === tween) activeTween = null;
                 }
             });
 
@@ -495,16 +553,13 @@
 
         window.addEventListener('beforeunload', function () {
             stopSectionTween();
-            InertiaPlugin.untrack(scroller, 'scrollTop');
         }, { once: true });
     }
 
     ready(function () {
         loadScript(GSAP_SRC, 'sc-gsap-core', function () {
             loadScript(SCROLL_TRIGGER_SRC, 'sc-gsap-scrolltrigger', function () {
-                loadScript(SCROLL_TO_SRC, 'sc-gsap-scrollto', function () {
-                    loadScript(INERTIA_SRC, 'sc-gsap-inertia', initMotion);
-                });
+                loadScript(SCROLL_TO_SRC, 'sc-gsap-scrollto', initMotion);
             });
         });
     });
