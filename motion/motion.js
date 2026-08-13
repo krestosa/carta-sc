@@ -12,16 +12,13 @@
         instant: 0.10,
         fast: 0.16,
         ui: 0.22,
-        reveal: 0.46,
-        scrollMin: 0.34,
-        scrollMax: 0.68
+        reveal: 0.46
     };
 
     var EASE = {
         enter: 'power2.out',
         exit: 'power2.in',
-        reveal: 'power2.out',
-        scroll: 'power2.inOut'
+        reveal: 'power2.out'
     };
 
     function loadScript(src, id, done) {
@@ -72,11 +69,14 @@
 
         gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
         ScrollTrigger.config({ limitCallbacks: true });
+        if (ScrollToPlugin.config) {
+            ScrollToPlugin.config({ autoKill: true });
+        }
 
         var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var desktop = window.matchMedia('(min-width: 993px)').matches;
 
-        setupSectionNavigation(gsap, reduceMotion);
+        setupSectionNavigation(gsap, ScrollTrigger, reduceMotion);
 
         if (reduceMotion) return;
 
@@ -227,11 +227,10 @@
         }
     }
 
-    function setupSectionNavigation(gsap, reduceMotion) {
+    function setupSectionNavigation(gsap, ScrollTrigger, reduceMotion) {
         /*
-         * Override del scroll legacy del shop.
-         * Los handlers originales usan jQuery.animate() y competirian con
-         * ScrollToPlugin. Se desactivan aqui sin modificar los JS originales.
+         * El scroll legacy usa jQuery.animate(). Lo neutralizamos desde
+         * nuestra capa para que exista un solo controlador de movimiento.
          */
         if (window.jQuery) {
             window.jQuery('a.anchorLink, a.anchorLinkSub').off('click');
@@ -269,7 +268,6 @@
                     var rect = element.getBoundingClientRect();
                     if (rect.height <= 0 || rect.bottom <= 0) return;
 
-                    /* Solo cuenta capas que realmente estan ocupando el borde superior. */
                     if (rect.top <= 2 && rect.bottom > 0) {
                         maxBottom = Math.max(maxBottom, rect.bottom);
                     }
@@ -279,11 +277,10 @@
             return Math.max(0, Math.ceil(maxBottom)) + 12;
         }
 
-        function getScrollDuration(target, offset) {
-            var absoluteTop = target.getBoundingClientRect().top + window.pageYOffset - offset;
-            var distance = Math.abs(absoluteTop - window.pageYOffset);
-            var duration = MOTION.scrollMin + Math.min(distance / 3000, 1) * 0.34;
-            return Math.min(MOTION.scrollMax, Math.max(MOTION.scrollMin, duration));
+        function getTargetY(target) {
+            var y = target.getBoundingClientRect().top + window.pageYOffset - getStickyOffset();
+            var maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            return Math.max(0, Math.min(maxY, y));
         }
 
         function closeSectionMenus() {
@@ -321,34 +318,169 @@
             }
         }
 
+        /*
+         * Controlador inercial persistente.
+         * Al cambiar de destino NO se reinicia una animacion: solo cambia
+         * targetY. La velocidad existente se conserva y converge hacia la
+         * nueva velocidad deseada.
+         */
+        var inertial = {
+            active: false,
+            position: window.pageYOffset || 0,
+            velocity: 0,
+            targetY: window.pageYOffset || 0,
+            href: '',
+            focusTarget: null,
+            keyboardTriggered: false,
+            nativeVelocity: 0
+        };
+
+        var clampVelocity = gsap.utils.clamp(-7000, 7000);
+
+        /* GSAP expone la velocidad de scroll en px/s mediante ScrollTrigger. */
+        var velocityProbe = ScrollTrigger.create({
+            start: 0,
+            end: 'max',
+            onUpdate: function (self) {
+                if (!inertial.active) {
+                    inertial.nativeVelocity = self.getVelocity();
+                }
+            }
+        });
+
+        function desiredSpeedForDistance(distance) {
+            /*
+             * Curva saturante:
+             *  100 px  -> ~280 px/s
+             *  500 px  -> ~1.3k px/s
+             * 1500 px  -> ~2.9k px/s
+             * 3000 px  -> ~4.2k px/s
+             * Muy cerca del destino la velocidad tiende a cero.
+             */
+            return 5200 * (1 - Math.exp(-distance / 1800));
+        }
+
+        function responsivenessForDistance(distance, directionChanged) {
+            var nearFactor = 1 - Math.min(distance / 1200, 1);
+            var response = 5.5 + nearFactor * 9.5;
+            if (directionChanged) response += 2.5;
+            return response;
+        }
+
+        function finishInertialScroll() {
+            inertial.active = false;
+            inertial.velocity = 0;
+            inertial.position = inertial.targetY;
+            window.scrollTo(0, inertial.targetY);
+
+            updateHash(inertial.href);
+            if (inertial.keyboardTriggered && inertial.focusTarget) {
+                focusSectionForKeyboard(inertial.focusTarget);
+            }
+
+            inertial.focusTarget = null;
+            inertial.keyboardTriggered = false;
+        }
+
+        function stopInertialScroll() {
+            if (!inertial.active) return;
+            inertial.active = false;
+            inertial.position = window.pageYOffset || document.documentElement.scrollTop || 0;
+            inertial.targetY = inertial.position;
+            inertial.velocity = 0;
+            inertial.href = '';
+            inertial.focusTarget = null;
+            inertial.keyboardTriggered = false;
+        }
+
+        function tick(time, deltaTime) {
+            if (!inertial.active) return;
+
+            var dt = Math.min(Math.max(deltaTime / 1000, 0.001), 0.032);
+            var currentY = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+            /* Si algo externo movio mucho el scroll, sincronizamos posicion. */
+            if (Math.abs(currentY - inertial.position) > 80) {
+                inertial.position = currentY;
+            }
+
+            var remaining = inertial.targetY - inertial.position;
+            var distance = Math.abs(remaining);
+
+            if (distance < 0.75 && Math.abs(inertial.velocity) < 18) {
+                finishInertialScroll();
+                return;
+            }
+
+            var direction = remaining === 0 ? 0 : (remaining > 0 ? 1 : -1);
+            var velocityDirection = inertial.velocity === 0 ? direction : (inertial.velocity > 0 ? 1 : -1);
+            var directionChanged = direction !== 0 && velocityDirection !== direction;
+            var desiredVelocity = direction * desiredSpeedForDistance(distance);
+            var response = responsivenessForDistance(distance, directionChanged);
+            var blend = 1 - Math.exp(-response * dt);
+
+            /*
+             * Conserva inercia: no se resetea velocity al retargetear.
+             * Solo se la conduce progresivamente hacia la nueva velocidad.
+             */
+            inertial.velocity += (desiredVelocity - inertial.velocity) * blend;
+            inertial.velocity = clampVelocity(inertial.velocity);
+
+            var nextY = inertial.position + inertial.velocity * dt;
+            var nextRemaining = inertial.targetY - nextY;
+
+            /* Evita oscilacion visible al llegar al punto exacto. */
+            if ((remaining > 0 && nextRemaining <= 0) || (remaining < 0 && nextRemaining >= 0)) {
+                inertial.position = inertial.targetY;
+                finishInertialScroll();
+                return;
+            }
+
+            inertial.position = nextY;
+            window.scrollTo(0, nextY);
+        }
+
+        gsap.ticker.add(tick);
+
         function scrollToSection(target, href, keyboardTriggered) {
-            var offset = getStickyOffset();
+            var targetY = getTargetY(target);
 
             if (reduceMotion) {
-                var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
-                window.scrollTo(0, Math.max(0, y));
+                gsap.set(window, {
+                    scrollTo: {
+                        y: targetY,
+                        autoKill: true
+                    }
+                });
                 updateHash(href);
                 if (keyboardTriggered) focusSectionForKeyboard(target);
                 return;
             }
 
-            gsap.killTweensOf(window);
+            /*
+             * Si ya esta en movimiento, solo cambiamos el destino.
+             * Si estaba quieto, heredamos una porcion de la velocidad real
+             * del scroll para que un click durante una rueda/flick no corte seco.
+             */
+            if (!inertial.active) {
+                inertial.position = window.pageYOffset || document.documentElement.scrollTop || 0;
+                inertial.velocity = clampVelocity(inertial.nativeVelocity * 0.55);
+                inertial.active = true;
+            }
 
-            gsap.to(window, {
-                duration: getScrollDuration(target, offset),
-                scrollTo: {
-                    y: target,
-                    offsetY: offset,
-                    autoKill: true
-                },
-                ease: EASE.scroll,
-                overwrite: 'auto',
-                onComplete: function () {
-                    updateHash(href);
-                    if (keyboardTriggered) focusSectionForKeyboard(target);
-                }
-            });
+            inertial.targetY = targetY;
+            inertial.href = href;
+            inertial.focusTarget = target;
+            inertial.keyboardTriggered = keyboardTriggered;
         }
+
+        /* Interaccion manual siempre gana sobre el scroll programatico. */
+        window.addEventListener('wheel', stopInertialScroll, { passive: true });
+        window.addEventListener('touchstart', stopInertialScroll, { passive: true });
+        window.addEventListener('keydown', function (event) {
+            var keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+            if (keys.indexOf(event.key) !== -1) stopInertialScroll();
+        });
 
         document.addEventListener('click', function (event) {
             if (event.button && event.button !== 0) return;
