@@ -7,12 +7,27 @@
     var GSAP_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js';
     var SCROLL_TRIGGER_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js';
     var SCROLL_TO_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
+    var INERTIA_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/InertiaPlugin.min.js';
 
     var MOTION = {
         instant: 0.10,
         fast: 0.16,
         ui: 0.22,
         reveal: 0.46
+    };
+
+    var SCROLL = {
+        nearSpeed: 1300,
+        farSpeed: 10500,
+        maxDistance: 6500,
+        brakeDistance: 190,
+        responseNear: 15,
+        responseFar: 25,
+        reverseResponse: 32,
+        inheritVelocity: 0.72,
+        maxVelocity: 12000,
+        arrivalDistance: 0.65,
+        arrivalVelocity: 20
     };
 
     var EASE = {
@@ -61,158 +76,177 @@
     }
 
     function initMotion() {
-        if (!window.gsap || !window.ScrollTrigger || !window.ScrollToPlugin) return;
+        if (!window.gsap || !window.ScrollTrigger || !window.ScrollToPlugin || !window.InertiaPlugin) return;
 
         var gsap = window.gsap;
         var ScrollTrigger = window.ScrollTrigger;
         var ScrollToPlugin = window.ScrollToPlugin;
+        var InertiaPlugin = window.InertiaPlugin;
 
-        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, InertiaPlugin);
         ScrollTrigger.config({ limitCallbacks: true });
         if (ScrollToPlugin.config) {
             ScrollToPlugin.config({ autoKill: true });
         }
 
-        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var desktop = window.matchMedia('(min-width: 993px)').matches;
+        setupSectionNavigation(gsap, ScrollTrigger, InertiaPlugin);
 
-        setupSectionNavigation(gsap, ScrollTrigger, reduceMotion);
+        var mm = gsap.matchMedia();
+        mm.add({
+            desktop: '(min-width: 993px)',
+            reduceMotion: '(prefers-reduced-motion: reduce)'
+        }, function (context) {
+            var desktop = context.conditions.desktop;
+            var reduceMotion = context.conditions.reduceMotion;
 
-        if (reduceMotion) return;
+            if (reduceMotion) return;
 
-        var header = visibleElements('.brandOnlyMobile, .topBar, .topShop');
-        if (header.length) {
-            gsap.fromTo(header,
-                { autoAlpha: 0, y: -4 },
-                {
-                    autoAlpha: 1,
-                    y: 0,
-                    duration: 0.24,
-                    stagger: 0.025,
-                    ease: EASE.enter,
-                    clearProps: 'transform,opacity,visibility'
-                }
-            );
-        }
-
-        gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion').forEach(function (heading) {
-            gsap.fromTo(heading,
-                { autoAlpha: 0, y: desktop ? 12 : 9 },
-                {
-                    autoAlpha: 1,
-                    y: 0,
-                    duration: 0.38,
-                    ease: EASE.reveal,
-                    clearProps: 'transform,opacity,visibility',
-                    scrollTrigger: {
-                        trigger: heading,
-                        start: 'top 89%',
-                        once: true
-                    }
-                }
-            );
-        });
-
-        var cards = gsap.utils.toArray('.productoShop');
-        if (cards.length) {
-            gsap.set(cards, {
-                autoAlpha: 0,
-                y: desktop ? 14 : 10
-            });
-
-            ScrollTrigger.batch(cards, {
-                start: 'top 89%',
-                once: true,
-                interval: 0.08,
-                batchMax: desktop ? 8 : 4,
-                onEnter: function (batch) {
-                    gsap.to(batch, {
-                        autoAlpha: 1,
-                        y: 0,
-                        duration: MOTION.reveal,
-                        stagger: 0.035,
-                        ease: EASE.reveal,
-                        overwrite: 'auto',
-                        onComplete: function () {
-                            batch.forEach(function (card) {
-                                gsap.set(card, { clearProps: 'transform,opacity,visibility' });
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        gsap.utils.toArray('.productoShop .sumar').forEach(function (plus) {
-            gsap.set(plus, { transformOrigin: '50% 50%' });
-
-            function press() {
-                gsap.to(plus, {
-                    scale: 0.94,
-                    duration: 0.07,
-                    ease: EASE.enter,
-                    overwrite: 'auto'
-                });
-            }
-
-            function release() {
-                gsap.to(plus, {
-                    scale: 1,
-                    duration: 0.13,
-                    ease: EASE.enter,
-                    overwrite: 'auto'
-                });
-            }
-
-            plus.addEventListener('pointerdown', press, { passive: true });
-            plus.addEventListener('pointerup', release, { passive: true });
-            plus.addEventListener('pointercancel', release, { passive: true });
-            plus.addEventListener('pointerleave', release, { passive: true });
-        });
-
-        gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
-            gsap.set(badge, { transformOrigin: '50% 50%' });
-
-            var observer = new MutationObserver(function () {
-                gsap.killTweensOf(badge);
-                gsap.timeline()
-                    .to(badge, {
-                        scale: 1.12,
-                        duration: 0.09,
-                        ease: EASE.enter
-                    })
-                    .to(badge, {
-                        scale: 1,
-                        duration: 0.11,
-                        ease: EASE.enter
-                    });
-            });
-
-            observer.observe(badge, {
-                childList: true,
-                characterData: true,
-                subtree: true
-            });
-        });
-
-        if (window.jQuery) {
-            window.jQuery(document).on('shown.bs.dropdown.scUxMotion', function (event) {
-                var menu = window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];
-                if (!menu) return;
-
-                gsap.fromTo(menu,
+            var header = visibleElements('.brandOnlyMobile, .topBar, .topShop');
+            if (header.length) {
+                gsap.fromTo(header,
                     { autoAlpha: 0, y: -4 },
                     {
                         autoAlpha: 1,
                         y: 0,
-                        duration: 0.20,
+                        duration: 0.24,
+                        stagger: 0.025,
                         ease: EASE.enter,
-                        overwrite: true,
                         clearProps: 'transform,opacity,visibility'
                     }
                 );
+            }
+
+            gsap.utils.toArray('.titleShopSeccion, .subTitleShopSeccion').forEach(function (heading) {
+                gsap.fromTo(heading,
+                    { autoAlpha: 0, y: desktop ? 12 : 9 },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: 0.38,
+                        ease: EASE.reveal,
+                        clearProps: 'transform,opacity,visibility',
+                        scrollTrigger: {
+                            trigger: heading,
+                            start: 'clamp(top 89%)',
+                            once: true
+                        }
+                    }
+                );
             });
-        }
+
+            var cards = gsap.utils.toArray('.productoShop');
+            if (cards.length) {
+                gsap.set(cards, {
+                    autoAlpha: 0,
+                    y: desktop ? 14 : 10
+                });
+
+                ScrollTrigger.batch(cards, {
+                    start: 'clamp(top 89%)',
+                    once: true,
+                    interval: 0.08,
+                    batchMax: function () {
+                        return window.innerWidth >= 993 ? 8 : 4;
+                    },
+                    onEnter: function (batch) {
+                        gsap.to(batch, {
+                            autoAlpha: 1,
+                            y: 0,
+                            duration: MOTION.reveal,
+                            stagger: 0.035,
+                            ease: EASE.reveal,
+                            overwrite: 'auto',
+                            onComplete: function () {
+                                batch.forEach(function (card) {
+                                    gsap.set(card, { clearProps: 'transform,opacity,visibility' });
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            gsap.utils.toArray('.productoShop .sumar').forEach(function (plus) {
+                gsap.set(plus, { transformOrigin: '50% 50%' });
+
+                function press() {
+                    gsap.to(plus, {
+                        scale: 0.94,
+                        duration: 0.07,
+                        ease: EASE.enter,
+                        overwrite: 'auto'
+                    });
+                }
+
+                function release() {
+                    gsap.to(plus, {
+                        scale: 1,
+                        duration: 0.13,
+                        ease: EASE.enter,
+                        overwrite: 'auto'
+                    });
+                }
+
+                plus.addEventListener('pointerdown', press, { passive: true });
+                plus.addEventListener('pointerup', release, { passive: true });
+                plus.addEventListener('pointercancel', release, { passive: true });
+                plus.addEventListener('pointerleave', release, { passive: true });
+            });
+
+            gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function (badge) {
+                gsap.set(badge, { transformOrigin: '50% 50%' });
+
+                var observer = new MutationObserver(function () {
+                    gsap.killTweensOf(badge);
+                    gsap.timeline()
+                        .to(badge, {
+                            scale: 1.12,
+                            duration: 0.09,
+                            ease: EASE.enter
+                        })
+                        .to(badge, {
+                            scale: 1,
+                            duration: 0.11,
+                            ease: EASE.enter
+                        });
+                });
+
+                observer.observe(badge, {
+                    childList: true,
+                    characterData: true,
+                    subtree: true
+                });
+
+                context.add(function () {
+                    observer.disconnect();
+                });
+            });
+
+            if (window.jQuery) {
+                window.jQuery(document).off('shown.bs.dropdown.scUxMotion').on('shown.bs.dropdown.scUxMotion', function (event) {
+                    var menu = window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];
+                    if (!menu) return;
+
+                    gsap.fromTo(menu,
+                        { autoAlpha: 0, y: -4 },
+                        {
+                            autoAlpha: 1,
+                            y: 0,
+                            duration: 0.20,
+                            ease: EASE.enter,
+                            overwrite: true,
+                            clearProps: 'transform,opacity,visibility'
+                        }
+                    );
+                });
+            }
+
+            return function () {
+                if (window.jQuery) {
+                    window.jQuery(document).off('shown.bs.dropdown.scUxMotion');
+                }
+            };
+        });
 
         function refreshTriggers() {
             window.setTimeout(function () {
@@ -227,14 +261,23 @@
         }
     }
 
-    function setupSectionNavigation(gsap, ScrollTrigger, reduceMotion) {
-        /*
-         * El scroll legacy usa jQuery.animate(). Lo neutralizamos desde
-         * nuestra capa para que exista un solo controlador de movimiento.
-         */
+    function setupSectionNavigation(gsap, ScrollTrigger, InertiaPlugin) {
         if (window.jQuery) {
             window.jQuery('a.anchorLink, a.anchorLinkSub').off('click');
             window.jQuery('.JSgoMenu').off('change');
+        }
+
+        var scroller = document.scrollingElement || document.documentElement;
+        InertiaPlugin.track(scroller, 'scrollTop');
+
+        var clampVelocity = gsap.utils.clamp(-SCROLL.maxVelocity, SCROLL.maxVelocity);
+        var clampDistance = gsap.utils.clamp(0, SCROLL.maxDistance);
+        var mapSpeed = gsap.utils.mapRange(0, SCROLL.maxDistance, SCROLL.nearSpeed, SCROLL.farSpeed);
+        var mapResponse = gsap.utils.mapRange(0, SCROLL.maxDistance, SCROLL.responseNear, SCROLL.responseFar);
+        var clampUnit = gsap.utils.clamp(0, 1);
+
+        function prefersReducedMotion() {
+            return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         }
 
         function resolveAnchorTarget(href) {
@@ -318,60 +361,48 @@
             }
         }
 
-        /*
-         * Controlador inercial persistente.
-         * Al cambiar de destino NO se reinicia una animacion: solo cambia
-         * targetY. La velocidad existente se conserva y converge hacia la
-         * nueva velocidad deseada.
-         */
         var inertial = {
             active: false,
-            position: window.pageYOffset || 0,
+            position: scroller.scrollTop || 0,
             velocity: 0,
-            targetY: window.pageYOffset || 0,
+            targetY: scroller.scrollTop || 0,
             href: '',
             focusTarget: null,
-            keyboardTriggered: false,
-            nativeVelocity: 0
+            keyboardTriggered: false
         };
 
-        var clampVelocity = gsap.utils.clamp(-7000, 7000);
-
-        /* GSAP expone la velocidad de scroll en px/s mediante ScrollTrigger. */
-        var velocityProbe = ScrollTrigger.create({
-            start: 0,
-            end: 'max',
-            onUpdate: function (self) {
-                if (!inertial.active) {
-                    inertial.nativeVelocity = self.getVelocity();
-                }
-            }
-        });
-
         function desiredSpeedForDistance(distance) {
+            if (distance <= 0) return 0;
+
+            var mappedDistance = clampDistance(distance);
+            var cruiseSpeed = mapSpeed(mappedDistance);
+
             /*
-             * Curva saturante:
-             *  100 px  -> ~280 px/s
-             *  500 px  -> ~1.3k px/s
-             * 1500 px  -> ~2.9k px/s
-             * 3000 px  -> ~4.2k px/s
-             * Muy cerca del destino la velocidad tiende a cero.
+             * Solo desaceleramos en los ultimos ~190 px. Antes de eso el
+             * movimiento conserva toda la velocidad correspondiente a la
+             * distancia. power2.out evita una frenada lineal/mecanica.
              */
-            return 5200 * (1 - Math.exp(-distance / 1800));
+            var brakeProgress = clampUnit(distance / SCROLL.brakeDistance);
+            var brakeFactor = 1 - Math.pow(1 - brakeProgress, 2);
+            return cruiseSpeed * brakeFactor;
         }
 
         function responsivenessForDistance(distance, directionChanged) {
-            var nearFactor = 1 - Math.min(distance / 1200, 1);
-            var response = 5.5 + nearFactor * 9.5;
-            if (directionChanged) response += 2.5;
-            return response;
+            if (directionChanged) return SCROLL.reverseResponse;
+            return mapResponse(clampDistance(distance));
         }
 
         function finishInertialScroll() {
             inertial.active = false;
             inertial.velocity = 0;
             inertial.position = inertial.targetY;
-            window.scrollTo(0, inertial.targetY);
+
+            gsap.set(window, {
+                scrollTo: {
+                    y: inertial.targetY,
+                    autoKill: false
+                }
+            });
 
             updateHash(inertial.href);
             if (inertial.keyboardTriggered && inertial.focusTarget) {
@@ -385,7 +416,7 @@
         function stopInertialScroll() {
             if (!inertial.active) return;
             inertial.active = false;
-            inertial.position = window.pageYOffset || document.documentElement.scrollTop || 0;
+            inertial.position = scroller.scrollTop || 0;
             inertial.targetY = inertial.position;
             inertial.velocity = 0;
             inertial.href = '';
@@ -397,9 +428,8 @@
             if (!inertial.active) return;
 
             var dt = Math.min(Math.max(deltaTime / 1000, 0.001), 0.032);
-            var currentY = window.pageYOffset || document.documentElement.scrollTop || 0;
+            var currentY = scroller.scrollTop || 0;
 
-            /* Si algo externo movio mucho el scroll, sincronizamos posicion. */
             if (Math.abs(currentY - inertial.position) > 80) {
                 inertial.position = currentY;
             }
@@ -407,7 +437,7 @@
             var remaining = inertial.targetY - inertial.position;
             var distance = Math.abs(remaining);
 
-            if (distance < 0.75 && Math.abs(inertial.velocity) < 18) {
+            if (distance < SCROLL.arrivalDistance && Math.abs(inertial.velocity) < SCROLL.arrivalVelocity) {
                 finishInertialScroll();
                 return;
             }
@@ -419,17 +449,12 @@
             var response = responsivenessForDistance(distance, directionChanged);
             var blend = 1 - Math.exp(-response * dt);
 
-            /*
-             * Conserva inercia: no se resetea velocity al retargetear.
-             * Solo se la conduce progresivamente hacia la nueva velocidad.
-             */
             inertial.velocity += (desiredVelocity - inertial.velocity) * blend;
             inertial.velocity = clampVelocity(inertial.velocity);
 
             var nextY = inertial.position + inertial.velocity * dt;
             var nextRemaining = inertial.targetY - nextY;
 
-            /* Evita oscilacion visible al llegar al punto exacto. */
             if ((remaining > 0 && nextRemaining <= 0) || (remaining < 0 && nextRemaining >= 0)) {
                 inertial.position = inertial.targetY;
                 finishInertialScroll();
@@ -437,7 +462,8 @@
             }
 
             inertial.position = nextY;
-            window.scrollTo(0, nextY);
+            scroller.scrollTop = nextY;
+            ScrollTrigger.update();
         }
 
         gsap.ticker.add(tick);
@@ -445,7 +471,7 @@
         function scrollToSection(target, href, keyboardTriggered) {
             var targetY = getTargetY(target);
 
-            if (reduceMotion) {
+            if (prefersReducedMotion()) {
                 gsap.set(window, {
                     scrollTo: {
                         y: targetY,
@@ -457,24 +483,31 @@
                 return;
             }
 
-            /*
-             * Si ya esta en movimiento, solo cambiamos el destino.
-             * Si estaba quieto, heredamos una porcion de la velocidad real
-             * del scroll para que un click durante una rueda/flick no corte seco.
-             */
             if (!inertial.active) {
-                inertial.position = window.pageYOffset || document.documentElement.scrollTop || 0;
-                inertial.velocity = clampVelocity(inertial.nativeVelocity * 0.55);
+                inertial.position = scroller.scrollTop || 0;
+
+                var trackedVelocity = 0;
+                try {
+                    trackedVelocity = InertiaPlugin.getVelocity(scroller, 'scrollTop') || 0;
+                } catch (error) {
+                    trackedVelocity = 0;
+                }
+
+                inertial.velocity = clampVelocity(trackedVelocity * SCROLL.inheritVelocity);
                 inertial.active = true;
             }
 
+            /*
+             * Retarget puro: no matamos ni recreamos un tween. La velocidad
+             * actual sigue viva y el controlador reacciona inmediatamente al
+             * nuevo destino, acelerando o frenando segun la nueva distancia.
+             */
             inertial.targetY = targetY;
             inertial.href = href;
             inertial.focusTarget = target;
             inertial.keyboardTriggered = keyboardTriggered;
         }
 
-        /* Interaccion manual siempre gana sobre el scroll programatico. */
         window.addEventListener('wheel', stopInertialScroll, { passive: true });
         window.addEventListener('touchstart', stopInertialScroll, { passive: true });
         window.addEventListener('keydown', function (event) {
@@ -509,12 +542,19 @@
             event.preventDefault();
             scrollToSection(target, href, false);
         });
+
+        window.addEventListener('beforeunload', function () {
+            gsap.ticker.remove(tick);
+            InertiaPlugin.untrack(scroller, 'scrollTop');
+        }, { once: true });
     }
 
     ready(function () {
         loadScript(GSAP_SRC, 'sc-gsap-core', function () {
             loadScript(SCROLL_TRIGGER_SRC, 'sc-gsap-scrolltrigger', function () {
-                loadScript(SCROLL_TO_SRC, 'sc-gsap-scrollto', initMotion);
+                loadScript(SCROLL_TO_SRC, 'sc-gsap-scrollto', function () {
+                    loadScript(INERTIA_SRC, 'sc-gsap-inertia', initMotion);
+                });
             });
         });
     });
