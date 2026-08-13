@@ -21,9 +21,8 @@ body {
 }
 
 /*
- * High-frequency category navigation: no entrance animation. State changes
- * stay crisp and bounded. The legacy stylesheet uses transition: all; this
- * layer limits it to the properties that communicate hover/current state.
+ * Category navigation has no entrance animation. The legacy stylesheet uses
+ * transition: all; this layer limits interaction feedback to bounded colors.
  */
 .sushiShop .wrapp-nav-tabsTopShop li a,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
@@ -33,15 +32,42 @@ body {
         background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
 }
 
-/* Current location is a state, not decoration. JS keeps this synced with the
-   section visible under the sticky header and with programmatic ScrollTo. */
+/*
+ * The current category is represented by one physical underline per nav bar.
+ * The active link itself never lights up; JS moves/scales the same line.
+ */
 .sushiShop .wrapp-nav-tabsTopShop a.anchorLink.sc-motion-current,
 .sushiShop .wrapp-nav-tabsTopShop a.anchorLinkSub.sc-motion-current,
 .sushiShop .wtopShopMenuMobile a.anchorLink.sc-motion-current,
 .sushiShop .wtopShopMenuMobile a.anchorLinkSub.sc-motion-current {
-    background-color: rgba(255, 255, 255, 0.12) !important;
-    -webkit-box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.92);
-    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.92);
+    background-color: transparent !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.sushiShop .sc-category-motion-root {
+    position: relative !important;
+}
+
+.sushiShop .sc-category-indicator {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.96);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 4;
+    -webkit-transform: translate3d(0, 0, 0) scaleX(1);
+    transform: translate3d(0, 0, 0) scaleX(1);
+    -webkit-transform-origin: 0 50%;
+    transform-origin: 0 50%;
+    will-change: transform;
 }
 
 /*
@@ -113,7 +139,7 @@ body {
     outline-offset: 3px;
 }
 
-/* Reduced motion keeps state/opacity feedback but removes positional movement. */
+/* Reduced motion keeps state feedback but removes positional movement. */
 @media (prefers-reduced-motion: reduce) {
     .sushiShop .topPullDown,
     .sushiShop .topPullDown.open {
@@ -130,7 +156,8 @@ body {
         transform: none !important;
     }
 
-    .sushiShop .sc-cart-scroll-motion {
+    .sushiShop .sc-cart-scroll-motion,
+    .sushiShop .sc-category-indicator {
         will-change: auto;
     }
 }
