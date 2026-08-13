@@ -9,7 +9,7 @@
     var SCROLL_TO_SRC = 'https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
 
     var MOTION = {
-        productInitial: 0.28,
+        productInitial: 0.34,
         productReveal: 0.34,
         productStagger: 0.030,
         cartList: 0.18,
@@ -109,17 +109,17 @@
             var badgeObservers = [];
 
             var productProfile = desktop ? {
-                initialY: 8,
+                initialY: 10,
                 revealY: 12,
                 batchMax: 8,
                 start: 'clamp(top 91%)'
             } : tablet ? {
-                initialY: 7,
+                initialY: 9,
                 revealY: 10,
                 batchMax: 6,
                 start: 'clamp(top 92%)'
             } : {
-                initialY: 6,
+                initialY: 8,
                 revealY: 8,
                 batchMax: 4,
                 start: 'clamp(top 93%)'
@@ -244,6 +244,8 @@
         var cards = gsap.utils.toArray('.listadoShop .productoShop');
         var batchTriggers = [];
         var safetyTimer = null;
+        var initialRafA = 0;
+        var initialRafB = 0;
 
         function noop() {}
 
@@ -277,25 +279,36 @@
         });
 
         if (initialCards.length) {
-            gsap.fromTo(initialCards,
-                {
-                    autoAlpha: 0,
-                    y: profile.initialY
-                },
-                {
-                    autoAlpha: 1,
-                    y: 0,
-                    duration: MOTION.productInitial,
-                    stagger: 0.024,
-                    ease: EASE.enter,
-                    overwrite: 'auto',
-                    onComplete: function () {
-                        initialCards.forEach(function (card) {
-                            gsap.set(card, { clearProps: 'transform,opacity,visibility' });
-                        });
-                    }
-                }
-            );
+            /*
+             * Fuerza un estado inicial pintado antes del tween. Separar set/to
+             * por dos frames evita que el navegador colapse ambos estados y
+             * haga que las primeras cards parezcan aparecer instantáneamente.
+             */
+            gsap.set(initialCards, {
+                autoAlpha: 0,
+                y: profile.initialY
+            });
+
+            initialRafA = window.requestAnimationFrame(function () {
+                initialRafA = 0;
+                initialRafB = window.requestAnimationFrame(function () {
+                    initialRafB = 0;
+
+                    gsap.to(initialCards, {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: MOTION.productInitial,
+                        stagger: 0.032,
+                        ease: EASE.enter,
+                        overwrite: 'auto',
+                        onComplete: function () {
+                            initialCards.forEach(function (card) {
+                                gsap.set(card, { clearProps: 'transform,opacity,visibility' });
+                            });
+                        }
+                    });
+                });
+            });
         }
 
         function revealBatch(batch) {
@@ -355,6 +368,8 @@
         }
 
         return function () {
+            if (initialRafA) window.cancelAnimationFrame(initialRafA);
+            if (initialRafB) window.cancelAnimationFrame(initialRafB);
             if (safetyTimer) window.clearTimeout(safetyTimer);
 
             batchTriggers.forEach(function (trigger) {
