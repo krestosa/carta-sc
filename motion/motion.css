@@ -1,31 +1,119 @@
 /*
  * SushiClub motion layer
  * ------------------------------------------------------------
- * Archivo dedicado exclusivamente a animaciones UX, resets y
- * overrides relacionados con motion. No agregar estas reglas a
- * los CSS originales del sitio.
+ * Motion, interaction-state resets and overrides live here.
+ * Original shop styles stay untouched.
  */
 
-/* ScrollToPlugin controla el desplazamiento. GSAP advierte que
-   scroll-behavior:smooth nativo entra en conflicto con el plugin. */
+:root {
+    --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --sc-motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --sc-motion-fast: 140ms;
+    --sc-motion-ui: 180ms;
+}
+
+/* ScrollToPlugin owns vertical navigation. Native smooth scrolling would
+   compound the interpolation and make retargeting feel delayed. */
 html,
 body {
     scroll-behavior: auto !important;
 }
 
-/* El CSS legacy usa transition: all sobre .sumar. GSAP controla
-   transform, así que evitamos una segunda interpolación CSS. */
-.sushiShop .productoShop .sumar {
-    transform-origin: 50% 50%;
-    touch-action: manipulation;
-    transition-property: background-color, border-color, color !important;
-    -webkit-transition-property: background-color, border-color, color !important;
+/*
+ * High-frequency category navigation: keep state changes crisp and bounded.
+ * The legacy stylesheet uses transition: all; this layer limits it to the
+ * properties that actually communicate hover/current state.
+ */
+.sushiShop .wrapp-nav-tabsTopShop li a,
+.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
+    -webkit-transition: color var(--sc-motion-fast) var(--sc-motion-ease-out),
+        background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+    transition: color var(--sc-motion-fast) var(--sc-motion-ease-out),
+        background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
 }
 
-/* Reduced motion: cualquier transform introducido por esta capa
-   queda neutralizado. El scroll entre secciones pasa a ser inmediato. */
+/* Current location is a state, not decoration. JS keeps this synced with the
+   section visible under the sticky header and with programmatic ScrollTo. */
+.sushiShop .wrapp-nav-tabsTopShop a.anchorLink.sc-motion-current,
+.sushiShop .wrapp-nav-tabsTopShop a.anchorLinkSub.sc-motion-current,
+.sushiShop .wtopShopMenuMobile a.anchorLink.sc-motion-current,
+.sushiShop .wtopShopMenuMobile a.anchorLinkSub.sc-motion-current {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    -webkit-box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.92);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.92);
+}
+
+/*
+ * Custom category pull-down: replace the legacy 20px travel + transition:all
+ * with a short spatial cue. Exit is intentionally faster than enter.
+ */
+.sushiShop .topPullDown {
+    -webkit-transform: translateY(-6px);
+    transform: translateY(-6px);
+    -webkit-transition: opacity 120ms var(--sc-motion-ease-out),
+        -webkit-transform 120ms var(--sc-motion-ease-out) !important;
+    transition: opacity 120ms var(--sc-motion-ease-out),
+        transform 120ms var(--sc-motion-ease-out) !important;
+    -webkit-transition-delay: 0ms !important;
+    transition-delay: 0ms !important;
+}
+
+.sushiShop .topPullDown.open {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    -webkit-transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),
+        -webkit-transform var(--sc-motion-ui) var(--sc-motion-ease-out) !important;
+    transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),
+        transform var(--sc-motion-ui) var(--sc-motion-ease-out) !important;
+    -webkit-transition-delay: 0ms !important;
+    transition-delay: 0ms !important;
+}
+
+/*
+ * Add-product feedback is a frequent action, so it stays near-imperceptible.
+ * CSS :active is cheaper and more interruptible than attaching a GSAP tween
+ * to every product button.
+ */
+.sushiShop .productoShop .sumar {
+    -webkit-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    touch-action: manipulation;
+    -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out),
+        background-color 160ms var(--sc-motion-ease-out),
+        border-color 160ms var(--sc-motion-ease-out),
+        color 160ms var(--sc-motion-ease-out) !important;
+    transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out),
+        background-color 160ms var(--sc-motion-ease-out),
+        border-color 160ms var(--sc-motion-ease-out),
+        color 160ms var(--sc-motion-ease-out) !important;
+}
+
+.sushiShop .productoShop .sumar:active {
+    -webkit-transform: scale(0.97);
+    transform: scale(0.97);
+}
+
+/* Keyboard focus must remain visible even where legacy hover styles dominate. */
+.sushiShop .wrapp-nav-tabsTopShop a:focus-visible,
+.sushiShop .wtopShopMenuMobile a:focus-visible,
+.sushiShop .productoShop .sumar:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+/* Reduced motion keeps state/opacity feedback but removes positional movement. */
 @media (prefers-reduced-motion: reduce) {
-    .sushiShop .productoShop .sumar {
+    .sushiShop .topPullDown,
+    .sushiShop .topPullDown.open {
+        -webkit-transform: none !important;
+        transform: none !important;
+        -webkit-transition: opacity 120ms var(--sc-motion-ease-out) !important;
+        transition: opacity 120ms var(--sc-motion-ease-out) !important;
+    }
+
+    .sushiShop .productoShop .sumar,
+    .sushiShop .productoShop .sumar:active {
+        -webkit-transform: none !important;
         transform: none !important;
     }
 }
