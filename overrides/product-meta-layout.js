@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Deploy marker: rail-overflow-sticky-description-v2. */
+/* Deploy marker: consolidated-catalogue-v3. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
