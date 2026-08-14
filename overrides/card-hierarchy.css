@@ -156,7 +156,6 @@
     letter-spacing: -0.015em !important;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    transition: color 160ms var(--sc-catalog-ease, ease) !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1 > .sabores {
@@ -268,21 +267,6 @@
 
   html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
     opacity: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img {
-    transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 180ms ease !important;
-    transform-origin: 50% 50% !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop > img,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop > img {
-    transform: scale(1.012) !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .title-shop1,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .title-shop1 {
-    color: var(--sc-catalog-ink, #151515) !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
@@ -618,11 +602,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.sushiShop .listadoShop .productoShop .imgShop > img,
-  body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop > img,
-  body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop > img,
   body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
     transition: none !important;
-    transform: none !important;
   }
 }
