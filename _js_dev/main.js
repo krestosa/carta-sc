@@ -303,15 +303,36 @@ function noFoto(){
 	$('.panel-body p:empty:not([class])').remove()
 }
 
-/* Dedicated catalogue override bootstrap. Layout/structure lives in overrides/. */
+/* Catalogue + motion bootstrap. CSS is parser-blocking so legacy catalogue
+   surfaces can never reach first paint. Behaviour remains isolated in overrides/. */
 (function () {
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var css = document.createElement('link');
-	css.rel = 'stylesheet';
-	css.href = 'overrides/catalog.css';
-	document.head.appendChild(css);
+	document.documentElement.classList.add(
+		'sc-catalog-prepaint',
+		'sc-catalog-skeleton',
+		'sc-catalog-content-loading'
+	);
+
+	function addBlockingCss(id, href) {
+		if (document.getElementById(id)) return;
+		if (document.readyState === 'loading') {
+			document.write('<link id="' + id + '" rel="stylesheet" href="' + href + '">');
+			return;
+		}
+		var link = document.createElement('link');
+		link.id = id;
+		link.rel = 'stylesheet';
+		link.href = href;
+		document.head.appendChild(link);
+	}
+
+	addBlockingCss('sc-catalog-css', 'overrides/catalog.css');
+	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css');
+	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css');
+	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css');
+	addBlockingCss('sc-motion-css', 'motion/motion.css');
 
 	var script = document.createElement('script');
 	script.src = 'overrides/catalog.js';
@@ -323,11 +344,6 @@ function noFoto(){
 (function () {
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
-
-	var css = document.createElement('link');
-	css.rel = 'stylesheet';
-	css.href = 'motion/motion.css';
-	document.head.appendChild(css);
 
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js';
