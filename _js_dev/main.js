@@ -328,16 +328,16 @@ function noFoto(){
 		document.head.appendChild(link);
 	}
 
-	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1258-ratio');
-	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1258-ratio');
-	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1258-ratio');
-	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1258-ratio');
-	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1258-ratio');
-	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1258-ratio');
-	addBlockingCss('sc-product-image-ratio-css', 'overrides/product-image-ratio.css?v=20260814-1258-ratio');
+	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-product-image-ratio-css', 'overrides/product-image-ratio.css?v=20260814-1302-flavors');
 
 	var script = document.createElement('script');
-	script.src = 'overrides/catalog.js?v=20260814-1258-ratio';
+	script.src = 'overrides/catalog.js?v=20260814-1302-flavors';
 	script.async = false;
 	document.head.appendChild(script);
 })();
@@ -348,7 +348,7 @@ function noFoto(){
 	window.__scUxMotionRequested = true;
 
 	var script = document.createElement('script');
-	script.src = 'motion/motion.js?v=20260814-1258-ratio';
+	script.src = 'motion/motion.js?v=20260814-1302-flavors';
 	script.async = true;
 	document.head.appendChild(script);
 })();
