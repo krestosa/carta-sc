@@ -309,7 +309,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1501-spacing';
+	var assetVersion = '20260814-1503-subcategory';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -362,7 +362,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1501-spacing';
+	var version = window.__scCatalogAssetVersion || '20260814-1503-subcategory';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
