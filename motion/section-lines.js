@@ -19,6 +19,7 @@ function loadScript(src,id,done){
   script.src=src;
   script.async=true;
   script.onload=function(){script.dataset.loaded='true';done();};
+  script.onerror=function(){done();};
   document.head.appendChild(script);
 }
 
@@ -28,46 +29,16 @@ function targets(){
   ),function(el){return (el.textContent||'').replace(/\s+/g,' ').trim().length>0;});
 }
 
-function isInInitialViewport(el){
+function isInitial(el){
+  if(el.classList.contains('sc-static-initial-section'))return true;
+  var parent=el.closest('.titleShopSeccion, .subTitleShopSeccion');
+  if(parent&&parent.classList.contains('sc-static-initial-section'))return true;
   var r=el.getBoundingClientRect();
   return r.top<window.innerHeight&&r.bottom>0;
 }
 
-function markInitialViewportCards(){
-  Array.prototype.forEach.call(document.querySelectorAll('.listadoShop .productoShop'),function(card){
-    var r=card.getBoundingClientRect();
-    if(r.top<window.innerHeight&&r.bottom>0)card.classList.add('sc-static-initial-card');
-  });
-}
-
-function afterSkeleton(done){
-  var root=document.documentElement;
-  var finished=false;
-  var observer=null;
-  var timer=0;
-
-  function run(){
-    if(finished)return;
-    finished=true;
-    if(observer)observer.disconnect();
-    if(timer)clearTimeout(timer);
-    requestAnimationFrame(function(){requestAnimationFrame(done);});
-  }
-
-  if(!root.classList.contains('sc-catalog-content-loading')){
-    run();
-    return;
-  }
-
-  observer=new MutationObserver(function(){
-    if(!root.classList.contains('sc-catalog-content-loading'))run();
-  });
-  observer.observe(root,{attributes:true,attributeFilter:['class']});
-  timer=setTimeout(run,1900);
-}
-
 function initMotion(){
-  if(initialized)return;
+  if(initialized||!window.gsap||!window.ScrollTrigger||!window.SplitText)return;
   initialized=true;
 
   var gsap=window.gsap;
@@ -78,27 +49,21 @@ function initMotion(){
   var splits=[];
   var tweens=[];
 
-  /* Classification happens only after the skeleton has released and layout has
-     settled for two frames, so everything initially visible remains static. */
-  markInitialViewportCards();
-
-  if(!elements.length)return;
-
   elements.forEach(function(el){
     el.classList.add('sc-section-rule-host');
 
-    /* Anything already visible when the skeleton is gone stays completely
-       static. Only content that starts below the viewport gets reveal motion. */
-    if(reduce||isInInitialViewport(el)){
+    /* The initial viewport is frozen before GSAP loads. It never receives an
+       entrance tween. Everything below it gets the split + rule reveal. */
+    if(reduce||isInitial(el)){
       gsap.set(el,{'--sc-section-rule-scale':1});
       return;
     }
 
     gsap.set(el,{'--sc-section-rule-scale':0});
 
-    tweens.push(gsap.to(el,{
+    var ruleTween=gsap.to(el,{
       '--sc-section-rule-scale':1,
-      duration:0.95,
+      duration:0.72,
       ease:'power3.out',
       overwrite:'auto',
       scrollTrigger:{
@@ -106,20 +71,21 @@ function initMotion(){
         start:'clamp(top 90%)',
         once:true
       }
-    }));
+    });
+    tweens.push(ruleTween);
 
-    splits.push(SplitText.create(el,{
+    var split=SplitText.create(el,{
       type:'lines',
       mask:'lines',
       linesClass:'sc-section-text-line',
       autoSplit:true,
       onSplit:function(self){
         return gsap.from(self.lines,{
-          yPercent:108,
+          yPercent:105,
           autoAlpha:0,
-          duration:0.68,
+          duration:0.52,
           ease:'power3.out',
-          stagger:0.055,
+          stagger:0.045,
           overwrite:'auto',
           scrollTrigger:{
             trigger:el,
@@ -129,7 +95,8 @@ function initMotion(){
           }
         });
       }
-    }));
+    });
+    splits.push(split);
   });
 
   function refresh(){window.setTimeout(function(){ST.refresh();},60);}
@@ -137,7 +104,10 @@ function initMotion(){
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refresh).catch(function(){});
 
   window.__scSectionLinesCleanup=function(){
-    tweens.forEach(function(tween){if(tween&&tween.scrollTrigger)tween.scrollTrigger.kill();if(tween)tween.kill();});
+    tweens.forEach(function(tween){
+      if(tween&&tween.scrollTrigger)tween.scrollTrigger.kill();
+      if(tween)tween.kill();
+    });
     splits.forEach(function(split){if(split&&split.revert)split.revert();});
     elements.forEach(function(el){
       el.classList.remove('sc-section-rule-host');
@@ -151,13 +121,11 @@ function boot(){
     if(attempts++<120)window.setTimeout(boot,50);
     return;
   }
-
   if(!window.SplitText){
     loadScript(SPLIT_SRC,'sc-gsap-splittext',boot);
     return;
   }
-
-  afterSkeleton(initMotion);
+  requestAnimationFrame(function(){requestAnimationFrame(initMotion);});
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
