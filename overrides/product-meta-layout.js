@@ -14,7 +14,7 @@ function loadMobileResponsiveStyles(){
   var link=document.createElement('link');
   link.id='sc-mobile-responsive-css';
   link.rel='stylesheet';
-  link.href='overrides/mobile-responsive.css?v=20260814-1835-mobile-v3';
+  link.href='overrides/mobile-responsive.css?v=20260814-1839-mobile-v4';
   document.head.appendChild(link);
 }
 
@@ -245,7 +245,6 @@ function repairMobileHeader(finalAttempt){
     if(menuHasBoundClick(menus[i])){liveMenu=menus[i];break;}
   }
 
-  /* Do not delete anything while SlickNav is still finishing DOM-ready. */
   if(!liveMenu&&!finalAttempt)return;
   if(!liveMenu)liveMenu=menus[0];
 
