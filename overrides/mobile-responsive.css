@@ -14,8 +14,8 @@
     align-items: center !important;
     justify-content: center !important;
     width: 100% !important;
-    height: 68px !important;
-    min-height: 68px !important;
+    height: 100px !important;
+    min-height: 100px !important;
     margin: 0 !important;
     padding: 0 56px !important;
     overflow: hidden !important;
@@ -37,13 +37,14 @@
 
   body.sushiShop .brandOnlyMobile img {
     display: block !important;
-    width: clamp(150px, 22vw, 174px) !important;
-    max-width: none !important;
-    height: auto !important;
-    max-height: 44px !important;
+    width: 333px !important;
+    max-width: calc(100vw - 104px) !important;
+    height: 100px !important;
+    max-height: 100px !important;
     margin: 0 !important;
     padding: 0 !important;
     object-fit: contain !important;
+    object-position: center center !important;
     transform: none !important;
   }
 
@@ -72,8 +73,8 @@
     right: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: 68px !important;
-    min-height: 68px !important;
+    height: 100px !important;
+    min-height: 100px !important;
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
@@ -86,7 +87,7 @@
     box-sizing: border-box !important;
     display: flex !important;
     position: absolute !important;
-    top: 16px !important;
+    top: 32px !important;
     right: 14px !important;
     float: none !important;
     align-items: center !important;
@@ -133,11 +134,11 @@
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     box-sizing: border-box !important;
     position: absolute !important;
-    top: 68px !important;
+    top: 100px !important;
     right: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    max-height: calc(100vh - 68px) !important;
+    max-height: calc(100vh - 100px) !important;
     margin: 0 !important;
     padding: 8px 12px 14px !important;
     overflow-x: hidden !important;
@@ -177,30 +178,19 @@
 
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile {
-    height: 62px !important;
-    min-height: 62px !important;
-    padding-right: 50px !important;
-    padding-left: 50px !important;
+    padding-right: 52px !important;
+    padding-left: 52px !important;
   }
 
   body.sushiShop .brandOnlyMobile img {
-    width: 150px !important;
-    max-height: 40px !important;
-  }
-
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu {
-    height: 62px !important;
-    min-height: 62px !important;
+    width: 333px !important;
+    max-width: calc(100vw - 104px) !important;
+    height: 100px !important;
+    max-height: 100px !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
-    top: 13px !important;
     right: 12px !important;
-  }
-
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
-    top: 62px !important;
-    max-height: calc(100vh - 62px) !important;
   }
 
   body.sushiShop .listadoShop .titleShopSeccion {
