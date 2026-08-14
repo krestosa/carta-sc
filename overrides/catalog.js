@@ -10,6 +10,9 @@ var categoryProxies=[];
 var proxyStyle=null;
 var categoryWheelScroller=null;
 var categoryWheelHandler=null;
+var categoryStateObserver=null;
+var categoryStateRaf=0;
+var lastAutoCategory=null;
 var skeletonBoot=bootLoadingSkeleton();
 
 function bootLoadingSkeleton(){
@@ -128,6 +131,61 @@ function installCategoryProxies(root){
   });
 }
 
+function removeCategoryAutoScroll(){
+  if(categoryStateObserver)categoryStateObserver.disconnect();
+  categoryStateObserver=null;
+  if(categoryStateRaf)cancelAnimationFrame(categoryStateRaf);
+  categoryStateRaf=0;
+  lastAutoCategory=null;
+}
+function currentCategoryLink(root){
+  if(!root)return null;
+  return root.querySelector('.nav-top-li > a.anchorLink.sc-motion-current')
+    ||root.querySelector('.nav-top-li > a.anchorLink[aria-current="location"]')
+    ||root.querySelector('.nav-top-li.active > a.anchorLink')
+    ||root.querySelector('.nav-top-li > a.anchorLink.active');
+}
+function revealCategoryAtNearestEdge(link,scroller){
+  if(!link||!scroller||!desktopQuery.matches)return;
+  requestAnimationFrame(function(){
+    if(!document.documentElement.contains(link)||!document.documentElement.contains(scroller))return;
+    var rail=scroller.getBoundingClientRect();
+    var item=link.getBoundingClientRect();
+    var target=scroller.scrollLeft;
+
+    if(item.right>rail.right+0.5)target+=item.right-rail.right;
+    else if(item.left<rail.left-0.5)target+=item.left-rail.left;
+    else return;
+
+    var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
+    target=Math.max(0,Math.min(max,target));
+    if(Math.abs(target-scroller.scrollLeft)<0.5)return;
+
+    var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(typeof scroller.scrollTo==='function'){
+      try{scroller.scrollTo({left:target,top:0,behavior:reduced?'auto':'smooth'});return;}catch(e){}
+    }
+    scroller.scrollLeft=target;
+  });
+}
+function scheduleCategoryAutoScroll(root,scroller){
+  if(categoryStateRaf)cancelAnimationFrame(categoryStateRaf);
+  categoryStateRaf=requestAnimationFrame(function(){
+    categoryStateRaf=0;
+    var link=currentCategoryLink(root);
+    if(!link||link===lastAutoCategory)return;
+    lastAutoCategory=link;
+    revealCategoryAtNearestEdge(link,scroller);
+  });
+}
+function installCategoryAutoScroll(root,scroller){
+  removeCategoryAutoScroll();
+  if(!root||!scroller)return;
+  categoryStateObserver=new MutationObserver(function(){scheduleCategoryAutoScroll(root,scroller);});
+  categoryStateObserver.observe(root,{subtree:true,attributes:true,attributeFilter:['class','aria-current']});
+  scheduleCategoryAutoScroll(root,scroller);
+}
+
 function removeHorizontalCategoryWheel(){
   if(categoryWheelScroller&&categoryWheelHandler){
     categoryWheelScroller.removeEventListener('wheel',categoryWheelHandler);
@@ -215,6 +273,7 @@ function applyDesktop(){
   if(nav.parentNode!==scroller)scroller.appendChild(nav);
   normalizeParentLinks(nav);
   installCategoryProxies(nav);
+  installCategoryAutoScroll(nav,scroller);
   document.body.classList.add('sc-catalog-layout-ready');
   refreshMotion();
 }
@@ -223,6 +282,7 @@ function restoreDesktop(){
   document.querySelectorAll('.listadoShop.sc-first-catalog-section').forEach(function(list){list.classList.remove('sc-first-catalog-section');});
   if(nav&&navHome){navNext&&navNext.parentNode===navHome?navHome.insertBefore(nav,navNext):navHome.appendChild(nav);}
   clearCategoryProxies();
+  removeCategoryAutoScroll();
   removeHorizontalCategoryWheel();
   restoreParentLinks();
   if(toolbar&&toolbar.parentNode)toolbar.parentNode.removeChild(toolbar);
