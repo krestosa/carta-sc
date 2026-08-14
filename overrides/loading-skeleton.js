@@ -7,6 +7,7 @@ var root=document.documentElement;
 var desktop=window.matchMedia('(min-width: 993px)');
 var MIN_VISIBLE_MS=120;
 var MAX_WAIT_MS=1800;
+var EXIT_MS=280;
 var started=Date.now();
 var finished=false;
 
@@ -92,13 +93,15 @@ function finish(){
   finished=true;
   var remaining=Math.max(0,MIN_VISIBLE_MS-(Date.now()-started));
   setTimeout(function(){
-    root.classList.remove('sc-catalog-content-loading');
+    /* Content and placeholders overlap during this state. CSS crossfades them,
+       so the catalogue never flashes between skeleton and final content. */
     root.classList.add('sc-catalog-skeleton-leaving');
+    root.classList.remove('sc-catalog-content-loading');
     setTimeout(function(){
       root.classList.remove('sc-catalog-skeleton','sc-catalog-skeleton-leaving');
       var container=document.querySelector('.containerShop');
       if(container)container.removeAttribute('aria-busy');
-    },150);
+    },EXIT_MS);
   },remaining);
 }
 
