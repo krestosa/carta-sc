@@ -1,0 +1,23 @@
+/* Category navigation interaction override.
+   Keeps the 1px toolbar rule as the baseline and overlays the active category. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
+    /* Existing 1px border-bottom remains the full-width baseline. */
+    overflow: hidden;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
+    /* 2px active rule: 1px overlays the baseline, 1px rises above it. */
+    bottom: -15px !important;
+    height: 2px !important;
+    background: var(--sc-catalog-ink, #151515) !important;
+    z-index: 9 !important;
+    pointer-events: none !important;
+    transition: none !important;
+    will-change: transform;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories {
+    overscroll-behavior-x: contain;
+  }
+}
