@@ -10,6 +10,15 @@ body.sushiShop .listadoShop .subTitleShopSeccion {
   border-bottom: 0 !important;
 }
 
+/* Cards already visible when the initial catalogue settles never participate
+   in reveal motion. This also neutralizes any in-flight GSAP opacity tween. */
+body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  transition: none !important;
+}
+
 body.sushiShop .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
 body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
   content: '';
@@ -45,4 +54,4 @@ body.sushiShop .sc-section-text-line {
   }
 }
 
-/* Deploy marker: section-modal-motion-v3. */
+/* Deploy marker: smooth-skeleton-static-fold-v4. */
