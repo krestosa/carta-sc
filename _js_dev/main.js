@@ -303,6 +303,22 @@ function noFoto(){
 	$('.panel-body p:empty:not([class])').remove()
 }
 
+/* Dedicated catalogue override bootstrap. Layout/structure lives in overrides/. */
+(function () {
+	if (window.__scCatalogOverrideRequested) return;
+	window.__scCatalogOverrideRequested = true;
+
+	var css = document.createElement('link');
+	css.rel = 'stylesheet';
+	css.href = 'overrides/catalog.css';
+	document.head.appendChild(css);
+
+	var script = document.createElement('script');
+	script.src = 'overrides/catalog.js';
+	script.async = false;
+	document.head.appendChild(script);
+})();
+
 /* Dedicated motion bootstrap. Do not add animation logic here. */
 (function () {
 	if (window.__scUxMotionRequested) return;
