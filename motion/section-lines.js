@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+/* Deploy marker: below-fold-motion-v11. */
 if(window.__scSectionLinesMotionBooted)return;
 window.__scSectionLinesMotionBooted=true;
 
@@ -52,8 +53,6 @@ function initMotion(){
   elements.forEach(function(el){
     el.classList.add('sc-section-rule-host');
 
-    /* The initial viewport is frozen before GSAP loads. It never receives an
-       entrance tween. Everything below it gets the split + rule reveal. */
     if(reduce||isInitial(el)){
       gsap.set(el,{'--sc-section-rule-scale':1});
       return;
