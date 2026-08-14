@@ -335,74 +335,131 @@
   }
 }
 
-/* Direction affordance uses the exact supplied Material chevron path.
-   Render as rail pseudo-elements so global button styles cannot hide it. */
+/* Rail controls v3: real clickable buttons live outside the category text area.
+   The thin baseline spans the full rail and the black active rule runs over it. */
 body.sushiShop .sc-rail-arrow {
-  display: none !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: absolute !important;
+  top: 50% !important;
+  bottom: auto !important;
+  width: 24px !important;
+  height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: #666 !important;
+  cursor: pointer !important;
+  transform: translateY(-50%) !important;
+  z-index: 70 !important;
+}
+
+body.sushiShop .sc-rail-arrow svg {
+  display: block !important;
+  width: 24px !important;
+  height: 24px !important;
+  fill: #666 !important;
+  pointer-events: none !important;
+}
+
+body.sushiShop .sc-rail-arrow--left svg {
+  transform: rotate(180deg) !important;
+}
+
+body.sushiShop .sc-rail-arrow:hover,
+body.sushiShop .sc-rail-arrow:focus-visible {
+  color: #151515 !important;
+}
+
+body.sushiShop .sc-rail-arrow:hover svg,
+body.sushiShop .sc-rail-arrow:focus-visible svg {
+  fill: #151515 !important;
+}
+
+body.sushiShop .sc-rail-arrow:focus-visible {
+  outline: 1px solid #151515 !important;
+  outline-offset: 2px !important;
 }
 
 @media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after,
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before {
-    content: '' !important;
-    display: block !important;
-    position: absolute;
-    top: 50%;
-    width: 30px;
-    height: 30px;
-    margin: 0;
-    padding: 0;
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 -960 960 960' width='24px' fill='%23e3e3e3'%3E%3Cpath d='M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 24px 24px;
-    border: 0;
-    box-shadow: none;
-    pointer-events: none;
-    z-index: 60;
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
+    overflow: visible !important;
+    border-bottom: 1px solid var(--sc-catalog-line, #e7e7e2) !important;
   }
 
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink.sc-motion-current)::after,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink[aria-current='location'])::after,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child.active::after {
+    bottom: -15px !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after {
-    right: 0;
-    transform: translateY(-50%);
+    content: none !important;
+    display: none !important;
   }
 
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before {
-    left: 0;
-    transform: translateY(-50%) rotate(180deg);
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow--left {
+    left: calc(-1 * var(--sc-catalog-gutter, 32px)) !important;
+    right: auto !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow--right {
+    right: calc(-1 * var(--sc-catalog-gutter, 32px)) !important;
+    left: auto !important;
   }
 }
 
 @media (max-width: 992px) {
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before {
-    content: '' !important;
-    display: block !important;
-    position: absolute;
-    top: 50%;
-    width: 30px;
-    height: 30px;
-    margin: 0;
-    padding: 0;
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 -960 960 960' width='24px' fill='%23e3e3e3'%3E%3Cpath d='M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 24px 24px;
-    border: 0;
-    box-shadow: none;
-    pointer-events: none;
-    z-index: 60;
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile {
+    border-bottom: 1px solid #e7e7e2 !important;
   }
 
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabsTopShop::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
-    right: 0;
-    transform: translateY(-50%);
+    content: none !important;
+    display: none !important;
   }
 
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before {
-    left: 0;
-    transform: translateY(-50%) rotate(180deg);
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
+    width: calc(100% - 56px) !important;
+    margin-left: 28px !important;
+    margin-right: 28px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow {
+    width: 28px !important;
+    height: 100% !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow--left {
+    left: 0 !important;
+    right: auto !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow--right {
+    right: 0 !important;
+    left: auto !important;
   }
 }
