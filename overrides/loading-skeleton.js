@@ -3,6 +3,9 @@
 if(window.__scCatalogSkeletonBooted)return;
 window.__scCatalogSkeletonBooted=true;
 
+var currentScript=document.currentScript;
+if(currentScript)currentScript.dataset.loaded='true';
+
 var root=document.documentElement;
 var desktop=window.matchMedia('(min-width: 993px)');
 var MIN_VISIBLE_MS=120;
