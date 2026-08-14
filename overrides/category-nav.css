@@ -1,6 +1,6 @@
 /* Category navigation interaction override.
    Keeps the 1px toolbar rule as the baseline and overlays the active category.
-   Deploy marker: active-rule-horizontal-wheel-hover-v3-retry1. */
+   Deploy marker: active-rule-horizontal-wheel-v2. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
     /* Move the final 14px into the horizontal scroller so the moving rule is
@@ -33,14 +33,11 @@
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar a.anchorLink.sc-category-proxy-hover {
     color: var(--sc-catalog-ink, #151515) !important;
-    text-decoration-line: underline !important;
-    text-decoration-thickness: 1px !important;
-    text-underline-offset: 4px !important;
+    text-decoration: none !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-proxy:focus-visible {
-    outline: 1px solid var(--sc-catalog-ink, #151515) !important;
-    outline-offset: -1px !important;
+    outline: none !important;
   }
 
 }
