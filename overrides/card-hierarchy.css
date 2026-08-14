@@ -143,6 +143,319 @@
   }
 }
 
+/* Tablet/mobile: same catalogue system, only the grid density and spacing change. */
+@media (max-width: 992px) {
+  body.sushiShop {
+    --sc-r-ink: #151515;
+    --sc-r-copy: #696969;
+    --sc-r-muted: #909090;
+    --sc-r-line: #e7e7e2;
+    --sc-r-card-rule: #171717;
+    --sc-r-card-subrule: #deded8;
+  }
+
+  body.sushiShop .topShop.bottomShop,
+  body.sushiShop .productoShop .sumar {
+    display: none !important;
+  }
+
+  body.sushiShop .containerShop {
+    box-sizing: border-box;
+    width: calc(100% - 40px) !important;
+    max-width: 940px !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.sushiShop .containerShop > .row {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  body.sushiShop .containerShop .col-md-9.normCols {
+    float: none !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.sushiShop .listadoShop {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 34px;
+    width: 100% !important;
+    margin: 0 0 76px !important;
+    padding: 0 !important;
+    font-size: initial !important;
+    align-items: stretch;
+  }
+
+  body.sushiShop .listadoShop:empty {
+    display: none !important;
+  }
+
+  body.sushiShop .listadoShop > :not(.productoShop) {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  body.sushiShop .listadoShop > a[name][id] {
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.sushiShop .listadoShop > br {
+    display: none !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion {
+    position: static !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    margin: 10px 0 -3px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: var(--sc-r-ink) !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 26px !important;
+    line-height: 1.08 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.038em !important;
+    text-transform: none !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    box-sizing: border-box;
+    width: 100% !important;
+    padding: 24px 0 15px !important;
+    border-top: 1px solid var(--sc-r-line) !important;
+    background: transparent !important;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion {
+    box-sizing: border-box;
+    width: 100% !important;
+    margin: 9px 0 -3px !important;
+    padding: 0 !important;
+    color: #343434 !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 20px !important;
+    line-height: 1.12 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.028em !important;
+    text-transform: none !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop,
+  body.sushiShop .listadoShop .productoShop.ConCarr {
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    vertical-align: top;
+  }
+
+  body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+    box-sizing: border-box;
+    display: grid !important;
+    position: relative !important;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr) 76px;
+    grid-template-rows: auto auto auto 24px;
+    column-gap: 18px;
+    align-content: start;
+    min-width: 0;
+    height: 100%;
+    color: inherit;
+    text-decoration: none !important;
+    outline: none;
+  }
+
+  /* Keep imgLiquid's background-image as the image source on small screens. */
+  body.sushiShop .listadoShop .productoShop .imgShop {
+    box-sizing: border-box;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 286 / 200;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--sc-r-card-rule) !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    background-size: contain !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    overflow: hidden !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .title-shop1 {
+    display: -webkit-box !important;
+    position: static !important;
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0 !important;
+    min-height: 54px !important;
+    max-height: 54px !important;
+    margin: 0 !important;
+    padding: 13px 0 0 !important;
+    overflow: hidden;
+    color: #303030 !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 15.5px !important;
+    line-height: 1.26 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.015em !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  body.sushiShop .listadoShop .productoShop .priceRow {
+    box-sizing: border-box;
+    display: flex !important;
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    align-self: start;
+    min-width: 76px !important;
+    min-height: 54px !important;
+    margin: 0 !important;
+    padding: 13px 0 0 !important;
+    gap: 1px !important;
+    float: none !important;
+    white-space: nowrap;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  body.sushiShop .listadoShop .productoShop .price,
+  body.sushiShop .listadoShop .productoShop .priceHijass {
+    order: 1;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: var(--sc-r-ink) !important;
+    font-family: inherit !important;
+    font-size: 15.5px !important;
+    line-height: 18px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.018em !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .ofertaPrice {
+    order: 2;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: var(--sc-r-muted) !important;
+    font-family: inherit !important;
+    font-size: 11.5px !important;
+    line-height: 14px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    text-decoration: line-through;
+    opacity: 1 !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .descrip {
+    box-sizing: border-box;
+    display: -webkit-box !important;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    min-height: 59px !important;
+    max-height: 59px !important;
+    margin: 10px 0 0 !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid var(--sc-r-card-subrule) !important;
+    overflow: hidden !important;
+    color: var(--sc-r-copy) !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 12.5px !important;
+    line-height: 16px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* On mobile/tablet the original flavor node is positioned in the same
+     dedicated metadata row used by desktop, avoiding extra JS. */
+  body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
+    display: flex !important;
+    position: absolute !important;
+    left: 0 !important;
+    bottom: 1px !important;
+    align-items: center !important;
+    gap: 7px !important;
+    width: max-content !important;
+    height: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores:empty {
+    display: none !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores img {
+    display: block !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    opacity: 1 !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.sushiShop .containerShop {
+    width: calc(100% - 32px) !important;
+  }
+
+  body.sushiShop .listadoShop {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 36px;
+    margin-bottom: 68px !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion {
+    font-size: 24px !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    padding-top: 22px !important;
+    padding-bottom: 14px !important;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion {
+    font-size: 18px !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img,
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop > img,
