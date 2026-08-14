@@ -1,0 +1,50 @@
+/* Responsive section-title split reveals + horizontal rule draws. */
+body.sushiShop .listadoShop .titleShopSeccion > div {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion > div::after,
+body.sushiShop .listadoShop .subTitleShopSeccion::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--sc-catalog-line, var(--sc-r-line, #e7e7e2));
+  transform: scaleX(var(--sc-section-rule-scale, 1));
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion > div::after {
+  margin-top: 12px;
+}
+
+body.sushiShop .listadoShop .subTitleShopSeccion::after {
+  margin-top: 8px;
+}
+
+body.sushiShop .sc-section-text-line,
+body.sushiShop .sc-section-text-line-mask {
+  display: block;
+}
+
+body.sushiShop .sc-section-text-line-mask {
+  overflow: clip;
+}
+
+@supports not (overflow: clip) {
+  body.sushiShop .sc-section-text-line-mask {
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .listadoShop .titleShopSeccion > div::after,
+  body.sushiShop .listadoShop .subTitleShopSeccion::after {
+    transform: scaleX(1) !important;
+  }
+}
