@@ -1,28 +1,46 @@
 /* Category navigation interaction override.
    Keeps the 1px toolbar rule as the baseline and overlays the active category.
-   Deploy marker: active-rule-horizontal-wheel-v2. */
+   Deploy marker: active-rule-horizontal-wheel-v3. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
     /* Move the final 14px into the horizontal scroller so the moving rule is
        inside its clipping box instead of being cut by overflow-y:hidden. */
     padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
     overflow: hidden;
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories {
     box-sizing: border-box;
     width: 100%;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
     padding-bottom: 14px;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior: contain;
   }
 
+  /* Remove inherited legacy offsets from every level of the sticky rail.
+     The first category must share the exact left edge with the catalogue. */
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .wrapp-nav-tabsTopShop,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child > a.anchorLink {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    left: 0 !important;
+  }
+
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
     /* Bottom edge lands on the toolbar's 1px baseline; the 2px active rule
-       therefore overlays/rises above that same line. GSAP owns x + scaleX. */
+       therefore overlays/rises above that same line. GSAP owns x + scaleX.
+       Motion geometry deliberately insets text by 1.25px, so compensate that
+       visual inset here to avoid a 1px hairline before the first active rule. */
     bottom: -14px !important;
     height: 2px !important;
+    margin-left: -1.25px !important;
     background: var(--sc-catalog-ink, #151515) !important;
     opacity: 1;
     z-index: 9 !important;
@@ -39,5 +57,4 @@
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-proxy:focus-visible {
     outline: none !important;
   }
-
 }
