@@ -309,7 +309,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1702-below-fold-motion-v10';
+	var assetVersion = '20260814-1728-rail-parent-rule-v13';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -369,7 +369,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1702-below-fold-motion-v10';
+	var version = window.__scCatalogAssetVersion || '20260814-1728-rail-parent-rule-v13';
 	var desktop = window.matchMedia('(min-width: 993px)');
 	var attempts = 0;
 
