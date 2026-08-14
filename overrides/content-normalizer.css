@@ -1,0 +1,24 @@
+/* Dynamic content normalization: consistent editorial typography and casing. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion {
+    text-transform: uppercase !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {
+    font-weight: 400 !important;
+    font-style: normal !important;
+    text-transform: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip * {
+    font: inherit !important;
+    letter-spacing: inherit !important;
+    text-transform: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip b,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip strong {
+    font-weight: 400 !important;
+  }
+}
