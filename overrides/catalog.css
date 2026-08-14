@@ -18,6 +18,13 @@
   font-display: swap;
 }
 
+/* The static snapshot still contains the legacy search-results section.
+   It is not part of this catalogue surface and must never become visible. */
+body.sushiShop #busquedaJSBox,
+body.sushiShop #busquedaJSBox + div {
+  display: none !important;
+}
+
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready {
     --sc-catalog-ink: #151515;
