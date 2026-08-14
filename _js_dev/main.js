@@ -304,13 +304,12 @@ function noFoto(){
 	$('.panel-body p:empty:not([class])').remove()
 }
 
-/* Catalogue bootstrap: paint the real catalogue immediately and keep all
-   layout geometry deterministic. There is no skeleton or reveal-hidden state. */
+/* Catalogue bootstrap: real content paints immediately; no skeleton state. */
 (function () {
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1642-stability-v9';
+	var assetVersion = '20260814-1702-below-fold-motion-v10';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -340,6 +339,7 @@ function noFoto(){
 	addBlockingCss('sc-motion-css', asset('motion/motion.css'));
 	addBlockingCss('sc-product-image-ratio-css', asset('overrides/product-image-ratio.css'));
 	addBlockingCss('sc-card-hierarchy-css', asset('overrides/card-hierarchy.css'));
+	addBlockingCss('sc-section-lines-css', asset('motion/section-lines.css'));
 	addBlockingCss('sc-content-normalizer-css', asset('overrides/content-normalizer.css'));
 
 	var script = document.createElement('script');
@@ -363,32 +363,80 @@ function noFoto(){
 	document.head.appendChild(normalizerScript);
 })();
 
-/* Interaction motion only. Entrance/reveal animations are intentionally not
-   loaded; cards and section labels remain visible throughout startup. */
+/* Motion policy: freeze only the first viewport. Everything originally below
+   it keeps the GSAP/ScrollTrigger entrance reveals. */
 (function () {
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1642-stability-v9';
-	var script = document.createElement('script');
-	script.src = 'motion/motion.js?v=' + version;
-	script.async = true;
-	script.onload = function(){
-		if (!document.getElementById('sc-sticky-rail-motion-js')) {
-			var sticky = document.createElement('script');
-			sticky.id = 'sc-sticky-rail-motion-js';
-			sticky.src = 'motion/sticky-rail.js?v=' + version;
-			sticky.async = true;
-			document.head.appendChild(sticky);
-		}
+	var version = window.__scCatalogAssetVersion || '20260814-1702-below-fold-motion-v10';
+	var desktop = window.matchMedia('(min-width: 993px)');
+	var attempts = 0;
 
-		if (!document.getElementById('sc-modal-motion-js')) {
-			var modalMotion = document.createElement('script');
-			modalMotion.id = 'sc-modal-motion-js';
-			modalMotion.src = 'motion/modal-motion.js?v=' + version;
-			modalMotion.async = true;
-			document.head.appendChild(modalMotion);
+	function markInitialViewport(){
+		var vh = window.innerHeight || document.documentElement.clientHeight;
+		document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){
+			var r = card.getBoundingClientRect();
+			if(r.top < vh && r.bottom > 0)card.classList.add('sc-static-initial-card');
+		});
+		document.querySelectorAll('.listadoShop .titleShopSeccion, .listadoShop .subTitleShopSeccion').forEach(function(section){
+			var r = section.getBoundingClientRect();
+			if(r.top < vh && r.bottom > 0){
+				section.classList.add('sc-static-initial-section');
+				var host = section.matches('.titleShopSeccion') ? section.querySelector(':scope > div') : section;
+				if(host)host.classList.add('sc-static-initial-section');
+			}
+		});
+	}
+
+	function loadMotion(){
+		markInitialViewport();
+		var script = document.createElement('script');
+		script.src = 'motion/motion.js?v=' + version;
+		script.async = true;
+		script.onload = function(){
+			if (!document.getElementById('sc-sticky-rail-motion-js')) {
+				var sticky = document.createElement('script');
+				sticky.id = 'sc-sticky-rail-motion-js';
+				sticky.src = 'motion/sticky-rail.js?v=' + version;
+				sticky.async = true;
+				document.head.appendChild(sticky);
+			}
+
+			if (!document.getElementById('sc-section-lines-motion-js')) {
+				var sectionLines = document.createElement('script');
+				sectionLines.id = 'sc-section-lines-motion-js';
+				sectionLines.src = 'motion/section-lines.js?v=' + version;
+				sectionLines.async = true;
+				document.head.appendChild(sectionLines);
+			}
+
+			if (!document.getElementById('sc-modal-motion-js')) {
+				var modalMotion = document.createElement('script');
+				modalMotion.id = 'sc-modal-motion-js';
+				modalMotion.src = 'motion/modal-motion.js?v=' + version;
+				modalMotion.async = true;
+				document.head.appendChild(modalMotion);
+			}
+		};
+		document.head.appendChild(script);
+	}
+
+	function waitForStableLayout(){
+		if(!document.body){
+			requestAnimationFrame(waitForStableLayout);
+			return;
 		}
-	};
-	document.head.appendChild(script);
+		if(desktop.matches && !document.body.classList.contains('sc-catalog-layout-ready') && attempts++ < 45){
+			requestAnimationFrame(waitForStableLayout);
+			return;
+		}
+		requestAnimationFrame(function(){requestAnimationFrame(loadMotion);});
+	}
+
+	if(document.readyState === 'loading'){
+		document.addEventListener('DOMContentLoaded', waitForStableLayout, {once:true});
+	}else{
+		waitForStableLayout();
+	}
 })();
