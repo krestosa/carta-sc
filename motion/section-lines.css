@@ -1,4 +1,7 @@
 /* Responsive section-title split reveals + horizontal rule draws. */
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
+body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
 body.sushiShop .listadoShop .titleShopSeccion,
 body.sushiShop .listadoShop .titleShopSeccion > div,
 body.sushiShop .listadoShop .subTitleShopSeccion {
@@ -10,14 +13,24 @@ body.sushiShop .listadoShop .subTitleShopSeccion {
   background-image: none !important;
 }
 
+html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion,
+html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion > div,
+html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+}
+
 /* Kill legacy rules attached to the parent wrapper. The only visible section
    divider is the animated ::after on the initialized text host. */
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::before,
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::after,
 body.sushiShop .listadoShop .titleShopSeccion::before,
 body.sushiShop .listadoShop .titleShopSeccion::after {
   content: none !important;
   display: none !important;
 }
 
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
 body.sushiShop .listadoShop .titleShopSeccion > div {
   padding-bottom: 0 !important;
 }
@@ -31,6 +44,8 @@ body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
   transition: none !important;
 }
 
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
+body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion.sc-section-rule-host::after,
 body.sushiShop .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
 body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
   content: '' !important;
@@ -52,10 +67,12 @@ body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
   pointer-events: none;
 }
 
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
 body.sushiShop .listadoShop .titleShopSeccion > div.sc-section-rule-host::after {
   margin-top: 12px !important;
 }
 
+body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion.sc-section-rule-host::after,
 body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
   margin-top: 8px !important;
 }
@@ -71,4 +88,4 @@ body.sushiShop .sc-section-text-line {
   }
 }
 
-/* Deploy marker: single-section-divider-v4. */
+/* Deploy marker: single-section-divider-v5. */
