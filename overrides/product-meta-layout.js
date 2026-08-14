@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Stable metadata/rail layout: no catalogue-wide MutationObserver. */
+/* Stable metadata/rail layout with finite listeners and clickable rail controls. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
@@ -56,6 +56,51 @@ function scheduleDescriptionMeasure(){
   });
 }
 
+function makeRailArrow(host,scroller,direction){
+  var selector='.sc-rail-arrow--'+direction;
+  var existing=host.querySelector(selector);
+  if(existing)return existing;
+
+  var button=document.createElement('button');
+  button.type='button';
+  button.className='sc-rail-arrow sc-rail-arrow--'+direction;
+  button.setAttribute('aria-label',direction==='left'?'Ver categorías anteriores':'Ver más categorías');
+  button.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#666" aria-hidden="true"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>';
+
+  button.addEventListener('click',function(){
+    var amount=Math.max(140,Math.round(scroller.clientWidth*.65));
+    if(direction==='left')amount*=-1;
+    try{scroller.scrollBy({left:amount,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+    catch(_){scroller.scrollLeft+=amount;}
+    requestAnimationFrame(scheduleRailState);
+  });
+
+  host.appendChild(button);
+  return button;
+}
+
+function setRailArrowVisible(button,visible){
+  if(!button)return;
+  button.style.setProperty('opacity',visible?'1':'0','important');
+  button.style.setProperty('visibility',visible?'visible':'hidden','important');
+  button.style.setProperty('pointer-events',visible?'auto':'none','important');
+  button.disabled=!visible;
+}
+
+function setRailArrowState(host,scroller,canLeft,canRight){
+  if(!host)return;
+  var left=host.querySelector('.sc-rail-arrow--left');
+  var right=host.querySelector('.sc-rail-arrow--right');
+
+  if(scroller){
+    left=left||makeRailArrow(host,scroller,'left');
+    right=right||makeRailArrow(host,scroller,'right');
+  }
+
+  setRailArrowVisible(left,!!canLeft);
+  setRailArrowVisible(right,!!canRight);
+}
+
 function setOverflowState(host,scroller){
   if(!host||!scroller)return;
   var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
@@ -63,6 +108,7 @@ function setOverflowState(host,scroller){
   var canRight=max>1&&scroller.scrollLeft<max-1;
   host.classList.toggle('sc-overflow-left',canLeft);
   host.classList.toggle('sc-overflow-right',canRight);
+  setRailArrowState(host,scroller,canLeft,canRight);
 }
 
 function updateRailState(){
@@ -84,8 +130,12 @@ function updateRailState(){
   var mobileScroller=mobileRail&&mobileRail.querySelector('.topShopMenuMobileScroller');
 
   if(mobileRail){
-    if(desktopQuery.matches)mobileRail.classList.remove('sc-overflow-left','sc-overflow-right');
-    else setOverflowState(mobileRail,mobileScroller);
+    if(desktopQuery.matches){
+      mobileRail.classList.remove('sc-overflow-left','sc-overflow-right');
+      setRailArrowState(mobileRail,null,false,false);
+    }else{
+      setOverflowState(mobileRail,mobileScroller);
+    }
   }
 
   if(mobileWrapper){
@@ -127,8 +177,11 @@ ready(function(){
   document.addEventListener('scroll',scheduleRailState,true);
   window.addEventListener('resize',handleResize,{passive:true});
 
-  /* Toolbar creation and font settling are finite events; a couple of deferred
-     passes replace the previous unbounded subtree MutationObserver. */
+  /* Horizontal rail movement must update arrow availability too. */
+  document.querySelectorAll('.sc-catalog-categories, .topShopMenuMobileScroller').forEach(function(scroller){
+    scroller.addEventListener('scroll',scheduleRailState,{passive:true});
+  });
+
   setTimeout(handleResize,0);
   setTimeout(handleResize,180);
 
