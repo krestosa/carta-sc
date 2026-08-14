@@ -1,4 +1,5 @@
-/* SushiClub catalogue product images: normalized 286x200 stage, transparent background. */
+/* SushiClub product media.
+   Owns only the desktop product image stage and raster fitting. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
@@ -13,12 +14,6 @@
     background-image: none !important;
     line-height: 0 !important;
     overflow: hidden !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop {
-    background: transparent !important;
-    background-color: transparent !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img,
@@ -37,43 +32,5 @@
     object-fit: contain !important;
     object-position: center !important;
     transform: none !important;
-  }
-
-  /* Product detail modal mirrors the card media ratio and price hierarchy. */
-  body.sushiShop .sc-product-modal__image-stage {
-    box-sizing: border-box;
-    width: 100% !important;
-    height: auto !important;
-    padding: 0 !important;
-    aspect-ratio: 286 / 200 !important;
-    background: transparent !important;
-    overflow: hidden !important;
-  }
-
-  body.sushiShop .sc-product-modal__image {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    object-fit: contain !important;
-    object-position: center !important;
-  }
-
-  body.sushiShop .sc-product-modal__price-row {
-    display: flex !important;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    align-items: flex-start !important;
-    gap: 2px !important;
-  }
-
-  body.sushiShop .sc-product-modal__price-row .price,
-  body.sushiShop .sc-product-modal__price-row .priceHijass {
-    order: 1;
-  }
-
-  body.sushiShop .sc-product-modal__price-row .ofertaPrice {
-    order: 2;
   }
 }
