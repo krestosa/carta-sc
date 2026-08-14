@@ -63,12 +63,32 @@
     display: none !important;
   }
 
+  /* Price always occupies one baseline. Discounted products keep the current
+     value first and the previous value secondary instead of stacking vertically. */
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
+    display: flex !important;
     grid-column: 2;
     grid-row: 2;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: baseline !important;
+    justify-content: flex-end !important;
+    align-self: start;
+    gap: 6px !important;
+    min-width: 0 !important;
     min-height: 54px !important;
     padding: 14px 0 0 !important;
+    white-space: nowrap;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .price,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceHijass {
+    order: 1;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .ofertaPrice {
+    order: 2;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
@@ -108,5 +128,48 @@
 
   html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
     opacity: 0 !important;
+  }
+
+  /* Restrained interaction cue: the card itself stays flat; only the product
+     raster gains a very small scale response. */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img {
+    transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 180ms ease !important;
+    transform-origin: 50% 50% !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop > img,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop > img {
+    transform: scale(1.012) !important;
+  }
+}
+
+/* Keep discounted prices on one line in the legacy tablet/mobile layout too.
+   DOM order is preserved there because the + control still lives inside .price. */
+@media (max-width: 992px) {
+  body.sushiShop .listadoShop .productoShop .priceRow {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    white-space: nowrap;
+  }
+
+  body.sushiShop .listadoShop .productoShop .priceRow .price,
+  body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
+  body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
+    float: none !important;
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop > img,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop > img {
+    transition: none !important;
+    transform: none !important;
   }
 }
