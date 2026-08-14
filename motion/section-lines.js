@@ -5,7 +5,6 @@ window.__scSectionLinesMotionBooted=true;
 
 var SPLIT_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js';
 var attempts=0;
-var mediaContext=null;
 
 function loadScript(src,id,done){
   var old=document.getElementById(id);
@@ -23,9 +22,14 @@ function loadScript(src,id,done){
 }
 
 function targets(){
-  return Array.prototype.slice.call(document.querySelectorAll(
+  return Array.prototype.filter.call(document.querySelectorAll(
     '.listadoShop .titleShopSeccion > div, .listadoShop .subTitleShopSeccion'
-  ));
+  ),function(el){return (el.textContent||'').replace(/\s+/g,' ').trim().length>0;});
+}
+
+function isInitiallyVisible(el){
+  var r=el.getBoundingClientRect();
+  return r.bottom>0&&r.top<window.innerHeight*0.94;
 }
 
 function boot(){
@@ -42,75 +46,78 @@ function boot(){
   var gsap=window.gsap;
   var ST=window.ScrollTrigger;
   var SplitText=window.SplitText;
-  gsap.registerPlugin(ST,SplitText);
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var elements=targets();
+  var splits=[];
+  var tweens=[];
 
-  mediaContext=gsap.matchMedia();
-  mediaContext.add({
-    motion:'(prefers-reduced-motion: no-preference)',
-    reduceMotion:'(prefers-reduced-motion: reduce)'
-  },function(ctx){
-    var reduce=!!ctx.conditions.reduceMotion;
-    var elements=targets();
-    var splits=[];
-    var ruleTweens=[];
+  if(!elements.length)return;
 
-    if(!elements.length)return function(){};
+  elements.forEach(function(el){
+    el.classList.add('sc-section-rule-host');
 
     if(reduce){
-      gsap.set(elements,{'--sc-section-rule-scale':1});
-      return function(){gsap.set(elements,{clearProps:'--sc-section-rule-scale'});};
+      gsap.set(el,{'--sc-section-rule-scale':1});
+      return;
     }
 
-    elements.forEach(function(el){
-      gsap.set(el,{'--sc-section-rule-scale':0});
+    var initial=isInitiallyVisible(el);
+    gsap.set(el,{'--sc-section-rule-scale':0});
 
-      ruleTweens.push(gsap.to(el,{
-        '--sc-section-rule-scale':1,
-        duration:0.86,
-        ease:'power3.out',
-        overwrite:'auto',
-        scrollTrigger:{
-          trigger:el,
-          start:'clamp(top 88%)',
-          once:true
-        }
-      }));
-
-      splits.push(SplitText.create(el,{
-        type:'lines',
-        mask:'lines',
-        linesClass:'sc-section-text-line',
-        autoSplit:true,
-        onSplit:function(self){
-          return gsap.from(self.lines,{
-            yPercent:112,
-            autoAlpha:0,
-            duration:0.72,
-            ease:'power3.out',
-            stagger:0.07,
-            overwrite:'auto',
-            scrollTrigger:{
-              trigger:el,
-              start:'clamp(top 88%)',
-              once:true,
-              invalidateOnRefresh:true
-            }
-          });
-        }
-      }));
-    });
-
-    return function(){
-      ruleTweens.forEach(function(tween){if(tween&&tween.scrollTrigger)tween.scrollTrigger.kill();if(tween)tween.kill();});
-      splits.forEach(function(split){if(split&&split.revert)split.revert();});
-      gsap.set(elements,{clearProps:'--sc-section-rule-scale'});
+    var ruleConfig={
+      '--sc-section-rule-scale':1,
+      duration:0.95,
+      ease:'power3.out',
+      overwrite:'auto'
     };
+    if(!initial){
+      ruleConfig.scrollTrigger={
+        trigger:el,
+        start:'clamp(top 90%)',
+        once:true
+      };
+    }
+    tweens.push(gsap.to(el,ruleConfig));
+
+    splits.push(SplitText.create(el,{
+      type:'lines',
+      mask:'lines',
+      linesClass:'sc-section-text-line',
+      autoSplit:true,
+      onSplit:function(self){
+        var config={
+          yPercent:108,
+          autoAlpha:0,
+          duration:0.68,
+          ease:'power3.out',
+          stagger:0.055,
+          overwrite:'auto'
+        };
+        if(!isInitiallyVisible(el)){
+          config.scrollTrigger={
+            trigger:el,
+            start:'clamp(top 90%)',
+            once:true,
+            invalidateOnRefresh:true
+          };
+        }
+        return gsap.from(self.lines,config);
+      }
+    }));
   });
 
-  window.setTimeout(function(){ST.refresh();},80);
-  if(document.fonts&&document.fonts.ready){
-    document.fonts.ready.then(function(){ST.refresh();}).catch(function(){});
-  }
+  function refresh(){window.setTimeout(function(){ST.refresh();},60);}
+  refresh();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refresh).catch(function(){});
+
+  window.__scSectionLinesCleanup=function(){
+    tweens.forEach(function(tween){if(tween&&tween.scrollTrigger)tween.scrollTrigger.kill();if(tween)tween.kill();});
+    splits.forEach(function(split){if(split&&split.revert)split.revert();});
+    elements.forEach(function(el){
+      el.classList.remove('sc-section-rule-host');
+      gsap.set(el,{clearProps:'--sc-section-rule-scale'});
+    });
+  };
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
