@@ -29,7 +29,15 @@ function targets(){
 }
 
 function isInInitialViewport(el){
-  return el.getBoundingClientRect().top<window.innerHeight;
+  var r=el.getBoundingClientRect();
+  return r.top<window.innerHeight&&r.bottom>0;
+}
+
+function markInitialViewportCards(){
+  Array.prototype.forEach.call(document.querySelectorAll('.listadoShop .productoShop'),function(card){
+    var r=card.getBoundingClientRect();
+    if(r.top<window.innerHeight&&r.bottom>0)card.classList.add('sc-static-initial-card');
+  });
 }
 
 function afterSkeleton(done){
@@ -67,9 +75,12 @@ function initMotion(){
   var SplitText=window.SplitText;
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var elements=targets();
-  var animated=[];
   var splits=[];
   var tweens=[];
+
+  /* Classification happens only after the skeleton has released and layout has
+     settled for two frames, so everything initially visible remains static. */
+  markInitialViewportCards();
 
   if(!elements.length)return;
 
@@ -83,7 +94,6 @@ function initMotion(){
       return;
     }
 
-    animated.push(el);
     gsap.set(el,{'--sc-section-rule-scale':0});
 
     tweens.push(gsap.to(el,{
