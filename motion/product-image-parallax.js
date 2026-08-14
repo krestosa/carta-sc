@@ -26,6 +26,11 @@ function boot(){
       var frame=img.closest('.imgShop');
       if(!frame)return;
 
+      frame.style.setProperty('overflow','hidden','important');
+      img.style.setProperty('transform','translate3d(0,var(--sc-image-parallax-y,0px),0) scale(1.04)','important');
+      img.style.setProperty('transform-origin','50% 50%','important');
+      img.style.setProperty('backface-visibility','hidden');
+
       var tween=gsap.fromTo(img,
         {'--sc-image-parallax-y':(-distance)+'px'},
         {
@@ -54,6 +59,9 @@ function boot(){
       });
       images.forEach(function(img){
         img.style.removeProperty('--sc-image-parallax-y');
+        img.style.removeProperty('transform');
+        img.style.removeProperty('transform-origin');
+        img.style.removeProperty('backface-visibility');
       });
     };
   });
