@@ -1,10 +1,6 @@
-/*
- * SushiClub catalogue pre-paint guard
- * ------------------------------------------------------------
- * Parser-blocking desktop geometry. It prevents replaced legacy catalogue
- * surfaces from ever reaching the first paint while keeping untouched legacy
- * UI available to the rest of the page.
- */
+/* SushiClub catalogue pre-paint guard.
+   Preserve final desktop geometry before catalog.js mounts the sticky rail.
+   No skeleton, hidden text or placeholder bars. */
 @media (min-width: 993px) {
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile {
     position: static !important;
@@ -13,14 +9,14 @@
     z-index: auto !important;
   }
 
-  /* The old black category row must never be painted. */
+  /* Prevent the legacy black category surface from flashing. The real rail
+     gets mounted into the reserved slot below without moving the catalogue. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile > .topShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .topShop.bottomShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .productoShop .sumar {
     display: none !important;
   }
 
-  /* Reserve exactly the desktop catalogue width used by catalog.css. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop {
     box-sizing: border-box;
     width: calc(100% - 64px) !important;
@@ -45,30 +41,28 @@
     padding-left: 0 !important;
   }
 
-  /* Exact slot occupied by the sticky category toolbar once catalog.js mounts. */
+  /* Same outer geometry as the mounted desktop rail: 47px internal box with
+     the current 16px/14px vertical spacing. No placeholder artwork. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop::before {
     content: '';
     display: block;
     box-sizing: border-box;
     width: 100%;
     height: 47px;
-    margin: 42px 0 34px;
+    margin: 16px 0 14px;
+    border: 0;
     border-bottom: 1px solid #e7e7e2;
-    background:
-      linear-gradient(#ecece7 0 0) 0 17px / 82px 11px no-repeat,
-      linear-gradient(#ecece7 0 0) 107px 17px / 94px 11px no-repeat,
-      linear-gradient(#ecece7 0 0) 226px 17px / 72px 11px no-repeat,
-      linear-gradient(#ecece7 0 0) 323px 17px / 106px 11px no-repeat;
+    background: transparent;
   }
 
-  /* The first layout is already the final three-column grid. */
+  /* Match the final three-column catalogue before JS touches the DOM. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: 32px;
-    row-gap: 32px;
+    row-gap: 36px !important;
     width: 100% !important;
-    margin: 0 0 64px !important;
+    margin: 0 0 74px !important;
     padding: 0 !important;
     font-size: initial !important;
     align-items: stretch;
@@ -77,6 +71,14 @@
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > :not(.productoShop) {
     grid-column: 1 / -1;
     min-width: 0;
+  }
+
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > a[name][id] {
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
   }
 
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > br {
@@ -89,89 +91,44 @@
     display: flex !important;
     flex-direction: column;
     width: auto !important;
-    min-width: 0;
+    min-width: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
   }
 
-  /* Mirror the final Swiss card geometry before catalogue JS is ready. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop > a.fancyboxModalAddProd {
+    box-sizing: border-box;
     display: grid !important;
+    position: relative !important;
     flex: 1 1 auto;
     grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto 24px !important;
     column-gap: 18px;
     align-content: start;
     min-width: 0;
     height: 100%;
   }
 
+  /* Ensure first-paint media geometry equals product-image-ratio.css. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
-    grid-column: 1 / -1;
-    grid-row: 1;
-    width: 100%;
-    padding-bottom: 84.1% !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    aspect-ratio: 286 / 200;
     margin: 0 !important;
-    border: 0 !important;
-    border-bottom: 1px solid #171717 !important;
-    border-radius: 0 !important;
-    background-color: #f4f4f0 !important;
-    background-image: none !important;
-    overflow: hidden;
+    overflow: hidden !important;
   }
 
-  /* Preserve the final text boxes while suppressing legacy ink. */
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {
-    grid-column: 1;
-    grid-row: 2;
-    min-width: 0;
-    min-height: 54px !important;
-    max-height: 54px !important;
-    margin: 0 !important;
-    padding: 13px 0 0 !important;
-    overflow: hidden;
-    color: transparent !important;
-  }
-
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
-    box-sizing: border-box;
-    display: flex !important;
-    grid-column: 2;
-    grid-row: 2;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-start;
-    min-width: 76px;
-    min-height: 54px !important;
-    margin: 0 !important;
-    padding: 14px 0 0 !important;
-    gap: 2px !important;
-    opacity: 0 !important;
-  }
-
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
-    box-sizing: border-box;
-    grid-column: 1 / -1;
-    grid-row: 3;
-    min-height: 59px !important;
-    max-height: 59px !important;
-    margin: 10px 0 0 !important;
-    padding: 10px 0 0 !important;
-    border-top: 1px solid #deded8 !important;
-    overflow: hidden;
-    color: transparent !important;
-  }
-
+  /* Content is real and visible from first paint. */
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
-    color: transparent !important;
-    background: transparent !important;
-  }
-
-  /* Override the old skeleton guard: geometry is final, so keep the row in flow. */
-  html.sc-catalog-prepaint.sc-catalog-skeleton body.sushiShop:not(.sc-catalog-layout-ready) .containerShop > .row {
     visibility: visible !important;
+    opacity: 1 !important;
   }
 }
