@@ -328,15 +328,15 @@ function noFoto(){
 		document.head.appendChild(link);
 	}
 
-	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1532');
-	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1532');
-	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1532');
-	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1532');
-	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1532');
-	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1532');
+	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1245-card2');
+	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1245-card2');
+	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1245-card2');
+	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1245-card2');
+	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1245-card2');
+	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1245-card2');
 
 	var script = document.createElement('script');
-	script.src = 'overrides/catalog.js?v=20260814-1532';
+	script.src = 'overrides/catalog.js?v=20260814-1245-card2';
 	script.async = false;
 	document.head.appendChild(script);
 })();
@@ -347,7 +347,7 @@ function noFoto(){
 	window.__scUxMotionRequested = true;
 
 	var script = document.createElement('script');
-	script.src = 'motion/motion.js?v=20260814-1532';
+	script.src = 'motion/motion.js?v=20260814-1245-card2';
 	script.async = true;
 	document.head.appendChild(script);
 })();
