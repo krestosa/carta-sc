@@ -1,13 +1,12 @@
 (function(){
 'use strict';
-/* Deploy marker: rail-direction-indicators-v2. */
+/* Stable metadata/rail layout: no catalogue-wide MutationObserver. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
 var desktopQuery=window.matchMedia('(min-width: 993px)');
 var railStateRaf=0;
 var descriptionRaf=0;
-var railObserver=null;
 
 function clearRows(){
   document.querySelectorAll('.sc-product-flavors').forEach(function(row){
@@ -46,79 +45,15 @@ function measureDescriptions(){
   document.querySelectorAll('.listadoShop .productoShop .descrip').forEach(function(desc){
     desc.classList.remove('sc-description-truncated');
     var truncated=desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1;
-    desc.classList.toggle('sc-description-truncated',truncated);
+    if(truncated)desc.classList.add('sc-description-truncated');
   });
 }
 
 function scheduleDescriptionMeasure(){
   if(descriptionRaf)return;
-  descriptionRaf=requestAnimationFrame(function(){requestAnimationFrame(measureDescriptions);});
-}
-
-function makeRailArrow(host,scroller,direction){
-  var selector='.sc-rail-arrow--'+direction;
-  var existing=host.querySelector(selector);
-  if(existing)return existing;
-
-  var button=document.createElement('button');
-  button.type='button';
-  button.className='sc-rail-arrow sc-rail-arrow--'+direction;
-  button.setAttribute('aria-label',direction==='left'?'Ver categorías anteriores':'Ver más categorías');
-  button.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3" aria-hidden="true"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>';
-
-  var style=button.style;
-  style.position='absolute';
-  style.top='0';
-  style.bottom='0';
-  style[direction]='0';
-  style.width='30px';
-  style.margin='0';
-  style.padding='0';
-  style.border='0';
-  style.borderRadius='0';
-  style.background='#fff';
-  style.boxShadow='none';
-  style.display='flex';
-  style.alignItems='center';
-  style.justifyContent='center';
-  style.opacity='0';
-  style.visibility='hidden';
-  style.pointerEvents='none';
-  style.cursor='pointer';
-  style.zIndex='40';
-
-  if(direction==='left')button.querySelector('svg').style.transform='rotate(180deg)';
-
-  button.addEventListener('click',function(){
-    var amount=Math.max(140,Math.round(scroller.clientWidth*.65));
-    if(direction==='left')amount*=-1;
-    try{scroller.scrollBy({left:amount,behavior:'smooth'});}
-    catch(_){scroller.scrollLeft+=amount;}
+  descriptionRaf=requestAnimationFrame(function(){
+    requestAnimationFrame(measureDescriptions);
   });
-
-  host.appendChild(button);
-  return button;
-}
-
-function setRailArrowVisible(button,visible){
-  if(!button)return;
-  button.style.opacity=visible?'1':'0';
-  button.style.visibility=visible?'visible':'hidden';
-  button.style.pointerEvents=visible?'auto':'none';
-}
-
-function setRailArrowState(host,scroller,canLeft,canRight){
-  if(!host)return;
-  var left=host.querySelector('.sc-rail-arrow--left');
-  var right=host.querySelector('.sc-rail-arrow--right');
-
-  if(scroller){
-    left=left||makeRailArrow(host,scroller,'left');
-    right=right||makeRailArrow(host,scroller,'right');
-  }
-
-  setRailArrowVisible(left,!!canLeft);
-  setRailArrowVisible(right,!!canRight);
 }
 
 function setOverflowState(host,scroller){
@@ -128,7 +63,6 @@ function setOverflowState(host,scroller){
   var canRight=max>1&&scroller.scrollLeft<max-1;
   host.classList.toggle('sc-overflow-left',canLeft);
   host.classList.toggle('sc-overflow-right',canRight);
-  setRailArrowState(host,scroller,canLeft,canRight);
 }
 
 function updateRailState(){
@@ -150,10 +84,8 @@ function updateRailState(){
   var mobileScroller=mobileRail&&mobileRail.querySelector('.topShopMenuMobileScroller');
 
   if(mobileRail){
-    if(desktopQuery.matches){
-      mobileRail.classList.remove('sc-overflow-left','sc-overflow-right');
-      setRailArrowState(mobileRail,null,false,false);
-    }else setOverflowState(mobileRail,mobileScroller);
+    if(desktopQuery.matches)mobileRail.classList.remove('sc-overflow-left','sc-overflow-right');
+    else setOverflowState(mobileRail,mobileScroller);
   }
 
   if(mobileWrapper){
@@ -168,20 +100,6 @@ function updateRailState(){
 function scheduleRailState(){
   if(railStateRaf)return;
   railStateRaf=requestAnimationFrame(updateRailState);
-}
-
-function installRailState(){
-  scheduleRailState();
-  window.addEventListener('scroll',scheduleRailState,{passive:true});
-  document.addEventListener('scroll',scheduleRailState,true);
-
-  if(document.body&&window.MutationObserver){
-    railObserver=new MutationObserver(function(){
-      scheduleRailState();
-      scheduleDescriptionMeasure();
-    });
-    railObserver.observe(document.body,{childList:true,subtree:true});
-  }
 }
 
 function ready(fn){
@@ -202,9 +120,17 @@ function handleBreakpoint(){
 
 ready(function(){
   installRows();
-  installRailState();
+  scheduleRailState();
   scheduleDescriptionMeasure();
+
+  window.addEventListener('scroll',scheduleRailState,{passive:true});
+  document.addEventListener('scroll',scheduleRailState,true);
   window.addEventListener('resize',handleResize,{passive:true});
+
+  /* Toolbar creation and font settling are finite events; a couple of deferred
+     passes replace the previous unbounded subtree MutationObserver. */
+  setTimeout(handleResize,0);
+  setTimeout(handleResize,180);
 
   if(document.fonts&&document.fonts.ready){
     document.fonts.ready.then(handleResize).catch(function(){});
