@@ -13,7 +13,7 @@ function loadMobileResponsiveStyles(){
   var link=document.createElement('link');
   link.id='sc-mobile-responsive-css';
   link.rel='stylesheet';
-  link.href='overrides/mobile-responsive.css?v=20260814-1824-mobile-v1';
+  link.href='overrides/mobile-responsive.css?v=20260814-1830-mobile-v2';
   document.head.appendChild(link);
 }
 
@@ -172,43 +172,30 @@ function ready(fn){
 function repairMobileHeader(){
   if(desktopQuery.matches)return;
 
-  var logo=document.querySelector('.brandOnlyMobile img');
-  if(logo){
-    logo.style.removeProperty('width');
-    logo.style.removeProperty('height');
-    logo.style.removeProperty('margin');
-    logo.style.removeProperty('margin-left');
-    logo.style.removeProperty('transform');
-  }
+  var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));
+  if(!menus.length)return;
 
-  var jq=window.jQuery;
-  var source=document.getElementById('menuMobile');
-  if(!jq||!source||!jq.fn||typeof jq.fn.slicknav!=='function')return;
-
-  var $source=jq(source);
-  try{$source.slicknav('destroy');}catch(_){ }
-
-  document.querySelectorAll('body > .slicknav_menu').forEach(function(menu){
-    if(menu.parentNode)menu.parentNode.removeChild(menu);
+  /* main.js creates the live SlickNav instance after the static snapshot menu.
+     Keep that event-bound instance and remove only the older captured copies. */
+  var liveMenu=menus[menus.length-1];
+  menus.forEach(function(menu){
+    if(menu!==liveMenu&&menu.parentNode)menu.parentNode.removeChild(menu);
   });
 
-  try{$source.removeData('slicknav');}catch(_){ }
-  $source.removeClass('slicknav_hidden').removeAttr('aria-hidden');
+  liveMenu.classList.add('sc-mobile-main-menu');
+  liveMenu.style.removeProperty('visibility');
+  liveMenu.style.removeProperty('pointer-events');
 
-  try{
-    $source.slicknav({label:''});
-  }catch(_){
-    return;
-  }
-
-  var menu=document.querySelector('body > .slicknav_menu');
-  if(!menu)return;
-  menu.classList.add('sc-mobile-main-menu');
-
-  var button=menu.querySelector('.slicknav_btn');
+  var button=liveMenu.querySelector('.slicknav_btn');
   if(button){
     button.setAttribute('aria-label','Abrir menú de navegación');
     button.setAttribute('title','Menú');
+  }
+
+  var logo=document.querySelector('.brandOnlyMobile img');
+  if(logo){
+    logo.style.removeProperty('margin-left');
+    logo.style.removeProperty('transform');
   }
 }
 
@@ -238,8 +225,8 @@ ready(function(){
   scheduleDescriptionMeasure();
   loadProductImageParallax();
 
-  /* Let the legacy DOM-ready queue finish, then replace the captured static
-     SlickNav markup with one fresh, event-bound instance. */
+  /* Preserve the already working legacy SlickNav instance and remove only
+     duplicate snapshot markup after the DOM-ready queue has finished. */
   setTimeout(repairMobileHeader,0);
 
   window.addEventListener('scroll',scheduleRailState,{passive:true});
