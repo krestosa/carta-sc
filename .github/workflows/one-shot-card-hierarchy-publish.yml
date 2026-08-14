@@ -1,0 +1,78 @@
+name: One-shot card hierarchy publish
+
+on:
+  push:
+    branches:
+      - diseño
+
+permissions:
+  contents: write
+
+jobs:
+  publish-card-hierarchy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: diseño
+          fetch-depth: 0
+
+      - name: Wire hierarchy overrides and refresh cache key
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          version = '20260814-1308-hierarchy'
+
+          main = Path('_js_dev/main.js')
+          s = main.read_text(encoding='utf-8')
+
+          css_line = f"\taddBlockingCss('sc-card-hierarchy-css', 'overrides/card-hierarchy.css?v={version}');\n"
+          if 'sc-card-hierarchy-css' not in s:
+              marker = "addBlockingCss('sc-product-image-ratio-css'"
+              pos = s.find(marker)
+              if pos < 0:
+                  raise SystemExit('product image ratio loader not found')
+              end = s.find('\n', pos)
+              if end < 0:
+                  raise SystemExit('product image ratio loader line malformed')
+              s = s[:end+1] + css_line + s[end+1:]
+
+          if 'product-meta-layout.js' not in s:
+              marker = "\tdocument.head.appendChild(script);\n})();"
+              replacement = (
+                  "\tdocument.head.appendChild(script);\n\n"
+                  "\tvar metaScript = document.createElement('script');\n"
+                  f"\tmetaScript.src = 'overrides/product-meta-layout.js?v={version}';\n"
+                  "\tmetaScript.async = false;\n"
+                  "\tdocument.head.appendChild(metaScript);\n"
+                  "})();"
+              )
+              if marker not in s:
+                  raise SystemExit('catalog script append marker not found')
+              s = s.replace(marker, replacement, 1)
+
+          s = re.sub(r'(?<=\?v=)[A-Za-z0-9._-]+', version, s)
+          main.write_text(s, encoding='utf-8')
+
+          index = Path('index.html')
+          s = index.read_text(encoding='utf-8')
+          s2, count = re.subn(r'(_js_dev/main\.js\?v=)[^"\']+', rf'\g<1>{version}', s, count=1)
+          if count != 1:
+              raise SystemExit('versioned main.js entrypoint not found exactly once')
+          index.write_text(s2, encoding='utf-8')
+          PY
+
+      - name: Commit exact loader changes
+        shell: bash
+        run: |
+          if git diff --quiet -- _js_dev/main.js index.html; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _js_dev/main.js index.html
+          git commit -m "fix: publish product metadata and category hierarchy"
+          git push origin HEAD:diseño
