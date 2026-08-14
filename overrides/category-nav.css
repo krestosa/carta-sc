@@ -1,5 +1,6 @@
 /* SushiClub category navigation.
-   Owns rail structure and active rule. No shadows or gradient affordances. */
+   Owns rail structure and active rule. No shadows or gradient affordances.
+   Deploy marker: flat-rail-v2. */
 
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
