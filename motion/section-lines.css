@@ -20,12 +20,15 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoSh
   border-bottom: 0 !important;
 }
 
-/* Kill legacy rules attached to the parent wrapper. The only visible section
-   divider is the animated ::after on the initialized text host. */
+/* The wrapper never owns a rule. There is exactly one divider: ::after on the
+   text host. It exists before GSAP starts so adding the animation host class
+   cannot change layout or create a second line. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::before,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::after,
 body.sushiShop .listadoShop .titleShopSeccion::before,
-body.sushiShop .listadoShop .titleShopSeccion::after {
+body.sushiShop .listadoShop .titleShopSeccion::after,
+body.sushiShop .listadoShop .titleShopSeccion > div::before,
+body.sushiShop .listadoShop .subTitleShopSeccion::before {
   content: none !important;
   display: none !important;
 }
@@ -35,8 +38,8 @@ body.sushiShop .listadoShop .titleShopSeccion > div {
   padding-bottom: 0 !important;
 }
 
-/* Cards already visible when the initial catalogue settles never participate
-   in reveal motion. This also neutralizes any in-flight GSAP opacity tween. */
+/* Cards that were visible at the moment the skeleton hands off are permanently
+   excluded from catalogue reveal motion for this page load. */
 body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
   opacity: 1 !important;
   visibility: visible !important;
@@ -44,10 +47,10 @@ body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
   transition: none !important;
 }
 
-body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
-body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion.sc-section-rule-host::after,
-body.sushiShop .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
-body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
+body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::after,
+body.sushiShop .listadoShop .titleShopSeccion > div::after,
+body.sushiShop .listadoShop .subTitleShopSeccion::after {
   content: '' !important;
   display: block !important;
   position: static !important;
@@ -67,13 +70,13 @@ body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
   pointer-events: none;
 }
 
-body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
-body.sushiShop .listadoShop .titleShopSeccion > div.sc-section-rule-host::after {
+body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
+body.sushiShop .listadoShop .titleShopSeccion > div::after {
   margin-top: 12px !important;
 }
 
-body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion.sc-section-rule-host::after,
-body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
+body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::after,
+body.sushiShop .listadoShop .subTitleShopSeccion::after {
   margin-top: 8px !important;
 }
 
@@ -82,10 +85,10 @@ body.sushiShop .sc-section-text-line {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.sushiShop .listadoShop .titleShopSeccion > div.sc-section-rule-host::after,
-  body.sushiShop .listadoShop .subTitleShopSeccion.sc-section-rule-host::after {
+  body.sushiShop .listadoShop .titleShopSeccion > div::after,
+  body.sushiShop .listadoShop .subTitleShopSeccion::after {
     transform: scaleX(1) !important;
   }
 }
 
-/* Deploy marker: single-section-divider-v5. */
+/* Deploy marker: stable-single-divider-v6. */
