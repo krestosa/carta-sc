@@ -63,7 +63,7 @@ $(window).load(function() {
 
 function modalesHome(){
 	if ($(".modalNormPOPHOME").length){
-		setTimeout(function() {$(".modalNormPOPHOME").click() }, 500)
+		setTimeout(function() {$('.modalNormPOPHOME').click() }, 500)
 	}
 };
 
@@ -328,15 +328,15 @@ function noFoto(){
 		document.head.appendChild(link);
 	}
 
-	addBlockingCss('sc-catalog-css', 'overrides/catalog.css');
-	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css');
-	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css');
-	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css');
-	addBlockingCss('sc-motion-css', 'motion/motion.css');
-	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css');
+	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1532');
+	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1532');
+	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1532');
+	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1532');
+	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1532');
+	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1532');
 
 	var script = document.createElement('script');
-	script.src = 'overrides/catalog.js';
+	script.src = 'overrides/catalog.js?v=20260814-1532';
 	script.async = false;
 	document.head.appendChild(script);
 })();
@@ -347,7 +347,7 @@ function noFoto(){
 	window.__scUxMotionRequested = true;
 
 	var script = document.createElement('script');
-	script.src = 'motion/motion.js';
+	script.src = 'motion/motion.js?v=20260814-1532';
 	script.async = true;
 	document.head.appendChild(script);
 })();
