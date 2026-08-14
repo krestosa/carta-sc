@@ -1,103 +1,32 @@
-/* Smooth handoff from catalogue skeleton to settled content. */
+/* Smooth handoff from measured skeleton layers to settled catalogue content. */
 @media (min-width: 993px) {
-  html.sc-catalog-skeleton body.sushiShop .bannerShop .imgBannerShop,
-  html.sc-catalog-skeleton-leaving body.sushiShop .bannerShop .imgBannerShop,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop img,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop img {
-    transition: opacity 260ms cubic-bezier(.22,1,.36,1) !important;
+  html.sc-catalog-skeleton body.sushiShop .sc-skeleton-layer,
+  html.sc-catalog-skeleton-leaving body.sushiShop .sc-skeleton-layer {
+    transition: opacity 220ms cubic-bezier(.22,1,.36,1) !important;
   }
 
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .bannerShop .imgBannerShop,
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop img {
-    opacity: 0 !important;
+  html.sc-catalog-skeleton body.sushiShop .sc-skeleton-text,
+  html.sc-catalog-skeleton-leaving body.sushiShop .sc-skeleton-text {
+    transition: color 180ms ease-out !important;
   }
 
-  html.sc-catalog-skeleton-leaving body.sushiShop .bannerShop .imgBannerShop,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop img {
-    opacity: 1 !important;
-  }
-
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion {
-    transition: color 220ms ease-out !important;
-  }
-
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow > *,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow > *,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1 .sabores,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1 .sabores {
-    transition: opacity 220ms ease-out !important;
-  }
-
-  /* The animated divider owns ::after. Skeleton title placeholders use
-     ::before so the two visual systems can never stack or flash. */
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::after {
-    content: none !important;
-  }
-
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::before,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 13px;
-    width: min(260px, 46%);
-    height: 18px;
-    pointer-events: none;
-    background: var(--sc-skeleton-base, #ecece7);
-    opacity: 1;
-    transition: opacity 260ms cubic-bezier(.22,1,.36,1);
-  }
-
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::before,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 2px;
-    width: min(170px, 35%);
-    height: 10px;
-    pointer-events: none;
-    background: var(--sc-skeleton-base, #ecece7);
-    opacity: 1;
-    transition: opacity 260ms cubic-bezier(.22,1,.36,1);
-  }
-
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::before,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::before {
-    opacity: 0;
-  }
-
-  html.sc-catalog-skeleton body.sushiShop .bannerShop .BanContShop::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop .bannerShop .BanContShop::after,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop::after,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1::after,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip::after,
-  html.sc-catalog-skeleton body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow::after,
-  html.sc-catalog-skeleton-leaving body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow::after {
-    transition: opacity 260ms cubic-bezier(.22,1,.36,1) !important;
+  html.sc-catalog-skeleton body.sushiShop .listadoShop .productoShop .sc-product-flavors,
+  html.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .productoShop .sc-product-flavors,
+  html.sc-catalog-skeleton body.sushiShop .listadoShop .productoShop .title-shop1 .sabores,
+  html.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .productoShop .title-shop1 .sabores,
+  html.sc-catalog-skeleton body.sushiShop .sc-skeleton-text > :not(.sc-skeleton-layer),
+  html.sc-catalog-skeleton-leaving body.sushiShop .sc-skeleton-text > :not(.sc-skeleton-layer) {
+    transition: opacity 180ms ease-out !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.sc-catalog-skeleton *,
-  html.sc-catalog-skeleton-leaving * {
+  html.sc-catalog-skeleton .sc-skeleton-layer,
+  html.sc-catalog-skeleton-leaving .sc-skeleton-layer,
+  html.sc-catalog-skeleton .sc-skeleton-text,
+  html.sc-catalog-skeleton-leaving .sc-skeleton-text,
+  html.sc-catalog-skeleton .sc-skeleton-text > *,
+  html.sc-catalog-skeleton-leaving .sc-skeleton-text > * {
     transition-duration: 0ms !important;
   }
 }
