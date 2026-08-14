@@ -1,4 +1,4 @@
-/* SushiClub catalogue product images: intrinsic ratio, transparent stage. */
+/* SushiClub catalogue product images: normalized 286x200 stage, transparent background. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
@@ -7,11 +7,12 @@
     height: auto !important;
     min-height: 0 !important;
     padding: 0 !important;
-    aspect-ratio: auto !important;
+    aspect-ratio: 286 / 200 !important;
     background: transparent !important;
     background-color: transparent !important;
     background-image: none !important;
     line-height: 0 !important;
+    overflow: hidden !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop,
@@ -27,7 +28,7 @@
     inset: auto !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
     max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
