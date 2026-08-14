@@ -34,8 +34,18 @@
     --sc-catalog-ease: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  /* Hide only the old black desktop category row. The promotional banner
-     lives in the same wrapper and must remain visible. */
+  /* The promotional banner stays in normal document flow. Only the old
+     black desktop category row is hidden; categories are rendered below. */
+  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    z-index: auto !important;
+  }
+
   body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile > .topShop {
     display: none !important;
   }
@@ -73,11 +83,16 @@
 
   /* Category toolbar: parent categories only, moved from the fixed black nav. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 120;
     box-sizing: border-box;
     width: 100%;
     margin: 42px 0 34px;
-    padding: 0 0 14px;
+    padding: 16px 0 14px;
     border-bottom: 1px solid var(--sc-catalog-line);
+    background: #ffffff;
     overflow: hidden;
   }
 
