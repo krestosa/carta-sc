@@ -140,11 +140,11 @@ function sliderInternal(){
 		return false
 	})
 	$('.JSviewMap').on('click', function(){
-		$(this).closest('.panel').find(".galAbs").addClass("close")
+		$(this).closest('.panel').find('.galAbs').addClass('close')
 		return false
 	})
 
-	//Saca los controles si hay solo una image
+	/* Remove controls if there is only one image. */
 	$('.sliderInternalEsp, .sliderInternalEsp').each(function(){
 		if ($('.containerSlide', this).length < 20){
 			$('.controls', this).hide()
@@ -310,7 +310,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1617-skeleton-crossfade-v2';
+	var assetVersion = '20260814-1621-modal-divider-v4';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -378,7 +378,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1617-skeleton-crossfade-v2';
+	var version = window.__scCatalogAssetVersion || '20260814-1621-modal-divider-v4';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
