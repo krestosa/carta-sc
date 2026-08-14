@@ -1,6 +1,6 @@
 /* SushiClub category navigation.
    Owns rail structure and active rule. No shadows or gradient affordances.
-   Deploy marker: compact-rail-spacing-v1. */
+   Deploy marker: compact-rail-spacing-v2. */
 
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
@@ -10,7 +10,7 @@
     z-index: 120;
     box-sizing: border-box;
     width: 100%;
-    margin: 34px 0 26px;
+    margin: 16px 0 14px;
     padding: 16px 0 0 !important;
     border: 0 !important;
     background: #fff;
