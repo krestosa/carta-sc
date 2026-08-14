@@ -1,11 +1,12 @@
 (function(){
 'use strict';
-/* Deploy marker: rail-overflow-sticky-v1. */
+/* Deploy marker: rail-overflow-sticky-description-v2. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
 var desktopQuery=window.matchMedia('(min-width: 993px)');
 var railStateRaf=0;
+var descriptionRaf=0;
 var railObserver=null;
 
 function clearRows(){
@@ -38,6 +39,20 @@ function installRows(){
     if(!row.children.length)row.setAttribute('aria-hidden','true');
     link.appendChild(row);
   });
+}
+
+function measureDescriptions(){
+  descriptionRaf=0;
+  document.querySelectorAll('.listadoShop .productoShop .descrip').forEach(function(desc){
+    desc.classList.remove('sc-description-truncated');
+    var truncated=desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1;
+    desc.classList.toggle('sc-description-truncated',truncated);
+  });
+}
+
+function scheduleDescriptionMeasure(){
+  if(descriptionRaf)return;
+  descriptionRaf=requestAnimationFrame(function(){requestAnimationFrame(measureDescriptions);});
 }
 
 function setOverflowState(host,scroller){
@@ -86,15 +101,13 @@ function scheduleRailState(){
 function installRailState(){
   scheduleRailState();
   window.addEventListener('scroll',scheduleRailState,{passive:true});
-  window.addEventListener('resize',scheduleRailState,{passive:true});
   document.addEventListener('scroll',scheduleRailState,true);
 
-  if(document.fonts&&document.fonts.ready){
-    document.fonts.ready.then(scheduleRailState).catch(function(){});
-  }
-
   if(document.body&&window.MutationObserver){
-    railObserver=new MutationObserver(scheduleRailState);
+    railObserver=new MutationObserver(function(){
+      scheduleRailState();
+      scheduleDescriptionMeasure();
+    });
     railObserver.observe(document.body,{childList:true,subtree:true});
   }
 }
@@ -105,15 +118,27 @@ function ready(fn){
     : fn();
 }
 
+function handleResize(){
+  scheduleRailState();
+  scheduleDescriptionMeasure();
+}
+
 function handleBreakpoint(){
   installRows();
-  scheduleRailState();
+  handleResize();
 }
 
 ready(function(){
   installRows();
   installRailState();
+  scheduleDescriptionMeasure();
+  window.addEventListener('resize',handleResize,{passive:true});
+
+  if(document.fonts&&document.fonts.ready){
+    document.fonts.ready.then(handleResize).catch(function(){});
+  }
 });
+
 if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',handleBreakpoint);
 else desktopQuery.addListener(handleBreakpoint);
 })();
