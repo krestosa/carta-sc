@@ -6,13 +6,24 @@ window.__scModalCtaBooted=true;
 var CART_URL='https://www.sushiclub.com.ar/shop_init.php';
 var observer=null;
 
+function assetVersion(){return window.__scCatalogAssetVersion||'20260814-1600-lines-modal-v3';}
+
 function ensureStyles(){
   if(document.getElementById('sc-modal-cta-css'))return;
   var link=document.createElement('link');
   link.id='sc-modal-cta-css';
   link.rel='stylesheet';
-  link.href='overrides/modal-cta.css?v='+(window.__scCatalogAssetVersion||'20260814-1544-modal-footer');
+  link.href='overrides/modal-cta.css?v='+assetVersion();
   document.head.appendChild(link);
+}
+
+function ensureMotion(){
+  if(document.getElementById('sc-modal-motion-js'))return;
+  var script=document.createElement('script');
+  script.id='sc-modal-motion-js';
+  script.src='motion/modal-motion.js?v='+assetVersion();
+  script.async=true;
+  document.head.appendChild(script);
 }
 
 function enhanceModal(modal){
@@ -63,6 +74,7 @@ function scan(root){
 
 function boot(){
   ensureStyles();
+  ensureMotion();
   scan(document);
   if(!document.body||!window.MutationObserver)return;
   observer=new MutationObserver(function(mutations){
