@@ -334,3 +334,75 @@
     transition: none !important;
   }
 }
+
+/* Direction affordance uses the exact supplied Material chevron path.
+   Render as rail pseudo-elements so global button styles cannot hide it. */
+body.sushiShop .sc-rail-arrow {
+  display: none !important;
+}
+
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before {
+    content: '' !important;
+    display: block !important;
+    position: absolute;
+    top: 50%;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 -960 960 960' width='24px' fill='%23e3e3e3'%3E%3Cpath d='M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px 24px;
+    border: 0;
+    box-shadow: none;
+    pointer-events: none;
+    z-index: 60;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after {
+    right: 0;
+    transform: translateY(-50%);
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before {
+    left: 0;
+    transform: translateY(-50%) rotate(180deg);
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after,
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before {
+    content: '' !important;
+    display: block !important;
+    position: absolute;
+    top: 50%;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 -960 960 960' width='24px' fill='%23e3e3e3'%3E%3Cpath d='M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px 24px;
+    border: 0;
+    box-shadow: none;
+    pointer-events: none;
+    z-index: 60;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
+    right: 0;
+    transform: translateY(-50%);
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before {
+    left: 0;
+    transform: translateY(-50%) rotate(180deg);
+  }
+}
