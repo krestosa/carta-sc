@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Pages deploy marker: category-context-hover-hashless-v1. */
+/* Pages deploy marker: stable-no-skeleton-v1. */
 if(window.__scCatalogOverrideBooted)return;
 window.__scCatalogOverrideBooted=true;
 
@@ -14,46 +14,20 @@ var categoryWheelHandler=null;
 var categoryStateObserver=null;
 var categoryStateRaf=0;
 var lastAutoCategory=null;
-var skeletonBoot=bootLoadingSkeleton();
 
-function bootLoadingSkeleton(){
-  if(!desktopQuery.matches)return Promise.resolve();
-  var root=document.documentElement;
-  root.classList.add('sc-catalog-skeleton','sc-catalog-content-loading');
-
-  if(!document.getElementById('sc-skeleton-guard')){
-    var guard=document.createElement('style');
-    guard.id='sc-skeleton-guard';
-    guard.textContent='@media (min-width:993px){body.sushiShop .bannerShop .BanContShop{position:relative;aspect-ratio:1500/157;overflow:hidden}html.sc-catalog-skeleton body.sushiShop:not(.sc-catalog-layout-ready) .containerShop>.row{visibility:hidden}}';
-    document.head.appendChild(guard);
-  }
-
-  if(!document.getElementById('sc-loading-skeleton-css')){
-    var css=document.createElement('link');
-    css.id='sc-loading-skeleton-css';
-    css.rel='stylesheet';
-    css.href='overrides/loading-skeleton.css';
-    document.head.appendChild(css);
-  }
-
-  return new Promise(function(resolve){
-    var old=document.getElementById('sc-loading-skeleton-js');
-    if(old){
-      if(old.dataset.loaded==='true')return resolve();
-      old.addEventListener('load',resolve,{once:true});
-      setTimeout(resolve,700);
-      return;
-    }
-    var script=document.createElement('script');
-    script.id='sc-loading-skeleton-js';
-    script.src='overrides/loading-skeleton.js';
-    script.async=false;
-    script.onload=function(){script.dataset.loaded='true';resolve();};
-    script.onerror=resolve;
-    document.head.appendChild(script);
-    setTimeout(resolve,700);
-  });
-}
+/* Skeleton loading was removed. Clean stale state once and never observe the
+   root class attribute; observing and mutating the same attribute can create
+   an unbounded MutationObserver feedback loop. */
+[
+  'sc-catalog-skeleton',
+  'sc-catalog-content-loading',
+  'sc-catalog-skeleton-leaving',
+  'sc-skeleton-ready'
+].forEach(function(name){
+  if(document.documentElement.classList.contains(name))document.documentElement.classList.remove(name);
+});
+var staleGuard=document.getElementById('sc-skeleton-guard');
+if(staleGuard&&staleGuard.parentNode)staleGuard.parentNode.removeChild(staleGuard);
 
 function ensureCategoryNavStyles(){
   if(document.getElementById('sc-category-nav-css'))return;
@@ -231,10 +205,6 @@ function installHorizontalCategoryWheel(scroller){
   categoryWheelScroller=scroller;
   categoryWheelHandler=function(e){
     if(!desktopQuery.matches)return;
-
-    /* While the pointer is over the category rail, wheel input belongs only
-       to this horizontal scroller. Even at either edge it must never bubble
-       into vertical page scrolling. */
     e.preventDefault();
 
     var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
@@ -284,7 +254,6 @@ function makeToolbar(container){
 function refreshMotion(){
   requestAnimationFrame(function(){
     if(window.ScrollTrigger&&typeof window.ScrollTrigger.refresh==='function')window.ScrollTrigger.refresh();
-    dispatchEvent(new Event('resize'));
   });
 }
 function applyDesktop(){
@@ -386,13 +355,9 @@ ensureCategoryNavStyles();
 installHashlessHistoryGuard();
 forceTop();
 ready(function(){
-  skeletonBoot.then(function(){
-    syncLayout();
-    installModal();
-    installCleanAnchors();
-    var guard=document.getElementById('sc-skeleton-guard');
-    if(guard&&document.body.classList.contains('sc-catalog-layout-ready'))guard.remove();
-    if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',syncLayout);else desktopQuery.addListener(syncLayout);
-  });
+  syncLayout();
+  installModal();
+  installCleanAnchors();
+  if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',syncLayout);else desktopQuery.addListener(syncLayout);
 });
 })();
