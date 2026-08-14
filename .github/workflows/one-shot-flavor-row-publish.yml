@@ -1,0 +1,54 @@
+name: One-shot flavor row publish
+
+on:
+  push:
+    branches:
+      - diseño
+
+permissions:
+  contents: write
+
+jobs:
+  publish-flavor-row:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: diseño
+          fetch-depth: 0
+
+      - name: Refresh catalogue cache key
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          version = '20260814-1302-flavors'
+
+          main = Path('_js_dev/main.js')
+          s = main.read_text(encoding='utf-8')
+          s2, count = re.subn(r'(?<=\?v=)[A-Za-z0-9._-]+', version, s)
+          if count < 1:
+              raise SystemExit('No versioned catalogue assets found in main.js')
+          main.write_text(s2, encoding='utf-8')
+
+          index = Path('index.html')
+          s = index.read_text(encoding='utf-8')
+          s2, count = re.subn(r'(_js_dev/main\.js\?v=)[^"\']+', rf'\g<1>{version}', s, count=1)
+          if count != 1:
+              raise SystemExit('Versioned main.js entrypoint not found exactly once')
+          index.write_text(s2, encoding='utf-8')
+          PY
+
+      - name: Commit exact version bump
+        shell: bash
+        run: |
+          if git diff --quiet -- _js_dev/main.js index.html; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _js_dev/main.js index.html
+          git commit -m "fix: publish flavor metadata row with fresh cache key"
+          git push origin HEAD:diseño
