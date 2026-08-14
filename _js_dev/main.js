@@ -310,15 +310,13 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1628-measured-skeleton-v6';
+	var assetVersion = '20260814-1631-no-skeleton-v7';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
-	document.documentElement.classList.add(
-		'sc-catalog-prepaint',
-		'sc-catalog-skeleton',
-		'sc-catalog-content-loading'
-	);
+	/* The catalogue now paints real content immediately. Prepaint only reserves
+	   final geometry so catalog.js can mount the rail without shifting the grid. */
+	document.documentElement.classList.add('sc-catalog-prepaint');
 
 	function addBlockingCss(id, href) {
 		if (document.getElementById(id)) return;
@@ -335,8 +333,8 @@ function noFoto(){
 
 	addBlockingCss('sc-catalog-css', asset('overrides/catalog.css'));
 	addBlockingCss('sc-category-nav-css', asset('overrides/category-nav.css'));
+	/* Harmless compatibility sheet: only reserves banner intrinsic geometry. */
 	addBlockingCss('sc-loading-skeleton-css', asset('overrides/loading-skeleton.css'));
-	addBlockingCss('sc-skeleton-transition-css', asset('motion/skeleton-transition.css'));
 	addBlockingCss('sc-catalog-prepaint-css', asset('overrides/prepaint.css'));
 	addBlockingCss('sc-motion-css', asset('motion/motion.css'));
 	addBlockingCss('sc-product-image-ratio-css', asset('overrides/product-image-ratio.css'));
@@ -344,13 +342,13 @@ function noFoto(){
 	addBlockingCss('sc-section-lines-css', asset('motion/section-lines.css'));
 	addBlockingCss('sc-content-normalizer-css', asset('overrides/content-normalizer.css'));
 
-	/* Load the skeleton controller here with the shared asset version. catalog.js
-	   detects this id and reuses it instead of requesting an unversioned copy. */
-	var skeletonScript = document.createElement('script');
-	skeletonScript.id = 'sc-loading-skeleton-js';
-	skeletonScript.src = asset('overrides/loading-skeleton.js');
-	skeletonScript.async = false;
-	document.head.appendChild(skeletonScript);
+	/* Compatibility guard loads before catalog.js so its historical skeleton
+	   bootstrap cannot hide the catalogue or inject placeholder UI. */
+	var skeletonGuardScript = document.createElement('script');
+	skeletonGuardScript.id = 'sc-loading-skeleton-js';
+	skeletonGuardScript.src = asset('overrides/loading-skeleton.js');
+	skeletonGuardScript.async = false;
+	document.head.appendChild(skeletonGuardScript);
 
 	var script = document.createElement('script');
 	script.src = asset('overrides/catalog.js');
@@ -378,11 +376,27 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1628-measured-skeleton-v6';
+	var version = window.__scCatalogAssetVersion || '20260814-1631-no-skeleton-v7';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
 	script.onload = function(){
+		/* motion.js historically scheduled an initial card fade. Mark everything
+		   already visible before that RAF can paint; the CSS rule makes it static. */
+		var vh = window.innerHeight || document.documentElement.clientHeight;
+		var initialCards = [];
+		document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){
+			var r = card.getBoundingClientRect();
+			if(r.top < vh && r.bottom > 0){
+				card.classList.add('sc-static-initial-card');
+				initialCards.push(card);
+			}
+		});
+		if(window.gsap && initialCards.length){
+			window.gsap.killTweensOf(initialCards);
+			window.gsap.set(initialCards,{autoAlpha:1,clearProps:'opacity,visibility,transform'});
+		}
+
 		if (!document.getElementById('sc-sticky-rail-motion-js')) {
 			var sticky = document.createElement('script');
 			sticky.id = 'sc-sticky-rail-motion-js';
