@@ -5,6 +5,7 @@ window.__scSectionLinesMotionBooted=true;
 
 var SPLIT_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js';
 var attempts=0;
+var initialized=false;
 
 function loadScript(src,id,done){
   var old=document.getElementById(id);
@@ -27,27 +28,46 @@ function targets(){
   ),function(el){return (el.textContent||'').replace(/\s+/g,' ').trim().length>0;});
 }
 
-function isInitiallyVisible(el){
-  var r=el.getBoundingClientRect();
-  return r.bottom>0&&r.top<window.innerHeight*0.94;
+function isInInitialViewport(el){
+  return el.getBoundingClientRect().top<window.innerHeight;
 }
 
-function boot(){
-  if(!window.gsap||!window.ScrollTrigger){
-    if(attempts++<120)window.setTimeout(boot,50);
+function afterSkeleton(done){
+  var root=document.documentElement;
+  var finished=false;
+  var observer=null;
+  var timer=0;
+
+  function run(){
+    if(finished)return;
+    finished=true;
+    if(observer)observer.disconnect();
+    if(timer)clearTimeout(timer);
+    requestAnimationFrame(function(){requestAnimationFrame(done);});
+  }
+
+  if(!root.classList.contains('sc-catalog-content-loading')){
+    run();
     return;
   }
 
-  if(!window.SplitText){
-    loadScript(SPLIT_SRC,'sc-gsap-splittext',boot);
-    return;
-  }
+  observer=new MutationObserver(function(){
+    if(!root.classList.contains('sc-catalog-content-loading'))run();
+  });
+  observer.observe(root,{attributes:true,attributeFilter:['class']});
+  timer=setTimeout(run,1900);
+}
+
+function initMotion(){
+  if(initialized)return;
+  initialized=true;
 
   var gsap=window.gsap;
   var ST=window.ScrollTrigger;
   var SplitText=window.SplitText;
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var elements=targets();
+  var animated=[];
   var splits=[];
   var tweens=[];
 
@@ -56,28 +76,27 @@ function boot(){
   elements.forEach(function(el){
     el.classList.add('sc-section-rule-host');
 
-    if(reduce){
+    /* Anything already visible when the skeleton is gone stays completely
+       static. Only content that starts below the viewport gets reveal motion. */
+    if(reduce||isInInitialViewport(el)){
       gsap.set(el,{'--sc-section-rule-scale':1});
       return;
     }
 
-    var initial=isInitiallyVisible(el);
+    animated.push(el);
     gsap.set(el,{'--sc-section-rule-scale':0});
 
-    var ruleConfig={
+    tweens.push(gsap.to(el,{
       '--sc-section-rule-scale':1,
       duration:0.95,
       ease:'power3.out',
-      overwrite:'auto'
-    };
-    if(!initial){
-      ruleConfig.scrollTrigger={
+      overwrite:'auto',
+      scrollTrigger:{
         trigger:el,
         start:'clamp(top 90%)',
         once:true
-      };
-    }
-    tweens.push(gsap.to(el,ruleConfig));
+      }
+    }));
 
     splits.push(SplitText.create(el,{
       type:'lines',
@@ -85,23 +104,20 @@ function boot(){
       linesClass:'sc-section-text-line',
       autoSplit:true,
       onSplit:function(self){
-        var config={
+        return gsap.from(self.lines,{
           yPercent:108,
           autoAlpha:0,
           duration:0.68,
           ease:'power3.out',
           stagger:0.055,
-          overwrite:'auto'
-        };
-        if(!isInitiallyVisible(el)){
-          config.scrollTrigger={
+          overwrite:'auto',
+          scrollTrigger:{
             trigger:el,
             start:'clamp(top 90%)',
             once:true,
             invalidateOnRefresh:true
-          };
-        }
-        return gsap.from(self.lines,config);
+          }
+        });
       }
     }));
   });
@@ -118,6 +134,20 @@ function boot(){
       gsap.set(el,{clearProps:'--sc-section-rule-scale'});
     });
   };
+}
+
+function boot(){
+  if(!window.gsap||!window.ScrollTrigger){
+    if(attempts++<120)window.setTimeout(boot,50);
+    return;
+  }
+
+  if(!window.SplitText){
+    loadScript(SPLIT_SRC,'sc-gsap-splittext',boot);
+    return;
+  }
+
+  afterSkeleton(initMotion);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
