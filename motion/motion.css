@@ -56,6 +56,17 @@ body {
     box-shadow: none !important;
 }
 
+/* The moving indicator is the only category underline/state surface. */
+.sushiShop .wrapp-nav-tabsTopShop li.active > a,
+.sushiShop .wrapp-nav-tabsTopShop a.active,
+.sushiShop .wtopShopMenuMobile li.active > a,
+.sushiShop .wtopShopMenuMobile a.active {
+    background-color: transparent !important;
+    border-bottom-color: transparent !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
 .sushiShop .sc-category-motion-root {
     position: relative !important;
 }
@@ -66,7 +77,7 @@ body {
     left: 0;
     bottom: 0;
     width: 1px;
-    height: 2px;
+    height: 1px;
     margin: 0;
     padding: 0;
     border: 0;
