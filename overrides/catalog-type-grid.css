@@ -1,20 +1,24 @@
 /*
- * SushiClub catalogue typographic grid
+ * SushiClub catalogue Swiss card system
  * ------------------------------------------------------------
- * Swiss/editorial hierarchy for catalogue content only.
- * No new rules, dividers, card chrome or decorative surfaces are introduced.
+ * Desktop-only editorial hierarchy inspired by the International Typographic Style:
+ * strict grid, asymmetry, grotesk typography, rules and restrained surfaces.
  */
 
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready {
-    --sc-type-xs: 12px;
-    --sc-type-sm: 13px;
-    --sc-type-md: 15px;
+    --sc-type-xs: 11.5px;
+    --sc-type-sm: 12.5px;
+    --sc-type-md: 15.5px;
     --sc-type-lg: 17px;
     --sc-type-xl: 22px;
+    --sc-card-rule: #171717;
+    --sc-card-subrule: #deded8;
+    --sc-card-stage: #f4f4f0;
+    --sc-card-stage-hover: #efefea;
   }
 
-  /* Section hierarchy: compact, asymmetric and type-led. */
+  /* Section hierarchy remains restrained and type-led. */
   body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion {
     font-size: var(--sc-type-xl, 22px) !important;
@@ -25,22 +29,55 @@
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
-    font-size: var(--sc-type-xs, 12px) !important;
+    font-size: 12px !important;
     line-height: 1.25 !important;
     font-weight: 600 !important;
     letter-spacing: 0.055em !important;
   }
 
-  /* Card rhythm. Pre-paint selectors mirror the exact final geometry. */
+  /*
+   * Swiss product module:
+   * image occupies the full module width;
+   * title and price share an asymmetric information row;
+   * description sits on a second baseline separated by a hairline rule.
+   */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop > a.fancyboxModalAddProd {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    grid-template-rows: auto auto 1fr;
+    column-gap: 18px;
+    align-content: start;
+    min-width: 0;
+    height: 100%;
+  }
+
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
-    margin-bottom: 16px !important;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100%;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--sc-card-rule, #171717) !important;
+    border-radius: 0 !important;
+    background-color: var(--sc-card-stage, #f4f4f0) !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop {
+    background-color: var(--sc-card-stage-hover, #efefea) !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {
-    min-height: 40px !important;
-    max-height: 40px !important;
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    min-height: 54px !important;
+    max-height: 54px !important;
+    margin: 0 !important;
+    padding: 13px 0 0 !important;
     font-size: var(--sc-type-lg, 17px) !important;
     line-height: 20px !important;
     font-weight: 600 !important;
@@ -58,37 +95,59 @@
     height: 14px !important;
   }
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
-    min-height: 54px !important;
-    max-height: 54px !important;
-    margin-top: 8px !important;
-    font-size: var(--sc-type-sm, 13px) !important;
-    line-height: 18px !important;
-    font-weight: 400 !important;
-    letter-spacing: 0 !important;
-  }
-
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
     box-sizing: border-box;
-    min-height: 34px !important;
-    padding-top: 16px !important;
-    gap: 4px 10px !important;
+    display: flex !important;
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    align-self: start;
+    min-width: 76px;
+    min-height: 54px !important;
+    margin: 0 !important;
+    padding: 14px 0 0 !important;
+    gap: 2px !important;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .ofertaPrice {
-    font-size: var(--sc-type-xs, 12px) !important;
-    line-height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: var(--sc-type-xs, 11.5px) !important;
+    line-height: 14px !important;
+    font-weight: 400 !important;
     letter-spacing: 0 !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .price,
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceHijass {
-    font-size: var(--sc-type-md, 15px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: var(--sc-type-md, 15.5px) !important;
     line-height: 18px !important;
     font-weight: 600 !important;
-    letter-spacing: -0.015em !important;
+    letter-spacing: -0.018em !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
+    box-sizing: border-box;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    min-height: 59px !important;
+    max-height: 59px !important;
+    margin: 10px 0 0 !important;
+    padding: 10px 0 0 !important;
+    border-top: 1px solid var(--sc-card-subrule, #deded8) !important;
+    font-size: var(--sc-type-sm, 12.5px) !important;
+    line-height: 16px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    -webkit-line-clamp: 3;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .title-shop1,
