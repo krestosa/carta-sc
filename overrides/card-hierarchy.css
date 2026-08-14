@@ -9,15 +9,15 @@
     letter-spacing: -0.04em !important;
   }
 
-  /* Subcategories inherit the previous parent-title scale. */
+  /* Subcategories sit clearly between category headings and product titles. */
   body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
     margin: 10px 0 -3px !important;
     color: #343434 !important;
-    font-size: 22px !important;
-    line-height: 1.12 !important;
+    font-size: 18.5px !important;
+    line-height: 1.15 !important;
     font-weight: 600 !important;
-    letter-spacing: -0.03em !important;
+    letter-spacing: -0.025em !important;
     text-transform: none !important;
   }
 
@@ -247,10 +247,10 @@
     padding: 0 !important;
     color: #343434 !important;
     font-family: 'SC Acumin', Arial, sans-serif !important;
-    font-size: 20px !important;
-    line-height: 1.12 !important;
+    font-size: 18.5px !important;
+    line-height: 1.15 !important;
     font-weight: 600 !important;
-    letter-spacing: -0.028em !important;
+    letter-spacing: -0.025em !important;
     text-transform: none !important;
   }
 
