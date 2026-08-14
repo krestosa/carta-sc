@@ -1,0 +1,53 @@
+/* Catalogue stability guard: real content is always paintable.
+   No skeleton, reveal-hidden cards, placeholder text or entrance offsets. */
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop[style],
+html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion,
+html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion > div,
+html.sc-no-loading-state body.sushiShop .listadoShop .subTitleShopSeccion,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .title-shop1,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .descrip,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .priceRow,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {
+  top: 0 !important;
+  transform: none !important;
+}
+
+/* Neutralize any stale skeleton rules/classes from an older cached bootstrap. */
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .bannerShop .BanContShop::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .bannerShop .BanContShop::after,
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .listadoShop .productoShop .imgShop::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .productoShop .imgShop::after,
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .listadoShop .productoShop .title-shop1::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .productoShop .title-shop1::after,
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .listadoShop .productoShop .priceRow::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .productoShop .priceRow::after,
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .listadoShop .titleShopSeccion > div::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .titleShopSeccion > div::after,
+html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .listadoShop .subTitleShopSeccion::after,
+html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .listadoShop .subTitleShopSeccion::after {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+}
+
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .bannerShop .imgBannerShop,
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .productoShop .title-shop1,
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .productoShop .descrip,
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .productoShop .priceRow,
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .titleShopSeccion > div,
+html.sc-no-loading-state.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .subTitleShopSeccion {
+  color: inherit !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+}
