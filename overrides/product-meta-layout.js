@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Deploy marker: rail-direction-indicators-v1. */
+/* Deploy marker: rail-direction-indicators-v2. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
