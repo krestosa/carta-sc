@@ -5,7 +5,6 @@ window.__scModalMotionBooted=true;
 
 var attempts=0;
 var observer=null;
-var closing=false;
 
 function reduced(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
@@ -29,16 +28,18 @@ function animateOpen(modal){
   var gsap=window.gsap;
   gsap.killTweensOf([modal,dialog]);
   gsap.set(modal,{autoAlpha:0});
-  gsap.set(dialog,{autoAlpha:0,y:18,scale:0.985,transformOrigin:'50% 50%'});
+  gsap.set(dialog,{autoAlpha:0,y:10,scale:0.992,transformOrigin:'50% 50%'});
   gsap.timeline({defaults:{overwrite:'auto'}})
-    .to(modal,{autoAlpha:1,duration:0.24,ease:'power2.out'},0)
-    .to(dialog,{autoAlpha:1,y:0,scale:1,duration:0.38,ease:'power3.out',clearProps:'transform,opacity,visibility'},0.035);
+    .to(modal,{autoAlpha:1,duration:0.14,ease:'power2.out'},0)
+    .to(dialog,{autoAlpha:1,y:0,scale:1,duration:0.20,ease:'power3.out',clearProps:'transform,opacity,visibility'},0.015);
 }
 
+/* Run the catalogue's native close immediately so activeModal is cleared and
+   the page becomes interactive at once. The old DOM node remains for its native
+   190ms removal window, which is enough for our short visual exit. */
 function releaseNativeClose(modal,mode){
   if(!modal)return;
   modal.dataset.scMotionClosing='released';
-  closing=false;
 
   if(mode==='button'){
     var button=modal.querySelector('.sc-product-modal__close');
@@ -55,26 +56,25 @@ function releaseNativeClose(modal,mode){
 }
 
 function animateClose(modal,mode){
-  if(!modal||closing)return;
-  if(modal.dataset.scMotionClosing==='released')return;
+  if(!modal||modal.dataset.scMotionClosing)return;
 
-  if(!window.gsap||reduced()){
-    releaseNativeClose(modal,mode);
-    return;
-  }
-
-  closing=true;
   modal.dataset.scMotionClosing='animating';
+  modal.style.pointerEvents='none';
+  document.body.classList.remove('sc-product-modal-open');
+
   var dialog=modal.querySelector('.sc-product-modal__dialog');
   var gsap=window.gsap;
-  gsap.killTweensOf([modal,dialog]);
 
-  gsap.timeline({
-    defaults:{overwrite:'auto'},
-    onComplete:function(){releaseNativeClose(modal,mode);}
-  })
-    .to(dialog,{autoAlpha:0,y:9,scale:0.988,duration:0.20,ease:'power2.in'},0)
-    .to(modal,{autoAlpha:0,duration:0.24,ease:'power2.inOut'},0.02);
+  /* Functional close happens first. This means another card can open during
+     the visual tail without the previous modal closing the new one. */
+  releaseNativeClose(modal,mode);
+
+  if(!gsap||reduced()||!dialog)return;
+
+  gsap.killTweensOf([modal,dialog]);
+  gsap.timeline({defaults:{overwrite:'auto'}})
+    .to(dialog,{autoAlpha:0,y:6,scale:0.994,duration:0.11,ease:'power2.in'},0)
+    .to(modal,{autoAlpha:0,duration:0.13,ease:'power2.inOut'},0.005);
 }
 
 function onClick(event){
@@ -97,10 +97,18 @@ function onMouseDown(event){
   animateClose(modal,'overlay');
 }
 
+function activeUnreleasedModal(){
+  var modals=document.querySelectorAll('.sc-product-modal');
+  for(var i=modals.length-1;i>=0;i-=1){
+    if(modals[i].dataset.scMotionClosing!=='released')return modals[i];
+  }
+  return null;
+}
+
 function onKeyDown(event){
   if(event.key!=='Escape'&&event.key!=='Esc')return;
-  var modal=document.querySelector('.sc-product-modal');
-  if(!modal||modal.dataset.scMotionClosing==='released')return;
+  var modal=activeUnreleasedModal();
+  if(!modal)return;
   event.preventDefault();
   event.stopPropagation();
   if(event.stopImmediatePropagation)event.stopImmediatePropagation();
@@ -117,7 +125,7 @@ function install(){
   document.addEventListener('mousedown',onMouseDown,true);
   document.addEventListener('keydown',onKeyDown,true);
 
-  var existing=document.querySelector('.sc-product-modal');
+  var existing=activeUnreleasedModal();
   if(existing)requestAnimationFrame(function(){animateOpen(existing);});
 
   if(document.body&&window.MutationObserver){
@@ -137,4 +145,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else install();
 })();
 
-/* Deploy marker: final-section-modal-motion-v3. */
+/* Deploy marker: fast-nonblocking-modal-v4. */
