@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Deploy marker: below-fold-motion-v11. */
+/* Deploy marker: parent-rule-only-v12. */
 if(window.__scSectionLinesMotionBooted)return;
 window.__scSectionLinesMotionBooted=true;
 
@@ -30,6 +30,10 @@ function targets(){
   ),function(el){return (el.textContent||'').replace(/\s+/g,' ').trim().length>0;});
 }
 
+function isParentCategory(el){
+  return !!(el.parentElement&&el.parentElement.classList.contains('titleShopSeccion'));
+}
+
 function isInitial(el){
   if(el.classList.contains('sc-static-initial-section'))return true;
   var parent=el.closest('.titleShopSeccion, .subTitleShopSeccion');
@@ -51,29 +55,33 @@ function initMotion(){
   var tweens=[];
 
   elements.forEach(function(el){
-    el.classList.add('sc-section-rule-host');
+    var parentCategory=isParentCategory(el);
+    var initial=isInitial(el);
 
-    if(reduce||isInitial(el)){
-      gsap.set(el,{'--sc-section-rule-scale':1});
-      return;
+    if(parentCategory){
+      el.classList.add('sc-section-rule-host');
+      if(reduce||initial){
+        gsap.set(el,{'--sc-section-rule-scale':1});
+      }else{
+        gsap.set(el,{'--sc-section-rule-scale':0});
+        tweens.push(gsap.to(el,{
+          '--sc-section-rule-scale':1,
+          duration:0.72,
+          ease:'power3.out',
+          overwrite:'auto',
+          scrollTrigger:{
+            trigger:el,
+            start:'clamp(top 90%)',
+            once:true
+          }
+        }));
+      }
     }
 
-    gsap.set(el,{'--sc-section-rule-scale':0});
+    /* Parent and subcategory text reveal below the initial viewport. */
+    if(reduce||initial)return;
 
-    var ruleTween=gsap.to(el,{
-      '--sc-section-rule-scale':1,
-      duration:0.72,
-      ease:'power3.out',
-      overwrite:'auto',
-      scrollTrigger:{
-        trigger:el,
-        start:'clamp(top 90%)',
-        once:true
-      }
-    });
-    tweens.push(ruleTween);
-
-    var split=SplitText.create(el,{
+    splits.push(SplitText.create(el,{
       type:'lines',
       mask:'lines',
       linesClass:'sc-section-text-line',
@@ -94,8 +102,7 @@ function initMotion(){
           }
         });
       }
-    });
-    splits.push(split);
+    }));
   });
 
   function refresh(){window.setTimeout(function(){ST.refresh();},60);}
