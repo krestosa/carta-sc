@@ -1,5 +1,17 @@
 /* SushiClub product media.
-   Owns only the desktop product image stage and raster fitting. */
+   Owns product image stage, raster fitting and the clipped parallax surface. */
+
+body.sushiShop .listadoShop .productoShop .imgShop {
+  overflow: hidden !important;
+}
+
+body.sushiShop .listadoShop .productoShop .imgShop > img {
+  --sc-image-parallax-y: 0px;
+  transform: translate3d(0, var(--sc-image-parallax-y), 0) scale(1.04) !important;
+  transform-origin: 50% 50% !important;
+  backface-visibility: hidden;
+}
+
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
@@ -31,6 +43,14 @@
     opacity: 1 !important;
     object-fit: contain !important;
     object-position: center !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .listadoShop .productoShop .imgShop > img {
+    --sc-image-parallax-y: 0px !important;
     transform: none !important;
   }
 }
+
+/* Deploy marker: internal-image-parallax-v1. */
