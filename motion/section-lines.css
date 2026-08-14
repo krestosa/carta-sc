@@ -1,4 +1,4 @@
-/* Responsive section-title split reveals + horizontal rule draws. */
+/* Responsive section-title split reveals. Only parent categories own a divider. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
@@ -20,13 +20,14 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoSh
   border-bottom: 0 !important;
 }
 
-/* One divider only: ::after on the text host. */
+/* Wrappers and subcategories never own rules. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::before,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::after,
 body.sushiShop .listadoShop .titleShopSeccion::before,
 body.sushiShop .listadoShop .titleShopSeccion::after,
 body.sushiShop .listadoShop .titleShopSeccion > div::before,
-body.sushiShop .listadoShop .subTitleShopSeccion::before {
+body.sushiShop .listadoShop .subTitleShopSeccion::before,
+body.sushiShop .listadoShop .subTitleShopSeccion::after {
   content: none !important;
   display: none !important;
 }
@@ -44,19 +45,16 @@ body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
   transition: none !important;
 }
 
+/* Single 1px divider under parent category title, 12px from the text. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
-body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::after,
-body.sushiShop .listadoShop .titleShopSeccion > div::after,
-body.sushiShop .listadoShop .subTitleShopSeccion::after {
+body.sushiShop .listadoShop .titleShopSeccion > div::after {
   content: '' !important;
   display: block !important;
   position: static !important;
   inset: auto !important;
   width: 100% !important;
   height: 1px !important;
-  margin-right: 0 !important;
-  margin-bottom: 0 !important;
-  margin-left: 0 !important;
+  margin: 12px 0 0 !important;
   padding: 0 !important;
   border: 0 !important;
   background: var(--sc-catalog-line, var(--sc-r-line, #e7e7e2)) !important;
@@ -66,25 +64,14 @@ body.sushiShop .listadoShop .subTitleShopSeccion::after {
   pointer-events: none;
 }
 
-body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
-body.sushiShop .listadoShop .titleShopSeccion > div::after {
-  margin-top: 12px !important;
-}
-
-body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion::after,
-body.sushiShop .listadoShop .subTitleShopSeccion::after {
-  margin-top: 8px !important;
-}
-
 body.sushiShop .sc-section-text-line {
   display: block;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.sushiShop .listadoShop .titleShopSeccion > div::after,
-  body.sushiShop .listadoShop .subTitleShopSeccion::after {
+  body.sushiShop .listadoShop .titleShopSeccion > div::after {
     transform: scaleX(1) !important;
   }
 }
 
-/* Deploy marker: below-fold-motion-v11. */
+/* Deploy marker: parent-rule-only-v12. */
