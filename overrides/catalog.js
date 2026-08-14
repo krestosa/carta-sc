@@ -10,6 +10,46 @@ var categoryProxies=[];
 var proxyStyle=null;
 var categoryWheelScroller=null;
 var categoryWheelHandler=null;
+var skeletonBoot=bootLoadingSkeleton();
+
+function bootLoadingSkeleton(){
+  if(!desktopQuery.matches)return Promise.resolve();
+  var root=document.documentElement;
+  root.classList.add('sc-catalog-skeleton','sc-catalog-content-loading');
+
+  if(!document.getElementById('sc-skeleton-guard')){
+    var guard=document.createElement('style');
+    guard.id='sc-skeleton-guard';
+    guard.textContent='@media (min-width:993px){body.sushiShop .bannerShop .BanContShop{position:relative;aspect-ratio:1500/157;overflow:hidden}html.sc-catalog-skeleton body.sushiShop:not(.sc-catalog-layout-ready) .containerShop>.row{visibility:hidden}}';
+    document.head.appendChild(guard);
+  }
+
+  if(!document.getElementById('sc-loading-skeleton-css')){
+    var css=document.createElement('link');
+    css.id='sc-loading-skeleton-css';
+    css.rel='stylesheet';
+    css.href='overrides/loading-skeleton.css';
+    document.head.appendChild(css);
+  }
+
+  return new Promise(function(resolve){
+    var old=document.getElementById('sc-loading-skeleton-js');
+    if(old){
+      if(old.dataset.loaded==='true')return resolve();
+      old.addEventListener('load',resolve,{once:true});
+      setTimeout(resolve,700);
+      return;
+    }
+    var script=document.createElement('script');
+    script.id='sc-loading-skeleton-js';
+    script.src='overrides/loading-skeleton.js';
+    script.async=false;
+    script.onload=function(){script.dataset.loaded='true';resolve();};
+    script.onerror=resolve;
+    document.head.appendChild(script);
+    setTimeout(resolve,700);
+  });
+}
 
 function ensureCategoryNavStyles(){
   if(document.getElementById('sc-category-nav-css'))return;
@@ -249,9 +289,13 @@ function installModal(){
 ensureCategoryNavStyles();
 forceTop();
 ready(function(){
-  syncLayout();
-  installModal();
-  installCleanAnchors();
-  if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',syncLayout);else desktopQuery.addListener(syncLayout);
+  skeletonBoot.then(function(){
+    syncLayout();
+    installModal();
+    installCleanAnchors();
+    var guard=document.getElementById('sc-skeleton-guard');
+    if(guard&&document.body.classList.contains('sc-catalog-layout-ready'))guard.remove();
+    if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',syncLayout);else desktopQuery.addListener(syncLayout);
+  });
 });
 })();
