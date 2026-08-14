@@ -310,7 +310,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1548-category-rule-12';
+	var assetVersion = '20260814-1553-split-lines-close';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -340,6 +340,7 @@ function noFoto(){
 	addBlockingCss('sc-motion-css', asset('motion/motion.css'));
 	addBlockingCss('sc-product-image-ratio-css', asset('overrides/product-image-ratio.css'));
 	addBlockingCss('sc-card-hierarchy-css', asset('overrides/card-hierarchy.css'));
+	addBlockingCss('sc-section-lines-css', asset('motion/section-lines.css'));
 	addBlockingCss('sc-content-normalizer-css', asset('overrides/content-normalizer.css'));
 
 	var script = document.createElement('script');
@@ -368,17 +369,26 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1548-category-rule-12';
+	var version = window.__scCatalogAssetVersion || '20260814-1553-split-lines-close';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
 	script.onload = function(){
-		if (document.getElementById('sc-sticky-rail-motion-js')) return;
-		var sticky = document.createElement('script');
-		sticky.id = 'sc-sticky-rail-motion-js';
-		sticky.src = 'motion/sticky-rail.js?v=' + version;
-		sticky.async = true;
-		document.head.appendChild(sticky);
+		if (!document.getElementById('sc-sticky-rail-motion-js')) {
+			var sticky = document.createElement('script');
+			sticky.id = 'sc-sticky-rail-motion-js';
+			sticky.src = 'motion/sticky-rail.js?v=' + version;
+			sticky.async = true;
+			document.head.appendChild(sticky);
+		}
+
+		if (!document.getElementById('sc-section-lines-motion-js')) {
+			var sectionLines = document.createElement('script');
+			sectionLines.id = 'sc-section-lines-motion-js';
+			sectionLines.src = 'motion/section-lines.js?v=' + version;
+			sectionLines.async = true;
+			document.head.appendChild(sectionLines);
+		}
 	};
 	document.head.appendChild(script);
 })();
