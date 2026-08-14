@@ -309,6 +309,10 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
+	var assetVersion = '20260814-1452-consolidated';
+	window.__scCatalogAssetVersion = assetVersion;
+	function asset(path) { return path + '?v=' + assetVersion; }
+
 	document.documentElement.classList.add(
 		'sc-catalog-prepaint',
 		'sc-catalog-skeleton',
@@ -328,28 +332,27 @@ function noFoto(){
 		document.head.appendChild(link);
 	}
 
-	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-product-image-ratio-css', 'overrides/product-image-ratio.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-card-hierarchy-css', 'overrides/card-hierarchy.css?v=20260814-1320-normalizer');
-	addBlockingCss('sc-content-normalizer-css', 'overrides/content-normalizer.css?v=20260814-1320-normalizer');
+	addBlockingCss('sc-catalog-css', asset('overrides/catalog.css'));
+	addBlockingCss('sc-category-nav-css', asset('overrides/category-nav.css'));
+	addBlockingCss('sc-loading-skeleton-css', asset('overrides/loading-skeleton.css'));
+	addBlockingCss('sc-catalog-prepaint-css', asset('overrides/prepaint.css'));
+	addBlockingCss('sc-motion-css', asset('motion/motion.css'));
+	addBlockingCss('sc-product-image-ratio-css', asset('overrides/product-image-ratio.css'));
+	addBlockingCss('sc-card-hierarchy-css', asset('overrides/card-hierarchy.css'));
+	addBlockingCss('sc-content-normalizer-css', asset('overrides/content-normalizer.css'));
 
 	var script = document.createElement('script');
-	script.src = 'overrides/catalog.js?v=20260814-1320-normalizer';
+	script.src = asset('overrides/catalog.js');
 	script.async = false;
 	document.head.appendChild(script);
 
 	var metaScript = document.createElement('script');
-	metaScript.src = 'overrides/product-meta-layout.js?v=20260814-1320-normalizer';
+	metaScript.src = asset('overrides/product-meta-layout.js');
 	metaScript.async = false;
 	document.head.appendChild(metaScript);
 
 	var normalizerScript = document.createElement('script');
-	normalizerScript.src = 'overrides/content-normalizer.js?v=20260814-1320-normalizer';
+	normalizerScript.src = asset('overrides/content-normalizer.js');
 	normalizerScript.async = false;
 	document.head.appendChild(normalizerScript);
 })();
@@ -359,8 +362,9 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
+	var version = window.__scCatalogAssetVersion || '20260814-1452-consolidated';
 	var script = document.createElement('script');
-	script.src = 'motion/motion.js?v=20260814-1320-normalizer';
+	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
 	document.head.appendChild(script);
 })();
