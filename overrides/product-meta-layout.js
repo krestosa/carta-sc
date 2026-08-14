@@ -7,13 +7,14 @@ window.__scProductMetaLayoutBooted=true;
 var desktopQuery=window.matchMedia('(min-width: 993px)');
 var railStateRaf=0;
 var descriptionRaf=0;
+var lastMobileActiveCategory=null;
 
 function loadMobileResponsiveStyles(){
   if(document.getElementById('sc-mobile-responsive-css'))return;
   var link=document.createElement('link');
   link.id='sc-mobile-responsive-css';
   link.rel='stylesheet';
-  link.href='overrides/mobile-responsive.css?v=20260814-1830-mobile-v2';
+  link.href='overrides/mobile-responsive.css?v=20260814-1835-mobile-v3';
   document.head.appendChild(link);
 }
 
@@ -122,6 +123,41 @@ function setOverflowState(host,scroller){
   setRailArrowState(host,scroller,canLeft,canRight);
 }
 
+function mobileActiveCategoryLink(rail){
+  if(!rail)return null;
+  return rail.querySelector('.nav-top-li > a.anchorLink.sc-motion-current')
+    ||rail.querySelector('.nav-top-li > a.anchorLink[aria-current="location"]')
+    ||rail.querySelector('.nav-top-li.active > a.anchorLink')
+    ||rail.querySelector('.nav-top-li > a.anchorLink.active');
+}
+
+function autoScrollMobileCategory(rail,scroller){
+  if(desktopQuery.matches||!rail||!scroller)return;
+  var link=mobileActiveCategoryLink(rail);
+  if(!link||link===lastMobileActiveCategory)return;
+  lastMobileActiveCategory=link;
+
+  requestAnimationFrame(function(){
+    if(!document.documentElement.contains(link)||!document.documentElement.contains(scroller))return;
+    var railRect=scroller.getBoundingClientRect();
+    var itemRect=link.getBoundingClientRect();
+    var target=scroller.scrollLeft+(itemRect.left+itemRect.width/2-(railRect.left+railRect.width/2));
+    var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
+    target=Math.max(0,Math.min(max,target));
+    if(Math.abs(target-scroller.scrollLeft)<1)return;
+
+    try{
+      scroller.scrollTo({
+        left:target,
+        top:0,
+        behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
+      });
+    }catch(_){
+      scroller.scrollLeft=target;
+    }
+  });
+}
+
 function updateRailState(){
   railStateRaf=0;
 
@@ -144,8 +180,10 @@ function updateRailState(){
     if(desktopQuery.matches){
       mobileRail.classList.remove('sc-overflow-left','sc-overflow-right');
       setRailArrowState(mobileRail,null,false,false);
+      lastMobileActiveCategory=null;
     }else{
       setOverflowState(mobileRail,mobileScroller);
+      autoScrollMobileCategory(mobileRail,mobileScroller);
     }
   }
 
@@ -169,15 +207,48 @@ function ready(fn){
     : fn();
 }
 
-function repairMobileHeader(){
+function menuHasBoundClick(menu){
+  var button=menu&&menu.querySelector('.slicknav_btn');
+  var jq=window.jQuery;
+  if(!button||!jq||typeof jq._data!=='function')return false;
+  try{
+    var events=jq._data(button,'events');
+    return !!(events&&events.click&&events.click.length);
+  }catch(_){return false;}
+}
+
+function installFallbackMenuToggle(menu){
+  var button=menu&&menu.querySelector('.slicknav_btn');
+  var nav=menu&&menu.querySelector('.slicknav_nav');
+  if(!button||!nav||button.getAttribute('data-sc-fallback-toggle')==='true')return;
+  button.setAttribute('data-sc-fallback-toggle','true');
+  button.addEventListener('click',function(e){
+    e.preventDefault();
+    var currentlyOpen=button.classList.contains('slicknav_open')||nav.getAttribute('aria-hidden')==='false'||nav.style.display==='block';
+    var nextOpen=!currentlyOpen;
+    button.classList.toggle('slicknav_open',nextOpen);
+    button.classList.toggle('slicknav_collapsed',!nextOpen);
+    nav.classList.toggle('slicknav_hidden',!nextOpen);
+    nav.setAttribute('aria-hidden',nextOpen?'false':'true');
+    nav.style.display=nextOpen?'block':'none';
+  });
+}
+
+function repairMobileHeader(finalAttempt){
   if(desktopQuery.matches)return;
 
   var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));
   if(!menus.length)return;
 
-  /* SlickNav prepends the live event-bound menu to body. The static snapshot
-     copy is therefore after it. Keep the first menu and remove later copies. */
-  var liveMenu=menus[0];
+  var liveMenu=null;
+  for(var i=0;i<menus.length;i+=1){
+    if(menuHasBoundClick(menus[i])){liveMenu=menus[i];break;}
+  }
+
+  /* Do not delete anything while SlickNav is still finishing DOM-ready. */
+  if(!liveMenu&&!finalAttempt)return;
+  if(!liveMenu)liveMenu=menus[0];
+
   menus.forEach(function(menu){
     if(menu!==liveMenu&&menu.parentNode)menu.parentNode.removeChild(menu);
   });
@@ -192,11 +263,21 @@ function repairMobileHeader(){
     button.setAttribute('title','Menú');
   }
 
+  if(!menuHasBoundClick(liveMenu))installFallbackMenuToggle(liveMenu);
+
   var logo=document.querySelector('.brandOnlyMobile img');
   if(logo){
     logo.style.removeProperty('margin-left');
     logo.style.removeProperty('transform');
   }
+}
+
+function scheduleMobileHeaderRepair(){
+  if(desktopQuery.matches)return;
+  window.setTimeout(function(){repairMobileHeader(false);},0);
+  window.setTimeout(function(){repairMobileHeader(false);},60);
+  window.setTimeout(function(){repairMobileHeader(false);},180);
+  window.setTimeout(function(){repairMobileHeader(true);},420);
 }
 
 function handleResize(){
@@ -206,8 +287,9 @@ function handleResize(){
 
 function handleBreakpoint(){
   installRows();
+  lastMobileActiveCategory=null;
   handleResize();
-  if(!desktopQuery.matches)setTimeout(repairMobileHeader,0);
+  scheduleMobileHeaderRepair();
 }
 
 function loadProductImageParallax(){
@@ -224,10 +306,7 @@ ready(function(){
   scheduleRailState();
   scheduleDescriptionMeasure();
   loadProductImageParallax();
-
-  /* Preserve the already working legacy SlickNav instance and remove only
-     duplicate snapshot markup after the DOM-ready queue has finished. */
-  setTimeout(repairMobileHeader,0);
+  scheduleMobileHeaderRepair();
 
   window.addEventListener('scroll',scheduleRailState,{passive:true});
   document.addEventListener('scroll',scheduleRailState,true);
@@ -236,6 +315,14 @@ ready(function(){
   document.querySelectorAll('.sc-catalog-categories, .topShopMenuMobileScroller').forEach(function(scroller){
     scroller.addEventListener('scroll',scheduleRailState,{passive:true});
   });
+
+  document.addEventListener('click',function(e){
+    if(desktopQuery.matches)return;
+    var link=e.target.closest&&e.target.closest('.topShopMenuMobile a.anchorLink[href^="#"]');
+    if(!link)return;
+    window.setTimeout(scheduleRailState,0);
+    window.setTimeout(scheduleRailState,180);
+  },true);
 
   setTimeout(handleResize,0);
   setTimeout(handleResize,180);
