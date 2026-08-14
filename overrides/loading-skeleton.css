@@ -1,17 +1,6 @@
-/*
- * SushiClub catalogue loading skeleton
- * ------------------------------------------------------------
- * Skeleton geometry is generated from the final DOM by loading-skeleton.js.
- * No product/title/nav placeholder position is hardcoded here.
- */
-
+/* Catalogue loading skeleton removed.
+   Keep only intrinsic banner geometry so the first paint matches the final layout. */
 @media (min-width: 993px) {
-  html.sc-catalog-skeleton {
-    --sc-skeleton-base: #ecece7;
-    --sc-skeleton-highlight: #f7f7f3;
-  }
-
-  /* The banner keeps its real intrinsic geometry before the asset resolves. */
   body.sushiShop .bannerShop .BanContShop {
     position: relative;
     aspect-ratio: 1500 / 157;
@@ -23,92 +12,5 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-  }
-
-  /* Do not expose a half-built legacy layout. The row becomes visible only
-     after JS has measured the final catalogue and installed matching layers. */
-  html.sc-catalog-skeleton:not(.sc-skeleton-ready) body.sushiShop .containerShop > .row,
-  html.sc-catalog-skeleton:not(.sc-skeleton-ready) body.sushiShop .sc-catalog-toolbar {
-    visibility: hidden !important;
-  }
-
-  html.sc-catalog-skeleton.sc-skeleton-ready body.sushiShop .containerShop > .row,
-  html.sc-catalog-skeleton.sc-skeleton-ready body.sushiShop .sc-catalog-toolbar {
-    visibility: visible !important;
-  }
-
-  body.sushiShop .sc-skeleton-host {
-    position: relative !important;
-  }
-
-  body.sushiShop .sc-skeleton-layer {
-    box-sizing: border-box;
-    position: absolute;
-    inset: 0;
-    z-index: 40;
-    overflow: hidden;
-    pointer-events: none;
-    opacity: 1;
-  }
-
-  body.sushiShop .sc-skeleton-bar {
-    box-sizing: border-box;
-    position: absolute;
-    display: block;
-    min-width: 2px;
-    min-height: 2px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 1px;
-    background: var(--sc-skeleton-base);
-    pointer-events: none;
-  }
-
-  body.sushiShop .sc-skeleton-image > .sc-skeleton-layer {
-    background-color: var(--sc-skeleton-base);
-    background-image: linear-gradient(105deg, transparent 35%, var(--sc-skeleton-highlight) 50%, transparent 65%);
-    background-size: 220% 100%;
-    animation: sc-skeleton-shimmer 1.15s linear infinite;
-  }
-
-  /* The layer is drawn over the real image box, so image geometry and final
-     geometry are literally the same element. */
-  body.sushiShop .listadoShop .productoShop .imgShop,
-  body.sushiShop .bannerShop .BanContShop {
-    isolation: isolate;
-  }
-
-  /* Real text stays in its final layout while its ink is suppressed. Bars are
-     measured from the text's own client rects and positioned over that ink. */
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .sc-skeleton-text {
-    color: transparent !important;
-    text-shadow: none !important;
-  }
-
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .sc-skeleton-text > :not(.sc-skeleton-layer),
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .productoShop .sc-product-flavors,
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .productoShop .title-shop1 .sabores {
-    opacity: 0 !important;
-  }
-
-  html.sc-catalog-skeleton body.sushiShop .sc-category-indicator,
-  html.sc-catalog-skeleton-leaving body.sushiShop .sc-category-indicator {
-    opacity: 0 !important;
-  }
-
-  html.sc-catalog-skeleton-leaving body.sushiShop .sc-skeleton-layer {
-    opacity: 0;
-  }
-}
-
-@keyframes sc-skeleton-shimmer {
-  from { background-position: 130% 0; }
-  to { background-position: -70% 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body.sushiShop .sc-skeleton-image > .sc-skeleton-layer {
-    animation: none !important;
   }
 }
