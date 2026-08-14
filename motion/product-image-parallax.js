@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+/* Deploy marker: internal-image-parallax-v2. */
 if(window.__scProductImageParallaxBooted)return;
 window.__scProductImageParallaxBooted=true;
 
