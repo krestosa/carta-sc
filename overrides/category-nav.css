@@ -256,3 +256,69 @@
     gap: 22px !important;
   }
 }
+
+/* Dynamic rail affordances. JS only toggles state classes; presentation stays here. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
+    transition: box-shadow 180ms ease !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 26px;
+    background: linear-gradient(270deg, #fff 18%, rgba(255,255,255,.9) 42%, rgba(255,255,255,0) 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms ease;
+    z-index: 30;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after {
+    opacity: 1;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-is-stuck {
+    box-shadow: 0 7px 18px rgba(0,0,0,.038);
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile {
+    transition: box-shadow 180ms ease !important;
+  }
+
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile.sc-is-stuck {
+    box-shadow: 0 7px 18px rgba(0,0,0,.038);
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 26px;
+    background: linear-gradient(270deg, #fff 18%, rgba(255,255,255,.9) 42%, rgba(255,255,255,0) 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms ease;
+    z-index: 30;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .sc-catalog-toolbar,
+  body.sushiShop .sc-catalog-toolbar::after,
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile,
+  body.sushiShop .topShopMenuMobile::after {
+    transition: none !important;
+  }
+}
