@@ -46,6 +46,7 @@ function boot(){
 
   mediaContext=gsap.matchMedia();
   mediaContext.add({
+    motion:'(prefers-reduced-motion: no-preference)',
     reduceMotion:'(prefers-reduced-motion: reduce)'
   },function(ctx){
     var reduce=!!ctx.conditions.reduceMotion;
