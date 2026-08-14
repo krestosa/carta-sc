@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Pages deploy marker: category-auto-edge-v1. */
+/* Pages deploy marker: category-context-hover-hashless-v1. */
 if(window.__scCatalogOverrideBooted)return;
 window.__scCatalogOverrideBooted=true;
 
@@ -67,6 +67,15 @@ function ensureCategoryNavStyles(){
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function text(node){return node?node.textContent.replace(/\s+/g,' ').trim():'';}
 
+function installHashlessHistoryGuard(){
+  if(window.__scHashlessCategoryHistoryGuard)return;
+  window.__scHashlessCategoryHistoryGuard=true;
+  var replace=history.replaceState;
+  history.replaceState=function(state,title,url){
+    if(typeof url==='string'&&/^#anchor/i.test(url))url=location.pathname+location.search;
+    return replace.call(history,state,title,url);
+  };
+}
 function cleanHash(){
   if(!location.hash)return;
   try{history.replaceState(history.state,document.title,location.pathname+location.search);}catch(e){}
@@ -95,8 +104,8 @@ function ensureProxyStyle(){
   proxyStyle.textContent='\n'
     +'.sc-catalog-toolbar .nav-top-li{position:relative!important;}\n'
     +'.sc-catalog-toolbar .sc-category-proxy{position:absolute;inset:0;z-index:8;width:100%;height:100%;margin:0;padding:0;border:0;background:transparent;color:transparent;font:inherit;cursor:pointer;}\n'
-    +'.sc-catalog-toolbar .sc-category-proxy:focus-visible{outline:1px solid #151515;outline-offset:5px;}\n'
-    +'.sc-catalog-toolbar a.anchorLink.sc-category-proxy-hover{color:var(--sc-catalog-ink,#151515)!important;}\n';
+    +'.sc-catalog-toolbar .sc-category-proxy:focus-visible{outline:1px solid var(--sc-catalog-ink,#151515);outline-offset:-1px;}\n'
+    +'.sc-catalog-toolbar a.anchorLink.sc-category-proxy-hover{color:var(--sc-catalog-ink,#151515)!important;text-decoration:underline!important;text-decoration-thickness:1px!important;text-underline-offset:4px!important;}\n';
   document.head.appendChild(proxyStyle);
 }
 function clearCategoryProxies(){
@@ -146,17 +155,38 @@ function currentCategoryLink(root){
     ||root.querySelector('.nav-top-li.active > a.anchorLink')
     ||root.querySelector('.nav-top-li > a.anchorLink.active');
 }
-function revealCategoryAtNearestEdge(link,scroller){
+function categoryLinks(root){
+  return root?Array.prototype.slice.call(root.querySelectorAll('.nav-top-li > a.anchorLink[href^="#"]')):[];
+}
+function revealCategoryWithContext(link,previous,root,scroller){
   if(!link||!scroller||!desktopQuery.matches)return;
   requestAnimationFrame(function(){
     if(!document.documentElement.contains(link)||!document.documentElement.contains(scroller))return;
+    var links=categoryLinks(root);
+    var index=links.indexOf(link);
+    var previousIndex=previous?links.indexOf(previous):-1;
+    var direction=previousIndex<0?0:(index>previousIndex?1:index<previousIndex?-1:0);
     var rail=scroller.getBoundingClientRect();
     var item=link.getBoundingClientRect();
     var target=scroller.scrollLeft;
+    var edge=item;
 
-    if(item.right>rail.right+0.5)target+=item.right-rail.right;
-    else if(item.left<rail.left-0.5)target+=item.left-rail.left;
-    else return;
+    if(direction>0&&index>=0)edge=links[Math.min(links.length-1,index+2)].getBoundingClientRect();
+    else if(direction<0&&index>=0)edge=links[Math.max(0,index-2)].getBoundingClientRect();
+
+    if(direction>0){
+      if(edge.right>rail.right+0.5)target+=edge.right-rail.right;
+      else if(item.left<rail.left-0.5)target+=item.left-rail.left;
+      else return;
+    }else if(direction<0){
+      if(edge.left<rail.left-0.5)target+=edge.left-rail.left;
+      else if(item.right>rail.right+0.5)target+=item.right-rail.right;
+      else return;
+    }else{
+      if(item.right>rail.right+0.5)target+=item.right-rail.right;
+      else if(item.left<rail.left-0.5)target+=item.left-rail.left;
+      else return;
+    }
 
     var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
     target=Math.max(0,Math.min(max,target));
@@ -175,8 +205,9 @@ function scheduleCategoryAutoScroll(root,scroller){
     categoryStateRaf=0;
     var link=currentCategoryLink(root);
     if(!link||link===lastAutoCategory)return;
+    var previous=lastAutoCategory;
     lastAutoCategory=link;
-    revealCategoryAtNearestEdge(link,scroller);
+    revealCategoryWithContext(link,previous,root,scroller);
   });
 }
 function installCategoryAutoScroll(root,scroller){
@@ -352,6 +383,7 @@ function installModal(){
 }
 
 ensureCategoryNavStyles();
+installHashlessHistoryGuard();
 forceTop();
 ready(function(){
   skeletonBoot.then(function(){
