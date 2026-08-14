@@ -310,7 +310,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1605-below-fold-motion';
+	var assetVersion = '20260814-1612-skeleton-crossfade';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -336,12 +336,21 @@ function noFoto(){
 	addBlockingCss('sc-catalog-css', asset('overrides/catalog.css'));
 	addBlockingCss('sc-category-nav-css', asset('overrides/category-nav.css'));
 	addBlockingCss('sc-loading-skeleton-css', asset('overrides/loading-skeleton.css'));
+	addBlockingCss('sc-skeleton-transition-css', asset('motion/skeleton-transition.css'));
 	addBlockingCss('sc-catalog-prepaint-css', asset('overrides/prepaint.css'));
 	addBlockingCss('sc-motion-css', asset('motion/motion.css'));
 	addBlockingCss('sc-product-image-ratio-css', asset('overrides/product-image-ratio.css'));
 	addBlockingCss('sc-card-hierarchy-css', asset('overrides/card-hierarchy.css'));
 	addBlockingCss('sc-section-lines-css', asset('motion/section-lines.css'));
 	addBlockingCss('sc-content-normalizer-css', asset('overrides/content-normalizer.css'));
+
+	/* Load the skeleton controller here with the shared asset version. catalog.js
+	   detects this id and reuses it instead of requesting an unversioned copy. */
+	var skeletonScript = document.createElement('script');
+	skeletonScript.id = 'sc-loading-skeleton-js';
+	skeletonScript.src = asset('overrides/loading-skeleton.js');
+	skeletonScript.async = false;
+	document.head.appendChild(skeletonScript);
 
 	var script = document.createElement('script');
 	script.src = asset('overrides/catalog.js');
@@ -369,7 +378,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1605-below-fold-motion';
+	var version = window.__scCatalogAssetVersion || '20260814-1612-skeleton-crossfade';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
@@ -388,6 +397,14 @@ function noFoto(){
 			sectionLines.src = 'motion/section-lines.js?v=' + version;
 			sectionLines.async = true;
 			document.head.appendChild(sectionLines);
+		}
+
+		if (!document.getElementById('sc-modal-motion-js')) {
+			var modalMotion = document.createElement('script');
+			modalMotion.id = 'sc-modal-motion-js';
+			modalMotion.src = 'motion/modal-motion.js?v=' + version;
+			modalMotion.async = true;
+			document.head.appendChild(modalMotion);
 		}
 	};
 	document.head.appendChild(script);
