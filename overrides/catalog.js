@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+/* Pages deploy marker: category-auto-edge-v1. */
 if(window.__scCatalogOverrideBooted)return;
 window.__scCatalogOverrideBooted=true;
 
