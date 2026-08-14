@@ -63,22 +63,22 @@
     display: none !important;
   }
 
-  /* Price always occupies one baseline. Discounted products keep the current
-     value first and the previous value secondary instead of stacking vertically. */
+  /* Current price keeps the visual weight on top; the smaller crossed-out
+     previous price sits immediately below it without changing card height. */
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
     display: flex !important;
     grid-column: 2;
     grid-row: 2;
-    flex-direction: row !important;
+    flex-direction: column !important;
     flex-wrap: nowrap !important;
-    align-items: baseline !important;
-    justify-content: flex-end !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
     align-self: start;
-    gap: 6px !important;
-    min-width: 0 !important;
+    gap: 1px !important;
+    min-width: 76px !important;
     min-height: 54px !important;
-    padding: 14px 0 0 !important;
+    padding: 13px 0 0 !important;
     white-space: nowrap;
   }
 
@@ -140,28 +140,6 @@
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:hover .imgShop > img,
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .imgShop > img {
     transform: scale(1.012) !important;
-  }
-}
-
-/* Keep discounted prices on one line in the legacy tablet/mobile layout too.
-   DOM order is preserved there because the + control still lives inside .price. */
-@media (max-width: 992px) {
-  body.sushiShop .listadoShop .productoShop .priceRow {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: baseline !important;
-    gap: 6px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    white-space: nowrap;
-  }
-
-  body.sushiShop .listadoShop .productoShop .priceRow .price,
-  body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
-  body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
-    float: none !important;
-    flex: 0 0 auto;
   }
 }
 
