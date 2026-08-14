@@ -1,5 +1,6 @@
 /* Mobile/tablet header + catalogue hierarchy.
-   Keeps the site header compact and the catalogue aligned to the content grid. */
+   Keeps the site header compact and the catalogue aligned to the content grid.
+   Deploy marker: live-slicknav-centered-logo-v2. */
 
 @media (max-width: 992px) {
   body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
