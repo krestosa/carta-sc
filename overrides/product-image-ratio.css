@@ -38,4 +38,42 @@
     object-position: center !important;
     transform: none !important;
   }
+
+  /* Product detail modal mirrors the card media ratio and price hierarchy. */
+  body.sushiShop .sc-product-modal__image-stage {
+    box-sizing: border-box;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 !important;
+    aspect-ratio: 286 / 200 !important;
+    background: transparent !important;
+    overflow: hidden !important;
+  }
+
+  body.sushiShop .sc-product-modal__image {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+
+  body.sushiShop .sc-product-modal__price-row {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+
+  body.sushiShop .sc-product-modal__price-row .price,
+  body.sushiShop .sc-product-modal__price-row .priceHijass {
+    order: 1;
+  }
+
+  body.sushiShop .sc-product-modal__price-row .ofertaPrice {
+    order: 2;
+  }
 }
