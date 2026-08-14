@@ -1,7 +1,5 @@
-/* Catalogue stability guard: real content is always paintable.
-   No skeleton, reveal-hidden cards, placeholder text or entrance offsets. */
-html.sc-no-loading-state body.sushiShop .listadoShop .productoShop,
-html.sc-no-loading-state body.sushiShop .listadoShop .productoShop[style],
+/* Catalogue stability guard: real content is paintable from first layout.
+   Initial viewport elements are explicitly excluded from entrance motion. */
 html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion,
 html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion > div,
 html.sc-no-loading-state body.sushiShop .listadoShop .subTitleShopSeccion,
@@ -13,10 +11,23 @@ html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .sc-product-f
   visibility: visible !important;
 }
 
-html.sc-no-loading-state body.sushiShop .listadoShop .productoShop,
-html.sc-no-loading-state body.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {
+/* Only cards captured inside the initial viewport are locked visible. Cards
+   below the fold remain available to GSAP/ScrollTrigger for reveal motion. */
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop.sc-static-initial-card,
+html.sc-no-loading-state body.sushiShop .listadoShop .productoShop.sc-static-initial-card[style] {
+  opacity: 1 !important;
+  visibility: visible !important;
   top: 0 !important;
   transform: none !important;
+  transition: none !important;
+}
+
+/* Initial section labels remain static. The child SplitText lines inherit their
+   normal visible state because no reveal tween is created for these hosts. */
+html.sc-no-loading-state body.sushiShop .sc-static-initial-section,
+html.sc-no-loading-state body.sushiShop .sc-static-initial-section > div {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Neutralize any stale skeleton rules/classes from an older cached bootstrap. */
