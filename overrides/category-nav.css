@@ -1,10 +1,8 @@
 /* Category navigation interaction override.
    Keeps the 1px toolbar rule as the baseline and overlays the active category.
-   Deploy marker: active-rule-horizontal-wheel-v4. */
+   Deploy marker: active-rule-horizontal-wheel-v5. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
-    /* Move the final 14px into the horizontal scroller so the moving rule is
-       inside its clipping box instead of being cut by overflow-y:hidden. */
     padding-bottom: 0 !important;
     padding-left: 0 !important;
     margin-left: 0 !important;
@@ -23,8 +21,7 @@
     overscroll-behavior: contain;
   }
 
-  /* Remove every inherited legacy offset from the left edge of the rail.
-     The first category box must start exactly at the catalogue content edge. */
+  /* Kill every inherited left offset from the legacy nav. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .wrapp-nav-tabsTopShop,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child,
@@ -37,18 +34,35 @@
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
-    /* GSAP owns x + scaleX. category-indicator-edge.js corrects only the first
-       active category so the thick rule begins at the actual link box edge,
-       rather than at the first glyph's visual bounding box. */
     bottom: -14px !important;
     height: 2px !important;
-    margin-left: 0;
+    margin-left: -1.25px !important;
     background: var(--sc-catalog-ink, #151515) !important;
     opacity: 1;
     z-index: 9 !important;
     pointer-events: none !important;
     transition: none !important;
     will-change: transform;
+  }
+
+  /* The moving indicator is based on the visual glyph bounds. For the first
+     category that can expose 1-3px of the thin baseline before the thick rule.
+     Paint the active first item's full box on the same baseline, from x=0. */
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink.sc-motion-current)::after,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink[aria-current='location'])::after,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -14px;
+    height: 2px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--sc-catalog-ink, #151515);
+    pointer-events: none;
+    z-index: 10;
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar a.anchorLink.sc-category-proxy-hover {
