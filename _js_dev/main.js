@@ -328,18 +328,24 @@ function noFoto(){
 		document.head.appendChild(link);
 	}
 
-	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1302-flavors');
-	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1302-flavors');
-	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1302-flavors');
-	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1302-flavors');
-	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1302-flavors');
-	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1302-flavors');
-	addBlockingCss('sc-product-image-ratio-css', 'overrides/product-image-ratio.css?v=20260814-1302-flavors');
+	addBlockingCss('sc-catalog-css', 'overrides/catalog.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-category-nav-css', 'overrides/category-nav.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-motion-css', 'motion/motion.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-product-image-ratio-css', 'overrides/product-image-ratio.css?v=20260814-1308-hierarchy');
+	addBlockingCss('sc-card-hierarchy-css', 'overrides/card-hierarchy.css?v=20260814-1308-hierarchy');
 
 	var script = document.createElement('script');
-	script.src = 'overrides/catalog.js?v=20260814-1302-flavors';
+	script.src = 'overrides/catalog.js?v=20260814-1308-hierarchy';
 	script.async = false;
 	document.head.appendChild(script);
+
+	var metaScript = document.createElement('script');
+	metaScript.src = 'overrides/product-meta-layout.js?v=20260814-1308-hierarchy';
+	metaScript.async = false;
+	document.head.appendChild(metaScript);
 })();
 
 /* Dedicated motion bootstrap. Do not add animation logic here. */
@@ -348,7 +354,7 @@ function noFoto(){
 	window.__scUxMotionRequested = true;
 
 	var script = document.createElement('script');
-	script.src = 'motion/motion.js?v=20260814-1302-flavors';
+	script.src = 'motion/motion.js?v=20260814-1308-hierarchy';
 	script.async = true;
 	document.head.appendChild(script);
 })();
