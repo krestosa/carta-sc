@@ -310,7 +310,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1612-skeleton-crossfade';
+	var assetVersion = '20260814-1617-skeleton-crossfade-v2';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -378,7 +378,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1612-skeleton-crossfade';
+	var version = window.__scCatalogAssetVersion || '20260814-1617-skeleton-crossfade-v2';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
