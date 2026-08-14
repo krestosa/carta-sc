@@ -3,21 +3,18 @@
 if(window.__scStickyRailMotionBooted)return;
 window.__scStickyRailMotionBooted=true;
 
-var retryTimer=0;
 var attempts=0;
 var mediaContext=null;
 
 function boot(){
-  if(!window.gsap||!window.ScrollTrigger){
-    if(attempts++<120)retryTimer=window.setTimeout(boot,50);
+  if(!window.gsap){
+    if(attempts++<120)window.setTimeout(boot,50);
     return;
   }
 
   var gsap=window.gsap;
-  var ST=window.ScrollTrigger;
-  gsap.registerPlugin(ST);
-
   mediaContext=gsap.matchMedia();
+
   mediaContext.add({
     desktop:'(min-width: 993px)',
     compact:'(max-width: 992px)',
@@ -34,54 +31,80 @@ function boot(){
 
     if(!host||!surface)return function(){};
 
-    function settle(sticking){
+    var lastStuck=host.classList.contains('sc-is-stuck');
+    var observer=null;
+
+    function clearMotion(){
+      gsap.killTweensOf(surface);
+      gsap.set(surface,{clearProps:'transform,opacity,visibility'});
+      surface.style.willChange='';
+    }
+
+    function animateState(stuck){
       gsap.killTweensOf(surface);
 
       if(reduce){
-        gsap.set(surface,{clearProps:'transform'});
-        surface.style.willChange='';
+        clearMotion();
         return;
       }
 
-      surface.style.willChange='transform';
-      gsap.fromTo(surface,{
-        y:sticking?-6:3,
-        scaleY:sticking?0.985:1.008,
-        transformOrigin:'50% 0%'
-      },{
-        y:0,
-        scaleY:1,
-        duration:sticking?0.34:0.22,
-        ease:sticking?'power3.out':'power2.out',
-        overwrite:'auto',
-        clearProps:'transform',
-        onComplete:function(){surface.style.willChange='';}
-      });
+      surface.style.willChange='transform,opacity';
+
+      if(stuck){
+        gsap.fromTo(surface,{
+          y:-10,
+          autoAlpha:0.78,
+          scaleY:0.972,
+          transformOrigin:'50% 0%'
+        },{
+          y:0,
+          autoAlpha:1,
+          scaleY:1,
+          duration:0.40,
+          ease:'power3.out',
+          overwrite:true,
+          clearProps:'transform,opacity,visibility',
+          onComplete:function(){surface.style.willChange='';}
+        });
+      }else{
+        gsap.fromTo(surface,{
+          y:4,
+          autoAlpha:0.90,
+          scaleY:1.008,
+          transformOrigin:'50% 0%'
+        },{
+          y:0,
+          autoAlpha:1,
+          scaleY:1,
+          duration:0.22,
+          ease:'power2.out',
+          overwrite:true,
+          clearProps:'transform,opacity,visibility',
+          onComplete:function(){surface.style.willChange='';}
+        });
+      }
     }
 
-    var trigger=ST.create({
-      id:'sc-category-sticky-motion-'+(desktop?'desktop':'compact'),
-      trigger:host,
-      start:'top top',
-      end:'max',
-      invalidateOnRefresh:true,
-      onEnter:function(){settle(true);},
-      onLeaveBack:function(){settle(false);}
-    });
+    function sync(){
+      var stuck=host.classList.contains('sc-is-stuck');
+      if(stuck===lastStuck)return;
+      lastStuck=stuck;
+      animateState(stuck);
+    }
+
+    observer=new MutationObserver(sync);
+    observer.observe(host,{attributes:true,attributeFilter:['class']});
+
+    /* Covers restored scroll positions where the page starts already stuck. */
+    if(lastStuck&&!reduce)requestAnimationFrame(function(){animateState(true);});
 
     return function(){
-      trigger.kill();
-      gsap.killTweensOf(surface);
-      gsap.set(surface,{clearProps:'transform'});
-      surface.style.willChange='';
+      if(observer)observer.disconnect();
+      clearMotion();
     };
   });
 }
 
-function ready(){
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
-  else boot();
-}
-
-ready();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
 })();
