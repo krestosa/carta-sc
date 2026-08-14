@@ -96,7 +96,7 @@ function modalesConLink(){
 			$(this).css('cursor', 'pointer')
 			$(this).on('click', function(){
 				if (lastLinkPopTar.toLowerCase().indexOf('blank') === -1){
-					window.location.href =  lastLinkPop
+					window.location.href = lastLinkPop
 				}else{
 					window.open(lastLinkPop);
 				}
@@ -309,7 +309,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1452-consolidated';
+	var assetVersion = '20260814-1457-railclean';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -362,7 +362,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1452-consolidated';
+	var version = window.__scCatalogAssetVersion || '20260814-1457-railclean';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
