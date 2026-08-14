@@ -1,23 +1,13 @@
 (function(){
 'use strict';
-/* Deploy marker: inline-subcategory-nav-v1. */
+/* Deploy marker: consolidated-catalogue-v3. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
 var desktopQuery=window.matchMedia('(min-width: 993px)');
 var railStateRaf=0;
 var descriptionRaf=0;
-var subcategoryRaf=0;
 var railObserver=null;
-
-function loadSubcategoryStyles(){
-  if(document.getElementById('sc-subcategory-nav-css'))return;
-  var link=document.createElement('link');
-  link.id='sc-subcategory-nav-css';
-  link.rel='stylesheet';
-  link.href='overrides/subcategory-nav.css?v='+(window.__scCatalogAssetVersion||'20260814-1503-subcategory');
-  document.head.appendChild(link);
-}
 
 function clearRows(){
   document.querySelectorAll('.sc-product-flavors').forEach(function(row){
@@ -49,87 +39,6 @@ function installRows(){
     if(!row.children.length)row.setAttribute('aria-hidden','true');
     link.appendChild(row);
   });
-}
-
-function cleanText(node){
-  return ((node&&node.textContent)||'').replace(/\s+/g,' ').trim();
-}
-
-function slugify(value){
-  var text=(value||'').toLowerCase();
-  if(text.normalize)text=text.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  return text.replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48)||'item';
-}
-
-function ensureSubcategoryId(node,sectionIndex,subIndex,text){
-  if(node.id)return node.id;
-  var base='sc-subcategory-'+(sectionIndex+1)+'-'+(subIndex+1)+'-'+slugify(text);
-  var id=base;
-  var suffix=2;
-  while(document.getElementById(id)&&document.getElementById(id)!==node){
-    id=base+'-'+suffix++;
-  }
-  node.id=id;
-  return id;
-}
-
-function installSubcategoryNav(){
-  subcategoryRaf=0;
-
-  document.querySelectorAll('.listadoShop').forEach(function(section,sectionIndex){
-    var header=section.querySelector('.titleShopSeccion');
-    if(!header)return;
-
-    var host=header.firstElementChild||header;
-    var subs=Array.prototype.filter.call(section.querySelectorAll('.subTitleShopSeccion'),function(sub){
-      return sub.closest('.listadoShop')===section&&cleanText(sub);
-    });
-    var existing=host.querySelector('.sc-subcategory-nav');
-
-    if(!subs.length){
-      if(existing&&existing.parentNode)existing.parentNode.removeChild(existing);
-      return;
-    }
-
-    var signature=subs.map(cleanText).join('|');
-    if(existing&&existing.getAttribute('data-sc-signature')===signature)return;
-    if(existing&&existing.parentNode)existing.parentNode.removeChild(existing);
-
-    var label=host.querySelector('.sc-category-title-label');
-    if(!label){
-      label=document.createElement('span');
-      label.className='sc-category-title-label';
-      Array.prototype.slice.call(host.childNodes).forEach(function(node){
-        if(node.nodeType===1&&node.classList&&node.classList.contains('sc-subcategory-nav'))return;
-        label.appendChild(node);
-      });
-      host.appendChild(label);
-    }
-
-    var nav=document.createElement('nav');
-    nav.className='sc-subcategory-nav';
-    nav.setAttribute('data-sc-signature',signature);
-    nav.setAttribute('aria-label','Subcategorías de '+cleanText(label));
-
-    subs.forEach(function(sub,subIndex){
-      var text=cleanText(sub);
-      var id=ensureSubcategoryId(sub,sectionIndex,subIndex,text);
-      sub.classList.add('sc-subcategory-target');
-
-      var link=document.createElement('a');
-      link.className='sc-subcategory-link';
-      link.href='#'+id;
-      link.textContent=text;
-      nav.appendChild(link);
-    });
-
-    host.appendChild(nav);
-  });
-}
-
-function scheduleSubcategoryNav(){
-  if(subcategoryRaf)return;
-  subcategoryRaf=requestAnimationFrame(installSubcategoryNav);
 }
 
 function measureDescriptions(){
@@ -198,9 +107,8 @@ function installRailState(){
     railObserver=new MutationObserver(function(){
       scheduleRailState();
       scheduleDescriptionMeasure();
-      scheduleSubcategoryNav();
     });
-    railObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
+    railObserver.observe(document.body,{childList:true,subtree:true});
   }
 }
 
@@ -221,9 +129,7 @@ function handleBreakpoint(){
 }
 
 ready(function(){
-  loadSubcategoryStyles();
   installRows();
-  scheduleSubcategoryNav();
   installRailState();
   scheduleDescriptionMeasure();
   window.addEventListener('resize',handleResize,{passive:true});
