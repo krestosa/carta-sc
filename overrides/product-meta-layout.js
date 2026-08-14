@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-/* Deploy marker: consolidated-catalogue-v3. */
+/* Deploy marker: rail-direction-indicators-v1. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
@@ -55,10 +55,80 @@ function scheduleDescriptionMeasure(){
   descriptionRaf=requestAnimationFrame(function(){requestAnimationFrame(measureDescriptions);});
 }
 
+function makeRailArrow(host,scroller,direction){
+  var selector='.sc-rail-arrow--'+direction;
+  var existing=host.querySelector(selector);
+  if(existing)return existing;
+
+  var button=document.createElement('button');
+  button.type='button';
+  button.className='sc-rail-arrow sc-rail-arrow--'+direction;
+  button.setAttribute('aria-label',direction==='left'?'Ver categorías anteriores':'Ver más categorías');
+  button.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3" aria-hidden="true"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></svg>';
+
+  var style=button.style;
+  style.position='absolute';
+  style.top='0';
+  style.bottom='0';
+  style[direction]='0';
+  style.width='30px';
+  style.margin='0';
+  style.padding='0';
+  style.border='0';
+  style.borderRadius='0';
+  style.background='#fff';
+  style.boxShadow='none';
+  style.display='flex';
+  style.alignItems='center';
+  style.justifyContent='center';
+  style.opacity='0';
+  style.visibility='hidden';
+  style.pointerEvents='none';
+  style.cursor='pointer';
+  style.zIndex='40';
+
+  if(direction==='left')button.querySelector('svg').style.transform='rotate(180deg)';
+
+  button.addEventListener('click',function(){
+    var amount=Math.max(140,Math.round(scroller.clientWidth*.65));
+    if(direction==='left')amount*=-1;
+    try{scroller.scrollBy({left:amount,behavior:'smooth'});}
+    catch(_){scroller.scrollLeft+=amount;}
+  });
+
+  host.appendChild(button);
+  return button;
+}
+
+function setRailArrowVisible(button,visible){
+  if(!button)return;
+  button.style.opacity=visible?'1':'0';
+  button.style.visibility=visible?'visible':'hidden';
+  button.style.pointerEvents=visible?'auto':'none';
+}
+
+function setRailArrowState(host,scroller,canLeft,canRight){
+  if(!host)return;
+  var left=host.querySelector('.sc-rail-arrow--left');
+  var right=host.querySelector('.sc-rail-arrow--right');
+
+  if(scroller){
+    left=left||makeRailArrow(host,scroller,'left');
+    right=right||makeRailArrow(host,scroller,'right');
+  }
+
+  setRailArrowVisible(left,!!canLeft);
+  setRailArrowVisible(right,!!canRight);
+}
+
 function setOverflowState(host,scroller){
   if(!host||!scroller)return;
   var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
-  host.classList.toggle('sc-overflow-right',max>1&&scroller.scrollLeft<max-1);
+  var canLeft=max>1&&scroller.scrollLeft>1;
+  var canRight=max>1&&scroller.scrollLeft<max-1;
+  host.classList.toggle('sc-overflow-left',canLeft);
+  host.classList.toggle('sc-overflow-right',canRight);
+  setRailArrowState(host,scroller,canLeft,canRight);
 }
 
 function updateRailState(){
@@ -80,8 +150,10 @@ function updateRailState(){
   var mobileScroller=mobileRail&&mobileRail.querySelector('.topShopMenuMobileScroller');
 
   if(mobileRail){
-    if(desktopQuery.matches)mobileRail.classList.remove('sc-overflow-right');
-    else setOverflowState(mobileRail,mobileScroller);
+    if(desktopQuery.matches){
+      mobileRail.classList.remove('sc-overflow-left','sc-overflow-right');
+      setRailArrowState(mobileRail,null,false,false);
+    }else setOverflowState(mobileRail,mobileScroller);
   }
 
   if(mobileWrapper){
