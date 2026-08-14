@@ -309,7 +309,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1515-rail-arrows';
+	var assetVersion = '20260814-1522-sticky-motion';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -362,9 +362,17 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1515-rail-arrows';
+	var version = window.__scCatalogAssetVersion || '20260814-1522-sticky-motion';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
+	script.onload = function(){
+		if (document.getElementById('sc-sticky-rail-motion-js')) return;
+		var sticky = document.createElement('script');
+		sticky.id = 'sc-sticky-rail-motion-js';
+		sticky.src = 'motion/sticky-rail.js?v=' + version;
+		sticky.async = true;
+		document.head.appendChild(sticky);
+	};
 	document.head.appendChild(script);
 })();
