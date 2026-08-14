@@ -310,7 +310,7 @@ function noFoto(){
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1532-sticky-state-v2';
+	var assetVersion = '20260814-1536-modal-cart';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
@@ -347,6 +347,11 @@ function noFoto(){
 	script.async = false;
 	document.head.appendChild(script);
 
+	var modalCtaScript = document.createElement('script');
+	modalCtaScript.src = asset('overrides/modal-cta.js');
+	modalCtaScript.async = false;
+	document.head.appendChild(modalCtaScript);
+
 	var metaScript = document.createElement('script');
 	metaScript.src = asset('overrides/product-meta-layout.js');
 	metaScript.async = false;
@@ -363,7 +368,7 @@ function noFoto(){
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1532-sticky-state-v2';
+	var version = window.__scCatalogAssetVersion || '20260814-1536-modal-cart';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
