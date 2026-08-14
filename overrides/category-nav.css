@@ -1,5 +1,6 @@
 /* Category navigation interaction override.
-   Keeps the 1px toolbar rule as the baseline and overlays the active category. */
+   Keeps the 1px toolbar rule as the baseline and overlays the active category.
+   Deploy marker: active-rule-horizontal-wheel-v1. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
     /* Existing 1px border-bottom remains the full-width baseline. */
