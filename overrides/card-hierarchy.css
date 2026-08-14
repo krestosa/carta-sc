@@ -1,0 +1,111 @@
+/* SushiClub catalogue: section hierarchy + post-description flavor metadata. */
+@media (min-width: 993px) {
+  /* Parent category hierarchy. */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion {
+    font-size: 28px !important;
+    line-height: 1.08 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  /* Subcategories inherit the previous parent-title scale. */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
+    margin: 10px 0 -3px !important;
+    color: #343434 !important;
+    font-size: 22px !important;
+    line-height: 1.12 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.03em !important;
+    text-transform: none !important;
+  }
+
+  /* A little more breathing room between parent category groups. */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop {
+    margin-bottom: 88px !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div {
+    padding-top: 28px !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* Keep the first parent category tight to the toolbar. */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
+    padding-top: 2px !important;
+  }
+
+  /*
+   * Product information grid:
+   * image / title+price / description / flavor metadata.
+   * The fourth row is always reserved, so cards stay aligned even without icons.
+   */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop > a.fancyboxModalAddProd {
+    position: relative !important;
+    grid-template-rows: auto auto auto 30px !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {
+    position: static !important;
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 54px !important;
+    max-height: 54px !important;
+    padding: 13px 0 0 !important;
+  }
+
+  /* The legacy inline icon container remains only as the modal data source. */
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1 > .sabores {
+    display: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 54px !important;
+    padding: 14px 0 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
+    box-sizing: border-box;
+    display: flex !important;
+    grid-column: 1 / -1;
+    grid-row: 4;
+    align-items: center;
+    align-self: start;
+    gap: 7px;
+    width: 100%;
+    height: 20px;
+    margin: 10px 0 0;
+    padding: 0;
+    line-height: 0;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors img {
+    display: block !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    opacity: 1 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors:empty {
+    visibility: hidden;
+  }
+
+  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
+    opacity: 0 !important;
+  }
+}
