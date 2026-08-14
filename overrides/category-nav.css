@@ -1,11 +1,12 @@
 /* Category navigation interaction override.
-   Keeps the 1px toolbar rule as the baseline and overlays the active category.
-   Deploy marker: active-rule-horizontal-wheel-v5. */
+   The baseline belongs to the category rail, not to the outer sticky toolbar.
+   Deploy marker: active-rule-horizontal-wheel-v6. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
     padding-bottom: 0 !important;
     padding-left: 0 !important;
     margin-left: 0 !important;
+    border-bottom: 0 !important;
     overflow: hidden;
   }
 
@@ -21,7 +22,7 @@
     overscroll-behavior: contain;
   }
 
-  /* Kill every inherited left offset from the legacy nav. */
+  /* Remove every inherited leading offset from the legacy navigation. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .wrapp-nav-tabsTopShop,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child,
@@ -30,13 +31,32 @@
     margin-inline-start: 0 !important;
     padding-left: 0 !important;
     padding-inline-start: 0 !important;
+    text-indent: 0 !important;
     left: 0 !important;
+  }
+
+  /* Draw the 1px baseline from the actual category rail. Because the UL and
+     its first LI/link have no leading margin or padding, this starts exactly
+     at the left edge of the first category instead of at the outer toolbar. */
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -14px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--sc-catalog-line, #e7e7e2);
+    pointer-events: none;
+    z-index: 1;
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
     bottom: -14px !important;
     height: 2px !important;
-    margin-left: -1.25px !important;
+    margin-left: 0 !important;
     background: var(--sc-catalog-ink, #151515) !important;
     opacity: 1;
     z-index: 9 !important;
@@ -45,9 +65,9 @@
     will-change: transform;
   }
 
-  /* The moving indicator is based on the visual glyph bounds. For the first
-     category that can expose 1-3px of the thin baseline before the thick rule.
-     Paint the active first item's full box on the same baseline, from x=0. */
+  /* For the first active category, use the first item's own box as the active
+     rule. This makes its thick rule share the exact same left edge as the rail
+     baseline even though GSAP measures the visual glyph bounds. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink.sc-motion-current)::after,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink[aria-current='location'])::after,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child.active::after {
