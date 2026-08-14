@@ -304,19 +304,21 @@ function noFoto(){
 	$('.panel-body p:empty:not([class])').remove()
 }
 
-/* Catalogue + motion bootstrap. CSS is parser-blocking so legacy catalogue
-   surfaces can never reach first paint. Behaviour remains isolated in overrides/. */
+/* Catalogue bootstrap: paint the real catalogue immediately and keep all
+   layout geometry deterministic. There is no skeleton or reveal-hidden state. */
 (function () {
 	if (window.__scCatalogOverrideRequested) return;
 	window.__scCatalogOverrideRequested = true;
 
-	var assetVersion = '20260814-1631-no-skeleton-v7';
+	var assetVersion = '20260814-1642-stability-v9';
 	window.__scCatalogAssetVersion = assetVersion;
 	function asset(path) { return path + '?v=' + assetVersion; }
 
-	/* The catalogue now paints real content immediately. Prepaint only reserves
-	   final geometry so catalog.js can mount the rail without shifting the grid. */
-	document.documentElement.classList.add('sc-catalog-prepaint');
+	var root = document.documentElement;
+	root.classList.add('sc-catalog-prepaint', 'sc-no-loading-state');
+	['sc-catalog-skeleton','sc-catalog-content-loading','sc-catalog-skeleton-leaving','sc-skeleton-ready'].forEach(function(name){
+		if(root.classList.contains(name))root.classList.remove(name);
+	});
 
 	function addBlockingCss(id, href) {
 		if (document.getElementById(id)) return;
@@ -333,22 +335,12 @@ function noFoto(){
 
 	addBlockingCss('sc-catalog-css', asset('overrides/catalog.css'));
 	addBlockingCss('sc-category-nav-css', asset('overrides/category-nav.css'));
-	/* Harmless compatibility sheet: only reserves banner intrinsic geometry. */
-	addBlockingCss('sc-loading-skeleton-css', asset('overrides/loading-skeleton.css'));
 	addBlockingCss('sc-catalog-prepaint-css', asset('overrides/prepaint.css'));
+	addBlockingCss('sc-no-loading-state-css', asset('overrides/no-loading-state.css'));
 	addBlockingCss('sc-motion-css', asset('motion/motion.css'));
 	addBlockingCss('sc-product-image-ratio-css', asset('overrides/product-image-ratio.css'));
 	addBlockingCss('sc-card-hierarchy-css', asset('overrides/card-hierarchy.css'));
-	addBlockingCss('sc-section-lines-css', asset('motion/section-lines.css'));
 	addBlockingCss('sc-content-normalizer-css', asset('overrides/content-normalizer.css'));
-
-	/* Compatibility guard loads before catalog.js so its historical skeleton
-	   bootstrap cannot hide the catalogue or inject placeholder UI. */
-	var skeletonGuardScript = document.createElement('script');
-	skeletonGuardScript.id = 'sc-loading-skeleton-js';
-	skeletonGuardScript.src = asset('overrides/loading-skeleton.js');
-	skeletonGuardScript.async = false;
-	document.head.appendChild(skeletonGuardScript);
 
 	var script = document.createElement('script');
 	script.src = asset('overrides/catalog.js');
@@ -371,46 +363,23 @@ function noFoto(){
 	document.head.appendChild(normalizerScript);
 })();
 
-/* Dedicated motion bootstrap. Do not add animation logic here. */
+/* Interaction motion only. Entrance/reveal animations are intentionally not
+   loaded; cards and section labels remain visible throughout startup. */
 (function () {
 	if (window.__scUxMotionRequested) return;
 	window.__scUxMotionRequested = true;
 
-	var version = window.__scCatalogAssetVersion || '20260814-1631-no-skeleton-v7';
+	var version = window.__scCatalogAssetVersion || '20260814-1642-stability-v9';
 	var script = document.createElement('script');
 	script.src = 'motion/motion.js?v=' + version;
 	script.async = true;
 	script.onload = function(){
-		/* motion.js historically scheduled an initial card fade. Mark everything
-		   already visible before that RAF can paint; the CSS rule makes it static. */
-		var vh = window.innerHeight || document.documentElement.clientHeight;
-		var initialCards = [];
-		document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){
-			var r = card.getBoundingClientRect();
-			if(r.top < vh && r.bottom > 0){
-				card.classList.add('sc-static-initial-card');
-				initialCards.push(card);
-			}
-		});
-		if(window.gsap && initialCards.length){
-			window.gsap.killTweensOf(initialCards);
-			window.gsap.set(initialCards,{autoAlpha:1,clearProps:'opacity,visibility,transform'});
-		}
-
 		if (!document.getElementById('sc-sticky-rail-motion-js')) {
 			var sticky = document.createElement('script');
 			sticky.id = 'sc-sticky-rail-motion-js';
 			sticky.src = 'motion/sticky-rail.js?v=' + version;
 			sticky.async = true;
 			document.head.appendChild(sticky);
-		}
-
-		if (!document.getElementById('sc-section-lines-motion-js')) {
-			var sectionLines = document.createElement('script');
-			sectionLines.id = 'sc-section-lines-motion-js';
-			sectionLines.src = 'motion/section-lines.js?v=' + version;
-			sectionLines.async = true;
-			document.head.appendChild(sectionLines);
 		}
 
 		if (!document.getElementById('sc-modal-motion-js')) {
