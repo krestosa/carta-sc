@@ -175,9 +175,9 @@ function repairMobileHeader(){
   var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));
   if(!menus.length)return;
 
-  /* main.js creates the live SlickNav instance after the static snapshot menu.
-     Keep that event-bound instance and remove only the older captured copies. */
-  var liveMenu=menus[menus.length-1];
+  /* SlickNav prepends the live event-bound menu to body. The static snapshot
+     copy is therefore after it. Keep the first menu and remove later copies. */
+  var liveMenu=menus[0];
   menus.forEach(function(menu){
     if(menu!==liveMenu&&menu.parentNode)menu.parentNode.removeChild(menu);
   });
