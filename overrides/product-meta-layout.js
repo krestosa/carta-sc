@@ -8,6 +8,17 @@ var desktopQuery=window.matchMedia('(min-width: 993px)');
 var railStateRaf=0;
 var descriptionRaf=0;
 
+function loadMobileResponsiveStyles(){
+  if(document.getElementById('sc-mobile-responsive-css'))return;
+  var link=document.createElement('link');
+  link.id='sc-mobile-responsive-css';
+  link.rel='stylesheet';
+  link.href='overrides/mobile-responsive.css?v=20260814-1824-mobile-v1';
+  document.head.appendChild(link);
+}
+
+loadMobileResponsiveStyles();
+
 function clearRows(){
   document.querySelectorAll('.sc-product-flavors').forEach(function(row){
     if(row.parentNode)row.parentNode.removeChild(row);
@@ -158,6 +169,49 @@ function ready(fn){
     : fn();
 }
 
+function repairMobileHeader(){
+  if(desktopQuery.matches)return;
+
+  var logo=document.querySelector('.brandOnlyMobile img');
+  if(logo){
+    logo.style.removeProperty('width');
+    logo.style.removeProperty('height');
+    logo.style.removeProperty('margin');
+    logo.style.removeProperty('margin-left');
+    logo.style.removeProperty('transform');
+  }
+
+  var jq=window.jQuery;
+  var source=document.getElementById('menuMobile');
+  if(!jq||!source||!jq.fn||typeof jq.fn.slicknav!=='function')return;
+
+  var $source=jq(source);
+  try{$source.slicknav('destroy');}catch(_){ }
+
+  document.querySelectorAll('body > .slicknav_menu').forEach(function(menu){
+    if(menu.parentNode)menu.parentNode.removeChild(menu);
+  });
+
+  try{$source.removeData('slicknav');}catch(_){ }
+  $source.removeClass('slicknav_hidden').removeAttr('aria-hidden');
+
+  try{
+    $source.slicknav({label:''});
+  }catch(_){
+    return;
+  }
+
+  var menu=document.querySelector('body > .slicknav_menu');
+  if(!menu)return;
+  menu.classList.add('sc-mobile-main-menu');
+
+  var button=menu.querySelector('.slicknav_btn');
+  if(button){
+    button.setAttribute('aria-label','Abrir menú de navegación');
+    button.setAttribute('title','Menú');
+  }
+}
+
 function handleResize(){
   scheduleRailState();
   scheduleDescriptionMeasure();
@@ -166,6 +220,7 @@ function handleResize(){
 function handleBreakpoint(){
   installRows();
   handleResize();
+  if(!desktopQuery.matches)setTimeout(repairMobileHeader,0);
 }
 
 function loadProductImageParallax(){
@@ -183,11 +238,14 @@ ready(function(){
   scheduleDescriptionMeasure();
   loadProductImageParallax();
 
+  /* Let the legacy DOM-ready queue finish, then replace the captured static
+     SlickNav markup with one fresh, event-bound instance. */
+  setTimeout(repairMobileHeader,0);
+
   window.addEventListener('scroll',scheduleRailState,{passive:true});
   document.addEventListener('scroll',scheduleRailState,true);
   window.addEventListener('resize',handleResize,{passive:true});
 
-  /* Horizontal rail movement must update arrow availability too. */
   document.querySelectorAll('.sc-catalog-categories, .topShopMenuMobileScroller').forEach(function(scroller){
     scroller.addEventListener('scroll',scheduleRailState,{passive:true});
   });
