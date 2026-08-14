@@ -3,6 +3,7 @@
  * ------------------------------------------------------------
  * Desktop-only visual refinement inspired by a restrained editorial shop grid.
  * Legacy styles remain untouched; this file only overrides catalogue surfaces.
+ * Pages deploy marker: catalogue-grid-v1.
  */
 
 @font-face {
@@ -33,8 +34,9 @@
     --sc-catalog-ease: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  /* The old desktop category strip is emptied by catalog.js. */
-  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile {
+  /* Hide only the old black desktop category row. The promotional banner
+     lives in the same wrapper and must remain visible. */
+  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile > .topShop {
     display: none !important;
   }
 
@@ -226,7 +228,6 @@
     border-top: 1px solid var(--sc-catalog-line);
     background: transparent !important;
   }
-
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion {
     margin-top: 0 !important;
