@@ -65,7 +65,7 @@ function waitForAboveFoldImages(){
   var jobs=[];
   var banner=document.querySelector('.bannerShop .imgBannerShop');
   if(banner){
-    if(!(banner.complete&&banner.naturalWidth)){
+    if(banner.complete&&banner.naturalWidth){}else{
       jobs.push(new Promise(function(resolve){
         var done=function(){banner.removeEventListener('load',done);banner.removeEventListener('error',done);resolve();};
         banner.addEventListener('load',done,{once:true});
