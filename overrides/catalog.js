@@ -141,17 +141,21 @@ function installHorizontalCategoryWheel(scroller){
   categoryWheelScroller=scroller;
   categoryWheelHandler=function(e){
     if(!desktopQuery.matches)return;
-    if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)||Math.abs(e.deltaY)<0.5)return;
+
+    /* While the pointer is over the category rail, wheel input belongs only
+       to this horizontal scroller. Even at either edge it must never bubble
+       into vertical page scrolling. */
+    e.preventDefault();
+
     var max=Math.max(0,scroller.scrollWidth-scroller.clientWidth);
     if(max<1)return;
-    var delta=e.deltaY;
+
+    var delta=Math.abs(e.deltaY)>=Math.abs(e.deltaX)?e.deltaY:e.deltaX;
+    if(Math.abs(delta)<0.5)return;
     if(e.deltaMode===1)delta*=16;
     else if(e.deltaMode===2)delta*=Math.max(1,scroller.clientWidth);
-    var left=scroller.scrollLeft;
-    var canMove=delta>0?left<max-0.5:left>0.5;
-    if(!canMove)return;
-    e.preventDefault();
-    scroller.scrollLeft=Math.max(0,Math.min(max,left+delta));
+
+    scroller.scrollLeft=Math.max(0,Math.min(max,scroller.scrollLeft+delta));
   };
   scroller.addEventListener('wheel',categoryWheelHandler,{passive:false});
 }
