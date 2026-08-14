@@ -1,0 +1,104 @@
+/* Inline subcategory navigation beside each parent category heading. */
+
+body.sushiShop .listadoShop .titleShopSeccion > div {
+  display: flex !important;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion .sc-category-title-label {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-nav {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  min-width: 0;
+  margin-left: auto;
+  font-family: 'SC Acumin', Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  text-align: right;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-link {
+  display: inline-block;
+  margin: 0;
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: #777;
+  font: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-link:hover,
+body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-link:focus-visible {
+  color: #151515;
+  border-bottom-color: currentColor;
+}
+
+body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-link:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+body.sushiShop .listadoShop .subTitleShopSeccion.sc-subcategory-target {
+  scroll-margin-top: 64px;
+}
+
+@media (max-width: 992px) {
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    gap: 18px;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-nav {
+    max-width: 58%;
+    gap: 5px 14px;
+    font-size: 11.5px;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion.sc-subcategory-target {
+    scroll-margin-top: 58px;
+  }
+}
+
+@media (max-width: 640px) {
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion .sc-category-title-label {
+    flex: 1 1 auto;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-nav {
+    flex: 0 1 52%;
+    max-width: 52%;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion .sc-subcategory-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
