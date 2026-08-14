@@ -168,10 +168,20 @@ function handleBreakpoint(){
   handleResize();
 }
 
+function loadProductImageParallax(){
+  if(document.getElementById('sc-product-image-parallax-js'))return;
+  var script=document.createElement('script');
+  script.id='sc-product-image-parallax-js';
+  script.src='motion/product-image-parallax.js?v=20260814-1753-parallax-v1';
+  script.async=true;
+  document.head.appendChild(script);
+}
+
 ready(function(){
   installRows();
   scheduleRailState();
   scheduleDescriptionMeasure();
+  loadProductImageParallax();
 
   window.addEventListener('scroll',scheduleRailState,{passive:true});
   document.addEventListener('scroll',scheduleRailState,true);
