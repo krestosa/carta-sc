@@ -6,7 +6,7 @@
  * UI available to the rest of the page.
  */
 @media (min-width: 993px) {
-  html.sc-catalog-prepaint body.sushiShop .fixedTopShop.wtopShopMenuMobile {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile {
     position: static !important;
     inset: auto !important;
     width: 100% !important;
@@ -14,14 +14,14 @@
   }
 
   /* The old black category row must never be painted. */
-  html.sc-catalog-prepaint body.sushiShop .fixedTopShop.wtopShopMenuMobile > .topShop,
-  html.sc-catalog-prepaint body.sushiShop .topShop.bottomShop,
-  html.sc-catalog-prepaint body.sushiShop .productoShop .sumar {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile > .topShop,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .topShop.bottomShop,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .productoShop .sumar {
     display: none !important;
   }
 
   /* Reserve exactly the desktop catalogue width used by catalog.css. */
-  html.sc-catalog-prepaint body.sushiShop .containerShop {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop {
     box-sizing: border-box;
     width: calc(100% - 64px) !important;
     max-width: 1240px !important;
@@ -31,12 +31,12 @@
     padding-left: 0 !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .containerShop > .row {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop > .row {
     margin-right: 0 !important;
     margin-left: 0 !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .containerShop .col-md-9.normCols {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop .col-md-9.normCols {
     float: none !important;
     width: 100% !important;
     min-height: 0 !important;
@@ -46,7 +46,7 @@
   }
 
   /* Exact slot occupied by the sticky category toolbar once catalog.js mounts. */
-  html.sc-catalog-prepaint body.sushiShop .containerShop::before {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop::before {
     content: '';
     display: block;
     box-sizing: border-box;
@@ -62,7 +62,7 @@
   }
 
   /* The first layout is already the final three-column grid. */
-  html.sc-catalog-prepaint body.sushiShop .listadoShop {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: 32px;
@@ -74,17 +74,17 @@
     align-items: stretch;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop > :not(.productoShop) {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > :not(.productoShop) {
     grid-column: 1 / -1;
     min-width: 0;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop > br {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > br {
     display: none !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop,
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop.ConCarr {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop.ConCarr {
     box-sizing: border-box;
     display: flex !important;
     flex-direction: column;
@@ -95,7 +95,7 @@
     border: 0 !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop > a.fancyboxModalAddProd {
     display: flex !important;
     flex: 1 1 auto;
     flex-direction: column;
@@ -103,7 +103,7 @@
     height: 100%;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .imgShop {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
     width: 100%;
     padding-bottom: 84.1% !important;
@@ -116,7 +116,7 @@
   }
 
   /* Preserve the final text boxes while suppressing legacy ink. */
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .title-shop1 {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {
     min-height: 39px !important;
     max-height: 39px !important;
     margin: 0 !important;
@@ -125,7 +125,7 @@
     color: transparent !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .descrip {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
     min-height: 55px !important;
     max-height: 55px !important;
     margin: 7px 0 0 !important;
@@ -134,15 +134,15 @@
     color: transparent !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .priceRow {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
     min-height: 30px !important;
     margin: auto 0 0 !important;
     padding: 12px 0 0 !important;
     opacity: 0 !important;
   }
 
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion,
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .subTitleShopSeccion {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
     color: transparent !important;
     background: transparent !important;
   }
