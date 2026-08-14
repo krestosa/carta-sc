@@ -333,6 +333,7 @@ function noFoto(){
 	addBlockingCss('sc-loading-skeleton-css', 'overrides/loading-skeleton.css');
 	addBlockingCss('sc-catalog-prepaint-css', 'overrides/prepaint.css');
 	addBlockingCss('sc-motion-css', 'motion/motion.css');
+	addBlockingCss('sc-catalog-type-grid-css', 'overrides/catalog-type-grid.css');
 
 	var script = document.createElement('script');
 	script.src = 'overrides/catalog.js';
