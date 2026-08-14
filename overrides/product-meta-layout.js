@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+/* Deploy marker: rail-overflow-sticky-v1. */
 if(window.__scProductMetaLayoutBooted)return;
 window.__scProductMetaLayoutBooted=true;
 
