@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 SITE = Path('.pages-site')
@@ -119,6 +121,9 @@ for src in SHOP_SCRIPTS:
         raise SystemExit(f'Original shop script tag remains after bundling: {src}')
 if len(re.findall(r'^/\* source:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(SHOP_SCRIPTS):
     raise SystemExit('Shop JS bundle source count mismatch')
+
+externalizer = Path(__file__).with_name('externalize-pages-static-assets.py')
+subprocess.run([sys.executable, str(externalizer)], check=True)
 
 print(f'Bundled {len(SHOP_SCRIPTS)} shop scripts into {BUNDLE}')
 if not date_flow_present:
