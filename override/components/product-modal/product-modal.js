@@ -12,10 +12,10 @@ function closeModal(event){
   activeModal=null;closingModal=modal;previousFocus=null;releaseBackground=null;
   modal.classList.remove('is-visible');
   M.close(modal);
-  document.body.classList.remove('sc-product-modal-open');
   var delay=matchMedia('(prefers-reduced-motion: reduce)').matches?0:190;
   window.setTimeout(function(){
     if(modal.parentNode)modal.parentNode.removeChild(modal);
+    document.body.classList.remove('sc-product-modal-open');
     release();
     if(closingModal===modal)closingModal=null;
     if(restore&&document.documentElement.contains(restore)){
