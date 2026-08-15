@@ -37,14 +37,6 @@ body.sushiShop .listadoShop .titleShopSeccion > div {
   padding-bottom: 0 !important;
 }
 
-body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
-  opacity: 1 !important;
-  visibility: visible !important;
-  top: 0 !important;
-  transform: none !important;
-  transition: none !important;
-}
-
 /* Single 1px divider under parent category title, 12px from the text. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
 body.sushiShop .listadoShop .titleShopSeccion > div::after {
