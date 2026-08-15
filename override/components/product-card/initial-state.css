@@ -1,8 +1,0 @@
-/* Late product-card state guards that must win after component layout styles. */
-body.sushiShop .listadoShop .productoShop.sc-static-initial-card {
-  opacity: 1 !important;
-  visibility: visible !important;
-  top: 0 !important;
-  transform: none !important;
-  transition: none !important;
-}

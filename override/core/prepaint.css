@@ -121,14 +121,4 @@
     margin: 0 !important;
     overflow: hidden !important;
   }
-
-  /* Content is real and visible from first paint. */
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
 }
