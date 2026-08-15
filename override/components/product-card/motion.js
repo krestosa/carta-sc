@@ -19,7 +19,6 @@ function install(){
       var profile=desktop?{batchMax:8,start:'clamp(top 91%)'}:tablet?{batchMax:6,start:'clamp(top 92%)'}:{batchMax:4,start:'clamp(top 93%)'};
       return parts.setupReveal?parts.setupReveal(gsap,ST,profile,reduce):function(){};
     });
-    if(parts.installParallax)parts.installParallax(gsap,ST);
   });
 }
 install();
