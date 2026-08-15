@@ -18,7 +18,8 @@
 }
 
 body.sushiShop #busquedaJSBox,
-body.sushiShop #busquedaJSBox + div {
+body.sushiShop #busquedaJSBox + div,
+body.sushiShop #busquedaJSBoxResults {
   display: none !important;
 }
 
@@ -26,7 +27,7 @@ body.sushiShop #busquedaJSBox + div {
   body.sushiShop.sc-catalog-layout-ready {
     --sc-catalog-ink: #151515;
     --sc-catalog-copy: #696969;
-    --sc-catalog-muted: #909090;
+    --sc-catalog-muted: #737373;
     --sc-catalog-line: #e7e7e2;
     --sc-catalog-surface: #f3f3ef;
     --sc-catalog-gutter: 32px;

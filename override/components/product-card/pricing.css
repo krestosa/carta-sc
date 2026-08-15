@@ -1,4 +1,8 @@
 /* Product-card pricing column. */
+body.sushiShop .listadoShop .productoShop .ofertaPrice {
+  color: #737373 !important;
+}
+
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
@@ -41,7 +45,6 @@
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: var(--sc-catalog-muted, #909090) !important;
     font-family: inherit !important;
     font-size: 11.5px !important;
     line-height: 14px !important;
@@ -93,7 +96,6 @@
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: var(--sc-r-muted) !important;
     font-family: inherit !important;
     font-size: 11.5px !important;
     line-height: 14px !important;

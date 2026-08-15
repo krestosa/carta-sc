@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v10';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v11';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
