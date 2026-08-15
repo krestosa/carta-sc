@@ -25,7 +25,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
     margin: 0 !important;
     padding: var(--sc-card-title-padding-top) 0 0 !important;
     overflow: hidden;
-    color: var(--sc-color-title) !important;
+    color: var(--sc-color-heading) !important;
     font-family: var(--sc-font-primary) !important;
     font-size: var(--sc-card-title-size) !important;
     line-height: var(--sc-card-title-line-height) !important;
@@ -64,21 +64,21 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
 }
 
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-  content: var(--sc-card-detail-label);
+  content: 'Ver detalle';
   position: absolute;
   right: 0;
   bottom: 0;
-  padding-left: var(--sc-card-detail-padding-left);
-  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) var(--sc-card-detail-fade-stop), var(--sc-color-surface) 100%);
-  color: var(--sc-color-detail);
+  padding-left: 22px;
+  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%);
+  color: var(--sc-color-copy);
   font-family: var(--sc-font-primary);
-  font-size: var(--sc-card-detail-size);
+  font-size: 10.5px;
   line-height: var(--sc-card-description-line-height);
   font-weight: var(--sc-font-weight-semibold);
   letter-spacing: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-standard);
+  transition: opacity var(--sc-motion-fast) ease;
 }
 
 body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:hover .descrip.sc-description-truncated::after,
@@ -98,7 +98,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
     margin: 0 !important;
     padding: var(--sc-card-title-padding-top) 0 0 !important;
     overflow: hidden;
-    color: var(--sc-color-title) !important;
+    color: var(--sc-color-heading) !important;
     font-family: var(--sc-font-primary) !important;
     font-size: var(--sc-card-title-size) !important;
     line-height: var(--sc-card-title-line-height) !important;

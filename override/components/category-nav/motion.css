@@ -1,3 +1,8 @@
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-motion-micro: 120ms;
+}
+
 .sushiShop .wrapp-nav-tabsTopShop li a,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
   -webkit-transition: color var(--sc-motion-fast) var(--sc-motion-ease-out), background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
@@ -19,7 +24,7 @@
 .sushiShop .sc-category-motion-root {position: relative !important;}
 .sushiShop .sc-category-indicator {
   display: block;position: absolute;left: 0;bottom: 0;width: var(--sc-border-hairline);height: var(--sc-border-hairline);margin: 0;padding: 0;border: 0;border-radius: 0;
-  background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: var(--sc-z-modal-close);
+  background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: 4;
   -webkit-transform: translate3d(0,0,0) scaleX(1);transform: translate3d(0,0,0) scaleX(1);
   -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;will-change: transform;
 }
@@ -31,12 +36,12 @@
 }
 .sushiShop .topPullDown.open {
   -webkit-transform: translateY(0);transform: translateY(0);
-  -webkit-transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-ui) var(--sc-motion-ease-out) !important;
-  transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),transform var(--sc-motion-ui) var(--sc-motion-ease-out) !important;
+  -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),transform var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
   -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
 }
 .sushiShop .wrapp-nav-tabsTopShop a:focus-visible,
-.sushiShop .wtopShopMenuMobile a:focus-visible {outline: var(--sc-focus-width) solid currentColor;outline-offset: var(--sc-focus-offset);}
+.sushiShop .wtopShopMenuMobile a:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
 @media (prefers-reduced-motion: reduce) {
   .sushiShop .topPullDown,.sushiShop .topPullDown.open {
     -webkit-transform: none !important;transform: none !important;

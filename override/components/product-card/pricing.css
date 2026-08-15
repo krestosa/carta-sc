@@ -32,7 +32,7 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: var(--sc-color-text) !important;
+    color: var(--sc-color-ink) !important;
     font-family: inherit !important;
     font-size: var(--sc-card-price-size) !important;
     line-height: var(--sc-card-price-line-height) !important;
@@ -83,7 +83,7 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: var(--sc-color-text) !important;
+    color: var(--sc-color-ink) !important;
     font-family: inherit !important;
     font-size: var(--sc-card-price-size) !important;
     line-height: var(--sc-card-price-line-height) !important;

@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG=C&&C.productCard;if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={initialViewportRatio:.96,behindViewportOffset:-20,initialDuration:.34,initialStagger:.032,revealDuration:.34,revealStagger:.03,batchInterval:.06,rescueViewportRatio:1.03,rescueBottomOffset:-30,rescueOpacityThreshold:.05,rescueDuration:.20,rescueDelay:900};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
 parts.setupReveal=function(gsap,ST,profile,reduce){

@@ -5,7 +5,7 @@ if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavB
 var each=U.each,ready=U.ready,mq=N.mq,boundScrollers=new WeakSet(),resizeRaf=0;
 
 function bindRailScrollers(){
-  each(document.querySelectorAll(S.categoryScroller+','+S.categoryMobileScroller),function(scroller){
+  each(document.querySelectorAll(N.selectors.scroller+','+N.selectors.mobileScroller),function(scroller){
     if(boundScrollers.has(scroller))return;
     boundScrollers.add(scroller);
     scroller.addEventListener('scroll',N.scheduleRail,{passive:true});

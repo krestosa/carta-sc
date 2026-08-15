@@ -13,9 +13,9 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile._open .topShopMenuMobileSc
 
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus-visible {
-  outline: var(--sc-focus-width) solid var(--sc-focus-color) !important;
-  outline-offset: var(--sc-focus-offset) !important;
-  border-radius: var(--sc-focus-radius) !important;
+  outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
+  outline-offset: var(--sc-focus-ring-offset) !important;
+  border-radius: 1px !important;
 }
 
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
@@ -27,7 +27,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
   position: absolute !important;
   top: 0 !important;
   bottom: 0 !important;
-  width: var(--sc-category-overflow-width) !important;
+  width: 22px !important;
   pointer-events: none !important;
   z-index: var(--sc-z-category-overflow) !important;
 }

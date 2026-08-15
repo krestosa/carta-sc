@@ -1,7 +1,8 @@
 (function(){
 'use strict';
-var SC=window.SCOverride=window.SCOverride||{},CFG=SC.config||{},LOCALE=CFG.catalog&&CFG.catalog.locale||'es-AR',C=SC.contentNormalizer=SC.contentNormalizer||{};
+var SC=window.SCOverride=window.SCOverride||{},C=SC.contentNormalizer=SC.contentNormalizer||{};
 if(SC.__contentNormalizerRulesBooted)return;SC.__contentNormalizerRulesBooted=true;
+var LOCALE=C.locale||'es-AR';C.locale=LOCALE;
 var CONNECTORS=new Set(['a','al','ante','bajo','con','contra','de','del','desde','durante','e','el','en','entre','hacia','hasta','la','las','los','mediante','ni','o','para','por','que','según','sin','sobre','su','sus','tras','tu','tus','u','un','una','unos','unas','y']);
 var PROTECTED={'aqa':'AQA','sushiclub':'SushiClub'};
 function titlePeriodClean(text){return text.replace(/\./g,function(dot,index,source){var before=source.charAt(index-1),after=source.charAt(index+1);return /\d/.test(before)&&/\d/.test(after)?dot:'';});}

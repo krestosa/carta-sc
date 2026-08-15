@@ -1,9 +1,8 @@
 (function(){
 'use strict';
-var SC=window.SCOverride=window.SCOverride||{},C=SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion;
+var SC=window.SCOverride=window.SCOverride||{},C=SC.config,S=C&&C.selectors,K=C&&C.classes;
 if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
-var desktopQuery=C.queries.desktop;
-
+var STABLE_LAYOUT_TIMEOUT=750,desktopQuery=C.queries.desktop;
 function markInitialViewport(){
   var vh=window.innerHeight||document.documentElement.clientHeight;
   document.querySelectorAll(S.productCards).forEach(function(card){
@@ -14,7 +13,7 @@ function markInitialViewport(){
     var rect=section.getBoundingClientRect();
     if(rect.top>=vh||rect.bottom<=0)return;
     section.classList.add(K.staticInitialSection);
-    var host=section.matches(S.sectionTitle)?section.querySelector(S.sectionTitleInner):section;
+    var host=section.matches(S.sectionTitle)?section.querySelector(":scope > div"):section;
     if(host)host.classList.add(K.staticInitialSection);
   });
 }
@@ -28,7 +27,7 @@ function waitForStableLayout(){
       function finish(){if(settled)return;settled=true;if(observer)observer.disconnect();if(timer)clearTimeout(timer);afterLayoutFrame(resolve);}
       observer=new MutationObserver(function(){if(document.body.classList.contains(K.catalogLayoutReady))finish();});
       observer.observe(document.body,{attributes:true,attributeFilter:['class']});
-      timer=window.setTimeout(finish,M.stableLayoutTimeout);
+      timer=window.setTimeout(finish,STABLE_LAYOUT_TIMEOUT);
     }
     if(document.body)start();else document.addEventListener('DOMContentLoaded',start,{once:true});
   });

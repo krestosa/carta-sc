@@ -1,8 +1,15 @@
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-motion-ease-linear: linear;
+  --sc-motion-panel: 220ms;
+  --sc-motion-medium: 260ms;
+}
+
 @media (min-width: 993px) {
   .sushiShop .sc-product-modal {
     opacity: 0;visibility: hidden;
-    -webkit-transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),visibility 0s var(--sc-motion-ease-linear) var(--sc-motion-ui);
-    transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),visibility 0s var(--sc-motion-ease-linear) var(--sc-motion-ui);
+    -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),visibility 0s var(--sc-motion-ease-linear) var(--sc-motion-fast);
+    transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),visibility 0s var(--sc-motion-ease-linear) var(--sc-motion-fast);
   }
   .sushiShop .sc-product-modal .sc-product-modal__dialog {
     opacity: 0;-webkit-transform: translateY(var(--sc-modal-dialog-motion-offset-y));transform: translateY(var(--sc-modal-dialog-motion-offset-y));

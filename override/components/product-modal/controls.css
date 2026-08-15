@@ -1,29 +1,35 @@
 /* Product modal interactive controls. */
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-modal-action-background: #000;
+  --sc-radius-round: 50%;
+}
+
 body.sushiShop .sc-product-modal__cart-button {
   box-sizing: border-box !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
-  min-height: var(--sc-modal-cart-min-height) !important;
-  padding: var(--sc-modal-cart-padding) !important;
-  border: var(--sc-border-hairline) solid var(--sc-color-text) !important;
+  min-height: 46px !important;
+  padding: 12px 18px !important;
+  border: var(--sc-border-hairline) solid var(--sc-color-ink) !important;
   border-radius: 0 !important;
-  background: var(--sc-color-text) !important;
+  background: var(--sc-color-ink) !important;
   color: var(--sc-color-surface) !important;
-  font: var(--sc-font-weight-semibold) var(--sc-modal-cart-size)/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
+  font: var(--sc-font-weight-semibold) 14px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
   text-decoration: none !important;
   text-align: center !important;
 }
 body.sushiShop .sc-product-modal__cart-button:hover,
 body.sushiShop .sc-product-modal__cart-button:focus-visible {
-  background: var(--sc-color-background) !important;
-  border-color: var(--sc-color-background) !important;
+  background: var(--sc-modal-action-background) !important;
+  border-color: var(--sc-modal-action-background) !important;
   color: var(--sc-color-surface) !important;
 }
 body.sushiShop .sc-product-modal__cart-button:focus-visible {
-  outline: var(--sc-focus-width) solid var(--sc-focus-color) !important;
-  outline-offset: var(--sc-focus-offset) !important;
+  outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
+  outline-offset: var(--sc-focus-ring-offset) !important;
 }
 body.sushiShop .sc-product-modal__close {
   box-sizing: border-box !important;
@@ -43,21 +49,21 @@ body.sushiShop .sc-product-modal__close {
   border: 0 !important;
   border-radius: var(--sc-radius-round) !important;
   background: transparent !important;
-  color: var(--sc-color-close) !important;
+  color: var(--sc-color-muted) !important;
   box-shadow: none !important;
   appearance: none !important;
   -webkit-appearance: none !important;
   cursor: pointer !important;
-  z-index: var(--sc-z-modal-close) !important;
+  z-index: 4 !important;
 }
 body.sushiShop .sc-product-modal__close::before {
   content: '' !important;
   position: absolute !important;
   width: var(--sc-modal-close-visual-size) !important;
   height: var(--sc-modal-close-visual-size) !important;
-  border: var(--sc-border-hairline) solid var(--sc-modal-close-border) !important;
+  border: var(--sc-border-hairline) solid rgba(0,0,0,.07) !important;
   border-radius: var(--sc-radius-round) !important;
-  background: var(--sc-modal-close-surface) !important;
+  background: rgba(255,255,255,.86) !important;
   z-index: 0 !important;
 }
 body.sushiShop .sc-product-modal__close svg {
@@ -65,16 +71,16 @@ body.sushiShop .sc-product-modal__close svg {
   width: var(--sc-modal-close-icon-size) !important;
   height: var(--sc-modal-close-icon-size) !important;
   stroke: currentColor !important;
-  stroke-width: var(--sc-modal-close-stroke-width) !important;
-  z-index: var(--sc-z-content) !important;
+  stroke-width: 1.6 !important;
+  z-index: var(--sc-z-raised) !important;
 }
 body.sushiShop .sc-product-modal__close:hover::before,
 body.sushiShop .sc-product-modal__close:focus-visible::before {
-  border-color: var(--sc-modal-close-border-hover) !important;
-  background: var(--sc-modal-close-surface-hover) !important;
+  border-color: rgba(0,0,0,.16) !important;
+  background: rgba(255,255,255,.98) !important;
 }
 body.sushiShop .sc-product-modal__close:focus-visible {
-  outline: var(--sc-focus-width) solid var(--sc-focus-color) !important;
-  outline-offset: var(--sc-focus-offset-minimal) !important;
-  color: var(--sc-color-text) !important;
+  outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
+  outline-offset: 1px !important;
+  color: var(--sc-color-ink) !important;
 }

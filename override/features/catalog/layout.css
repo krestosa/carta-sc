@@ -1,4 +1,10 @@
 /* Catalogue grid/container layout shared by card and section components. */
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-catalog-grid-row-gap: 36px;
+  --sc-catalog-section-bottom: 74px;
+}
+
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop {
     display: grid !important;
@@ -42,8 +48,8 @@
 
   body.sushiShop .containerShop {
     box-sizing: border-box;
-    width: calc(100% - var(--sc-compact-container-inline-space)) !important;
-    max-width: var(--sc-content-max-width-compact) !important;
+    width: calc(100% - 40px) !important;
+    max-width: 940px !important;
     margin-right: auto !important;
     margin-left: auto !important;
     padding-right: 0 !important;
@@ -67,10 +73,10 @@
   body.sushiShop .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--sc-compact-grid-column-gap);
-    row-gap: var(--sc-compact-grid-row-gap);
+    column-gap: 24px;
+    row-gap: 34px;
     width: 100% !important;
-    margin: 0 0 var(--sc-compact-section-bottom) !important;
+    margin: 0 0 64px !important;
     padding: 0 !important;
     font-size: initial !important;
     align-items: stretch;
@@ -100,12 +106,12 @@
 
 @media (max-width: 640px) {
   body.sushiShop .containerShop {
-    width: calc(100% - var(--sc-phone-container-inline-space)) !important;
+    width: calc(100% - 32px) !important;
   }
 
   body.sushiShop .listadoShop {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--sc-phone-grid-row-gap) !important;
-    margin-bottom: var(--sc-phone-section-bottom) !important;
+    row-gap: 28px !important;
+    margin-bottom: 44px !important;
   }
 }

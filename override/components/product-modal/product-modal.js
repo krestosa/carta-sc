@@ -1,8 +1,8 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,CFG=C&&C.motion,V=SC&&SC.productModalView,A=SC&&SC.productModalA11y,M=SC&&SC.productModalMotion;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,V=SC&&SC.productModalView,A=SC&&SC.productModalA11y,M=SC&&SC.productModalMotion;
 if(!SC||!U||!V||!A||!M||SC.__productModalBooted)return;SC.__productModalBooted=true;
-var ready=U.ready,activeModal=null,closingModal=null,previousFocus=null,releaseBackground=null;
+var ready=U.ready,activeModal=null,closingModal=null,previousFocus=null,releaseBackground=null,PRODUCT_MODAL_CLOSE_DELAY=190;
 
 function noop(){}
 function closeModal(event){
@@ -12,10 +12,10 @@ function closeModal(event){
   activeModal=null;closingModal=modal;previousFocus=null;releaseBackground=null;
   modal.classList.remove('is-visible');
   M.close(modal);
-  var delay=C.queries.reducedMotion.matches?0:CFG.productModalCloseDelay;
+  var delay=C.queries.reducedMotion.matches?0:PRODUCT_MODAL_CLOSE_DELAY;
   window.setTimeout(function(){
     if(modal.parentNode)modal.parentNode.removeChild(modal);
-    document.body.classList.remove(K.productModalOpen);
+    document.body.classList.remove("sc-product-modal-open");
     release();
     if(closingModal===modal)closingModal=null;
     if(restore&&document.documentElement.contains(restore)){
@@ -28,15 +28,15 @@ function openModal(link){
   var modal=V.build(link);if(!modal)return;
   previousFocus=link;
   document.body.appendChild(modal);
-  document.body.classList.add(K.productModalOpen);
+  document.body.classList.add("sc-product-modal-open");
   activeModal=modal;
   releaseBackground=A.lockBackground(modal)||noop;
-  var close=modal.querySelector(S.productModalClose);
+  var close=modal.querySelector(".sc-product-modal__close");
   try{close.focus({preventScroll:true});}catch(_){close.focus();}
   requestAnimationFrame(function(){if(activeModal===modal){modal.classList.add('is-visible');M.open(modal);}});
 }
 function onClick(event){
-  var close=event.target.closest&&event.target.closest(S.productModalClose);
+  var close=event.target.closest&&event.target.closest(".sc-product-modal__close");
   if(close&&activeModal&&activeModal.contains(close)){
     event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();
     closeModal();return;

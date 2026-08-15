@@ -2,8 +2,8 @@
 'use strict';
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
-var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{},I=C.ids||{};
-var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0;
+var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
+var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,REFRESH_DELAY=120,IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger',scrollTo:'sc-gsap-scrollto'};
 var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo;
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
@@ -11,7 +11,7 @@ function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedM
 function loadScript(src,id,done){
   var old=document.getElementById(id);
   if(old){
-    if(old.dataset.loaded==='true'||(id===I.gsapCore&&window.gsap)||(id===I.gsapScrollTrigger&&window.ScrollTrigger)||(id===I.gsapScrollTo&&window.ScrollToPlugin))return done(true);
+    if(old.dataset.loaded==='true'||(id===IDS.core&&window.gsap)||(id===IDS.scrollTrigger&&window.ScrollTrigger)||(id===IDS.scrollTo&&window.ScrollToPlugin))return done(true);
     old.addEventListener('load',function(){done(true);},{once:true});
     old.addEventListener('error',function(){done(false);},{once:true});
     return;
@@ -24,8 +24,8 @@ function loadScript(src,id,done){
 function loadPlugins(done){
   var pending=2,failed=false;
   function complete(ok){if(!ok)failed=true;if(--pending===0)done(!failed);}
-  loadScript(ST_SRC,I.gsapScrollTrigger,complete);
-  loadScript(SCROLL_TO_SRC,I.gsapScrollTo,complete);
+  loadScript(ST_SRC,IDS.scrollTrigger,complete);
+  loadScript(SCROLL_TO_SRC,IDS.scrollTo,complete);
 }
 function flush(){
   if(!unlocked||!deps)return;
@@ -44,8 +44,8 @@ function refresh(delay){
 }
 function installRefreshLifecycle(){
   if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;
-  if(document.readyState==='complete')refresh(M.refreshDelay);else window.addEventListener('load',function(){refresh(M.refreshDelay);},{once:true});
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(M.refreshDelay);}).catch(function(){});
+  if(document.readyState==='complete')refresh(REFRESH_DELAY);else window.addEventListener('load',function(){refresh(REFRESH_DELAY);},{once:true});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});
 }
 function unlock(){unlocked=true;installRefreshLifecycle();flush();}
 function initialize(){
@@ -60,7 +60,7 @@ function initialize(){
 SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,unlock:unlock,isReady:function(){return!!(deps&&unlocked);}};
 
 ready(function(){
-  loadScript(GSAP_SRC,I.gsapCore,function(ok){
+  loadScript(GSAP_SRC,IDS.core,function(ok){
     if(!ok)return;
     loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});
   });

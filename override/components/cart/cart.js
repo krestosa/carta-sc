@@ -1,9 +1,9 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.cartParts;if(!SC||!C||!parts||SC.__cartComponentBooted)return;SC.__cartComponentBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.cartParts,PROFILES={mobile:{maxLag:8,velocityScale:.0024},tablet:{maxLag:10,velocityScale:.0028},desktop:{maxLag:14,velocityScale:.0032}};if(!SC||!C||!parts||SC.__cartComponentBooted)return;SC.__cartComponentBooted=true;
 if(!SC.motion||typeof SC.motion.whenReady!=='function')return;
 SC.motion.whenReady(function(deps){
-  var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia(),profiles=C.cart.profiles;
+  var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia(),profiles=PROFILES;
   mm.add({mobile:C.media.mobile,tablet:C.media.tablet,desktop:C.media.desktop,reduceMotion:C.media.reducedMotion},function(ctx){
     var tablet=!!ctx.conditions.tablet,desktop=!!ctx.conditions.desktop,reduce=!!ctx.conditions.reduceMotion;
     var profile=desktop?profiles.desktop:tablet?profiles.tablet:profiles.mobile;

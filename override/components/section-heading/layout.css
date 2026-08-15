@@ -1,4 +1,16 @@
 /* Section heading geometry extracted from the former card hierarchy stylesheet. */
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-section-rule-scale: 1;
+  --sc-section-title-margin: 6px 0 -3px;
+  --sc-section-title-line-height: 1.08;
+  --sc-section-title-padding: 18px 0 12px;
+  --sc-section-subtitle-margin: 8px 0 -3px;
+  --sc-section-subtitle-size: 18.5px;
+  --sc-section-subtitle-line-height: 1.15;
+  --sc-section-subtitle-tracking: -.025em;
+}
+
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion {
@@ -9,14 +21,14 @@
     margin: var(--sc-section-title-margin) !important;
     padding: 0 !important;
     background: transparent !important;
-    color: var(--sc-color-text) !important;
+    color: var(--sc-color-ink) !important;
     font-family: var(--sc-font-primary) !important;
-    font-size: var(--sc-section-title-size-desktop) !important;
+    font-size: 28px !important;
     line-height: var(--sc-section-title-line-height) !important;
     font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: var(--sc-section-title-tracking-desktop) !important;
+    letter-spacing: -.04em !important;
     text-transform: none !important;
-    z-index: var(--sc-z-content);
+    z-index: var(--sc-z-raised);
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
@@ -25,7 +37,7 @@
     width: 100% !important;
     padding: var(--sc-section-title-padding) !important;
     border-top: 0 !important;
-    border-bottom: var(--sc-border-hairline) solid var(--sc-color-line) !important;
+    border-bottom: var(--sc-border-hairline) solid var(--sc-color-border) !important;
     background: transparent !important;
   }
 
@@ -34,7 +46,7 @@
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
-    padding-top: var(--sc-section-title-padding-first) !important;
+    padding-top: 2px !important;
     border-top: 0 !important;
   }
 
@@ -44,7 +56,7 @@
     width: 100% !important;
     margin: var(--sc-section-subtitle-margin) !important;
     padding: 0 !important;
-    color: var(--sc-color-subtitle) !important;
+    color: var(--sc-color-heading) !important;
     font-family: var(--sc-font-primary) !important;
     font-size: var(--sc-section-subtitle-size) !important;
     line-height: var(--sc-section-subtitle-line-height) !important;
@@ -62,12 +74,12 @@
     margin: var(--sc-section-title-margin) !important;
     padding: 0 !important;
     background: transparent !important;
-    color: var(--sc-color-text) !important;
+    color: var(--sc-color-ink) !important;
     font-family: var(--sc-font-primary) !important;
-    font-size: var(--sc-section-title-size-compact-base) !important;
+    font-size: 26px !important;
     line-height: var(--sc-section-title-line-height) !important;
     font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: var(--sc-section-title-tracking-compact-base) !important;
+    letter-spacing: -.038em !important;
     text-transform: none !important;
   }
 
@@ -76,7 +88,7 @@
     width: 100% !important;
     padding: var(--sc-section-title-padding) !important;
     border-top: 0 !important;
-    border-bottom: var(--sc-border-hairline) solid var(--sc-color-line) !important;
+    border-bottom: var(--sc-border-hairline) solid var(--sc-color-border) !important;
     background: transparent !important;
   }
 
@@ -85,7 +97,7 @@
     width: 100% !important;
     margin: var(--sc-section-subtitle-margin) !important;
     padding: 0 !important;
-    color: var(--sc-color-subtitle) !important;
+    color: var(--sc-color-heading) !important;
     font-family: var(--sc-font-primary) !important;
     font-size: var(--sc-section-subtitle-size) !important;
     line-height: var(--sc-section-subtitle-line-height) !important;
@@ -97,15 +109,15 @@
 
 @media (max-width: 640px) {
   body.sushiShop .listadoShop .titleShopSeccion {
-    font-size: var(--sc-section-title-size-phone-base) !important;
+    font-size: 24px !important;
   }
 
   body.sushiShop .listadoShop .titleShopSeccion > div {
-    padding-top: var(--sc-section-title-padding-phone-base-top) !important;
-    padding-bottom: var(--sc-section-title-padding-phone-base-bottom) !important;
+    padding-top: 16px !important;
+    padding-bottom: 12px !important;
   }
 
   body.sushiShop .listadoShop .subTitleShopSeccion {
-    font-size: var(--sc-section-subtitle-size-phone-base) !important;
+    font-size: 18px !important;
   }
 }

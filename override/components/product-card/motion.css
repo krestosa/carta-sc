@@ -1,19 +1,24 @@
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-motion-card: 340ms;
+}
+
 .sushiShop .listadoShop .productoShop {
   position: relative;top: 0;-webkit-transform: none !important;transform: none !important;
   -webkit-transition: top var(--sc-motion-card) var(--sc-motion-ease-out) !important;transition: top var(--sc-motion-card) var(--sc-motion-ease-out) !important;
 }
-.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {top: var(--sc-card-motion-offset-y);}
+.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {top: 10px;}
 .sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
 .sushiShop .listadoShop .productoShop .imgLiquid,
 .sushiShop .listadoShop .productoShop .imgShop {-webkit-transform: none !important;transform: none !important;}
 .sushiShop .productoShop .sumar {
   -webkit-transform-origin: 50% 50%;transform-origin: 50% 50%;touch-action: manipulation;
-  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-color) var(--sc-motion-ease-out),border-color var(--sc-motion-color) var(--sc-motion-ease-out),color var(--sc-motion-color) var(--sc-motion-ease-out) !important;
-  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-color) var(--sc-motion-ease-out),border-color var(--sc-motion-color) var(--sc-motion-ease-out),color var(--sc-motion-color) var(--sc-motion-ease-out) !important;
+  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
 }
 .sushiShop .productoShop .sumar:active {-webkit-transform: scale(var(--sc-card-action-active-scale));transform: scale(var(--sc-card-action-active-scale));}
-.sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-width) solid currentColor;outline-offset: var(--sc-focus-offset);}
-@media (max-width: 992px) {.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {top: var(--sc-card-motion-offset-y-compact);}}
+.sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
+@media (max-width: 992px) {.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {top: 8px;}}
 @media (prefers-reduced-motion: reduce) {
   .sushiShop .listadoShop .productoShop {top: 0 !important;-webkit-transition: none !important;transition: none !important;}
   .sushiShop .productoShop .sumar,.sushiShop .productoShop .sumar:active {-webkit-transform: none !important;transform: none !important;}

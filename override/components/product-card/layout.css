@@ -1,14 +1,40 @@
 /* Product-card structural layout only. */
+/* Component-local tokens: intentionally kept out of core/variables.css. */
+body.sushiShop {
+  --sc-card-rule: var(--sc-color-ink);
+  --sc-card-subrule: var(--sc-color-border-strong);
+  --sc-card-meta-row-height: 24px;
+  --sc-card-content-gap: 18px;
+  --sc-card-title-height: 54px;
+  --sc-card-title-padding-top: 13px;
+  --sc-card-title-size: 15.5px;
+  --sc-card-title-line-height: 1.26;
+  --sc-card-title-tracking: -.015em;
+  --sc-card-description-height: 59px;
+  --sc-card-description-offset: 10px;
+  --sc-card-description-size: 12.5px;
+  --sc-card-description-line-height: 16px;
+  --sc-card-price-width: 76px;
+  --sc-card-price-gap: 1px;
+  --sc-card-price-size: 15.5px;
+  --sc-card-price-line-height: 18px;
+  --sc-card-price-tracking: -.018em;
+  --sc-card-offer-size: 11.5px;
+  --sc-card-offer-line-height: 14px;
+  --sc-card-flavors-size: 18px;
+  --sc-card-action-active-scale: .97;
+}
+
 body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   box-sizing: border-box !important;
   display: flex !important;
   grid-column: 1 / -1 !important;
   grid-row: 4 !important;
   align-items: center !important;
-  gap: var(--sc-card-flavors-gap) !important;
+  gap: 7px !important;
   width: 100% !important;
-  height: var(--sc-card-flavors-row-height) !important;
-  margin: var(--sc-card-flavors-margin-top) 0 0 !important;
+  height: 20px !important;
+  margin: 4px 0 0 !important;
   padding: 0 !important;
   line-height: 0 !important;
 }
@@ -71,8 +97,8 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
-    outline: var(--sc-focus-width-subtle) solid var(--sc-card-rule);
-    outline-offset: var(--sc-focus-offset-card);
+    outline: var(--sc-focus-ring-width-subtle) solid var(--sc-card-rule);
+    outline-offset: 6px;
   }
 }
 

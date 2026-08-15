@@ -1,11 +1,11 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors;if(!SC||!U||!C||SC.__productModalA11yBooted)return;SC.__productModalA11yBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,MS=SC&&SC.productModalSelectors;if(!SC||!U||!C||!MS||SC.__productModalA11yBooted)return;SC.__productModalA11yBooted=true;
 var each=U.each;
 
 function focusableElements(dialog){
   return Array.prototype.filter.call(
-    dialog.querySelectorAll(S.focusable),
+    dialog.querySelectorAll("a[href],button:not([disabled]),input:not([disabled]):not([type=\"hidden\"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex=\"-1\"])"),
     function(el){return el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';}
   );
 }
@@ -32,7 +32,7 @@ function lockBackground(modal){
   };
 }
 function trapTab(modal,event){
-  var dialog=modal&&modal.querySelector(S.productModalDialog);if(!dialog)return;
+  var dialog=modal&&modal.querySelector(MS.dialog);if(!dialog)return;
   var items=focusableElements(dialog);
   if(!items.length){event.preventDefault();dialog.focus();return;}
   var first=items[0],last=items[items.length-1],current=document.activeElement;
@@ -41,7 +41,7 @@ function trapTab(modal,event){
 }
 function containFocus(modal,event){
   if(!modal||modal.contains(event.target))return;
-  var dialog=modal.querySelector(S.productModalDialog),items=focusableElements(dialog);
+  var dialog=modal.querySelector(MS.dialog),items=focusableElements(dialog);
   (items[0]||dialog).focus();
 }
 

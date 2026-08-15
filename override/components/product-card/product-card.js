@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,D=SC&&SC.productCardData,A=SC&&SC.productCardA11y,P=SC&&SC.productCardContent;
 if(!SC||!U||!C||!D||!A||!P||SC.__productCardBooted)return;SC.__productCardBooted=true;
-var ready=U.ready,S=C.selectors,M=C.motion,desktopQuery=C.queries.desktop,resizeObserver=null,lastWidth=-1;
+var ready=U.ready,S=C.selectors,M=C.motion,desktopQuery=C.queries.desktop,resizeObserver=null,lastWidth=-1,RESIZE_WIDTH_TOLERANCE=.5;
 
 function refreshCards(){
   A.enhanceAll();
@@ -18,7 +18,7 @@ function installResizeTracking(){
   lastWidth=root.getBoundingClientRect().width;
   resizeObserver=new ResizeObserver(function(entries){
     var width=entries[0]&&entries[0].contentRect?entries[0].contentRect.width:root.getBoundingClientRect().width;
-    if(Math.abs(width-lastWidth)<C.productCard.resizeWidthTolerance)return;
+    if(Math.abs(width-lastWidth)<RESIZE_WIDTH_TOLERANCE)return;
     lastWidth=width;
     P.scheduleDescriptionMeasure();
   });

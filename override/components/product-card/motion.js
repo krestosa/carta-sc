@@ -2,12 +2,12 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
-var installed=false;
+var installed=false,PROFILES={mobile:{batchMax:4,start:'clamp(top 93%)'},tablet:{batchMax:6,start:'clamp(top 92%)'},desktop:{batchMax:8,start:'clamp(top 91%)'}};
 function install(){
   if(installed||!SC.motion||typeof SC.motion.whenReady!=='function')return;
   installed=true;
   SC.motion.whenReady(function(deps){
-    var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia(),profiles=C.productCard.profiles;
+    var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia(),profiles=PROFILES;
     mm.add({mobile:C.media.mobile,tablet:C.media.tablet,desktop:C.media.desktop,reduceMotion:C.media.reducedMotion},function(ctx){
       var tablet=!!ctx.conditions.tablet,desktop=!!ctx.conditions.desktop,reduce=!!ctx.conditions.reduceMotion;
       var profile=desktop?profiles.desktop:tablet?profiles.tablet:profiles.mobile;

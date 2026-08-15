@@ -1,22 +1,22 @@
 /* Product modal compact viewport adjustments. */
 @media (max-width: 640px) {
   body.sushiShop .sc-product-modal {
-    padding: var(--sc-modal-phone-page-padding) !important;
+    padding: 8px !important;
   }
   body.sushiShop .sc-product-modal__dialog {
     width: calc(100vw - var(--sc-modal-phone-dialog-inline-space)) !important;
     max-height: calc(100dvh - var(--sc-modal-phone-dialog-inline-space)) !important;
   }
   body.sushiShop .sc-product-modal__content {
-    padding: var(--sc-modal-phone-content-padding) !important;
+    padding: 18px 18px 20px !important;
   }
   body.sushiShop .sc-product-modal__title {
-    font-size: var(--sc-modal-title-size-phone) !important;
+    font-size: 19px !important;
   }
   body.sushiShop .sc-product-modal__footer {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: var(--sc-modal-phone-footer-gap) !important;
+    gap: 12px !important;
   }
   body.sushiShop .sc-product-modal__actions {
     flex: 0 0 auto !important;
