@@ -6,6 +6,8 @@ var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 parts.setupReveal=function(gsap,ST,profile,reduce){
   var cards=gsap.utils.toArray('.listadoShop .productoShop'),triggers=[],timer=0,rafA=0,rafB=0;
   function noop(){}
+  function suppressReveal(){var state=SC.scrollState;return!!(state&&(state.programmatic||performance.now()<(state.suppressRevealUntil||0)));}
+  function showNow(batch){gsap.killTweensOf(batch);gsap.set(batch,{autoAlpha:1,clearProps:'opacity,visibility'});}
   if(!cards.length)return noop;
   if(reduce){gsap.set(cards,{clearProps:'opacity,visibility'});return noop;}
   var initial=[],deferred=[];
@@ -30,6 +32,7 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     });
   }
   function reveal(batch){
+    if(suppressReveal()){showNow(batch);return;}
     gsap.to(batch,{autoAlpha:1,duration:0.34,stagger:0.03,ease:'power2.out',overwrite:'auto',onComplete:function(){gsap.set(batch,{clearProps:'opacity,visibility'});}});
   }
   if(deferred.length){
@@ -40,7 +43,8 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
         var rect=card.getBoundingClientRect(),style=getComputedStyle(card);
         if(rect.top<=innerHeight*1.03&&rect.bottom>=-30&&(style.visibility==='hidden'||parseFloat(style.opacity)<0.05)){
           gsap.killTweensOf(card);
-          gsap.to(card,{autoAlpha:1,duration:0.20,ease:'power2.out',overwrite:true,clearProps:'opacity,visibility'});
+          if(suppressReveal())gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
+          else gsap.to(card,{autoAlpha:1,duration:0.20,ease:'power2.out',overwrite:true,clearProps:'opacity,visibility'});
         }
       });
       if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);
