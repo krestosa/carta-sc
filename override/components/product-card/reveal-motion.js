@@ -10,6 +10,10 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   if(reduce){gsap.set(cards,{clearProps:'opacity,visibility'});return noop;}
   var initial=[],deferred=[];
   cards.forEach(function(card){
+    if(card.classList.contains('sc-static-initial-card')){
+      gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
+      return;
+    }
     var rect=card.getBoundingClientRect();
     if(rect.bottom<-20)gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
     else if(rect.top<=window.innerHeight*0.96)initial.push(card);
