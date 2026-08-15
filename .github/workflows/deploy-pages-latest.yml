@@ -100,6 +100,10 @@ jobs:
             | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')
           test "$latest" = "$GITHUB_SHA"
 
+      - name: Validate override dependency graph
+        shell: bash
+        run: node scripts/validate-overrides.mjs
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
