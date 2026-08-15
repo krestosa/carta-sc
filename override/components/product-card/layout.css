@@ -125,9 +125,6 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     border-bottom: 1px solid var(--sc-r-card-rule) !important;
     border-radius: 0 !important;
     background-color: transparent !important;
-    background-size: contain !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
     overflow: hidden !important;
   }
 }
