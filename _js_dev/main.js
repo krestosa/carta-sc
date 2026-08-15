@@ -2,14 +2,12 @@
 'use strict';
 if(window.__scLegacyMainLoaderBooted)return;window.__scLegacyMainLoaderBooted=true;
 
-var version='20260815-override-modules-v3';
+var version='20260815-override-modules-v4';
 window.__scCatalogAssetVersion=version;
 
 var root=document.documentElement;
 root.classList.add('sc-catalog-prepaint','sc-no-loading-state');
-['sc-catalog-skeleton','sc-catalog-content-loading','sc-catalog-skeleton-leaving','sc-skeleton-ready'].forEach(function(name){
-  root.classList.remove(name);
-});
+['sc-catalog-skeleton','sc-catalog-content-loading','sc-catalog-skeleton-leaving','sc-skeleton-ready'].forEach(function(name){root.classList.remove(name);});
 
 function writeBootstrap(){
   document.write('<script src="_js_dev/main-legacy.js?v='+version+'"><\/script>');

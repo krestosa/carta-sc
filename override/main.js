@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v3';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v4';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
@@ -23,15 +23,11 @@ function loadScript(path,id){
   });
 }
 function loadSeries(items){
-  return items.reduce(function(chain,item){
-    return chain.then(function(){return loadScript(item[0],item[1]);});
-  },Promise.resolve());
+  return items.reduce(function(chain,item){return chain.then(function(){return loadScript(item[0],item[1]);});},Promise.resolve());
 }
 function markInitialViewport(){
   var vh=window.innerHeight||document.documentElement.clientHeight;
-  document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){
-    var r=card.getBoundingClientRect();if(r.top<vh&&r.bottom>0)card.classList.add('sc-static-initial-card');
-  });
+  document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){var r=card.getBoundingClientRect();if(r.top<vh&&r.bottom>0)card.classList.add('sc-static-initial-card');});
   document.querySelectorAll('.listadoShop .titleShopSeccion, .listadoShop .subTitleShopSeccion').forEach(function(section){
     var r=section.getBoundingClientRect();
     if(r.top<vh&&r.bottom>0){
@@ -46,9 +42,7 @@ function waitForStableLayout(){
     var desktop=window.matchMedia('(min-width: 993px)'),attempts=0;
     function check(){
       if(!document.body)return requestAnimationFrame(check);
-      if(desktop.matches&&!document.body.classList.contains('sc-catalog-layout-ready')&&attempts++<45){
-        return requestAnimationFrame(check);
-      }
+      if(desktop.matches&&!document.body.classList.contains('sc-catalog-layout-ready')&&attempts++<45)return requestAnimationFrame(check);
       requestAnimationFrame(function(){requestAnimationFrame(resolve);});
     }
     check();
@@ -64,7 +58,11 @@ loadSeries([
   ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
   ['mutations/scroll-restoration.js','sc-override-scroll-restoration-js'],
   ['components/category-nav/category-nav.js','sc-override-category-nav-js'],
+  ['components/product-card/data.js','sc-product-card-data-js'],
+  ['components/product-card/a11y.js','sc-product-card-a11y-js'],
+  ['components/product-card/content.js','sc-product-card-content-js'],
   ['components/product-card/product-card.js','sc-override-product-card-js'],
+  ['components/product-card/motion.js','sc-product-card-motion-js'],
   ['components/product-modal/product-modal.js','sc-override-product-modal-js'],
   ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
   ['components/cart/cart.js','sc-override-cart-js'],
