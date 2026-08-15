@@ -2,12 +2,12 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav;
 if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
-var each=U.each,ready=U.ready,mq=N.mq,boundScrollers=[],resizeRaf=0;
+var each=U.each,ready=U.ready,mq=N.mq,boundScrollers=new WeakSet(),resizeRaf=0;
 
 function bindRailScrollers(){
   each(document.querySelectorAll('.sc-catalog-categories,.topShopMenuMobileScroller'),function(scroller){
-    if(boundScrollers.indexOf(scroller)>=0)return;
-    boundScrollers.push(scroller);
+    if(boundScrollers.has(scroller))return;
+    boundScrollers.add(scroller);
     scroller.addEventListener('scroll',N.scheduleRail,{passive:true});
   });
 }
