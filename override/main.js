@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v4';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v5';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
@@ -22,9 +22,7 @@ function loadScript(path,id){
     document.head.appendChild(script);
   });
 }
-function loadSeries(items){
-  return items.reduce(function(chain,item){return chain.then(function(){return loadScript(item[0],item[1]);});},Promise.resolve());
-}
+function loadSeries(items){return items.reduce(function(chain,item){return chain.then(function(){return loadScript(item[0],item[1]);});},Promise.resolve());}
 function markInitialViewport(){
   var vh=window.innerHeight||document.documentElement.clientHeight;
   document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){var r=card.getBoundingClientRect();if(r.top<vh&&r.bottom>0)card.classList.add('sc-static-initial-card');});
@@ -63,6 +61,9 @@ loadSeries([
   ['components/product-card/content.js','sc-product-card-content-js'],
   ['components/product-card/product-card.js','sc-override-product-card-js'],
   ['components/product-card/motion.js','sc-product-card-motion-js'],
+  ['components/product-modal/view.js','sc-product-modal-view-js'],
+  ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
+  ['components/product-modal/motion.js','sc-product-modal-motion-js'],
   ['components/product-modal/product-modal.js','sc-override-product-modal-js'],
   ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
   ['components/cart/cart.js','sc-override-cart-js'],
