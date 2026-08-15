@@ -129,18 +129,8 @@
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink.sc-motion-current)::after,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink[aria-current='location'])::after,
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child.active::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -14px;
-    height: 2px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: var(--sc-catalog-ink, #151515);
-    pointer-events: none;
-    z-index: 10;
+    content: none !important;
+    display: none !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar::after {

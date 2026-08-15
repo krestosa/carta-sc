@@ -130,22 +130,26 @@
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink.sc-motion-current::after,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink[aria-current='location']::after,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -14px;
-    height: 2px;
-    background: #151515;
-    pointer-events: none;
-    z-index: 4;
+    content: none !important;
+    display: none !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
+    display: block !important;
+    bottom: -14px !important;
+    height: 2px !important;
+    margin-left: 0 !important;
+    background: #151515 !important;
+    opacity: 1 !important;
+    z-index: 9 !important;
+    pointer-events: none !important;
+    will-change: transform;
   }
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topPullDown,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .scrollArrowL,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .scrollArrowR,
-  body.sushiShop .wtopShopMenuMobile .fadeScroll,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
+  body.sushiShop .wtopShopMenuMobile .fadeScroll {
     display: none !important;
   }
 
