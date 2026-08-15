@@ -110,6 +110,7 @@ jobs:
           for script in (
               'scripts/prepare-pages-artifact.py',
               'scripts/clean-pages-snapshot.py',
+              'scripts/flatten-pages-bootstrap.py',
               'scripts/bundle-pages-legacy-css.py',
               'scripts/bundle-pages-legacy-js.py',
           ):
@@ -127,12 +128,19 @@ jobs:
           rsync -a --exclude='.git' --exclude='.pages-site' ./ .pages-site/
           python3 scripts/prepare-pages-artifact.py
           python3 scripts/clean-pages-snapshot.py
+          python3 scripts/flatten-pages-bootstrap.py
           python3 scripts/bundle-pages-legacy-css.py
           python3 scripts/bundle-pages-legacy-js.py
           node --check .pages-site/override/main.js
           node --check .pages-site/_pages/legacy.js
 
-          grep -F "_js_dev/main.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
+          if grep -F 'src="_js_dev/main.js?v=' .pages-site/index.html >/dev/null; then
+            echo 'Development bootstrap remains in Pages index'
+            exit 1
+          fi
+          grep -F "src=\"_js_dev/main-legacy.js?v=${GITHUB_SHA}\"" .pages-site/index.html >/dev/null
+          grep -F "rel=\"stylesheet\" href=\"override/main.css?v=${GITHUB_SHA}\"" .pages-site/index.html >/dev/null
+          grep -F "src=\"override/main.js?v=${GITHUB_SHA}\"" .pages-site/index.html >/dev/null
           grep -F "var version='${GITHUB_SHA}';" .pages-site/_js_dev/main.js >/dev/null
           grep -F "_pages/legacy.css?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
           grep -F "_pages/legacy.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
