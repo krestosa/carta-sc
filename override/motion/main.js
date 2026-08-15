@@ -4,9 +4,9 @@ if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{};
 var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0;
-var GSAP_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js';
-var ST_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js';
-var SCROLL_TO_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
+var GSAP_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js';
+var ST_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js';
+var SCROLL_TO_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollToPlugin.min.js';
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function reduced(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
