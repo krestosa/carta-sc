@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 SITE = Path('.pages-site')
@@ -17,8 +17,8 @@ FORBIDDEN_SUFFIXES = {
     '.mp4', '.webm', '.mov', '.m4v', '.avi',
     '.pdf',
 }
-# EOT and SVG are kept only as legacy CSS fallbacks. SushiClub no longer serves
-# every one of those historical files, and current browsers do not require them.
+# EOT and SVG remain only as old-browser fallbacks in legacy CSS. The live
+# SushiClub server no longer exposes every historical EOT/SVG file.
 MIRROR_FONT_SUFFIXES = {'.woff', '.woff2', '.ttf', '.otf'}
 ASSET_SUFFIX_PATTERN = (
     r'png|jpe?g|gif|webp|svg|ico|bmp|avif|'
@@ -35,10 +35,21 @@ REMOTE_IMAGE_PROBES = (
     ORIGIN + 'gfx/web-sushiclub2_black_m2.png',
     ORIGIN + 'gfx/web-sushiclub2_black.png',
 )
+# These cover the typography/icon families actually present in the snapshot.
+# The deploy must not silently fall back to system fonts because one of these
+# disappeared upstream.
 REQUIRED_MIRRORED_FONTS = {
     '_remote-assets/fuentes/AcuminPro-Regular.woff2',
     '_remote-assets/fuentes/AcuminPro-Semibold.woff2',
     '_remote-assets/fonts/fontawesome-webfont.woff2',
+    '_remote-assets/fonts/glyphicons-halflings-regular.woff',
+    '_remote-assets/fonts/hnl.woff',
+    '_remote-assets/fonts/bariol_bold-webfont.woff',
+    '_remote-assets/fonts/bariol_light-webfont.woff',
+    '_remote-assets/fonts/bariol_regular-webfont.woff',
+    '_remote-assets/fonts/websymbolsligaregular.woff',
+    '_remote-assets/fonts/slick.woff',
+    '_remote-assets/fonts/PlutoBold.otf',
 }
 USER_AGENT = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -124,10 +135,7 @@ if canonicalized_variants < 1:
 for url in REMOTE_IMAGE_PROBES:
     request = Request(
         url,
-        headers={
-            'User-Agent': USER_AGENT,
-            'Referer': ORIGIN + 'carta_delivery.php',
-        },
+        headers={'User-Agent': USER_AGENT, 'Referer': ORIGIN + 'carta_delivery.php'},
         method='GET',
     )
     try:
@@ -142,11 +150,10 @@ for url in REMOTE_IMAGE_PROBES:
     except (HTTPError, URLError, TimeoutError) as exc:
         raise SystemExit(f'Critical SushiClub image probe failed: {url}: {exc}') from exc
 
-# SushiClub serves its font files without Access-Control-Allow-Origin, so a
-# GitHub Pages document cannot use them directly. Mirror only modern font formats
-# at build time. The bytes still come from SushiClub on every deploy and no font
-# binary is ever committed to Git. Historical EOT/SVG fallbacks stay in legacy
-# CSS but are irrelevant to current browsers.
+# SushiClub font responses do not include Access-Control-Allow-Origin, so fonts
+# cannot be consumed directly from GitHub Pages. Mirror modern formats into the
+# generated artifact at build time. Nothing is committed to Git; every deploy
+# refreshes the bytes from the original SushiClub host.
 text_files = [
     path
     for path in SITE.rglob('*')
@@ -156,13 +163,36 @@ font_urls = set()
 for path in text_files:
     text = path.read_text(encoding='utf-8', errors='strict')
     font_urls.update(match.group(0) for match in REMOTE_MODERN_FONT_RE.finditer(text))
-
 if not font_urls:
     raise SystemExit('No modern SushiClub font URLs were found to mirror')
 
 mirror_root = SITE / '_remote-assets'
 downloaded_fonts = {}
+downloaded_targets = set()
+failed_fonts = []
 downloaded_bytes = 0
+
+
+def fetch_font(url):
+    request = Request(
+        url,
+        headers={'User-Agent': USER_AGENT, 'Referer': ORIGIN + 'carta_delivery.php'},
+        method='GET',
+    )
+    with urlopen(request, timeout=12) as response:
+        status = getattr(response, 'status', response.getcode())
+        payload = response.read()
+        content_type = (response.headers.get('Content-Type') or '').lower()
+    if status != 200:
+        raise HTTPError(url, status, f'HTTP {status}', {}, None)
+    if not payload:
+        raise ValueError('empty response')
+    if len(payload) > 8 * 1024 * 1024:
+        raise ValueError('response is unexpectedly large')
+    if b'<html' in payload[:512].lower() or content_type.startswith('text/html'):
+        raise ValueError('response is HTML, not a font')
+    return payload
+
 
 for source_url in sorted(font_urls):
     parsed = urlsplit(source_url)
@@ -174,41 +204,54 @@ for source_url in sorted(font_urls):
     if target.suffix.lower() not in MIRROR_FONT_SUFFIXES:
         raise SystemExit(f'Refusing unexpected mirrored font extension: {target}')
 
-    request = Request(
-        source_url,
-        headers={
-            'User-Agent': USER_AGENT,
-            'Referer': ORIGIN + 'carta_delivery.php',
-        },
-        method='GET',
-    )
-    try:
-        with urlopen(request, timeout=20) as response:
-            status = getattr(response, 'status', response.getcode())
-            payload = response.read()
-            content_type = (response.headers.get('Content-Type') or '').lower()
-    except (HTTPError, URLError, TimeoutError) as exc:
-        raise SystemExit(f'Could not fetch modern SushiClub font {source_url}: {exc}') from exc
+    # Multiple CSS declarations may reference the same file with different
+    # version queries. Reuse a font that was already fetched for this target.
+    if target in downloaded_targets:
+        downloaded_fonts[source_url] = target
+        continue
 
-    if status != 200:
-        raise SystemExit(f'Could not fetch modern SushiClub font {source_url}: HTTP {status}')
-    if not payload:
-        raise SystemExit(f'SushiClub font response was empty: {source_url}')
-    if len(payload) > 8 * 1024 * 1024:
-        raise SystemExit(f'SushiClub font response is unexpectedly large: {source_url}')
-    if b'<html' in payload[:512].lower() or content_type.startswith('text/html'):
-        raise SystemExit(f'SushiClub font URL returned HTML instead of a font: {source_url}')
+    # Some old CSS appends ?v=... while the current SushiClub server exposes
+    # only the canonical queryless file. Try the declared URL first, then its
+    # canonical path. Missing optional fallbacks are tolerated; required modern
+    # family files are enforced below.
+    candidates = [source_url]
+    canonical_url = urlunsplit((parsed.scheme, parsed.netloc, parsed.path, '', ''))
+    if canonical_url != source_url:
+        candidates.append(canonical_url)
+
+    payload = None
+    last_error = None
+    for candidate in candidates:
+        try:
+            payload = fetch_font(candidate)
+            break
+        except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+            last_error = exc
+
+    if payload is None:
+        failed_fonts.append((source_url, target, last_error))
+        continue
 
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(payload)
+    downloaded_targets.add(target)
     downloaded_fonts[source_url] = target
     downloaded_bytes += len(payload)
+
+# If a query variant failed before another declaration successfully populated
+# the same canonical target, use that successful copy too.
+unresolved_failed = []
+for source_url, target, error in failed_fonts:
+    if target in downloaded_targets:
+        downloaded_fonts[source_url] = target
+    else:
+        unresolved_failed.append((source_url, error))
 
 for path in text_files:
     text = path.read_text(encoding='utf-8', errors='strict')
     rewritten = text
-    # Replace longest URLs first so a query-string variant cannot be partially
-    # replaced by an otherwise identical queryless URL.
+    # Longest first prevents a queryless URL from partially replacing a longer
+    # query-string variant.
     for source_url, target in sorted(
         downloaded_fonts.items(), key=lambda item: len(item[0]), reverse=True
     ):
@@ -217,21 +260,8 @@ for path in text_files:
     if rewritten != text:
         path.write_text(rewritten, encoding='utf-8')
 
-# A modern cross-origin SushiClub font URL would reintroduce the CORS bug.
-remote_font_refs = []
-for path in text_files:
-    text = path.read_text(encoding='utf-8', errors='strict')
-    if REMOTE_MODERN_FONT_RE.search(text):
-        remote_font_refs.append(path.relative_to(SITE).as_posix())
-if remote_font_refs:
-    raise SystemExit(
-        'Direct cross-origin modern SushiClub font URL(s) remain: '
-        + ', '.join(sorted(remote_font_refs))
-    )
-
 # The generated artifact may contain only the build-time modern font mirror.
-# Every image/icon/media asset remains remote on SushiClub; source Git stays
-# code-only.
+# Images/icons/media stay remote on SushiClub and source Git remains code-only.
 unexpected_artifact_assets = []
 mirrored_font_assets = []
 for path in SITE.rglob('*'):
@@ -251,22 +281,35 @@ for path in SITE.rglob('*'):
 
 if unexpected_artifact_assets:
     preview = ', '.join(sorted(unexpected_artifact_assets)[:20])
-    suffix = (
-        ''
-        if len(unexpected_artifact_assets) <= 20
-        else f' (+{len(unexpected_artifact_assets) - 20} more)'
-    )
+    suffix = '' if len(unexpected_artifact_assets) <= 20 else f' (+{len(unexpected_artifact_assets) - 20} more)'
     raise SystemExit(f'Unexpected static asset files remain in Pages artifact: {preview}{suffix}')
 
 mirrored_set = set(mirrored_font_assets)
 missing_critical = sorted(REQUIRED_MIRRORED_FONTS - mirrored_set)
 if missing_critical:
-    raise SystemExit(f'Critical mirrored font(s) missing: {missing_critical}')
-if len(mirrored_font_assets) != len({target for target in downloaded_fonts.values()}):
+    details = '; '.join(f'{url}: {error}' for url, error in unresolved_failed[:10])
+    raise SystemExit(
+        f'Critical mirrored font(s) missing: {missing_critical}'
+        + (f'. Unresolved upstream font URLs: {details}' if details else '')
+    )
+if len(mirrored_font_assets) != len(downloaded_targets):
     raise SystemExit('Mirrored SushiClub font count does not match downloaded font set')
 
-# No deployed HTML/CSS/JS may keep references to old mirrored asset roots or
-# snapshot-only local filenames.
+# Critical font references must be same-origin in generated CSS/HTML. Optional
+# stale format declarations may remain remote, but a modern browser reaches the
+# mirrored WOFF/WOFF2/OTF source first for every required family.
+critical_remote_refs = []
+critical_names = {Path(path).name.lower() for path in REQUIRED_MIRRORED_FONTS}
+for path in text_files:
+    text = path.read_text(encoding='utf-8', errors='strict')
+    for match in REMOTE_MODERN_FONT_RE.finditer(text):
+        if Path(urlsplit(match.group(0)).path).name.lower() in critical_names:
+            critical_remote_refs.append((path.relative_to(SITE).as_posix(), match.group(0)))
+if critical_remote_refs:
+    raise SystemExit(f'Critical cross-origin font reference(s) remain: {critical_remote_refs[:10]}')
+
+# No deployed HTML/CSS/JS may keep snapshot-only local names or unexternalized
+# static roots.
 local_refs = []
 snapshot_refs = []
 for path in text_files:
@@ -280,6 +323,11 @@ if local_refs:
     raise SystemExit('Local static asset reference(s) remain: ' + ', '.join(sorted(local_refs)))
 if snapshot_refs:
     raise SystemExit('Snapshot-only static asset filename(s) remain: ' + ', '.join(sorted(snapshot_refs)))
+
+if unresolved_failed:
+    print(f'Skipped {len(unresolved_failed)} unavailable optional modern font fallback URL(s).')
+    for url, error in unresolved_failed[:10]:
+        print(f'- optional font fallback unavailable: {url} ({error})')
 
 print(
     f'Externalized {replacements} static asset reference(s) across {changed_files} file(s) '
