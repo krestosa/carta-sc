@@ -1,0 +1,10 @@
+/* Catalogue-level legacy overrides that are not component-specific. */
+body.sushiShop #busquedaJSBoxResults {
+  display: none !important;
+}
+body.sushiShop.sc-catalog-layout-ready {
+  --sc-catalog-muted: #737373 !important;
+}
+body.sushiShop {
+  --sc-r-muted: #737373 !important;
+}

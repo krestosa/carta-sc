@@ -1,7 +1,4 @@
-/* Mobile/tablet header + catalogue hierarchy.
-   Keeps the site header compact and the catalogue aligned to the content grid.
-   Deploy marker: compact-mobile-centered-axis-v3. */
-
+/* Mobile header presentation. Owns only the logo/header and SlickNav surface. */
 @media (max-width: 992px) {
   body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     visibility: hidden !important;
@@ -94,18 +91,27 @@
     float: none !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 36px !important;
-    height: 36px !important;
+    width: 44px !important;
+    height: 44px !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
     border-radius: 4px !important;
-    background: #111 !important;
+    background: transparent !important;
     box-shadow: none !important;
     text-shadow: none !important;
     cursor: pointer !important;
     pointer-events: auto !important;
     transform: translateY(-50%) !important;
+  }
+
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 4px !important;
+    border-radius: 4px !important;
+    background: #111 !important;
+    z-index: 0 !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_menutxt {
@@ -114,6 +120,7 @@
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon {
     display: flex !important;
+    position: relative !important;
     float: none !important;
     flex-direction: column !important;
     justify-content: center !important;
@@ -121,6 +128,7 @@
     width: 18px !important;
     height: 18px !important;
     margin: 0 !important;
+    z-index: 1 !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar,
@@ -159,24 +167,6 @@
     color: #fff !important;
     box-shadow: none !important;
   }
-
-  body.sushiShop .listadoShop .titleShopSeccion,
-  body.sushiShop .listadoShop .titleShopSeccion > div {
-    text-align: left !important;
-  }
-
-  body.sushiShop .listadoShop .titleShopSeccion {
-    font-size: 22px !important;
-    line-height: 1.08 !important;
-    letter-spacing: -0.032em !important;
-  }
-
-  body.sushiShop .listadoShop .subTitleShopSeccion {
-    font-size: 16px !important;
-    line-height: 1.16 !important;
-    letter-spacing: -0.018em !important;
-    text-align: left !important;
-  }
 }
 
 @media (max-width: 640px) {
@@ -194,40 +184,6 @@
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
     right: 12px !important;
-  }
-
-  /* Compact mobile rhythm without changing card content density. */
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
-    height: 42px !important;
-  }
-
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
-    padding: 12px 14px 11px !important;
-  }
-
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabsTopShop {
-    gap: 18px !important;
-  }
-
-  body.sushiShop .listadoShop {
-    row-gap: 28px !important;
-    margin-bottom: 44px !important;
-  }
-
-  body.sushiShop .listadoShop .titleShopSeccion {
-    margin: 2px 0 -2px !important;
-    font-size: 20px !important;
-  }
-
-  body.sushiShop .listadoShop .titleShopSeccion > div {
-    padding-top: 12px !important;
-    padding-bottom: 10px !important;
-  }
-
-  body.sushiShop .listadoShop .subTitleShopSeccion {
-    margin: 5px 0 -2px !important;
-    font-size: 15.5px !important;
   }
 }
 

@@ -1,0 +1,6 @@
+@media (max-width: 640px) {
+  body.sushiShop .listadoShop {
+    row-gap: 28px !important;
+    margin-bottom: 44px !important;
+  }
+}

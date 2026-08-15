@@ -1,0 +1,36 @@
+@media (max-width: 992px) {
+  body.sushiShop .listadoShop .titleShopSeccion,
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    text-align: left !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion {
+    font-size: 22px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.032em !important;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion {
+    font-size: 16px !important;
+    line-height: 1.16 !important;
+    letter-spacing: -0.018em !important;
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.sushiShop .listadoShop .titleShopSeccion {
+    margin: 2px 0 -2px !important;
+    font-size: 20px !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    padding-top: 12px !important;
+    padding-bottom: 10px !important;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion {
+    margin: 5px 0 -2px !important;
+    font-size: 15.5px !important;
+  }
+}

@@ -1,0 +1,44 @@
+/* Product-card compatibility and semantic presentation rules. */
+body.sushiShop .listadoShop .productoShop .ofertaPrice {
+  color: #737373 !important;
+}
+
+body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
+  display: none !important;
+}
+body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+  box-sizing: border-box !important;
+  display: flex !important;
+  grid-column: 1 / -1 !important;
+  grid-row: 4 !important;
+  align-items: center !important;
+  gap: 7px !important;
+  width: 100% !important;
+  height: 20px !important;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+}
+body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'] {
+  visibility: hidden !important;
+}
+
+@media (hover: none), (pointer: coarse) {
+  body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
+    opacity: 1 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
+    transition: none !important;
+  }
+}
