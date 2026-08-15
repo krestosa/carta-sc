@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,utils=SC&&SC.utils,config=SC&&SC.config;
 if(!SC||!utils||!config||SC.__mobileHeaderBooted)return;SC.__mobileHeaderBooted=true;
-var desktopQuery=config.desktopQuery;
+var desktopQuery=config.desktopQuery,retryTimer=0;
 
 function syncMenuButton(button,nav){
   if(!button||!nav)return;
@@ -36,11 +36,11 @@ function installFallbackMenuToggle(menu){
   });
 }
 function repairMobileHeader(finalAttempt){
-  if(desktopQuery.matches)return;
-  var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));if(!menus.length)return;
+  if(desktopQuery.matches)return true;
+  var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));if(!menus.length)return false;
   var live=pluginMenu();
   if(live&&menus.indexOf(live)===-1)live=null;
-  if(!live&&!finalAttempt)return;
+  if(!live&&!finalAttempt)return false;
   if(!live)live=menus[0];
   menus.forEach(function(menu){if(menu!==live&&menu.parentNode)menu.parentNode.removeChild(menu);});
   live.classList.add('sc-mobile-main-menu');live.style.removeProperty('visibility');live.style.removeProperty('pointer-events');
@@ -53,13 +53,20 @@ function repairMobileHeader(finalAttempt){
   }
   var logo=document.querySelector('.brandOnlyMobile img');
   if(logo){logo.style.removeProperty('margin-left');logo.style.removeProperty('transform');}
+  return true;
 }
 function schedule(){
+  if(retryTimer){clearTimeout(retryTimer);retryTimer=0;}
   if(desktopQuery.matches)return;
-  window.setTimeout(function(){repairMobileHeader(false);},0);
-  window.setTimeout(function(){repairMobileHeader(false);},60);
-  window.setTimeout(function(){repairMobileHeader(false);},180);
-  window.setTimeout(function(){repairMobileHeader(true);},420);
+  var delays=[0,60,120,240],index=0;
+  function attempt(){
+    retryTimer=0;
+    var finalAttempt=index===delays.length-1;
+    if(repairMobileHeader(finalAttempt))return;
+    index+=1;
+    if(index<delays.length)retryTimer=window.setTimeout(attempt,delays[index]);
+  }
+  retryTimer=window.setTimeout(attempt,delays[0]);
 }
 utils.ready(schedule);
 if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',schedule);else desktopQuery.addListener(schedule);
