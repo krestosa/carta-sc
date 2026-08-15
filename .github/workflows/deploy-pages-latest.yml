@@ -109,6 +109,7 @@ jobs:
           from pathlib import Path
           for script in (
               'scripts/prepare-pages-artifact.py',
+              'scripts/clean-pages-snapshot.py',
               'scripts/bundle-pages-legacy-css.py',
               'scripts/bundle-pages-legacy-js.py',
           ):
@@ -125,6 +126,7 @@ jobs:
           mkdir -p .pages-site
           rsync -a --exclude='.git' --exclude='.pages-site' ./ .pages-site/
           python3 scripts/prepare-pages-artifact.py
+          python3 scripts/clean-pages-snapshot.py
           python3 scripts/bundle-pages-legacy-css.py
           python3 scripts/bundle-pages-legacy-js.py
           node --check .pages-site/override/main.js
