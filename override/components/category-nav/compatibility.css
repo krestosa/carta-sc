@@ -1,4 +1,16 @@
-/* Category-rail compatibility and accessibility rules. */
+/* Category-rail compatibility with the legacy menu runtime. */
+body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories,
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
+  overscroll-behavior: auto !important;
+  overscroll-behavior-x: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile._open .topShopMenuMobileScroller {
+  height: var(--sc-category-height) !important;
+  min-height: var(--sc-category-height) !important;
+  overflow-y: hidden !important;
+}
+
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus-visible {
   outline: 2px solid #151515 !important;
