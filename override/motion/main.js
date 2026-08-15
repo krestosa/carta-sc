@@ -3,7 +3,7 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{};
-var queue=[],deps=null,unlocked=false,globalInstalled=false;
+var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false;
 var GSAP_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js';
 var ST_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js';
 var SCROLL_TO_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
@@ -33,19 +33,12 @@ function refresh(delay){
   if(!deps||!deps.ScrollTrigger)return;
   window.setTimeout(function(){deps.ScrollTrigger.refresh();},delay==null?0:delay);
 }
-function installGlobalMotion(){
-  if(globalInstalled||!deps||!unlocked)return;globalInstalled=true;
-  var gsap=deps.gsap;
-  if(window.jQuery){
-    window.jQuery(document).off('shown.bs.dropdown.scUxMotion').on('shown.bs.dropdown.scUxMotion',function(event){
-      var menu=window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];if(!menu)return;
-      gsap.fromTo(menu,{autoAlpha:0,y:reduced()?0:-3},{autoAlpha:1,y:0,duration:reduced()?0.12:0.16,ease:'power2.out',overwrite:true,clearProps:'transform,opacity,visibility'});
-    });
-  }
+function installRefreshLifecycle(){
+  if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;
   if(document.readyState==='complete')refresh(120);else window.addEventListener('load',function(){refresh(120);},{once:true});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(120);}).catch(function(){});
 }
-function unlock(){unlocked=true;installGlobalMotion();flush();}
+function unlock(){unlocked=true;installRefreshLifecycle();flush();}
 
 SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,unlock:unlock,isReady:function(){return!!(deps&&unlocked);}};
 
@@ -58,7 +51,7 @@ ready(function(){
         window.ScrollTrigger.config({limitCallbacks:true});
         if(window.ScrollToPlugin.config)window.ScrollToPlugin.config({autoKill:true});
         deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin};
-        installGlobalMotion();flush();
+        installRefreshLifecycle();flush();
       });
     });
   });

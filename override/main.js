@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v9';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v10';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
@@ -51,6 +51,7 @@ loadSeries([
   ['core/variables.js','sc-override-variables-js'],
   ['core/utils.js','sc-override-utils-js'],
   ['motion/main.js','sc-override-motion-js'],
+  ['motion/global-ui.js','sc-global-ui-motion-js'],
   ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
   ['mutations/history.js','sc-override-history-js'],
   ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
