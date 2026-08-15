@@ -26,7 +26,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     scrollbar-width: none;
   }
 
@@ -144,15 +144,6 @@
     background: var(--sc-catalog-ink, #151515);
     pointer-events: none;
     z-index: 10;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar a.anchorLink.sc-category-proxy-hover {
-    color: var(--sc-catalog-ink, #151515) !important;
-    text-decoration: none !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-proxy:focus-visible {
-    outline: none !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar::after {
@@ -438,15 +429,16 @@ body.sushiShop .sc-rail-arrow:focus-visible {
   }
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
-    width: calc(100% - 56px) !important;
-    margin-left: 28px !important;
-    margin-right: 28px !important;
+    width: calc(100% - 88px) !important;
+    margin-left: 44px !important;
+    margin-right: 44px !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow {
-    width: 28px !important;
+    width: 44px !important;
+    min-width: 44px !important;
     height: 100% !important;
     top: 0 !important;
     bottom: 0 !important;
