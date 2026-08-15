@@ -19,17 +19,20 @@ The Pages workflow copies the exact triggering `ux` commit to `.pages-site` and 
 The staging pipeline currently:
 
 1. Stamps the exact commit SHA into deployed asset URLs.
-2. Adds preload/preconnect hints and CORS-correct Acumin font preloads.
-3. Bundles all override CSS into one deployed `override/main.css` while preserving source import order and rebasing relative `url(...)` values.
-4. Bundles all override JavaScript modules into one deployed `override/main.js` while preserving the source loader order.
-5. Flattens the production bootstrap so Pages executes `main-legacy -> override CSS -> override JS` directly instead of requesting `_js_dev/main.js` and using `document.write`.
-6. Bundles 16 legacy local stylesheets into `_pages/legacy.css`.
-7. Bundles 16 synchronous legacy vendor scripts into `_pages/legacy.js`.
-8. Bundles the remaining two synchronous shop scripts into `_pages/shop.js`.
-9. Removes snapshot-only duplicate runtime state: redundant jQuery fallback, captured GTM runtime and captured reCAPTCHA runtime/iframes while retaining the canonical GTM bootstrap and reCAPTCHA API host.
-10. Removes the unused Google Maps runtime from this catalogue snapshot only when build guards prove no map markup or map-helper consumer exists.
-11. Adds native `loading="lazy"` / `decoding="async"` to product images and removes generated imgLiquid background-image styles in staging so product images have one download path.
-12. Runs syntax, dependency, bundle-integrity and stale-SHA guards before deploying the exact commit.
+2. Marks the catalogue banner as eager/high-priority, product images as lazy/async and adds CORS-correct Acumin preload hints.
+3. Moves critical preconnect/preload hints to the start of `<head>` and preloads the exact current banner URL.
+4. Bundles all override CSS into one deployed `override/main.css` while preserving source import order and rebasing relative `url(...)` values.
+5. Bundles all override JavaScript modules into one deployed `override/main.js` while preserving the source loader order.
+6. Flattens the production bootstrap so Pages executes `main-legacy -> override CSS -> override JS` directly instead of requesting `_js_dev/main.js` and using `document.write`.
+7. Bundles 16 legacy local stylesheets into `_pages/legacy.css` and normalizes legacy font fallbacks to assets that actually exist.
+8. Bundles 16 synchronous legacy vendor scripts into `_pages/legacy.js`.
+9. Bundles the remaining two synchronous shop scripts into `_pages/shop.js`.
+10. Removes snapshot-only duplicate runtime state: redundant jQuery fallback, captured GTM runtime and captured reCAPTCHA runtime/iframes while retaining the canonical GTM bootstrap and official reCAPTCHA API.
+11. Removes the unused Google Maps runtime from this catalogue snapshot only when build guards prove no map markup or map-helper consumer exists.
+12. Removes generated imgLiquid background-image styles in staging so product images have one download path.
+13. Validates every active local HTML/CSS asset path in the final artifact.
+14. Enforces production request/image budgets: exactly the expected bundled local script/stylesheet topology, no blocking remote script tags, lazy product images and one high-priority preloaded banner.
+15. Runs syntax, dependency, bundle-integrity and stale-SHA guards before deploying the exact commit.
 
 Production bundling is an output optimization only. Do not collapse the source modules merely because Pages serves fewer files.
 
@@ -71,13 +74,16 @@ Rules:
 ## Pages build scripts
 
 - `scripts/validate-overrides.mjs`: validates source override topology and invariants.
-- `scripts/prepare-pages-artifact.py`: SHA stamping, resource hints, native image loading, safe map pruning and override bundle generation.
+- `scripts/prepare-pages-artifact.py`: SHA stamping, initial resource hints, image loading priorities, safe map pruning and override bundle generation.
+- `scripts/optimize-pages-critical-path.py`: moves critical hints to the start of `<head>` and preloads the exact current banner asset.
 - `scripts/clean-pages-product-images.py`: removes generated imgLiquid product background styles from staging.
-- `scripts/clean-pages-snapshot.py`: removes captured duplicate runtime state while preserving canonical integrations.
+- `scripts/clean-pages-snapshot.py`: removes captured duplicate runtime state and repairs canonical third-party integrations in staging.
 - `scripts/flatten-pages-bootstrap.py`: replaces the staging development bootstrap with direct production tags.
-- `scripts/bundle-pages-legacy-css.py`: builds `_pages/legacy.css`.
+- `scripts/bundle-pages-legacy-css.py`: builds `_pages/legacy.css` and normalizes missing legacy font fallbacks.
 - `scripts/bundle-pages-legacy-js.py`: builds `_pages/legacy.js`.
 - `scripts/bundle-pages-shop-js.py`: builds `_pages/shop.js`.
+- `scripts/validate-pages-local-assets.py`: resolves active final HTML/CSS local references and rejects missing assets.
+- `scripts/validate-pages-performance-budget.py`: enforces the expected local request topology, image-loading policy and critical preloads.
 
 Each builder is intentionally strict. If source structure changes, update the builder only after understanding the new dependency instead of weakening its guard.
 
@@ -89,4 +95,4 @@ Run:
 node scripts/validate-overrides.mjs
 ```
 
-The Pages workflow also parses all Python build scripts, builds the staging artifact, runs `node --check` on generated JavaScript bundles, validates exact source counts and checks that the branch SHA is still current immediately before deploy.
+The Pages workflow also parses all Python build scripts, builds the staging artifact, runs `node --check` on generated JavaScript bundles, validates local assets and production performance budgets, checks exact bundle source counts, and verifies that the branch SHA is still current immediately before deploy.
