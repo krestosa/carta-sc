@@ -12,6 +12,45 @@ if not SITE.is_dir():
     raise SystemExit('.pages-site does not exist')
 
 
+def prune_unused_maps(text):
+    map_helpers = {
+        (SITE / '_js_dev/mapKrc.js').resolve(),
+        (SITE / 'js/main_shop_maps__q_9fc895e1.js').resolve(),
+    }
+    usage_re = re.compile(
+        r'\b(?:shop_init_mapear|shop_krc_geoCode|shop_krc_mapear|krc_geoCode|krc_mapear)\s*\(',
+        re.IGNORECASE,
+    )
+    html_map_re = re.compile(
+        r'(?:\bid=["\'][^"\']*map[^"\']*["\']|\bclass=["\'][^"\']*\bmapParent\b[^"\']*["\'])',
+        re.IGNORECASE,
+    )
+    if html_map_re.search(text):
+        raise SystemExit('Map markup detected; refusing to remove Google Maps from Pages')
+
+    for js_path in SITE.rglob('*.js'):
+        resolved = js_path.resolve()
+        if resolved in map_helpers:
+            continue
+        try:
+            source = js_path.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            source = js_path.read_text(encoding='utf-8', errors='ignore')
+        if usage_re.search(source):
+            raise SystemExit(f'Map helper usage detected in {js_path}; refusing to remove Google Maps')
+
+    removals = [
+        re.compile(r'<script\b[^>]*\bsrc=["\']https://maps\.googleapis\.com/maps/api/js\?[^"\']*["\'][^>]*></script>', re.IGNORECASE),
+        re.compile(r'<script\b[^>]*\bsrc=["\']_js_dev/mapKrc\.js["\'][^>]*></script>', re.IGNORECASE),
+        re.compile(r'<script\b[^>]*\bsrc=["\']js/main_shop_maps__q_9fc895e1\.js["\'][^>]*></script>', re.IGNORECASE),
+    ]
+    for pattern in removals:
+        text, count = pattern.subn('', text, count=1)
+        if count != 1:
+            raise SystemExit(f'Expected exactly one removable map script for pattern: {pattern.pattern}')
+    return text
+
+
 def stamp_entrypoint():
     path = SITE / 'index.html'
     text = path.read_text(encoding='utf-8')
@@ -62,6 +101,8 @@ def stamp_entrypoint():
     text, image_count = product_image_re.subn(lazy_product_image, text)
     if image_count < 1:
         raise SystemExit('No product images were found for native lazy loading')
+
+    text = prune_unused_maps(text)
     path.write_text(text, encoding='utf-8')
 
 
@@ -221,6 +262,8 @@ def verify():
         raise SystemExit('Acumin font preloads must include crossorigin')
     if 'loading="lazy"' not in index or 'decoding="async"' not in index:
         raise SystemExit('Native lazy product image attributes are missing')
+    if 'maps.googleapis.com/maps/api/js' in index or '_js_dev/mapKrc.js' in index or 'js/main_shop_maps__q_9fc895e1.js' in index:
+        raise SystemExit('Unused Google Maps runtime remains in the Pages artifact')
     if f"var version='{SHA}';" not in bootstrap:
         raise SystemExit('Stamped bootstrap version is missing')
     if '@import' in css:
