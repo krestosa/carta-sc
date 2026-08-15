@@ -1,9 +1,11 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,N=SC&&SC.categoryNav;if(!SC||!N||SC.__categoryNavMotionBooted)return;SC.__categoryNavMotionBooted=true;
+var installed=false;
 
 function install(){
-  if(!SC.motion||!SC.motion.whenReady)return;
+  if(installed||!SC.motion||!SC.motion.whenReady)return;
+  installed=true;
   SC.motion.whenReady(function(deps){
     var gsap=deps.gsap,mm=gsap.matchMedia();
     mm.add({desktop:'(min-width: 993px)',compact:'(max-width: 992px)',reduce:'(prefers-reduced-motion: reduce)'},function(ctx){
