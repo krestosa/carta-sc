@@ -102,7 +102,13 @@ jobs:
 
       - name: Validate override dependency graph
         shell: bash
-        run: node scripts/validate-overrides.mjs
+        run: |
+          node scripts/validate-overrides.mjs
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          ast.parse(Path('scripts/prepare-pages-artifact.py').read_text(encoding='utf-8'))
+          PY
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
@@ -113,80 +119,8 @@ jobs:
           rm -rf .pages-site
           mkdir -p .pages-site
           rsync -a --exclude='.git' --exclude='.pages-site' ./ .pages-site/
-
-          python3 - <<'PY'
-          import os
-          import re
-          from pathlib import Path
-
-          sha = os.environ['GITHUB_SHA']
-
-          index = Path('.pages-site/index.html')
-          text = index.read_text(encoding='utf-8')
-          text, count = re.subn(
-              r"_js_dev/main\.js\?v=[^\"']+",
-              f'_js_dev/main.js?v={sha}',
-              text,
-              count=1,
-          )
-          if count != 1:
-              raise SystemExit('Could not rewrite the main.js entrypoint exactly once')
-          index.write_text(text, encoding='utf-8')
-
-          bootstrap = Path('.pages-site/_js_dev/main.js')
-          text = bootstrap.read_text(encoding='utf-8')
-          text, count = re.subn(
-              r"var version='[^']+';",
-              f"var version='{sha}';",
-              text,
-              count=1,
-          )
-          if count != 1:
-              raise SystemExit('Could not stamp the bootstrap version exactly once')
-          bootstrap.write_text(text, encoding='utf-8')
-
-          css = Path('.pages-site/override/main.css')
-          manifest = css.read_text(encoding='utf-8')
-          import_re = re.compile(
-              r'^\s*@import\s+["\'](?P<path>\./[^"\']+)\?v=unversioned["\'];\s*$',
-              re.MULTILINE,
-          )
-          imports = [match.group('path') for match in import_re.finditer(manifest)]
-          if not imports:
-              raise SystemExit('No CSS imports were found to bundle')
-          if import_re.sub('', manifest).strip():
-              raise SystemExit('override/main.css contains non-import content; refusing unsafe bundle')
-
-          url_re = re.compile(r'url\(\s*(?P<quote>["\']?)(?P<value>.*?)(?P=quote)\s*\)', re.IGNORECASE)
-
-          def rewrite_urls(source, content):
-              def replace(match):
-                  value = match.group('value').strip()
-                  if not value or re.match(r'^(?:[a-z][a-z0-9+.-]*:|//|/|#)', value, re.IGNORECASE):
-                      return match.group(0)
-                  parts = re.match(r'^(?P<path>[^?#]+)(?P<suffix>[?#].*)?$', value)
-                  if not parts:
-                      return match.group(0)
-                  relative = parts.group('path')
-                  suffix = parts.group('suffix') or ''
-                  resolved = os.path.normpath(os.path.join(str(source.parent), relative))
-                  rebased = os.path.relpath(resolved, start=str(css.parent)).replace(os.sep, '/')
-                  quote = match.group('quote')
-                  return f'url({quote}{rebased}{suffix}{quote})'
-              return url_re.sub(replace, content)
-
-          bundled = []
-          for import_path in imports:
-              source = css.parent / import_path.removeprefix('./')
-              if not source.is_file():
-                  raise SystemExit(f'Missing CSS source while bundling: {source}')
-              content = source.read_text(encoding='utf-8')
-              if '@import' in content:
-                  raise SystemExit(f'Nested CSS import found while bundling: {source}')
-              bundled.append(f'/* source: {import_path} */\n{rewrite_urls(source, content).rstrip()}')
-
-          css.write_text('\n\n'.join(bundled) + '\n', encoding='utf-8')
-          PY
+          python3 scripts/prepare-pages-artifact.py
+          node --check .pages-site/override/main.js
 
           grep -F "_js_dev/main.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
           grep -F "var version='${GITHUB_SHA}';" .pages-site/_js_dev/main.js >/dev/null
@@ -194,7 +128,12 @@ jobs:
             echo 'CSS imports remain in bundled Pages artifact'
             exit 1
           fi
+          if grep -F 'loadStages([' .pages-site/override/main.js >/dev/null; then
+            echo 'Development JS loader remains in bundled Pages artifact'
+            exit 1
+          fi
           test "$(grep -c '^/\* source:' .pages-site/override/main.css)" -ge 1
+          test "$(grep -c '^/\* module:' .pages-site/override/main.js)" -ge 1
 
       - name: Upload prepared Pages artifact
         uses: actions/upload-pages-artifact@v4
