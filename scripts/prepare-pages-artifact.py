@@ -23,6 +23,20 @@ def stamp_entrypoint():
     )
     if count != 1:
         raise SystemExit('Could not rewrite the main.js entrypoint exactly once')
+
+    entry_re = re.compile(
+        rf'(?P<tag><script\s+src=["\']_js_dev/main\.js\?v={re.escape(SHA)}["\'][^>]*></script>)',
+        re.IGNORECASE,
+    )
+    hints = '\n'.join([
+        '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>',
+        f'<link rel="preload" as="script" href="_js_dev/main-legacy.js?v={SHA}">',
+        f'<link rel="preload" as="style" href="override/main.css?v={SHA}">',
+        f'<link rel="preload" as="script" href="override/main.js?v={SHA}">',
+    ])
+    text, count = entry_re.subn(lambda match: hints + '\n' + match.group('tag'), text, count=1)
+    if count != 1:
+        raise SystemExit('Could not inject override preload hints exactly once')
     path.write_text(text, encoding='utf-8')
 
 
@@ -160,6 +174,15 @@ def verify():
 
     if f'_js_dev/main.js?v={SHA}' not in index:
         raise SystemExit('Stamped main.js entrypoint is missing')
+    for asset in (
+        f'_js_dev/main-legacy.js?v={SHA}',
+        f'override/main.css?v={SHA}',
+        f'override/main.js?v={SHA}',
+    ):
+        if f'rel="preload"' not in index or asset not in index:
+            raise SystemExit(f'Preload hint is missing for {asset}')
+    if 'rel="preconnect" href="https://cdn.jsdelivr.net"' not in index:
+        raise SystemExit('jsDelivr preconnect hint is missing')
     if f"var version='{SHA}';" not in bootstrap:
         raise SystemExit('Stamped bootstrap version is missing')
     if '@import' in css:
