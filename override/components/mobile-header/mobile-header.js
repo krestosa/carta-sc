@@ -13,11 +13,16 @@ function syncMenuButton(button,nav){
   button.setAttribute('aria-label',open?'Cerrar menú de navegación':'Abrir menú de navegación');
   button.setAttribute('title','Menú');
 }
-function menuHasBoundClick(menu){
-  var button=menu&&menu.querySelector('.slicknav_btn'),jq=window.jQuery;
-  if(!button||!jq||typeof jq._data!=='function')return false;
-  try{var events=jq._data(button,'events');return !!(events&&events.click&&events.click.length);}catch(_){return false;}
+function pluginMenu(){
+  var source=document.getElementById('menuMobile'),jq=window.jQuery;
+  if(!source||!jq)return null;
+  try{
+    var instance=jq(source).data('plugin_slicknav');
+    var button=instance&&instance.btn&&instance.btn[0];
+    return button&&button.closest?button.closest('.slicknav_menu'):null;
+  }catch(_){return null;}
 }
+function isPluginMenu(menu){var live=pluginMenu();return !!(live&&live===menu);}
 function installFallbackMenuToggle(menu){
   var button=menu&&menu.querySelector('.slicknav_btn'),nav=menu&&menu.querySelector('.slicknav_nav');
   if(!button||!nav||button.getAttribute('data-sc-fallback-toggle')==='true')return;
@@ -33,13 +38,15 @@ function installFallbackMenuToggle(menu){
 function repairMobileHeader(finalAttempt){
   if(desktopQuery.matches)return;
   var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));if(!menus.length)return;
-  var live=null;
-  for(var i=0;i<menus.length;i+=1){if(menuHasBoundClick(menus[i])){live=menus[i];break;}}
-  if(!live&&!finalAttempt)return;if(!live)live=menus[0];
+  var live=pluginMenu();
+  if(live&&menus.indexOf(live)===-1)live=null;
+  if(!live&&!finalAttempt)return;
+  if(!live)live=menus[0];
   menus.forEach(function(menu){if(menu!==live&&menu.parentNode)menu.parentNode.removeChild(menu);});
   live.classList.add('sc-mobile-main-menu');live.style.removeProperty('visibility');live.style.removeProperty('pointer-events');
   var button=live.querySelector('.slicknav_btn'),nav=live.querySelector('.slicknav_nav');
-  if(!menuHasBoundClick(live))installFallbackMenuToggle(live);syncMenuButton(button,nav);
+  if(!isPluginMenu(live))installFallbackMenuToggle(live);
+  syncMenuButton(button,nav);
   if(button&&button.getAttribute('data-sc-a11y-sync')!=='true'){
     button.setAttribute('data-sc-a11y-sync','true');
     button.addEventListener('click',function(){window.setTimeout(function(){syncMenuButton(button,nav);},0);});
