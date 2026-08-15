@@ -58,6 +58,7 @@ function waitForStableLayout(){
 loadSeries([
   ['core/variables.js','sc-override-variables-js'],
   ['core/utils.js','sc-override-utils-js'],
+  ['motion/main.js','sc-override-motion-js'],
   ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
   ['mutations/history.js','sc-override-history-js'],
   ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
@@ -66,19 +67,14 @@ loadSeries([
   ['components/product-card/product-card.js','sc-override-product-card-js'],
   ['components/product-modal/product-modal.js','sc-override-product-modal-js'],
   ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
+  ['components/cart/cart.js','sc-override-cart-js'],
   ['features/content-normalizer/content-normalizer.js','sc-override-content-normalizer-js']
 ]).then(function(){
   return waitForStableLayout();
 }).then(function(){
   markInitialViewport();
-  return loadScript('motion/main.js','sc-override-motion-js');
-}).then(function(){
-  return loadSeries([
-    ['components/category-nav/motion.js','sc-sticky-rail-motion-js'],
-    ['components/section-heading/section-heading.js','sc-section-lines-motion-js'],
-    ['components/product-modal/motion.js','sc-modal-motion-js'],
-    ['components/product-card/image-parallax.js','sc-product-image-parallax-js']
-  ]);
+  if(window.SCOverride&&window.SCOverride.motion)window.SCOverride.motion.unlock();
+  return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');
 }).catch(function(error){
   if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);
 });

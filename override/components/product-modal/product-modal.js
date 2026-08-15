@@ -56,9 +56,29 @@ function unlockBackground(){
   });
   backgroundState=[];
 }
+function animateModalOpen(modal){
+  if(!modal||!SC.motion||!SC.motion.run||SC.motion.reduced())return;
+  SC.motion.run(function(deps){
+    var gsap=deps.gsap,dialog=modal.querySelector('.sc-product-modal__dialog');if(!dialog)return;
+    gsap.killTweensOf([modal,dialog]);gsap.set(modal,{autoAlpha:0});gsap.set(dialog,{autoAlpha:0,y:10,scale:.992,transformOrigin:'50% 50%'});
+    gsap.timeline({defaults:{overwrite:'auto'}})
+      .to(modal,{autoAlpha:1,duration:.14,ease:'power2.out'},0)
+      .to(dialog,{autoAlpha:1,y:0,scale:1,duration:.20,ease:'power3.out',clearProps:'transform,opacity,visibility'},.015);
+  });
+}
+function animateModalClose(modal){
+  if(!modal||!SC.motion||!SC.motion.run||SC.motion.reduced())return;
+  SC.motion.run(function(deps){
+    var gsap=deps.gsap,dialog=modal.querySelector('.sc-product-modal__dialog');if(!dialog)return;
+    gsap.killTweensOf([modal,dialog]);
+    gsap.timeline({defaults:{overwrite:'auto'}})
+      .to(dialog,{autoAlpha:0,y:6,scale:.994,duration:.11,ease:'power2.in'},0)
+      .to(modal,{autoAlpha:0,duration:.13,ease:'power2.inOut'},.005);
+  });
+}
 function closeModal(event){
   if(event)event.preventDefault();if(!activeModal)return;
-  var modal=activeModal;activeModal=null;modal.classList.remove('is-visible');
+  var modal=activeModal;activeModal=null;modal.classList.remove('is-visible');animateModalClose(modal);
   document.body.classList.remove('sc-product-modal-open');
   var restore=previousFocus;previousFocus=null;
   var delay=matchMedia('(prefers-reduced-motion: reduce)').matches?0:190;
@@ -113,7 +133,7 @@ function openModal(link){
   var close=modal.querySelector('.sc-product-modal__close');
   try{close.focus({preventScroll:true});}catch(_){close.focus();}
   lockBackground(modal);
-  requestAnimationFrame(function(){if(activeModal===modal)modal.classList.add('is-visible');});
+  requestAnimationFrame(function(){if(activeModal===modal){modal.classList.add('is-visible');animateModalOpen(modal);}});
 }
 function installModal(){
   document.addEventListener('click',function(e){

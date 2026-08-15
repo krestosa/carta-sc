@@ -1,0 +1,20 @@
+@media (min-width: 993px) {
+  .sushiShop .sc-product-modal {
+    opacity: 0;visibility: hidden;
+    -webkit-transition: opacity 180ms var(--sc-motion-ease-out),visibility 0s linear 180ms;
+    transition: opacity 180ms var(--sc-motion-ease-out),visibility 0s linear 180ms;
+  }
+  .sushiShop .sc-product-modal .sc-product-modal__dialog {
+    opacity: 0;-webkit-transform: translateY(10px);transform: translateY(10px);
+    -webkit-transition: opacity 220ms var(--sc-motion-ease-out),-webkit-transform 260ms var(--sc-motion-ease-out);
+    transition: opacity 220ms var(--sc-motion-ease-out),transform 260ms var(--sc-motion-ease-out);will-change: transform,opacity;
+  }
+  .sushiShop .sc-product-modal.is-visible {opacity: 1;visibility: visible;-webkit-transition-delay: 0s;transition-delay: 0s;}
+  .sushiShop .sc-product-modal.is-visible .sc-product-modal__dialog {opacity: 1;-webkit-transform: translateY(0);transform: translateY(0);}
+}
+@media (prefers-reduced-motion: reduce) {
+  .sushiShop .sc-product-modal,.sushiShop .sc-product-modal .sc-product-modal__dialog {
+    opacity: 1 !important;visibility: visible !important;-webkit-transform: none !important;transform: none !important;
+    -webkit-transition: none !important;transition: none !important;will-change: auto;
+  }
+}

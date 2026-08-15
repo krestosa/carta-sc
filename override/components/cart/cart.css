@@ -1,0 +1,6 @@
+.sushiShop .sc-cart-scroll-motion {
+  -webkit-transform-origin: 50% 0%;transform-origin: 50% 0%;will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sushiShop .sc-cart-scroll-motion {-webkit-transform: none !important;transform: none !important;will-change: auto;}
+}
