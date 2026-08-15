@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v5';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v6';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
@@ -55,6 +55,11 @@ loadSeries([
   ['mutations/history.js','sc-override-history-js'],
   ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
   ['mutations/scroll-restoration.js','sc-override-scroll-restoration-js'],
+  ['components/category-nav/core.js','sc-category-nav-core-js'],
+  ['components/category-nav/layout.js','sc-category-nav-layout-js'],
+  ['components/category-nav/rail.js','sc-category-nav-rail-js'],
+  ['components/category-nav/state.js','sc-category-nav-state-js'],
+  ['components/category-nav/motion.js','sc-category-nav-motion-js'],
   ['components/category-nav/category-nav.js','sc-override-category-nav-js'],
   ['components/product-card/data.js','sc-product-card-data-js'],
   ['components/product-card/a11y.js','sc-product-card-a11y-js'],
@@ -68,13 +73,9 @@ loadSeries([
   ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
   ['components/cart/cart.js','sc-override-cart-js'],
   ['features/content-normalizer/content-normalizer.js','sc-override-content-normalizer-js']
-]).then(function(){
-  return waitForStableLayout();
-}).then(function(){
+]).then(function(){return waitForStableLayout();}).then(function(){
   markInitialViewport();
   if(window.SCOverride&&window.SCOverride.motion)window.SCOverride.motion.unlock();
   return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');
-}).catch(function(error){
-  if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);
-});
+}).catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
 })();
