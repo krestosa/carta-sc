@@ -32,6 +32,42 @@ if not SITE.is_dir():
     raise SystemExit('.pages-site does not exist')
 
 
+def normalize_legacy_fonts(href, content):
+    if href == '_css_dev/font-awesome.min.css':
+        pattern = re.compile(
+            r"@font-face\s*\{\s*font-family\s*:\s*['\"]FontAwesome['\"].*?\}",
+            re.IGNORECASE | re.DOTALL,
+        )
+        replacement = (
+            "@font-face{font-family:'FontAwesome';"
+            "src:url('../fonts/fontawesome-webfont__q_fb3a7b16.woff2') format('woff2');"
+            "font-weight:normal;font-style:normal}"
+        )
+        content, count = pattern.subn(replacement, content, count=1)
+        if count != 1:
+            raise SystemExit('Could not normalize the Font Awesome @font-face block exactly once')
+
+    elif href == '_css_dev/slick-theme.css':
+        font_face = re.compile(
+            r"@font-face\s*\{\s*font-family\s*:\s*['\"]slick['\"].*?\}",
+            re.IGNORECASE | re.DOTALL,
+        )
+        content, count = font_face.subn('', content, count=1)
+        if count != 1:
+            raise SystemExit('Could not remove the missing Slick @font-face block exactly once')
+
+        content, family_count = re.subn(
+            r"font-family\s*:\s*['\"]slick['\"]\s*;",
+            'font-family: Arial, sans-serif;',
+            content,
+            flags=re.IGNORECASE,
+        )
+        if family_count < 1:
+            raise SystemExit('No Slick pseudo-element font-family declarations were normalized')
+
+    return content
+
+
 def rebase_urls(source, content):
     url_re = re.compile(
         r'url\(\s*(?P<quote>["\']?)(?P<value>.*?)(?P=quote)\s*\)',
@@ -96,6 +132,7 @@ for position, href in enumerate(LEGACY_STYLES):
     content = re.sub(r'^\s*@charset\s+["\'][^"\']+["\'];\s*', '', content, count=1, flags=re.IGNORECASE)
     if re.search(r'@import\b', content, re.IGNORECASE):
         raise SystemExit(f'Nested @import found in legacy stylesheet: {href}')
+    content = normalize_legacy_fonts(href, content)
     bundled.append(f'/* source: {href} */\n{rebase_urls(source, content).rstrip()}')
 
     replacement = ''
@@ -116,5 +153,11 @@ for href in LEGACY_STYLES:
         raise SystemExit(f'Active legacy stylesheet tag remains after bundling: {href}')
 if len(re.findall(r'^/\* source:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(LEGACY_STYLES):
     raise SystemExit('Legacy CSS bundle source count mismatch')
+
+bundle_text = BUNDLE.read_text(encoding='utf-8')
+if 'fontawesome-webfont.eot' in bundle_text or 'fontawesome-webfont.woff?' in bundle_text or 'fontawesome-webfont.ttf' in bundle_text or 'fontawesome-webfont.svg' in bundle_text:
+    raise SystemExit('Obsolete missing Font Awesome fallbacks remain in the Pages CSS bundle')
+if re.search(r"url\([^)]*fonts/slick\.(?:eot|woff|ttf|svg)", bundle_text, re.IGNORECASE):
+    raise SystemExit('Missing Slick font URLs remain in the Pages CSS bundle')
 
 print(f'Bundled {len(LEGACY_STYLES)} legacy stylesheets into {BUNDLE}')
