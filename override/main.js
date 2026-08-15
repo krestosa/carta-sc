@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v8';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v9';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
@@ -71,6 +71,9 @@ loadSeries([
   ['components/product-modal/motion.js','sc-product-modal-motion-js'],
   ['components/product-modal/product-modal.js','sc-override-product-modal-js'],
   ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
+  ['components/cart/list-motion.js','sc-cart-list-motion-js'],
+  ['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],
+  ['components/cart/badge-motion.js','sc-cart-badge-motion-js'],
   ['components/cart/cart.js','sc-override-cart-js'],
   ['features/content-normalizer/content-normalizer.js','sc-override-content-normalizer-js']
 ]).then(function(){return waitForStableLayout();}).then(function(){

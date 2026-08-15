@@ -15,8 +15,8 @@ function install(){
       function clear(){gsap.killTweensOf(surface);gsap.set(surface,{clearProps:'transform,opacity,visibility'});surface.style.willChange='';}
       function animate(on){
         gsap.killTweensOf(surface);if(reduce)return clear();surface.style.willChange='transform,opacity';
-        gsap.fromTo(surface,on?{y:-10,autoAlpha:.78,scaleY:.972,transformOrigin:'50% 0%'}:{y:4,autoAlpha:.9,scaleY:1.008,transformOrigin:'50% 0%'},{
-          y:0,autoAlpha:1,scaleY:1,duration:on?.4:.22,ease:on?'power3.out':'power2.out',overwrite:true,clearProps:'transform,opacity,visibility',onComplete:function(){surface.style.willChange='';}
+        gsap.fromTo(surface,on?{y:-10,autoAlpha:0.78,scaleY:0.972,transformOrigin:'50% 0%'}:{y:4,autoAlpha:0.9,scaleY:1.008,transformOrigin:'50% 0%'},{
+          y:0,autoAlpha:1,scaleY:1,duration:on ? 0.40 : 0.22,ease:on?'power3.out':'power2.out',overwrite:true,clearProps:'transform,opacity,visibility',onComplete:function(){surface.style.willChange='';}
         });
       }
       observer=new MutationObserver(function(){var now=host.classList.contains('sc-is-stuck');if(now!==last){last=now;animate(now);}});
