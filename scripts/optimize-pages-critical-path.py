@@ -14,6 +14,18 @@ if not SITE.is_dir():
 index_path = SITE / 'index.html'
 html = index_path.read_text(encoding='utf-8')
 
+font_css_re = re.compile(
+    r'https://fonts\.googleapis\.com/css\?family=Roboto:300,400,700(?:&amp;|&)display=swap|https://fonts\.googleapis\.com/css\?family=Roboto:300,400,700',
+    re.IGNORECASE,
+)
+html, font_css_count = font_css_re.subn(
+    'https://fonts.googleapis.com/css?family=Roboto:300,400,700&amp;display=swap',
+    html,
+    count=1,
+)
+if font_css_count != 1:
+    raise SystemExit(f'Expected one Roboto Google Fonts stylesheet URL, found {font_css_count}')
+
 banner = re.search(
     r'<img\b(?=[^>]*\bclass="[^"]*\bimgBannerShop\b[^"]*")(?=[^>]*\bsrc="([^"]+)")[^>]*>',
     html,
@@ -59,6 +71,8 @@ if count != 1:
 
 if html.count(f'<link rel="preload" as="image" href="{banner_src}" fetchpriority="high">') != 1:
     raise SystemExit('Banner preload must appear exactly once')
+if html.count('https://fonts.googleapis.com/css?family=Roboto:300,400,700&amp;display=swap') != 1:
+    raise SystemExit('Roboto stylesheet must use display=swap exactly once')
 head_start = html.lower().find('<head>')
 head_end = html.lower().find('</head>')
 charset_pos = html.lower().find('<meta charset="utf-8"', head_start, head_end)
@@ -70,4 +84,4 @@ if google_fonts_pos >= 0 and banner_preload_pos > google_fonts_pos:
     raise SystemExit('Critical resource hints must precede the Google Fonts stylesheet')
 
 index_path.write_text(html, encoding='utf-8')
-print(f'Moved critical resource hints to the start of head and preloaded {banner_src}')
+print(f'Moved critical resource hints to head start, enabled Roboto display=swap and preloaded {banner_src}')
