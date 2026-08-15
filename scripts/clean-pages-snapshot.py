@@ -11,6 +11,40 @@ if not re.fullmatch(r'[0-9a-f]{40}', SHA):
 if not SITE.is_dir():
     raise SystemExit('.pages-site does not exist')
 
+
+def find_matching_div_close(html, open_start):
+    tag_re = re.compile(r'<div\b[^>]*>|</div\s*>', re.IGNORECASE)
+    depth = 0
+    for match in tag_re.finditer(html, open_start):
+        tag = match.group(0)
+        if tag.lower().startswith('<div'):
+            depth += 1
+        else:
+            depth -= 1
+            if depth == 0:
+                return match.start(), match.end()
+    raise SystemExit('Could not find matching </div> in captured snapshot markup')
+
+
+def empty_div_contents(html, opening_marker):
+    start = html.find(opening_marker)
+    if start < 0:
+        raise SystemExit(f'Could not find snapshot div marker: {opening_marker}')
+    open_end = html.find('>', start)
+    if open_end < 0:
+        raise SystemExit(f'Could not find end of opening div: {opening_marker}')
+    close_start, _ = find_matching_div_close(html, start)
+    return html[:open_end + 1] + html[close_start:]
+
+
+def remove_div_block(html, opening_marker):
+    start = html.find(opening_marker)
+    if start < 0:
+        raise SystemExit(f'Could not find snapshot div block marker: {opening_marker}')
+    _, close_end = find_matching_div_close(html, start)
+    return html[:start] + html[close_end:]
+
+
 index_path = SITE / 'index.html'
 html = index_path.read_text(encoding='utf-8')
 
@@ -30,16 +64,39 @@ html, captured_gtm_count = captured_gtm.subn('', html, count=1)
 if captured_gtm_count != 1:
     raise SystemExit(f'Expected one captured GTM runtime tag, found {captured_gtm_count}')
 
+captured_recaptcha_runtime = re.compile(
+    r'<script\b[^>]*\bsrc=["\']https://www\.gstatic\.com/recaptcha/releases/[^"\']+/recaptcha__en\.js["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+html, recaptcha_runtime_count = captured_recaptcha_runtime.subn('', html, count=1)
+if recaptcha_runtime_count != 1:
+    raise SystemExit(f'Expected one captured reCAPTCHA runtime tag, found {recaptcha_runtime_count}')
+
+html = empty_div_contents(html, '<div class="g-recaptcha" data-sitekey=')
+html = remove_div_block(html, '<div style="background-color: rgb(255, 255, 255); border: 1px solid rgb(204, 204, 204); box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 3px;')
+
 jquery_tag = re.compile(
     r'<script\b[^>]*\bsrc=["\']js/jquery-2\.1\.0\.min\.js["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
+recaptcha_api = re.compile(
+    r'<script\b[^>]*\bsrc=["\']_external/www\.google\.com/recaptcha/api\.js["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+
 if len(jquery_tag.findall(html)) != 1:
     raise SystemExit('Pages artifact must retain exactly one explicit jQuery 2.1.0 script tag')
 if captured_gtm.search(html):
     raise SystemExit('Captured GTM runtime tag remains after cleanup')
 if 'GTM-WQPLGX9' not in html or 'googletagmanager.com/gtm.js?id=' not in html:
     raise SystemExit('Canonical GTM bootstrap snippet is missing after cleanup')
+if len(recaptcha_api.findall(html)) != 1:
+    raise SystemExit('Canonical reCAPTCHA api.js script must remain exactly once')
+if len(re.findall(r'<div class="g-recaptcha"\s+data-sitekey="[^"]+">\s*</div>', html, re.IGNORECASE)) != 1:
+    raise SystemExit('Clean reCAPTCHA host with sitekey must remain exactly once')
+for stale in ('recaptcha__en.js', '/recaptcha/api2/anchor?', '/recaptcha/api2/bframe?', 'g-recaptcha-bubble-arrow'):
+    if stale in html:
+        raise SystemExit(f'Captured reCAPTCHA runtime markup remains after cleanup: {stale}')
 
 index_path.write_text(html, encoding='utf-8')
-print('Removed duplicate snapshot jQuery and GTM runtime loads')
+print('Removed duplicate snapshot jQuery/GTM loads and captured reCAPTCHA runtime state')
