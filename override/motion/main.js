@@ -13,14 +13,21 @@ function reduced(){return window.matchMedia('(prefers-reduced-motion: reduce)').
 function loadScript(src,id,done){
   var old=document.getElementById(id);
   if(old){
-    if(old.dataset.loaded==='true'||(id==='sc-gsap-core'&&window.gsap)||(id==='sc-gsap-scrolltrigger'&&window.ScrollTrigger)||(id==='sc-gsap-scrollto'&&window.ScrollToPlugin))return done();
-    old.addEventListener('load',done,{once:true});
+    if(old.dataset.loaded==='true'||(id==='sc-gsap-core'&&window.gsap)||(id==='sc-gsap-scrolltrigger'&&window.ScrollTrigger)||(id==='sc-gsap-scrollto'&&window.ScrollToPlugin))return done(true);
+    old.addEventListener('load',function(){done(true);},{once:true});
+    old.addEventListener('error',function(){done(false);},{once:true});
     return;
   }
   var script=document.createElement('script');script.id=id;script.src=src;script.async=true;
-  script.onload=function(){script.dataset.loaded='true';done();};
-  script.onerror=function(){if(window.console&&console.warn)console.warn('[SushiClub motion] No se pudo cargar:',src);};
+  script.onload=function(){script.dataset.loaded='true';done(true);};
+  script.onerror=function(){if(window.console&&console.warn)console.warn('[SushiClub motion] No se pudo cargar:',src);done(false);};
   document.head.appendChild(script);
+}
+function loadPlugins(done){
+  var pending=2,failed=false;
+  function complete(ok){if(!ok)failed=true;if(--pending===0)done(!failed);}
+  loadScript(ST_SRC,'sc-gsap-scrolltrigger',complete);
+  loadScript(SCROLL_TO_SRC,'sc-gsap-scrollto',complete);
 }
 function flush(){
   if(!unlocked||!deps)return;
@@ -43,21 +50,21 @@ function installRefreshLifecycle(){
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(120);}).catch(function(){});
 }
 function unlock(){unlocked=true;installRefreshLifecycle();flush();}
+function initialize(){
+  if(!window.gsap||!window.ScrollTrigger||!window.ScrollToPlugin)return;
+  window.gsap.registerPlugin(window.ScrollTrigger,window.ScrollToPlugin);
+  window.ScrollTrigger.config({limitCallbacks:true});
+  if(window.ScrollToPlugin.config)window.ScrollToPlugin.config({autoKill:true});
+  deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin};
+  installRefreshLifecycle();flush();
+}
 
 SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,unlock:unlock,isReady:function(){return!!(deps&&unlocked);}};
 
 ready(function(){
-  loadScript(GSAP_SRC,'sc-gsap-core',function(){
-    loadScript(ST_SRC,'sc-gsap-scrolltrigger',function(){
-      loadScript(SCROLL_TO_SRC,'sc-gsap-scrollto',function(){
-        if(!window.gsap||!window.ScrollTrigger||!window.ScrollToPlugin)return;
-        window.gsap.registerPlugin(window.ScrollTrigger,window.ScrollToPlugin);
-        window.ScrollTrigger.config({limitCallbacks:true});
-        if(window.ScrollToPlugin.config)window.ScrollToPlugin.config({autoKill:true});
-        deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin};
-        installRefreshLifecycle();flush();
-      });
-    });
+  loadScript(GSAP_SRC,'sc-gsap-core',function(ok){
+    if(!ok)return;
+    loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});
   });
 });
 })();
