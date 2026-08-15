@@ -103,10 +103,63 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
-      - name: Upload exact repository snapshot
+      - name: Prepare cache-busted Pages artifact
+        shell: bash
+        run: |
+          rm -rf .pages-site
+          mkdir -p .pages-site
+          rsync -a --exclude='.git' --exclude='.pages-site' ./ .pages-site/
+
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          sha = os.environ['GITHUB_SHA']
+
+          index = Path('.pages-site/index.html')
+          text = index.read_text(encoding='utf-8')
+          text, count = re.subn(
+              r"_js_dev/main\.js\?v=[^\"']+",
+              f'_js_dev/main.js?v={sha}',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('Could not rewrite the main.js entrypoint exactly once')
+          index.write_text(text, encoding='utf-8')
+
+          bootstrap = Path('.pages-site/_js_dev/main.js')
+          text = bootstrap.read_text(encoding='utf-8')
+          text, count = re.subn(
+              r"var version='[^']+';",
+              f"var version='{sha}';",
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('Could not stamp the bootstrap version exactly once')
+          bootstrap.write_text(text, encoding='utf-8')
+
+          css = Path('.pages-site/override/main.css')
+          text = css.read_text(encoding='utf-8')
+          text, count = re.subn(r'\?v=unversioned', f'?v={sha}', text)
+          if count < 1:
+              raise SystemExit('No CSS asset version placeholders were found')
+          css.write_text(text, encoding='utf-8')
+          PY
+
+          grep -F "_js_dev/main.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
+          grep -F "var version='${GITHUB_SHA}';" .pages-site/_js_dev/main.js >/dev/null
+          if grep -F '?v=unversioned' .pages-site/override/main.css >/dev/null; then
+            echo 'Unversioned CSS imports remain in Pages artifact'
+            exit 1
+          fi
+
+      - name: Upload prepared Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: '.'
+          path: '.pages-site'
 
       - name: Guard again before deploy
         env:
