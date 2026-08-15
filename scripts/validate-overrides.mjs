@@ -53,6 +53,12 @@ if (!errors.length) {
   if (/\._data\s*\(/.test(overrideJsSource)) {
     fail('Override code must not depend on jQuery private _data internals');
   }
+  if (/\bdocument\.currentScript\b/.test(overrideJsSource)) {
+    fail('Override modules must not depend on document.currentScript because Pages concatenates them into one production bundle');
+  }
+  if (/\bimport\.meta\b/.test(overrideJsSource)) {
+    fail('Override modules must not depend on import.meta because Pages serves a classic concatenated production bundle');
+  }
   if (fs.existsSync(manualScrollRestorationPath)) {
     fail('override/mutations/scroll-restoration.js must not be reintroduced');
   }
@@ -105,6 +111,15 @@ if (!errors.length) {
   const seenIds = new Set();
   const duplicateIds = [...new Set(idRefs.filter((id) => seenIds.has(id) || !seenIds.add(id)))];
   if (duplicateIds.length) fail(`Duplicate script element ids in override/main.js: ${duplicateIds.join(', ')}`);
+
+  for (const file of overrideJsFiles) {
+    if (file === mainJsPath) continue;
+    const source = read(file);
+    const coupledIds = idRefs.filter((id) => source.includes(id));
+    if (coupledIds.length) {
+      fail(`${relative(file)} depends on development loader script id(s) removed by the Pages bundle: ${coupledIds.join(', ')}`);
+    }
+  }
 
   const mainCss = read(mainCssPath);
   const cssRefs = [];
