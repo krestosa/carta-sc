@@ -44,13 +44,13 @@ function isInitial(el){
 }
 function initMotion(deps,SplitText){
   if(initialized||!SplitText)return;initialized=true;
-  var gsap=deps.gsap,reduce=SC.motion.reduced(),elements=targets(),splits=[],tweens=[];
+  var gsap=deps.gsap,elements=targets(),splits=[],tweens=[];
 
   elements.forEach(function(el){
     var parentCategory=isParentCategory(el),initial=isInitial(el);
     if(parentCategory){
       el.classList.add('sc-section-rule-host');
-      if(reduce||initial)gsap.set(el,{'--sc-section-rule-scale':1});
+      if(initial)gsap.set(el,{'--sc-section-rule-scale':1});
       else{
         gsap.set(el,{'--sc-section-rule-scale':0});
         tweens.push(gsap.to(el,{
@@ -59,7 +59,7 @@ function initMotion(deps,SplitText){
         }));
       }
     }
-    if(reduce||initial)return;
+    if(initial)return;
     splits.push(SplitText.create(el,{
       type:'lines',mask:'lines',linesClass:'sc-section-text-line',autoSplit:true,
       onSplit:function(self){
@@ -87,6 +87,7 @@ function initMotion(deps,SplitText){
 
 SC.motion.whenReady(function(deps){
   ready(function(){
+    if(SC.motion.reduced())return;
     loadSplitText().then(function(SplitText){
       if(!SplitText)return;
       requestAnimationFrame(function(){requestAnimationFrame(function(){initMotion(deps,SplitText);});});
