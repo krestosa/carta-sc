@@ -3,7 +3,20 @@
 if(window.__scModalCtaBooted)return;
 window.__scModalCtaBooted=true;
 
-function assetVersion(){return window.__scCatalogAssetVersion||'20260815-ux-interaction-v2';}
+function assetVersion(){return window.__scCatalogAssetVersion||'20260815-ux-interaction-v3';}
+
+function restoreNativeHistory(){
+  try{
+    var proto=window.History&&window.History.prototype;
+    if(!proto||typeof proto.replaceState!=='function')return;
+    if(Object.prototype.hasOwnProperty.call(window.history,'replaceState')){
+      try{delete window.history.replaceState;}catch(_){}
+    }
+    if(window.history.replaceState!==proto.replaceState){
+      try{Object.defineProperty(window.history,'replaceState',{configurable:true,writable:true,value:proto.replaceState.bind(window.history)});}catch(_){}
+    }
+  }catch(_){}
+}
 
 function installInteractionCss(){
   if(document.getElementById('sc-ux-interaction-fixes-css'))return;
@@ -97,10 +110,12 @@ function stripLegacyHoverHandlers(){
 }
 
 function installInteractionFixes(){
+  restoreNativeHistory();
   installInteractionCss();
   document.addEventListener('click',interceptCategoryClick,true);
   document.addEventListener('change',interceptCategorySelect,true);
   var finish=function(){
+    restoreNativeHistory();
     cleanCategoryHash();
     stripLegacyHoverHandlers();
     window.setTimeout(stripLegacyHoverHandlers,0);
