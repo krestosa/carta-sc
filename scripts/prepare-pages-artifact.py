@@ -38,6 +38,14 @@ def stamp_entrypoint():
     if count != 1:
         raise SystemExit('Could not inject override preload hints exactly once')
 
+    font_preload_re = re.compile(
+        r'(?P<tag><link\s+rel="preload"\s+href="fuentes/AcuminPro-(?:Regular|Semibold)\.woff2"\s+as="font"\s+type="font/woff2")(?P<end>>)',
+        re.IGNORECASE,
+    )
+    text, font_count = font_preload_re.subn(lambda match: match.group('tag') + ' crossorigin' + match.group('end'), text)
+    if font_count != 2:
+        raise SystemExit(f'Expected two Acumin font preloads, found {font_count}')
+
     product_image_re = re.compile(
         r'(?P<prefix><div\b[^>]*class="[^"]*\bimgShop\b[^"]*"[^>]*>\s*<img\b)(?P<attrs>[^>]*)(?P<close>>)',
         re.IGNORECASE,
@@ -209,6 +217,8 @@ def verify():
             raise SystemExit(f'Preload hint is missing for {asset}')
     if 'rel="preconnect" href="https://cdn.jsdelivr.net"' not in index:
         raise SystemExit('jsDelivr preconnect hint is missing')
+    if len(re.findall(r'<link\s+rel="preload"\s+href="fuentes/AcuminPro-(?:Regular|Semibold)\.woff2"\s+as="font"\s+type="font/woff2"\s+crossorigin>', index, re.IGNORECASE)) != 2:
+        raise SystemExit('Acumin font preloads must include crossorigin')
     if 'loading="lazy"' not in index or 'decoding="async"' not in index:
         raise SystemExit('Native lazy product image attributes are missing')
     if f"var version='{SHA}';" not in bootstrap:
