@@ -61,15 +61,26 @@ def link_pattern(href):
     )
 
 
+def remove_commented_link(html, href):
+    pattern = re.compile(
+        rf'<!--\s*<link\b(?=[^>]*\bhref=["\']{re.escape(href)}["\'])[^>]*>\s*-->',
+        re.IGNORECASE,
+    )
+    return pattern.sub('', html)
+
+
 index_path = SITE / 'index.html'
 html = index_path.read_text(encoding='utf-8')
 bundled = []
+
+for href in LEGACY_STYLES:
+    html = remove_commented_link(html, href)
 
 for position, href in enumerate(LEGACY_STYLES):
     pattern = link_pattern(href)
     matches = list(pattern.finditer(html))
     if len(matches) != 1:
-        raise SystemExit(f'Expected exactly one stylesheet tag for {href}, found {len(matches)}')
+        raise SystemExit(f'Expected exactly one active stylesheet tag for {href}, found {len(matches)}')
 
     tag = matches[0].group(0)
     if not re.search(r'\brel=["\']stylesheet["\']', tag, re.IGNORECASE):
@@ -102,7 +113,7 @@ if html.count(f'_pages/legacy.css?v={SHA}') != 1:
     raise SystemExit('Legacy CSS bundle link must appear exactly once')
 for href in LEGACY_STYLES:
     if link_pattern(href).search(html):
-        raise SystemExit(f'Legacy stylesheet tag remains after bundling: {href}')
+        raise SystemExit(f'Active legacy stylesheet tag remains after bundling: {href}')
 if len(re.findall(r'^/\* source:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(LEGACY_STYLES):
     raise SystemExit('Legacy CSS bundle source count mismatch')
 
