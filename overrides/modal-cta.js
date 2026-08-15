@@ -3,10 +3,10 @@
 if(window.__scModalCtaBooted)return;
 window.__scModalCtaBooted=true;
 
+if('scrollRestoration' in history){try{history.scrollRestoration='auto';}catch(_){}}
+
 function assetVersion(){return window.__scCatalogAssetVersion||'20260815-ux-interaction-v1';}
 
-/* UX-08: return History to the browser implementation. catalog.js may have
-   installed a category-only replaceState wrapper before this file executes. */
 function restoreNativeHistory(){
   try{
     var proto=window.History&&window.History.prototype;
@@ -20,9 +20,6 @@ function restoreNativeHistory(){
   }catch(_){}
 }
 
-/* UX-01: the horizontal category rail must never consume vertical page scroll.
-   Also neutralize the legacy _open rule that expands its scroller to 100vh on
-   category mouseenter. */
 function installInteractionCss(){
   if(document.getElementById('sc-ux-interaction-fixes-css'))return;
   var style=document.createElement('style');
@@ -83,13 +80,12 @@ function scrollToCategory(target){
   try{window.scrollTo({top:top,left:0,behavior:reduced?'auto':'smooth'});}catch(_){window.scrollTo(0,top);}
 }
 
-/* Keep internal hrefs for semantics/deep-link resolution, but category clicks
-   do not mutate the visible URL. Capture phase also bypasses the old jQuery
-   animated-scroll handlers. */
 function interceptCategoryClick(event){
   if(event.defaultPrevented||event.button>0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
   var link=event.target&&event.target.closest?event.target.closest('a.anchorLink, a.anchorLinkSub'):null;
   if(!link)return;
+  if(!(link.closest('.sc-catalog-toolbar')||link.closest('.wtopShopMenuMobile .topShopMenuMobile')))return;
+  if(link.closest('.topPullDown,.dropdown-menu'))return;
   var target=resolveAnchor(link.getAttribute('href'));
   if(!target)return;
   event.preventDefault();
@@ -124,6 +120,7 @@ function installInteractionFixes(){
   document.addEventListener('click',interceptCategoryClick,true);
   document.addEventListener('change',interceptCategorySelect,true);
   var finish=function(){
+    cleanCategoryHash();
     stripLegacyHoverHandlers();
     window.setTimeout(stripLegacyHoverHandlers,0);
     window.setTimeout(stripLegacyHoverHandlers,120);
