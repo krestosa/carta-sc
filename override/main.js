@@ -61,7 +61,8 @@ loadStages([
     ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
     ['components/category-nav/core.js','sc-category-nav-core-js'],
     ['components/product-card/data.js','sc-product-card-data-js'],
-    ['components/product-card/motion.js','sc-product-card-motion-js'],
+    ['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],
+    ['components/product-card/image-parallax.js','sc-product-card-parallax-motion-js'],
     ['components/product-modal/view.js','sc-product-modal-view-js'],
     ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
     ['components/product-modal/motion.js','sc-product-modal-motion-js'],
@@ -78,6 +79,7 @@ loadStages([
     ['components/category-nav/motion.js','sc-category-nav-motion-js'],
     ['components/product-card/a11y.js','sc-product-card-a11y-js'],
     ['components/product-card/content.js','sc-product-card-content-js'],
+    ['components/product-card/motion.js','sc-product-card-motion-js'],
     ['components/cart/cart.js','sc-override-cart-js']
   ],
   [
