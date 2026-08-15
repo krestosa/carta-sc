@@ -11,6 +11,17 @@ parts.setupList=function(gsap,ST,reduce){
       return !row.matches('.total, .subtotal, .ahorro')&&(row.offsetParent!==null||row.getClientRects().length>0);
     });
   }
+  function affectsCart(mutation){
+    var target=mutation.target&&mutation.target.nodeType===1?mutation.target:mutation.target&&mutation.target.parentElement;
+    var table=target&&target.closest&&target.closest('.carritoTable');
+    if(table&&!animated.has(root(table)))return true;
+    for(var i=0;i<(mutation.addedNodes||[]).length;i+=1){
+      var node=mutation.addedNodes[i];if(!node||node.nodeType!==1)continue;
+      if(node.matches('.carritoTable,.carritoFixedContent,.carritoBox,.shop_carrito'))return true;
+      if(node.querySelector&&node.querySelector('.carritoTable'))return true;
+    }
+    return false;
+  }
   function scan(){
     raf=0;var changed=false;
     gsap.utils.toArray('.carritoTable').forEach(function(table){
@@ -28,9 +39,7 @@ parts.setupList=function(gsap,ST,reduce){
   scan();
   if(document.body){
     observer=new MutationObserver(function(mutations){
-      for(var i=0;i<mutations.length;i+=1){
-        if(mutations[i].addedNodes&&mutations[i].addedNodes.length){schedule();break;}
-      }
+      for(var i=0;i<mutations.length;i+=1){if(affectsCart(mutations[i])){schedule();break;}}
     });
     observer.observe(document.body,{childList:true,subtree:true});
   }
