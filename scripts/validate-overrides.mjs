@@ -27,10 +27,28 @@ const mainJsPath = path.join(overrideDir, 'main.js');
 const mainCssPath = path.join(overrideDir, 'main.css');
 const bootstrapPath = path.join(root, '_js_dev', 'main.js');
 const indexPath = path.join(root, 'index.html');
+const templateRegistryPath = path.join(overrideDir, 'templates', 'registry.js');
 const contentNormalizerRef = 'features/content-normalizer/content-normalizer.js';
 const manualScrollRestorationPath = path.join(overrideDir, 'mutations', 'scroll-restoration.js');
+const requiredTemplates = new Set([
+  'product-modal',
+  'category-toolbar',
+  'category-arrow-left',
+  'category-arrow-right',
+  'category-indicator',
+  'product-card-a11y-meta',
+  'product-trait-group',
+]);
+const structuralUiFiles = [
+  'components/product-modal/view.js',
+  'components/category-nav/layout.js',
+  'components/category-nav/rail-controls.js',
+  'components/category-nav/indicator.js',
+  'components/product-card/data.js',
+  'components/product-card/a11y.js',
+];
 
-for (const required of [overrideDir, mainJsPath, mainCssPath, bootstrapPath, indexPath]) {
+for (const required of [overrideDir, mainJsPath, mainCssPath, bootstrapPath, indexPath, templateRegistryPath]) {
   if (!fs.existsSync(required)) fail(`Missing required path: ${relative(required)}`);
 }
 
@@ -38,6 +56,7 @@ if (!errors.length) {
   const overrideFiles = walk(overrideDir);
   const overrideJsFiles = overrideFiles.filter((file) => file.endsWith('.js'));
   const overrideCssFiles = overrideFiles.filter((file) => file.endsWith('.css'));
+  const overrideHtmlFiles = overrideFiles.filter((file) => file.endsWith('.html'));
   const jsFiles = overrideJsFiles.concat(bootstrapPath);
   for (const file of jsFiles) {
     const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
@@ -61,6 +80,18 @@ if (!errors.length) {
   }
   if (fs.existsSync(manualScrollRestorationPath)) {
     fail('override/mutations/scroll-restoration.js must not be reintroduced');
+  }
+
+  for (const ref of structuralUiFiles) {
+    const file = path.join(overrideDir, ref);
+    if (!fs.existsSync(file)) {
+      fail(`Missing structural UI module: override/${ref}`);
+      continue;
+    }
+    const source = read(file);
+    if (/document\.createElement\s*\(/.test(source) || /\.innerHTML\s*=/.test(source)) {
+      fail(`Fixed UI markup must come from override HTML templates, not ${relative(file)}`);
+    }
   }
 
   const guardOwners = new Map();
@@ -96,6 +127,9 @@ if (!errors.length) {
   if (!uniqueJsRefs.has(contentNormalizerRef)) {
     fail(`Required content normalizer is not loaded: override/${contentNormalizerRef}`);
   }
+  if (!uniqueJsRefs.has('templates/registry.js')) {
+    fail('Required override template registry is not loaded: override/templates/registry.js');
+  }
 
   const unreferencedJs = overrideJsFiles
     .filter((file) => file !== mainJsPath)
@@ -119,6 +153,48 @@ if (!errors.length) {
     if (coupledIds.length) {
       fail(`${relative(file)} depends on development loader script id(s) removed by the Pages bundle: ${coupledIds.join(', ')}`);
     }
+  }
+
+  const templateRegistry = read(templateRegistryPath);
+  const templateRefs = [...templateRegistry.matchAll(/['"]([^'"]+\.html)['"]/g)].map((match) => match[1]);
+  if (!templateRefs.length) fail('override/templates/registry.js does not declare any HTML template sources');
+  const uniqueTemplateRefs = new Set(templateRefs);
+  if (uniqueTemplateRefs.size !== templateRefs.length) {
+    const seen = new Set();
+    const duplicates = [...new Set(templateRefs.filter((item) => seen.has(item) || !seen.add(item)))];
+    fail(`Duplicate HTML template sources in registry.js: ${duplicates.join(', ')}`);
+  }
+  for (const ref of uniqueTemplateRefs) {
+    const file = path.join(overrideDir, ref);
+    if (!fs.existsSync(file)) fail(`Template registry references missing HTML source: override/${ref}`);
+  }
+  const unreferencedHtml = overrideHtmlFiles
+    .map(relativeToOverride)
+    .filter((ref) => !uniqueTemplateRefs.has(ref));
+  if (unreferencedHtml.length) fail(`Unreferenced override HTML templates: ${unreferencedHtml.join(', ')}`);
+
+  const templateOwners = new Map();
+  for (const file of overrideHtmlFiles) {
+    const source = read(file);
+    const names = [...source.matchAll(/<template\b[^>]*\bdata-sc-template=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1].trim());
+    if (!names.length) fail(`No data-sc-template blocks found in ${relative(file)}`);
+    for (const name of names) {
+      const owners = templateOwners.get(name) || [];
+      owners.push(relative(file));
+      templateOwners.set(name, owners);
+    }
+  }
+  for (const [name, owners] of templateOwners) {
+    if (owners.length > 1) fail(`Duplicate override template ${name}: ${owners.join(', ')}`);
+  }
+  const templateNames = new Set(templateOwners.keys());
+  const missingTemplates = [...requiredTemplates].filter((name) => !templateNames.has(name));
+  const extraTemplates = [...templateNames].filter((name) => !requiredTemplates.has(name));
+  if (missingTemplates.length || extraTemplates.length) {
+    fail(`Override template manifest mismatch; missing=${missingTemplates.join(', ') || 'none'}, extra=${extraTemplates.join(', ') || 'none'}`);
+  }
+  if (!templateRegistry.includes('var COMPILED_TEMPLATES=null;/*__SC_TEMPLATE_PAYLOAD__*/')) {
+    fail('Template registry must contain the production compile marker exactly in source');
   }
 
   const mainCss = read(mainCssPath);
@@ -159,6 +235,7 @@ if (!errors.length) {
   const index = read(indexPath);
   const entrypoints = index.match(/_js_dev\/main\.js\?v=[^"']+/g) || [];
   if (entrypoints.length !== 1) fail('index.html must reference the _js_dev/main.js entrypoint exactly once');
+  if (/data-sc-template=/.test(index)) fail('Original index.html must not contain override component templates');
 }
 
 if (errors.length) {
@@ -167,6 +244,8 @@ if (errors.length) {
   process.exit(1);
 }
 
-const jsCount = walk(overrideDir).filter((file) => file.endsWith('.js')).length + 1;
+const files = walk(overrideDir);
+const jsCount = files.filter((file) => file.endsWith('.js')).length + 1;
+const htmlCount = files.filter((file) => file.endsWith('.html')).length;
 const cssCount = [...read(mainCssPath).matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]/g)].length;
-console.log(`Override validation passed: ${jsCount} JavaScript files checked, ${cssCount} CSS imports resolved.`);
+console.log(`Override validation passed: ${jsCount} JavaScript files checked, ${htmlCount} HTML template sources checked, ${cssCount} CSS imports resolved.`);
