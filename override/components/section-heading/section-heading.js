@@ -4,7 +4,7 @@ var SC=window.SCOverride;
 if(!SC||!SC.motion||typeof SC.motion.whenReady!=='function'||window.__scSectionLinesMotionBooted)return;
 window.__scSectionLinesMotionBooted=true;
 
-var SPLIT_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js';
+var SPLIT_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js';
 var initialized=false;
 var splitPromise=null;
 
