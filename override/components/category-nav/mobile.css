@@ -71,6 +71,7 @@
     padding: 0 !important;
     border: 0 !important;
     gap: 25px !important;
+    overflow: visible !important;
     background: transparent !important;
     font-size: 13.333px !important;
     transform: none !important;
@@ -136,7 +137,7 @@
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     display: block !important;
-    bottom: -14px !important;
+    bottom: -12px !important;
     height: 2px !important;
     margin-left: 0 !important;
     background: #151515 !important;
