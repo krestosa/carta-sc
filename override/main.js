@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 
-var version=window.__scCatalogAssetVersion||'20260815-override-modules-v15';
+var version=window.__scCatalogAssetVersion||'20260815-override-modules-v16';
 var base='override/';
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){
@@ -22,12 +22,8 @@ function loadScript(path,id){
     document.head.appendChild(script);
   });
 }
-function loadAll(items){
-  return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));
-}
-function loadStages(stages){
-  return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());
-}
+function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
+function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
 function markInitialViewport(){
   var vh=window.innerHeight||document.documentElement.clientHeight;
   document.querySelectorAll('.listadoShop .productoShop').forEach(function(card){var r=card.getBoundingClientRect();if(r.top<vh&&r.bottom>0)card.classList.add('sc-static-initial-card');});
