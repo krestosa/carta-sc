@@ -2,9 +2,11 @@
 'use strict';
 var SC=window.SCOverride,parts=SC&&SC.productCardMotionParts;
 if(!SC||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
+var installed=false;
 
 function install(){
-  if(!SC.motion||typeof SC.motion.whenReady!=='function')return;
+  if(installed||!SC.motion||typeof SC.motion.whenReady!=='function')return;
+  installed=true;
   SC.motion.whenReady(function(deps){
     var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia();
     mm.add({
