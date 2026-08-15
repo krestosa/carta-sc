@@ -1,0 +1,4 @@
+/* Search-state visibility must win over responsive product-card display rules. */
+body.sushiShop.sc-catalog-searching .sc-catalog-search-grid > .productoShop[hidden] {
+  display: none !important;
+}
