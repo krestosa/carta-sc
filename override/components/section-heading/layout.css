@@ -1,0 +1,111 @@
+/* Section heading geometry extracted from the former card hierarchy stylesheet. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion {
+    position: static !important;
+    top: auto !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    margin: 6px 0 -3px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: var(--sc-catalog-ink, #151515) !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 28px !important;
+    line-height: 1.08 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.04em !important;
+    text-transform: none !important;
+    z-index: 1;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion > div {
+    box-sizing: border-box;
+    width: 100% !important;
+    padding: 18px 0 12px !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid var(--sc-catalog-line, #e7e7e2) !important;
+    background: transparent !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion {
+    margin-top: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
+    padding-top: 2px !important;
+    border-top: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
+    box-sizing: border-box;
+    width: 100% !important;
+    margin: 8px 0 -3px !important;
+    padding: 0 !important;
+    color: #343434 !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 18.5px !important;
+    line-height: 1.15 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.025em !important;
+    text-transform: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop .listadoShop .titleShopSeccion {
+    position: static !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    margin: 6px 0 -3px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: var(--sc-r-ink) !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 26px !important;
+    line-height: 1.08 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.038em !important;
+    text-transform: none !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    box-sizing: border-box;
+    width: 100% !important;
+    padding: 18px 0 12px !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid var(--sc-r-line) !important;
+    background: transparent !important;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion {
+    box-sizing: border-box;
+    width: 100% !important;
+    margin: 8px 0 -3px !important;
+    padding: 0 !important;
+    color: #343434 !important;
+    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-size: 18.5px !important;
+    line-height: 1.15 !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.025em !important;
+    text-transform: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.sushiShop .listadoShop .titleShopSeccion {
+    font-size: 24px !important;
+  }
+
+  body.sushiShop .listadoShop .titleShopSeccion > div {
+    padding-top: 16px !important;
+    padding-bottom: 12px !important;
+  }
+
+  body.sushiShop .listadoShop .subTitleShopSeccion {
+    font-size: 18px !important;
+  }
+}

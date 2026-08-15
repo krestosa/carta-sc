@@ -1,0 +1,134 @@
+/* Product-card structural layout only. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready {
+    --sc-card-rule: #171717;
+    --sc-card-subrule: #deded8;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop.ConCarr {
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    vertical-align: top;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop > a.fancyboxModalAddProd {
+    box-sizing: border-box;
+    display: grid !important;
+    position: relative !important;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    grid-template-rows: auto auto auto 24px !important;
+    column-gap: 18px;
+    align-content: start;
+    min-width: 0;
+    height: 100%;
+    color: inherit;
+    text-decoration: none !important;
+    cursor: pointer;
+    outline: none;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
+    box-sizing: border-box;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100% !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--sc-card-rule, #171717) !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
+    box-sizing: border-box;
+    display: flex !important;
+    grid-column: 1 / -1;
+    grid-row: 4;
+    align-items: center;
+    align-self: start;
+    gap: 7px;
+    width: 100%;
+    height: 20px;
+    margin: 4px 0 0;
+    padding: 0;
+    line-height: 0;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors:empty {
+    visibility: hidden;
+  }
+
+  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
+    opacity: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
+    outline: 1px solid #171717;
+    outline-offset: 6px;
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop .listadoShop .productoShop,
+  body.sushiShop .listadoShop .productoShop.ConCarr {
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    vertical-align: top;
+  }
+
+  body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+    box-sizing: border-box;
+    display: grid !important;
+    position: relative !important;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr) 76px;
+    grid-template-rows: auto auto auto 24px;
+    column-gap: 18px;
+    align-content: start;
+    min-width: 0;
+    height: 100%;
+    color: inherit;
+    text-decoration: none !important;
+    outline: none;
+  }
+
+  body.sushiShop .listadoShop .productoShop .imgShop {
+    box-sizing: border-box;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 286 / 200;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--sc-r-card-rule) !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    background-size: contain !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    overflow: hidden !important;
+  }
+
+  body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+    display: none !important;
+  }
+}

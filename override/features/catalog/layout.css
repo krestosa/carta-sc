@@ -1,0 +1,120 @@
+/* Catalogue grid/container layout shared by card and section components. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--sc-catalog-gutter, 32px);
+    row-gap: 36px !important;
+    width: 100% !important;
+    margin: 0 0 74px !important;
+    padding: 0 !important;
+    font-size: initial !important;
+    align-items: stretch;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop:empty {
+    display: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop > :not(.productoShop) {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop > a[name][id] {
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .listadoShop > br {
+    display: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop {
+    --sc-r-ink: #151515;
+    --sc-r-copy: #696969;
+    --sc-r-muted: #909090;
+    --sc-r-line: #e7e7e2;
+    --sc-r-card-rule: #171717;
+    --sc-r-card-subrule: #deded8;
+  }
+
+  body.sushiShop .topShop.bottomShop,
+  body.sushiShop .productoShop .sumar {
+    display: none !important;
+  }
+
+  body.sushiShop .containerShop {
+    box-sizing: border-box;
+    width: calc(100% - 40px) !important;
+    max-width: 940px !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.sushiShop .containerShop > .row {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  body.sushiShop .containerShop .col-md-9.normCols {
+    float: none !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.sushiShop .listadoShop {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 34px;
+    width: 100% !important;
+    margin: 0 0 64px !important;
+    padding: 0 !important;
+    font-size: initial !important;
+    align-items: stretch;
+  }
+
+  body.sushiShop .listadoShop:empty {
+    display: none !important;
+  }
+
+  body.sushiShop .listadoShop > :not(.productoShop) {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  body.sushiShop .listadoShop > a[name][id] {
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.sushiShop .listadoShop > br {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.sushiShop .containerShop {
+    width: calc(100% - 32px) !important;
+  }
+
+  body.sushiShop .listadoShop {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 36px;
+    margin-bottom: 56px !important;
+  }
+}

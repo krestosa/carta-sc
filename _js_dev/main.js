@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scLegacyMainLoaderBooted)return;window.__scLegacyMainLoaderBooted=true;
 
-var version='20260815-override-modules-v6';
+var version='20260815-override-modules-v7';
 window.__scCatalogAssetVersion=version;
 
 var root=document.documentElement;
