@@ -42,8 +42,8 @@ Production bundling is an output optimization only. Do not collapse the source m
 - `motion/`: GSAP/ScrollTrigger infrastructure and global UI effects. Component motion stays inside the component.
 - `mutations/`: compatibility mutations against the legacy runtime. Do not place presentation CSS here.
 - `features/catalog/`: catalogue-level container/grid behavior that is not owned by a single component.
-- `features/content-normalizer/`: content normalization. `content-normalizer.js` is required runtime behavior and must stay loaded.
-- `components/category-nav/`: category navigation core, layout, rail controls, active state, motion and legacy compatibility styles.
+- `features/content-normalizer/`: content normalization split into `rules.js` (editorial casing rules), `dom.js` (DOM/text normalization), `observer.js` (incremental MutationObserver batching) and `content-normalizer.js` (bootstrap/orchestration). The bootstrap is required runtime behavior and must stay loaded.
+- `components/category-nav/`: category navigation split into `core.js`, `layout.js`, `rail-controls.js`, `rail-position.js`, `sticky-state.js`, `rail.js` (rail scheduler/orchestrator), `indicator.js`, `active-state.js`, `scroll-spy.js`, motion and compatibility styles.
 - `components/product-card/`: product data extraction, accessibility, content normalization, reveal/parallax motion and card-specific layout/content/pricing styles.
 - `components/product-modal/`: view construction, accessibility/focus isolation, controller state, motion and modal shell/content/control/responsive styles.
 - `components/cart/`: cart list reveal, sticky scroll response, badge feedback and their orchestrator.
