@@ -45,8 +45,73 @@ def remove_div_block(html, opening_marker):
     return html[:start] + html[close_end:]
 
 
+def add_aria_label(text, tag_name, lookahead, label):
+    pattern = re.compile(
+        rf'<{tag_name}\b(?=[^>]*{lookahead})[^>]*>',
+        re.IGNORECASE,
+    )
+    changed = 0
+
+    def replace(match):
+        nonlocal changed
+        tag = match.group(0)
+        if re.search(r'\baria-label\s*=', tag, re.IGNORECASE):
+            return tag
+        changed += 1
+        closing = '/>' if tag.endswith('/>') else '>'
+        body = tag[:-len(closing)].rstrip()
+        return f'{body} aria-label="{label}"{closing}'
+
+    return pattern.sub(replace, text), changed
+
+
+def repair_category_anchor_ids(text):
+    pattern = re.compile(
+        r'<a\b(?=[^>]*\bname="(?P<name>anchor[^"]*)")[^>]*>',
+        re.IGNORECASE,
+    )
+    repaired = 0
+
+    def replace(match):
+        nonlocal repaired
+        tag = match.group(0)
+        name = match.group('name')
+        id_match = re.search(r'\bid="([^"]*)"', tag, re.IGNORECASE)
+        current_id = id_match.group(1) if id_match else None
+        if current_id == name:
+            return tag
+        repaired += 1
+        if id_match:
+            return tag[:id_match.start()] + f'id="{name}"' + tag[id_match.end():]
+        return tag[:-1].rstrip() + f' id="{name}">'
+
+    return pattern.sub(replace, text), repaired
+
+
 index_path = SITE / 'index.html'
 html = index_path.read_text(encoding='utf-8')
+
+# Normalize static semantics in the artifact as well as at runtime. This also
+# repairs captured mojibake/replacement characters in category ids by deriving
+# each id from the intact name attribute.
+html, repaired_anchor_count = repair_category_anchor_ids(html)
+aria_repairs = 0
+for tag_name, lookahead, label in (
+    ('select', r'\bname=["\']sucursalNews["\']', 'Espacio preferido'),
+    ('input', r'\bclass=["\'][^"\']*\bnewsMail\b[^"\']*["\']', 'Email para newsletter'),
+    ('button', r'\bclass=["\'][^"\']*\bclose\b[^"\']*["\']', 'Cerrar'),
+    ('a', r'\bclass=["\'][^"\']*\bshopMenuRightIcon\b[^"\']*["\']', 'Ver carrito'),
+    ('a', r'\bhref=["\']https://www\.sushiclub\.com\.ar/pedidosonline["\']', 'Pedidos online de SushiClub'),
+    ('a', r'\bhref=["\'][^"\']*facebook\.com/sushiclubargentina[^"\']*["\']', 'Facebook de SushiClub'),
+    ('a', r'\bhref=["\'][^"\']*instagram\.com/SushiClub_ar[^"\']*["\']', 'Instagram de SushiClub'),
+    ('a', r'\bhref=["\'][^"\']*tiktok\.com/@sushiclub_ar[^"\']*["\']', 'TikTok de SushiClub'),
+    ('a', r'\bhref=["\'][^"\']*pinterest\.com/sushiclub[^"\']*["\']', 'Pinterest de SushiClub'),
+):
+    html, count = add_aria_label(html, tag_name, lookahead, label)
+    aria_repairs += count
+
+if '\ufffd' in html:
+    raise SystemExit('Unicode replacement character remains in the cleaned Pages snapshot')
 
 jquery_fallback = re.compile(
     r'<script>\s*window\.jQuery\s*\|\|\s*document\.write\(.*?jquery-2\.1\.0\.min\.js.*?\)\s*</script>',
@@ -109,5 +174,8 @@ for stale in ('recaptcha__en.js', '/recaptcha/api2/anchor?', '/recaptcha/api2/bf
     if stale in html:
         raise SystemExit(f'Captured reCAPTCHA runtime markup remains after cleanup: {stale}')
 
+if '\ufffd' in html:
+    raise SystemExit('Unicode replacement character remains in Pages snapshot')
+
 index_path.write_text(html, encoding='utf-8')
-print('Removed duplicate snapshot runtime state and repaired the reCAPTCHA API source')
+print(f'Removed duplicate snapshot runtime state, repaired {repaired_anchor_count} category anchor id(s), added {aria_repairs} accessibility label(s), and repaired the reCAPTCHA API source')
