@@ -16,9 +16,8 @@ parts.installParallax=function(gsap,ST){
       });
       tweens.push(tween);
     });
-    var refreshTimer=window.setTimeout(function(){ST.refresh();},80);
+    if(SC.motion&&SC.motion.refresh)SC.motion.refresh(80);
     return function(){
-      window.clearTimeout(refreshTimer);
       tweens.forEach(function(tween){if(tween&&tween.scrollTrigger)tween.scrollTrigger.kill();if(tween)tween.kill();});
       images.forEach(function(img){img.style.removeProperty('--sc-image-parallax-y');});
     };

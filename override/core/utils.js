@@ -11,8 +11,12 @@ SC.utils.visible=function(node){
   var rect=node.getBoundingClientRect();
   return rect.height>0&&(node.offsetParent!==null||node.getClientRects().length>0);
 };
-SC.utils.refreshMotion=function(){
+SC.utils.refreshMotion=function(delay){
   requestAnimationFrame(function(){
+    if(SC.motion&&typeof SC.motion.refresh==='function'){
+      SC.motion.refresh(delay==null?0:delay);
+      return;
+    }
     if(window.ScrollTrigger&&typeof window.ScrollTrigger.refresh==='function')window.ScrollTrigger.refresh();
   });
 };

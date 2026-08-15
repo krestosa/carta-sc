@@ -43,7 +43,7 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
           gsap.to(card,{autoAlpha:1,duration:0.20,ease:'power2.out',overwrite:true,clearProps:'opacity,visibility'});
         }
       });
-      ST.refresh();
+      if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);
     },900);
   }
   return function(){
