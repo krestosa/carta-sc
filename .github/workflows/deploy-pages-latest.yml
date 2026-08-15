@@ -107,7 +107,7 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
-      - name: Prepare cache-busted Pages artifact
+      - name: Prepare optimized Pages artifact
         shell: bash
         run: |
           rm -rf .pages-site
@@ -146,19 +146,55 @@ jobs:
           bootstrap.write_text(text, encoding='utf-8')
 
           css = Path('.pages-site/override/main.css')
-          text = css.read_text(encoding='utf-8')
-          text, count = re.subn(r'\?v=unversioned', f'?v={sha}', text)
-          if count < 1:
-              raise SystemExit('No CSS asset version placeholders were found')
-          css.write_text(text, encoding='utf-8')
+          manifest = css.read_text(encoding='utf-8')
+          import_re = re.compile(
+              r'^\s*@import\s+["\'](?P<path>\./[^"\']+)\?v=unversioned["\'];\s*$',
+              re.MULTILINE,
+          )
+          imports = [match.group('path') for match in import_re.finditer(manifest)]
+          if not imports:
+              raise SystemExit('No CSS imports were found to bundle')
+          if import_re.sub('', manifest).strip():
+              raise SystemExit('override/main.css contains non-import content; refusing unsafe bundle')
+
+          url_re = re.compile(r'url\(\s*(?P<quote>["\']?)(?P<value>.*?)(?P=quote)\s*\)', re.IGNORECASE)
+
+          def rewrite_urls(source, content):
+              def replace(match):
+                  value = match.group('value').strip()
+                  if not value or re.match(r'^(?:[a-z][a-z0-9+.-]*:|//|/|#)', value, re.IGNORECASE):
+                      return match.group(0)
+                  parts = re.match(r'^(?P<path>[^?#]+)(?P<suffix>[?#].*)?$', value)
+                  if not parts:
+                      return match.group(0)
+                  relative = parts.group('path')
+                  suffix = parts.group('suffix') or ''
+                  resolved = os.path.normpath(os.path.join(str(source.parent), relative))
+                  rebased = os.path.relpath(resolved, start=str(css.parent)).replace(os.sep, '/')
+                  quote = match.group('quote')
+                  return f'url({quote}{rebased}{suffix}{quote})'
+              return url_re.sub(replace, content)
+
+          bundled = []
+          for import_path in imports:
+              source = css.parent / import_path.removeprefix('./')
+              if not source.is_file():
+                  raise SystemExit(f'Missing CSS source while bundling: {source}')
+              content = source.read_text(encoding='utf-8')
+              if '@import' in content:
+                  raise SystemExit(f'Nested CSS import found while bundling: {source}')
+              bundled.append(f'/* source: {import_path} */\n{rewrite_urls(source, content).rstrip()}')
+
+          css.write_text('\n\n'.join(bundled) + '\n', encoding='utf-8')
           PY
 
           grep -F "_js_dev/main.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
           grep -F "var version='${GITHUB_SHA}';" .pages-site/_js_dev/main.js >/dev/null
-          if grep -F '?v=unversioned' .pages-site/override/main.css >/dev/null; then
-            echo 'Unversioned CSS imports remain in Pages artifact'
+          if grep -F '@import' .pages-site/override/main.css >/dev/null; then
+            echo 'CSS imports remain in bundled Pages artifact'
             exit 1
           fi
+          test "$(grep -c '^/\* source:' .pages-site/override/main.css)" -ge 1
 
       - name: Upload prepared Pages artifact
         uses: actions/upload-pages-artifact@v4
