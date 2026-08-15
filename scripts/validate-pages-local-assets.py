@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import html
 import re
+import subprocess
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -103,3 +105,5 @@ if missing:
     raise SystemExit(1)
 
 print(f'Pages local asset validation passed: {len(checked)} unique local resources resolved.')
+
+subprocess.run([sys.executable, str(Path(__file__).with_name('validate-pages-html.py'))], check=True)
