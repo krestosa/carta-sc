@@ -23,18 +23,32 @@ const mainJsPath = path.join(overrideDir, 'main.js');
 const mainCssPath = path.join(overrideDir, 'main.css');
 const bootstrapPath = path.join(root, '_js_dev', 'main.js');
 const indexPath = path.join(root, 'index.html');
+const contentNormalizerRef = 'features/content-normalizer/content-normalizer.js';
+const manualScrollRestorationPath = path.join(overrideDir, 'mutations', 'scroll-restoration.js');
 
 for (const required of [overrideDir, mainJsPath, mainCssPath, bootstrapPath, indexPath]) {
   if (!fs.existsSync(required)) fail(`Missing required path: ${relative(required)}`);
 }
 
 if (!errors.length) {
-  const jsFiles = walk(overrideDir).filter((file) => file.endsWith('.js')).concat(bootstrapPath);
+  const overrideJsFiles = walk(overrideDir).filter((file) => file.endsWith('.js'));
+  const jsFiles = overrideJsFiles.concat(bootstrapPath);
   for (const file of jsFiles) {
     const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
     if (result.status !== 0) {
       fail(`JavaScript syntax error in ${relative(file)}:\n${(result.stderr || result.stdout || '').trim()}`);
     }
+  }
+
+  const overrideJsSource = overrideJsFiles.map(read).join('\n');
+  if (/\bscrollRestoration\b/.test(overrideJsSource)) {
+    fail('Override code must leave browser scroll restoration native; scrollRestoration writes/references are not allowed');
+  }
+  if (/\._data\s*\(/.test(overrideJsSource)) {
+    fail('Override code must not depend on jQuery private _data internals');
+  }
+  if (fs.existsSync(manualScrollRestorationPath)) {
+    fail('override/mutations/scroll-restoration.js must not be reintroduced');
   }
 
   const mainJs = read(mainJsPath);
@@ -53,6 +67,9 @@ if (!errors.length) {
   for (const ref of uniqueJsRefs) {
     const file = path.join(overrideDir, ref);
     if (!fs.existsSync(file)) fail(`Loader references missing JavaScript module: override/${ref}`);
+  }
+  if (!uniqueJsRefs.has(contentNormalizerRef)) {
+    fail(`Required content normalizer is not loaded: override/${contentNormalizerRef}`);
   }
 
   const idRefs = [];
