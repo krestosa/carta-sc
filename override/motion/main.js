@@ -2,16 +2,16 @@
 'use strict';
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
-var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
+var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{},I=C.ids||{};
 var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0;
 var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo;
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
-function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion||'(prefers-reduced-motion: reduce)')).matches;}
+function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion)).matches;}
 function loadScript(src,id,done){
   var old=document.getElementById(id);
   if(old){
-    if(old.dataset.loaded==='true'||(id==='sc-gsap-core'&&window.gsap)||(id==='sc-gsap-scrolltrigger'&&window.ScrollTrigger)||(id==='sc-gsap-scrollto'&&window.ScrollToPlugin))return done(true);
+    if(old.dataset.loaded==='true'||(id===I.gsapCore&&window.gsap)||(id===I.gsapScrollTrigger&&window.ScrollTrigger)||(id===I.gsapScrollTo&&window.ScrollToPlugin))return done(true);
     old.addEventListener('load',function(){done(true);},{once:true});
     old.addEventListener('error',function(){done(false);},{once:true});
     return;
@@ -24,8 +24,8 @@ function loadScript(src,id,done){
 function loadPlugins(done){
   var pending=2,failed=false;
   function complete(ok){if(!ok)failed=true;if(--pending===0)done(!failed);}
-  loadScript(ST_SRC,'sc-gsap-scrolltrigger',complete);
-  loadScript(SCROLL_TO_SRC,'sc-gsap-scrollto',complete);
+  loadScript(ST_SRC,I.gsapScrollTrigger,complete);
+  loadScript(SCROLL_TO_SRC,I.gsapScrollTo,complete);
 }
 function flush(){
   if(!unlocked||!deps)return;
@@ -60,7 +60,7 @@ function initialize(){
 SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,unlock:unlock,isReady:function(){return!!(deps&&unlocked);}};
 
 ready(function(){
-  loadScript(GSAP_SRC,'sc-gsap-core',function(ok){
+  loadScript(GSAP_SRC,I.gsapCore,function(ok){
     if(!ok)return;
     loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});
   });

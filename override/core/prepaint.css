@@ -48,10 +48,10 @@
     display: block;
     box-sizing: border-box;
     width: 100%;
-    height: var(--sc-category-rail-reserved-height);
+    height: var(--sc-category-toolbar-reserved-height);
     margin: var(--sc-category-toolbar-margin-top) 0 var(--sc-category-toolbar-margin-bottom);
     border: 0;
-    border-bottom: 1px solid var(--sc-color-line);
+    border-bottom: var(--sc-border-hairline) solid var(--sc-color-line);
     background: transparent;
   }
 

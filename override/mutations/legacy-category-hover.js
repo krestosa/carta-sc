@@ -6,7 +6,7 @@ function closeLegacyCategoryMenus(){
   Array.prototype.forEach.call(document.querySelectorAll(S.legacyPullDownOpen),function(node){node.classList.remove('open');});
   Array.prototype.forEach.call(document.querySelectorAll(S.legacyMobileOpen),function(node){node.classList.remove('_open');});
 }
-function stripLegacyHoverHandlers(){closeLegacyCategoryMenus();if(!window.jQuery)return;window.jQuery('.nav-tabsTopShop .anchorLink').off('mouseenter');window.jQuery('.nav-top-li').off('mouseleave');}
+function stripLegacyHoverHandlers(){closeLegacyCategoryMenus();if(!window.jQuery)return;window.jQuery(S.legacyCategoryHoverLinks).off('mouseenter');window.jQuery(S.categoryListItem).off('mouseleave');}
 SC.mutations.closeLegacyCategoryMenus=closeLegacyCategoryMenus;SC.mutations.stripLegacyHoverHandlers=stripLegacyHoverHandlers;
 var finish=function(){stripLegacyHoverHandlers();window.setTimeout(stripLegacyHoverHandlers,0);window.setTimeout(stripLegacyHoverHandlers,M.legacyHoverRebindDelay);};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',finish,{once:true});else finish();

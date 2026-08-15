@@ -5,7 +5,7 @@ var parts=SC.cartParts=SC.cartParts||{};
 
 parts.setupScroll=function(gsap,ST,profile,reduce){
   var entries=[],observer,raf=0,settle=0,clamp=gsap.utils.clamp(-profile.maxLag,profile.maxLag);
-  function target(wrapper){return wrapper.querySelector('.carritoBox')||wrapper.querySelector('.shop_carrito')||wrapper.firstElementChild||wrapper;}
+  function target(wrapper){return wrapper.querySelector(S.cartBox)||wrapper.querySelector(S.cartShop)||wrapper.firstElementChild||wrapper;}
   function entryFor(wrapper){return entries.find(function(entry){return entry.wrapper===wrapper;});}
   function clearTarget(el){
     if(!el)return;

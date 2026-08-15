@@ -18,7 +18,7 @@
     background: var(--sc-color-surface) !important;
     line-height: 0 !important;
     text-align: center !important;
-    z-index: 20 !important;
+    z-index: var(--sc-z-mobile-brand) !important;
   }
 
   body.sushiShop .brandOnlyMobile > a {
@@ -27,7 +27,7 @@
     top: 50% !important;
     left: 50% !important;
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100vw - 72px) !important;
+    max-width: calc(100vw - var(--sc-mobile-logo-safe-inline)) !important;
     height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -79,7 +79,7 @@
     background: transparent !important;
     overflow: visible !important;
     pointer-events: none !important;
-    z-index: 1000 !important;
+    z-index: var(--sc-z-mobile-menu) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
@@ -87,7 +87,7 @@
     display: flex !important;
     position: absolute !important;
     top: 50% !important;
-    right: 14px !important;
+    right: var(--sc-mobile-menu-button-right) !important;
     float: none !important;
     align-items: center !important;
     justify-content: center !important;
@@ -96,7 +96,7 @@
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    border-radius: 4px !important;
+    border-radius: var(--sc-radius-control) !important;
     background: transparent !important;
     box-shadow: none !important;
     text-shadow: none !important;
@@ -108,8 +108,8 @@
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before {
     content: '' !important;
     position: absolute !important;
-    inset: 4px !important;
-    border-radius: 4px !important;
+    inset: var(--sc-mobile-menu-button-inset) !important;
+    border-radius: var(--sc-radius-control) !important;
     background: var(--sc-color-strong) !important;
     z-index: 0 !important;
   }
@@ -124,18 +124,18 @@
     float: none !important;
     flex-direction: column !important;
     justify-content: center !important;
-    gap: 4px !important;
-    width: 18px !important;
-    height: 18px !important;
+    gap: var(--sc-mobile-menu-icon-gap) !important;
+    width: var(--sc-mobile-menu-icon-size) !important;
+    height: var(--sc-mobile-menu-icon-size) !important;
     margin: 0 !important;
-    z-index: 1 !important;
+    z-index: var(--sc-z-content) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar,
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar + .slicknav_icon-bar {
     display: block !important;
-    width: 18px !important;
-    height: 2px !important;
+    width: var(--sc-mobile-menu-icon-size) !important;
+    height: var(--sc-mobile-menu-bar-height) !important;
     margin: 0 !important;
     border-radius: 0 !important;
     background: var(--sc-color-surface) !important;
@@ -151,13 +151,13 @@
     width: 100% !important;
     max-height: calc(100vh - var(--sc-mobile-header-height)) !important;
     margin: 0 !important;
-    padding: 8px 12px 14px !important;
+    padding: var(--sc-mobile-menu-panel-padding) !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     background: var(--sc-color-strong) !important;
     color: var(--sc-color-surface) !important;
     pointer-events: auto !important;
-    z-index: 1001 !important;
+    z-index: var(--sc-z-mobile-menu-panel) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
@@ -172,7 +172,7 @@
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100vw - 64px) !important;
+    max-width: calc(100vw - var(--sc-mobile-logo-safe-inline-phone)) !important;
   }
 
   body.sushiShop .brandOnlyMobile img {
@@ -183,7 +183,7 @@
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
-    right: 12px !important;
+    right: var(--sc-mobile-menu-button-right-phone) !important;
   }
 }
 

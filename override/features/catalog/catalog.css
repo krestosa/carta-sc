@@ -3,7 +3,7 @@
 
 @font-face {
   font-family: 'SC Acumin';
-  src: url('../../../fuentes/AcuminPro-Regular.woff2') format('woff2');
+  src: url('../../../_remote-assets/fuentes/AcuminPro-Regular.woff2') format('woff2');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: 'SC Acumin';
-  src: url('../../../fuentes/AcuminPro-Semibold.woff2') format('woff2');
+  src: url('../../../_remote-assets/fuentes/AcuminPro-Semibold.woff2') format('woff2');
   font-style: normal;
   font-weight: 600;
   font-display: swap;
@@ -70,8 +70,8 @@ body.sushiShop #busquedaJSBoxResults {
 
 @media (min-width: 993px) and (max-width: 1120px) {
   body.sushiShop.sc-catalog-layout-ready {
-    --sc-catalog-gutter: 24px;
-    --sc-catalog-inline-space: 48px;
+    --sc-catalog-gutter: var(--sc-catalog-gutter-narrow);
+    --sc-catalog-inline-space: var(--sc-catalog-inline-space-narrow);
   }
 
   body.sushiShop.sc-catalog-layout-ready .containerShop {

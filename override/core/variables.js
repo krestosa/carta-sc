@@ -28,6 +28,89 @@ config.urls=merged({
   splitText:'https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js'
 },config.urls);
 
+config.ids=merged({
+  mobileMenu:'menuMobile',
+  mobilePrimaryMenu:'sc-mobile-primary-menu',
+  gsapCore:'sc-gsap-core',
+  gsapScrollTrigger:'sc-gsap-scrolltrigger',
+  gsapScrollTo:'sc-gsap-scrollto',
+  gsapSplitText:'sc-gsap-splittext'
+},config.ids);
+
+config.attributes=merged({
+  template:'data-sc-template',
+  fallbackToggle:'data-sc-fallback-toggle',
+  a11ySync:'data-sc-a11y-sync',
+  a11yKey:'data-sc-a11y-key',
+  catalogView:'data-sc-catalog-view',
+  catalogViewContext:'data-sc-catalog-view-context',
+  view:'data-sc-view',
+  viewContext:'data-sc-view-context',
+  viewIcon:'data-sc-view-icon',
+  searchGroupPrototype:'data-sc-search-group-prototype',
+  originalTitle:'data-original-title'
+},config.attributes);
+
+config.storage=merged({
+  catalogViewPrefix:'scCatalogView',
+  legacyCatalogDesktop:'scCatalogView:desktop',
+  legacyCatalogMobile:'scCatalogView:mobile'
+},config.storage);
+
+config.labels=merged({
+  categoryNav:'Categorías de la carta',
+  mobileMenuOpen:'Abrir menú de navegación',
+  mobileMenuClose:'Cerrar menú de navegación',
+  mobileMenuTitle:'Menú',
+  traitsPrefix:'Características: ',
+  currentPricePrefix:'Precio actual: ',
+  productStatePrefix:'Estado del producto: ',
+  previousPricePrefix:'Precio anterior: ',
+  currentPriceMetaPrefix:'Precio actual ',
+  productStateMetaPrefix:'Estado ',
+  previousPriceMetaPrefix:'Precio anterior ',
+  catalogFallbackCategory:'OTROS',
+  searchSingleResult:'1 producto encontrado',
+  searchResultSuffix:' productos encontrados',
+  catalogViews:{
+    one:'Vista: una columna. Cambiar vista',
+    two:'Vista: dos columnas. Cambiar vista',
+    three:'Vista: tres columnas. Cambiar vista',
+    four:'Vista: cuatro columnas. Cambiar vista',
+    list:'Vista: lista. Cambiar vista'
+  },
+  bannerOrder:'Pedilo Online — promoción de SushiClub',
+  preferredStore:'Espacio preferido',
+  newsletterEmail:'Email para newsletter',
+  close:'Cerrar',
+  cart:'Ver carrito',
+  social:{
+    facebook:'Facebook de SushiClub',
+    instagram:'Instagram de SushiClub',
+    tiktok:'TikTok de SushiClub',
+    pinterest:'Pinterest de SushiClub'
+  }
+},config.labels);
+config.labels.catalogViews=merged({
+  one:'Vista: una columna. Cambiar vista',
+  two:'Vista: dos columnas. Cambiar vista',
+  three:'Vista: tres columnas. Cambiar vista',
+  four:'Vista: cuatro columnas. Cambiar vista',
+  list:'Vista: lista. Cambiar vista'
+},config.labels.catalogViews);
+config.labels.social=merged({
+  facebook:'Facebook de SushiClub',
+  instagram:'Instagram de SushiClub',
+  tiktok:'TikTok de SushiClub',
+  pinterest:'Pinterest de SushiClub'
+},config.labels.social);
+
+config.prefixes=merged({
+  product:'sc-product-',
+  productModalTitle:'sc-product-modal-title-',
+  railArrowClass:'sc-rail-arrow--'
+},config.prefixes);
+
 config.selectors=merged({
   container:'.containerShop',
   productList:'.listadoShop',
@@ -48,6 +131,8 @@ config.selectors=merged({
   categoryMobileRail:'.topShopMenuMobile',
   categoryMobileScroller:'.topShopMenuMobileScroller',
   categoryNavList:'.nav-tabsTopShop,.nav-tabs',
+  categoryNavWrapper:'.wrapp-nav-tabsTopShop',
+  categorySubLink:'a.anchorLinkSub',
   activeCategoryLink:'a.anchorLink.sc-motion-current,a.anchorLink[aria-current="location"]',
   catalogTools:'.sc-catalog-tools',
   catalogSearchResults:'.sc-catalog-search-results',
@@ -64,7 +149,67 @@ config.selectors=merged({
   topShop:'.topShop',
   legacyPullDownOpen:'.topPullDown.open',
   legacyMobileOpen:'.topShopMenuMobile._open',
-  railArrow:'.sc-rail-arrow'
+  legacyCategoryHoverLinks:'.nav-tabsTopShop .anchorLink',
+  categoryListItem:'.nav-top-li',
+  railArrow:'.sc-rail-arrow',
+  genericImage:'img',
+  templateNode:'template[data-sc-template]',
+  banner:'.bannerShop',
+  bannerImage:'.bannerShop img',
+  productMediaImage:'.imgShop img, .imgLiquidNoFillShop img',
+  productMediaHost:'.imgShop, .imgLiquidNoFillShop',
+  productLegacyControls:'input,.sumar,button',
+  productTraitsHost:'.title-shop1 .sabores',
+  productTraitImages:'.title-shop1 .sabores img[data-original-title]',
+  traitImages:'img[data-original-title]',
+  productId:'.producto-id',
+  productCurrentPrice:'.priceRow .priceHijass, .priceRow .price',
+  productPreviousPrice:'.priceRow .ofertaPrice',
+  productA11yMeta:'.sc-card-a11y-meta',
+  productFlavors:'.sc-product-flavors',
+  slickNavButton:'.slicknav_btn',
+  slickNavPanel:'.slicknav_nav',
+  slickNavMenu:'.slicknav_menu',
+  slickNavMenus:'body > .slicknav_menu',
+  mobileBrandImage:'.brandOnlyMobile img',
+  categoryDropdown:'.topPullDown,.dropdown-menu',
+  categoryLayoutLinks:'.nav-top-li > a.anchorLink',
+  cartRow:'tr',
+  cartTotalRow:'.total, .subtotal, .ahorro',
+  cartBox:'.carritoBox',
+  cartShop:'.shop_carrito',
+  catalogSearchGroupPrototype:'[data-sc-search-group-prototype]',
+  catalogSearchGroupTitle:'.sc-catalog-search-group-title',
+  catalogSearchGrid:'.sc-catalog-search-grid',
+  catalogSearchStatus:'.sc-catalog-search-status',
+  catalogSearchEmpty:'.sc-catalog-search-empty-message',
+  catalogSearchInput:'.sc-catalog-search-input',
+  catalogViewIcons:'[data-sc-view-icon]',
+  productModalImage:'.sc-product-modal__image',
+  productModalTitle:'.sc-product-modal__title',
+  productModalDescription:'.sc-product-modal__description',
+  productModalPriceSlot:'.sc-product-modal__price-slot',
+  productModalCartButton:'.sc-product-modal__cart-button',
+  productModalSourcePrice:'.priceRow',
+  productModalLegacyControls:'.sumar,input,button',
+  focusable:'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
+  sectionTitleInner:':scope > div',
+  contentBold:'b,strong',
+  inlineStyle:'[style]',
+  nonContent:'script,style',
+  legacyCategoryAnchor:'a[name^="anchor"]',
+  legacySearchBox:'#busquedaJSBox',
+  legacySearchResults:'#busquedaJSBoxResults',
+  orderLink:'a[href*="/pedidosonline"]',
+  styledProductImage:'.imgShop[style]',
+  preferredStoreSelect:'select[name="sucursalNews"]',
+  newsletterInput:'input.newsMail',
+  legacyCloseButton:'button.close',
+  cartLink:'a.shopMenuRightIcon',
+  socialFacebook:'a[href*="facebook.com/sushiclubargentina"]',
+  socialInstagram:'a[href*="instagram.com/SushiClub_ar"]',
+  socialTiktok:'a[href*="tiktok.com/@sushiclub_ar"]',
+  socialPinterest:'a[href*="pinterest.com/sushiclub"]'
 },config.selectors);
 
 config.classes=merged({
@@ -83,8 +228,49 @@ config.classes=merged({
   cartScrollMotion:'sc-cart-scroll-motion',
   overflowLeft:'sc-overflow-left',
   overflowRight:'sc-overflow-right',
-  stuck:'sc-is-stuck'
+  stuck:'sc-is-stuck',
+  mobileMainMenu:'sc-mobile-main-menu',
+  slickNavOpen:'slicknav_open',
+  slickNavCollapsed:'slicknav_collapsed',
+  slickNavHidden:'slicknav_hidden',
+  categoryMotionRoot:'sc-category-motion-root',
+  productModalTraits:'sc-product-modal__traits sabores',
+  productModalPriceRow:'sc-product-modal__price-row',
+  sectionTextLine:'sc-section-text-line'
 },config.classes);
+
+
+
+config.cssProperties=merged({
+  sectionRuleScale:'--sc-section-rule-scale'
+},config.cssProperties);
+
+config.templates=merged({
+  names:{
+    productModal:'product-modal',
+    categoryToolbar:'category-toolbar',
+    categoryArrowPrefix:'category-arrow-',
+    categoryIndicator:'category-indicator',
+    productCardA11yMeta:'product-card-a11y-meta',
+    productTraitGroup:'product-trait-group',
+    catalogTools:'catalog-tools'
+  },
+  sourcePaths:[
+    'components/product-modal/product-modal.html',
+    'components/category-nav/category-nav.html',
+    'components/product-card/product-card.html',
+    'components/catalog-tools/catalog-tools.html'
+  ]
+},config.templates);
+config.templates.names=merged({
+  productModal:'product-modal',
+  categoryToolbar:'category-toolbar',
+  categoryArrowPrefix:'category-arrow-',
+  categoryIndicator:'category-indicator',
+  productCardA11yMeta:'product-card-a11y-meta',
+  productTraitGroup:'product-trait-group',
+  catalogTools:'catalog-tools'
+},config.templates.names);
 
 config.motion=merged({
   refreshDelay:120,
@@ -95,7 +281,8 @@ config.motion=merged({
   legacyHoverRebindDelay:120,
   reducedDuration:.12,
   stableLayoutTimeout:750,
-  globalUiDuration:.16
+  globalUiDuration:.16,
+  globalUiOffsetY:-3
 },config.motion);
 config.motion.easings=merged({
   out:'power2.out',
@@ -103,6 +290,12 @@ config.motion.easings=merged({
   in:'power2.in',
   inOut:'power2.inOut'
 },config.motion.easings);
+
+
+config.mobileHeader=merged({
+  pluginDataKey:'plugin_slicknav',
+  repairDelays:[0,60,120,240]
+},config.mobileHeader);
 
 config.categoryNav=merged({
   offsetGap:12,
@@ -112,6 +305,7 @@ config.categoryNav=merged({
   scrollMinDuration:.72,
   scrollMaxDuration:1.36,
   scrollDistanceScale:2400,
+  scrollDistancePower:.62,
   railStepMin:140,
   railStepRatio:.65,
   centerRatio:.5,
@@ -128,6 +322,7 @@ config.categoryNav.indicator=merged({
   durationBase:.24,
   durationExtra:.18,
   durationDistance:760,
+  durationPower:.62,
   omegaScale:8,
   minDuration:.12,
   minWidth:6,
@@ -145,6 +340,7 @@ config.categoryNav.indicator=merged({
   settleSmoothVelocity:1.2,
   settleScrollVelocity:2,
   maxFrameDelta:.05,
+  minFrameDelta:.001,
   scrollSampleMin:.003,
   scrollSampleMax:.16,
   scrollVelocityOldWeight:.32,
@@ -155,6 +351,7 @@ config.categoryNav.indicator=merged({
 },config.categoryNav.indicator);
 
 config.cart=merged({
+  listOffsetY:4,
   scrollQuickDuration:.14,
   scrollVelocityFloor:55,
   scrollSettleDelay:70,
@@ -163,6 +360,7 @@ config.cart=merged({
   listStagger:.028,
   listReducedStagger:.018,
   badgeReducedDuration:.12,
+  badgeReducedOpacity:.72,
   badgePulseUpDuration:.07,
   badgePulseDownDuration:.10,
   badgePulseScale:1.08
@@ -174,6 +372,7 @@ config.cart.profiles=merged({
 },config.cart.profiles);
 
 config.productCard=merged({
+  resizeWidthTolerance:.5,
   initialViewportRatio:.96,
   behindViewportOffset:-20,
   initialDuration:.34,
@@ -194,6 +393,10 @@ config.productCard.profiles=merged({
 },config.productCard.profiles);
 
 config.productModal=merged({
+  openOffsetY:10,
+  openScale:.992,
+  closeOffsetY:6,
+  closeScale:.994,
   openBackdropDuration:.14,
   openDialogDuration:.20,
   openDialogDelay:.015,
@@ -216,4 +419,10 @@ config.catalog=merged({
   viewModes:{phone:['one','two','list'],tablet:['two','three','four','list'],desktop:['three','four','list']},
   defaultViews:{phone:'one',tablet:'two',desktop:'three'}
 },config.catalog);
+config.catalog.viewModes=merged({
+  phone:['one','two','list'],
+  tablet:['two','three','four','list'],
+  desktop:['three','four','list']
+},config.catalog.viewModes);
+config.catalog.defaultViews=merged({phone:'one',tablet:'two',desktop:'three'},config.catalog.defaultViews);
 })();

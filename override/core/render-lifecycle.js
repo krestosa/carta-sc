@@ -14,7 +14,7 @@ function markInitialViewport(){
     var rect=section.getBoundingClientRect();
     if(rect.top>=vh||rect.bottom<=0)return;
     section.classList.add(K.staticInitialSection);
-    var host=section.matches(S.sectionTitle)?section.querySelector(':scope > div'):section;
+    var host=section.matches(S.sectionTitle)?section.querySelector(S.sectionTitleInner):section;
     if(host)host.classList.add(K.staticInitialSection);
   });
 }

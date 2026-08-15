@@ -18,7 +18,7 @@ function installResizeTracking(){
   lastWidth=root.getBoundingClientRect().width;
   resizeObserver=new ResizeObserver(function(entries){
     var width=entries[0]&&entries[0].contentRect?entries[0].contentRect.width:root.getBoundingClientRect().width;
-    if(Math.abs(width-lastWidth)<0.5)return;
+    if(Math.abs(width-lastWidth)<C.productCard.resizeWidthTolerance)return;
     lastWidth=width;
     P.scheduleDescriptionMeasure();
   });

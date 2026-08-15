@@ -5,8 +5,8 @@ body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
 
 body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
   display: block !important;
-  width: 18px !important;
-  height: 18px !important;
+  width: var(--sc-card-flavors-size) !important;
+  height: var(--sc-card-flavors-size) !important;
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
@@ -28,9 +28,9 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
     color: var(--sc-color-title) !important;
     font-family: var(--sc-font-primary) !important;
     font-size: var(--sc-card-title-size) !important;
-    line-height: 1.26 !important;
+    line-height: var(--sc-card-title-line-height) !important;
     font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: -0.015em !important;
+    letter-spacing: var(--sc-card-title-tracking) !important;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -46,7 +46,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
     max-height: var(--sc-card-description-height) !important;
     margin: var(--sc-card-description-offset) 0 0 !important;
     padding: var(--sc-card-description-offset) 0 0 !important;
-    border-top: 1px solid var(--sc-card-subrule) !important;
+    border-top: var(--sc-border-hairline) solid var(--sc-card-subrule) !important;
     overflow: hidden !important;
     color: var(--sc-color-copy) !important;
     font-family: var(--sc-font-primary) !important;
@@ -64,21 +64,21 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
 }
 
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-  content: 'Ver detalle';
+  content: var(--sc-card-detail-label);
   position: absolute;
   right: 0;
   bottom: 0;
-  padding-left: 22px;
-  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%);
+  padding-left: var(--sc-card-detail-padding-left);
+  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) var(--sc-card-detail-fade-stop), var(--sc-color-surface) 100%);
   color: var(--sc-color-detail);
   font-family: var(--sc-font-primary);
-  font-size: 10.5px;
+  font-size: var(--sc-card-detail-size);
   line-height: var(--sc-card-description-line-height);
   font-weight: var(--sc-font-weight-semibold);
   letter-spacing: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--sc-motion-fast) ease;
+  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-standard);
 }
 
 body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:hover .descrip.sc-description-truncated::after,
@@ -101,9 +101,9 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
     color: var(--sc-color-title) !important;
     font-family: var(--sc-font-primary) !important;
     font-size: var(--sc-card-title-size) !important;
-    line-height: 1.26 !important;
+    line-height: var(--sc-card-title-line-height) !important;
     font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: -0.015em !important;
+    letter-spacing: var(--sc-card-title-tracking) !important;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -118,7 +118,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
     max-height: var(--sc-card-description-height) !important;
     margin: var(--sc-card-description-offset) 0 0 !important;
     padding: var(--sc-card-description-offset) 0 0 !important;
-    border-top: 1px solid var(--sc-card-subrule) !important;
+    border-top: var(--sc-border-hairline) solid var(--sc-card-subrule) !important;
     overflow: hidden !important;
     color: var(--sc-color-copy) !important;
     font-family: var(--sc-font-primary) !important;

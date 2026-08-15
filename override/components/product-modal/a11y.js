@@ -5,7 +5,7 @@ var each=U.each;
 
 function focusableElements(dialog){
   return Array.prototype.filter.call(
-    dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+    dialog.querySelectorAll(S.focusable),
     function(el){return el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';}
   );
 }

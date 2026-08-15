@@ -9,7 +9,7 @@ parts.setupBadges=function(gsap,reduce){
     var observer=new MutationObserver(function(){
       gsap.killTweensOf(badge);
       if(reduce){
-        gsap.fromTo(badge,{autoAlpha:0.72},{autoAlpha:1,duration:CFG.badgeReducedDuration,ease:M.easings.out,clearProps:'opacity,visibility'});
+        gsap.fromTo(badge,{autoAlpha:CFG.badgeReducedOpacity},{autoAlpha:1,duration:CFG.badgeReducedDuration,ease:M.easings.out,clearProps:'opacity,visibility'});
       }else{
         gsap.timeline().to(badge,{scale:CFG.badgePulseScale,duration:CFG.badgePulseUpDuration,ease:M.easings.out}).to(badge,{scale:1,duration:CFG.badgePulseDownDuration,ease:M.easings.out});
       }

@@ -7,8 +7,8 @@ parts.setupList=function(gsap,ST,reduce){
   var animated=new WeakSet(),observer,raf=0;
   function root(table){return table.closest(S.cartContent)||table;}
   function rows(table){
-    return Array.prototype.filter.call(table.querySelectorAll('tr'),function(row){
-      return !row.matches('.total, .subtotal, .ahorro')&&(row.offsetParent!==null||row.getClientRects().length>0);
+    return Array.prototype.filter.call(table.querySelectorAll(S.cartRow),function(row){
+      return !row.matches(S.cartTotalRow)&&(row.offsetParent!==null||row.getClientRects().length>0);
     });
   }
   function affectsCart(mutation){
@@ -28,7 +28,7 @@ parts.setupList=function(gsap,ST,reduce){
       var host=root(table);if(animated.has(host))return;
       var list=rows(table);if(!list.length)return;
       animated.add(host);changed=true;
-      gsap.fromTo(list,{autoAlpha:0,y:reduce?0:4},{
+      gsap.fromTo(list,{autoAlpha:0,y:reduce?0:CFG.listOffsetY},{
         autoAlpha:1,y:0,duration:reduce?CFG.listReducedDuration:CFG.listDuration,stagger:reduce?CFG.listReducedStagger:CFG.listStagger,
         ease:M.easings.out,overwrite:'auto',clearProps:'transform,opacity,visibility'
       });

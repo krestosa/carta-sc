@@ -11,16 +11,16 @@ body.sushiShop .sc-product-modal {
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  padding: clamp(8px,2.2vw,24px) !important;
+  padding: var(--sc-modal-page-padding) !important;
   background: var(--sc-modal-overlay) !important;
-  z-index: var(--sc-modal-z) !important;
+  z-index: var(--sc-z-modal) !important;
 }
 body.sushiShop .sc-product-modal__dialog {
   box-sizing: border-box !important;
   position: relative !important;
-  width: min(var(--sc-modal-max-width),calc(100vw - 24px)) !important;
-  max-height: calc(100vh - 16px) !important;
-  max-height: calc(100dvh - 16px) !important;
+  width: min(var(--sc-modal-max-width),calc(100vw - var(--sc-modal-dialog-inline-space))) !important;
+  max-height: calc(100vh - var(--sc-modal-dialog-block-space)) !important;
+  max-height: calc(100dvh - var(--sc-modal-dialog-block-space)) !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
@@ -35,7 +35,7 @@ body.sushiShop .sc-product-modal__image-stage {
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
-  aspect-ratio: 286/200 !important;
+  aspect-ratio: var(--sc-product-image-ratio) !important;
   overflow: hidden !important;
   background: transparent !important;
 }
@@ -48,18 +48,18 @@ body.sushiShop .sc-product-modal__image {
 }
 body.sushiShop .sc-product-modal__content {
   box-sizing: border-box !important;
-  padding: clamp(18px,2.25vw,26px) !important;
+  padding: var(--sc-modal-content-padding) !important;
 }
 body.sushiShop .sc-product-modal__footer {
   box-sizing: border-box !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: clamp(12px,2vw,24px) !important;
+  gap: var(--sc-modal-footer-gap) !important;
   width: 100% !important;
-  margin: clamp(14px,2vh,18px) 0 0 !important;
-  padding: clamp(12px,1.8vh,16px) 0 0 !important;
-  border-top: 1px solid var(--sc-color-line) !important;
+  margin: var(--sc-modal-footer-margin-top) 0 0 !important;
+  padding: var(--sc-modal-footer-padding-top) 0 0 !important;
+  border-top: var(--sc-border-hairline) solid var(--sc-color-line) !important;
 }
 body.sushiShop .sc-product-modal__price-row {
   display: flex !important;
@@ -67,7 +67,7 @@ body.sushiShop .sc-product-modal__price-row {
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: baseline !important;
-  gap: 8px !important;
+  gap: var(--sc-modal-price-gap) !important;
   min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -77,8 +77,8 @@ body.sushiShop .sc-product-modal__price-row {
   white-space: nowrap !important;
 }
 body.sushiShop .sc-product-modal__actions {
-  flex: 0 1 clamp(184px,42%,238px) !important;
-  min-width: 170px !important;
+  flex: 0 1 var(--sc-modal-actions-basis) !important;
+  min-width: var(--sc-modal-actions-min-width) !important;
   margin: 0 !important;
   padding: 0 !important;
 }

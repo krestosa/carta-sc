@@ -3,41 +3,41 @@ body.sushiShop .sc-product-modal__title {
   margin: 0 !important;
   color: var(--sc-color-text) !important;
   font-family: var(--sc-font-primary) !important;
-  font-size: 20px !important;
-  line-height: 1.2 !important;
+  font-size: var(--sc-modal-title-size) !important;
+  line-height: var(--sc-modal-title-line-height) !important;
   font-weight: var(--sc-font-weight-semibold) !important;
-  letter-spacing: -.025em !important;
+  letter-spacing: var(--sc-modal-title-tracking) !important;
 }
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
-  margin-right: 7px !important;
-  vertical-align: -2px !important;
+  gap: var(--sc-modal-traits-gap) !important;
+  margin-right: var(--sc-modal-traits-margin-right) !important;
+  vertical-align: var(--sc-modal-traits-align) !important;
 }
 body.sushiShop .sc-product-modal__traits img {
-  width: 15px !important;
-  height: 15px !important;
+  width: var(--sc-modal-traits-size) !important;
+  height: var(--sc-modal-traits-size) !important;
   margin: 0 !important;
   object-fit: contain !important;
 }
 body.sushiShop .sc-product-modal__description {
-  margin: 10px 0 0 !important;
+  margin: var(--sc-modal-description-margin-top) 0 0 !important;
   color: var(--sc-color-description) !important;
   font-family: var(--sc-font-primary) !important;
-  font-size: 13.5px !important;
-  line-height: 1.52 !important;
+  font-size: var(--sc-modal-description-size) !important;
+  line-height: var(--sc-modal-description-line-height) !important;
   font-weight: var(--sc-font-weight-regular) !important;
 }
 body.sushiShop .sc-product-modal__price-row .price,
 body.sushiShop .sc-product-modal__price-row .priceHijass {
   margin: 0 !important;
   color: var(--sc-color-text) !important;
-  font: var(--sc-font-weight-semibold) 17px/1.2 var(--sc-font-primary) !important;
+  font: var(--sc-font-weight-semibold) var(--sc-modal-price-size)/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
 }
 body.sushiShop .sc-product-modal__price-row .ofertaPrice {
   margin: 0 !important;
   color: var(--sc-color-muted) !important;
-  font: var(--sc-font-weight-regular) 12px/1.2 var(--sc-font-primary) !important;
+  font: var(--sc-font-weight-regular) var(--sc-modal-offer-size)/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
   text-decoration: line-through !important;
 }

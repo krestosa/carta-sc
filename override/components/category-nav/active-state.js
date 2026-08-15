@@ -7,7 +7,7 @@ function current(){return active;}
 function setActive(target,animate,duration){
   if(!target)return;var previous=active,changed=target!==previous;active=target;
   N.links().forEach(function(link){var on=N.anchor(link.getAttribute('href'))===target;link.classList.toggle(K.categoryCurrent,on);if(on)link.setAttribute('aria-current','location');else if(link.getAttribute('aria-current')==='location')link.removeAttribute('aria-current');});
-  each(document.querySelectorAll('a.anchorLinkSub.'+K.categoryCurrent),function(link){link.classList.remove(K.categoryCurrent);link.removeAttribute('aria-current');});
+  each(document.querySelectorAll(S.categorySubLink+'.'+K.categoryCurrent),function(link){link.classList.remove(K.categoryCurrent);link.removeAttribute('aria-current');});
   each(document.querySelectorAll(S.categorySelect),function(select){for(var i=0;i<select.options.length;i++)if(N.anchor(select.options[i].value)===target){if(select.value!==select.options[i].value)select.value=select.options[i].value;break;}});
   I.move(target,animate&&changed,duration);
   if(changed&&previous&&N.requestCenterActive)N.requestCenterActive(previous,target);else if(N.scheduleRail)N.scheduleRail();

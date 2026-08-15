@@ -9,7 +9,7 @@ SC.motion.whenReady(function(deps){
   window.jQuery(document).off('shown.bs.dropdown.scUxMotion').on('shown.bs.dropdown.scUxMotion',function(event){
     var menu=window.jQuery(event.target).find('> .dropdown-menu, .dropdown-menu').first()[0];if(!menu)return;
     var reduce=SC.motion.reduced();
-    gsap.fromTo(menu,{autoAlpha:0,y:reduce?0:-3},{
+    gsap.fromTo(menu,{autoAlpha:0,y:reduce?0:M.globalUiOffsetY},{
       autoAlpha:1,y:0,duration:reduce?M.reducedDuration:M.globalUiDuration,ease:M.easings.out,overwrite:true,clearProps:'transform,opacity,visibility'
     });
   });

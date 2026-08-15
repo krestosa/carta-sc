@@ -45,8 +45,8 @@ body.sushiShop .listadoShop .titleShopSeccion > div::after {
   position: static !important;
   inset: auto !important;
   width: 100% !important;
-  height: 1px !important;
-  margin: 12px 0 0 !important;
+  height: var(--sc-border-hairline) !important;
+  margin: var(--sc-section-divider-gap) 0 0 !important;
   padding: 0 !important;
   border: 0 !important;
   background: var(--sc-color-line) !important;

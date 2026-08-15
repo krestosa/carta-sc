@@ -5,32 +5,32 @@
   }
 
   body.sushiShop .listadoShop .titleShopSeccion {
-    font-size: 22px !important;
-    line-height: 1.08 !important;
-    letter-spacing: -0.032em !important;
+    font-size: var(--sc-section-title-size-compact) !important;
+    line-height: var(--sc-section-title-line-height) !important;
+    letter-spacing: var(--sc-section-title-tracking-compact) !important;
   }
 
   body.sushiShop .listadoShop .subTitleShopSeccion {
-    font-size: 16px !important;
-    line-height: 1.16 !important;
-    letter-spacing: -0.018em !important;
+    font-size: var(--sc-section-subtitle-size-compact) !important;
+    line-height: var(--sc-section-subtitle-line-height-compact) !important;
+    letter-spacing: var(--sc-section-subtitle-tracking-compact) !important;
     text-align: left !important;
   }
 }
 
 @media (max-width: 640px) {
   body.sushiShop .listadoShop .titleShopSeccion {
-    margin: 2px 0 -2px !important;
-    font-size: 20px !important;
+    margin: var(--sc-section-title-margin-phone) !important;
+    font-size: var(--sc-section-title-size-phone) !important;
   }
 
   body.sushiShop .listadoShop .titleShopSeccion > div {
-    padding-top: 12px !important;
-    padding-bottom: 10px !important;
+    padding-top: var(--sc-section-title-padding-phone-top) !important;
+    padding-bottom: var(--sc-section-title-padding-phone-bottom) !important;
   }
 
   body.sushiShop .listadoShop .subTitleShopSeccion {
-    margin: 5px 0 -2px !important;
-    font-size: 15.5px !important;
+    margin: var(--sc-section-subtitle-margin-phone) !important;
+    font-size: var(--sc-section-subtitle-size-phone) !important;
   }
 }
