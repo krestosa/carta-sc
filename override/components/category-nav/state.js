@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav;if(!SC||!U||!N||SC.__categoryNavStateBooted)return;SC.__categoryNavStateBooted=true;
-var each=U.each,metrics=[],active=null,indicators=[],spyRaf=0;
+var each=U.each,metrics=[],active=null,indicators=[],spyRaf=0,indicatorDirty=true;
 
 function refreshMetrics(){
   var seen=[];metrics=[];
@@ -9,7 +9,7 @@ function refreshMetrics(){
     var target=N.anchor(link.getAttribute('href'));if(!target||seen.indexOf(target)>=0)return;
     seen.push(target);metrics.push({target:target,top:target.getBoundingClientRect().top+(pageYOffset||document.documentElement.scrollTop||0)});
   });
-  metrics.sort(function(a,b){return a.top-b.top;});scheduleSpy();
+  metrics.sort(function(a,b){return a.top-b.top;});indicatorDirty=true;scheduleSpy();
 }
 function current(){
   if(!metrics.length)return null;
@@ -58,10 +58,10 @@ function setActive(target,animate){
   each(document.querySelectorAll('.JSgoMenu'),function(select){
     for(var i=0;i<select.options.length;i++)if(N.anchor(select.options[i].value)===target){if(select.value!==select.options[i].value)select.value=select.options[i].value;break;}
   });
-  moveIndicator(target,animate&&changed);
+  moveIndicator(target,animate&&changed);indicatorDirty=false;
   if(changed&&N.requestCenterActive)N.requestCenterActive();else if(N.scheduleRail)N.scheduleRail();
 }
-function spy(){spyRaf=0;var target=current();if(target&&target!==active)setActive(target,true);else if(target)moveIndicator(target,false);}
+function spy(){spyRaf=0;var target=current();if(target&&target!==active)setActive(target,true);else if(target&&indicatorDirty){moveIndicator(target,false);indicatorDirty=false;}}
 function scheduleSpy(){if(!spyRaf)spyRaf=requestAnimationFrame(spy);}
 
 N.refreshMetrics=refreshMetrics;

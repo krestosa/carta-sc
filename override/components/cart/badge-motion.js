@@ -4,8 +4,8 @@ var SC=window.SCOverride;if(!SC||SC.__cartBadgeMotionBooted)return;SC.__cartBadg
 var parts=SC.cartParts=SC.cartParts||{};
 
 parts.setupBadges=function(gsap,reduce){
-  var observers=[];
-  gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget').forEach(function(badge){
+  var observers=[],badges=gsap.utils.toArray('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget');
+  badges.forEach(function(badge){
     var observer=new MutationObserver(function(){
       gsap.killTweensOf(badge);
       if(reduce){
@@ -16,6 +16,9 @@ parts.setupBadges=function(gsap,reduce){
     });
     observer.observe(badge,{childList:true,characterData:true,subtree:true});observers.push(observer);
   });
-  return function(){observers.forEach(function(observer){observer.disconnect();});};
+  return function(){
+    observers.forEach(function(observer){observer.disconnect();});
+    badges.forEach(function(badge){gsap.killTweensOf(badge);gsap.set(badge,{clearProps:'transform,opacity,visibility'});});
+  };
 };
 })();

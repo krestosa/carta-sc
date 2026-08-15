@@ -3,10 +3,16 @@
 var SC=window.SCOverride,U=SC&&SC.utils,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardA11yBooted)return;SC.__productCardA11yBooted=true;
 var each=U.each,text=U.text,cardSequence=0;
 
+function cardKey(card){
+  var key=card.getAttribute('data-sc-a11y-key');if(key)return key;
+  var hidden=card.querySelector('.producto-id');
+  var base=hidden&&hidden.value?String(hidden.value):'item';
+  base=base.replace(/[^a-zA-Z0-9_-]/g,'-')||'item';
+  key=base+'-'+(++cardSequence);card.setAttribute('data-sc-a11y-key',key);return key;
+}
 function enhanceCardLink(link){
   var card=link.closest('.productoShop');if(!card)return;
-  var hidden=card.querySelector('.producto-id');
-  var key=hidden&&hidden.value?hidden.value:String(++cardSequence);key=String(key).replace(/[^a-zA-Z0-9_-]/g,'-');
+  var key=cardKey(card);
   var title=card.querySelector('.title-shop1'),desc=card.querySelector('.descrip');
   var current=card.querySelector('.priceRow .priceHijass, .priceRow .price'),previous=card.querySelector('.priceRow .ofertaPrice');
   var titleId=D.ensureId(title,'sc-product-'+key+'-title'),descId=desc&&text(desc)?D.ensureId(desc,'sc-product-'+key+'-desc'):'';
