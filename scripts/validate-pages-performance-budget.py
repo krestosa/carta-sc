@@ -133,8 +133,8 @@ required_preloads = {
     ('script', '_js_dev/main-legacy.js'),
     ('style', 'override/main.css'),
     ('script', 'override/main.js'),
-    ('font', 'fuentes/AcuminPro-Regular.woff2'),
-    ('font', 'fuentes/AcuminPro-Semibold.woff2'),
+    ('font', '_remote-assets/fuentes/AcuminPro-Regular.woff2'),
+    ('font', '_remote-assets/fuentes/AcuminPro-Semibold.woff2'),
 }
 actual_preloads = {(kind, href) for kind, href, attrs in parser.preloads}
 missing_preloads = sorted(required_preloads - actual_preloads)
