@@ -114,7 +114,7 @@
 
   body.sushiShop .listadoShop {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 36px;
-    margin-bottom: 56px !important;
+    row-gap: 28px !important;
+    margin-bottom: 44px !important;
   }
 }
