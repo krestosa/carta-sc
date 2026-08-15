@@ -3,7 +3,7 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{};
-var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false;
+var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0;
 var GSAP_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js';
 var ST_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js';
 var SCROLL_TO_SRC='https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollToPlugin.min.js';
@@ -31,7 +31,11 @@ function whenReady(fn){if(typeof fn!=='function')return;if(unlocked&&deps)fn(dep
 function run(fn){if(!deps||!unlocked||typeof fn!=='function')return false;fn(deps);return true;}
 function refresh(delay){
   if(!deps||!deps.ScrollTrigger)return;
-  window.setTimeout(function(){deps.ScrollTrigger.refresh();},delay==null?0:delay);
+  if(refreshTimer)window.clearTimeout(refreshTimer);
+  refreshTimer=window.setTimeout(function(){
+    refreshTimer=0;
+    deps.ScrollTrigger.refresh();
+  },delay==null?0:delay);
 }
 function installRefreshLifecycle(){
   if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;
