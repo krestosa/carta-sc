@@ -159,7 +159,7 @@ downloaded_bytes = 0
 
 for source_url in sorted(font_urls):
     parsed = urlsplit(source_url)
-    canonical_url = f'{parsed.scheme}://{parsed.netloc}{parsed.path}'
+    request_url = source_url
     relative_source_path = parsed.path.lstrip('/')
     target = mirror_root / relative_source_path
 
@@ -169,7 +169,7 @@ for source_url in sorted(font_urls):
         raise SystemExit(f'Refusing unexpected mirrored font extension: {target}')
 
     request = Request(
-        canonical_url,
+        request_url,
         headers={
             'User-Agent': USER_AGENT,
             'Referer': ORIGIN + 'carta_delivery.php',
@@ -182,16 +182,16 @@ for source_url in sorted(font_urls):
             payload = response.read()
             content_type = (response.headers.get('Content-Type') or '').lower()
     except (HTTPError, URLError, TimeoutError) as exc:
-        raise SystemExit(f'Could not fetch SushiClub font {canonical_url}: {exc}') from exc
+        raise SystemExit(f'Could not fetch SushiClub font {request_url}: {exc}') from exc
 
     if status != 200:
-        raise SystemExit(f'Could not fetch SushiClub font {canonical_url}: HTTP {status}')
+        raise SystemExit(f'Could not fetch SushiClub font {request_url}: HTTP {status}')
     if not payload:
-        raise SystemExit(f'SushiClub font response was empty: {canonical_url}')
+        raise SystemExit(f'SushiClub font response was empty: {request_url}')
     if len(payload) > 8 * 1024 * 1024:
-        raise SystemExit(f'SushiClub font response is unexpectedly large: {canonical_url}')
+        raise SystemExit(f'SushiClub font response is unexpectedly large: {request_url}')
     if b'<html' in payload[:512].lower() or content_type.startswith('text/html'):
-        raise SystemExit(f'SushiClub font URL returned HTML instead of a font: {canonical_url}')
+        raise SystemExit(f'SushiClub font URL returned HTML instead of a font: {request_url}')
 
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(payload)
