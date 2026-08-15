@@ -75,12 +75,21 @@ if recaptcha_runtime_count != 1:
 html = empty_div_contents(html, '<div class="g-recaptcha" data-sitekey=')
 html = remove_div_block(html, '<div style="background-color: rgb(255, 255, 255); border: 1px solid rgb(204, 204, 204); box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 3px;')
 
+local_recaptcha_api = re.compile(
+    r'<script\b[^>]*\bsrc=["\']_external/www\.google\.com/recaptcha/api\.js["\'][^>]*>\s*</script>',
+    re.IGNORECASE,
+)
+remote_recaptcha_tag = '<script src="https://www.google.com/recaptcha/api.js" async defer></script>'
+html, local_recaptcha_count = local_recaptcha_api.subn(remote_recaptcha_tag, html, count=1)
+if local_recaptcha_count != 1:
+    raise SystemExit(f'Expected one local captured reCAPTCHA api.js reference, found {local_recaptcha_count}')
+
 jquery_tag = re.compile(
     r'<script\b[^>]*\bsrc=["\']js/jquery-2\.1\.0\.min\.js["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
-recaptcha_api = re.compile(
-    r'<script\b[^>]*\bsrc=["\']_external/www\.google\.com/recaptcha/api\.js["\'][^>]*>\s*</script>',
+remote_recaptcha_api = re.compile(
+    r'<script\b[^>]*\bsrc=["\']https://www\.google\.com/recaptcha/api\.js["\'][^>]*>\s*</script>',
     re.IGNORECASE,
 )
 
@@ -90,8 +99,10 @@ if captured_gtm.search(html):
     raise SystemExit('Captured GTM runtime tag remains after cleanup')
 if 'GTM-WQPLGX9' not in html or 'googletagmanager.com/gtm.js?id=' not in html:
     raise SystemExit('Canonical GTM bootstrap snippet is missing after cleanup')
-if len(recaptcha_api.findall(html)) != 1:
-    raise SystemExit('Canonical reCAPTCHA api.js script must remain exactly once')
+if len(remote_recaptcha_api.findall(html)) != 1:
+    raise SystemExit('Official remote reCAPTCHA api.js script must remain exactly once')
+if '_external/www.google.com/recaptcha/api.js' in html:
+    raise SystemExit('Broken local reCAPTCHA api.js reference remains after cleanup')
 if len(re.findall(r'<div class="g-recaptcha"\s+data-sitekey="[^"]+">\s*</div>', html, re.IGNORECASE)) != 1:
     raise SystemExit('Clean reCAPTCHA host with sitekey must remain exactly once')
 for stale in ('recaptcha__en.js', '/recaptcha/api2/anchor?', '/recaptcha/api2/bframe?', 'g-recaptcha-bubble-arrow'):
@@ -99,4 +110,4 @@ for stale in ('recaptcha__en.js', '/recaptcha/api2/anchor?', '/recaptcha/api2/bf
         raise SystemExit(f'Captured reCAPTCHA runtime markup remains after cleanup: {stale}')
 
 index_path.write_text(html, encoding='utf-8')
-print('Removed duplicate snapshot jQuery/GTM loads and captured reCAPTCHA runtime state')
+print('Removed duplicate snapshot runtime state and repaired the reCAPTCHA API source')
