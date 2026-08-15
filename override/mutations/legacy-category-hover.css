@@ -1,0 +1,15 @@
+body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories {
+  overscroll-behavior: auto !important;
+  overscroll-behavior-x: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
+  overscroll-behavior: auto !important;
+  overscroll-behavior-x: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile._open .topShopMenuMobileScroller {
+  height: var(--sc-category-height) !important;
+  min-height: var(--sc-category-height) !important;
+  overflow-y: hidden !important;
+}

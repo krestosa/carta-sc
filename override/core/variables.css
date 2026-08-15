@@ -1,0 +1,11 @@
+:root {
+  --sc-color-text: #151515;
+  --sc-color-muted: #737373;
+  --sc-color-surface: #fff;
+  --sc-color-background: #000;
+  --sc-font-primary: 'SC Acumin', Arial, sans-serif;
+  --sc-category-height: 46px;
+  --sc-touch-target: 44px;
+  --sc-motion-fast: 180ms;
+  --sc-motion-normal: 320ms;
+}

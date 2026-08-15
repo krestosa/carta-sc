@@ -1,149 +1,3 @@
-/* UX hardening layer for the static SushiClub catalogue snapshot.
-   Functional/accessibility corrections only; category ordering and footer stay untouched. */
-
-.sc-sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-
-body.sushiShop #busquedaJSBox,
-body.sushiShop #busquedaJSBoxResults {
-  display: none !important;
-}
-
-body.sushiShop.sc-catalog-layout-ready {
-  --sc-catalog-muted: #737373 !important;
-}
-body.sushiShop {
-  --sc-r-muted: #737373 !important;
-}
-body.sushiShop .listadoShop .productoShop .ofertaPrice,
-body.sushiShop .sc-product-modal__price-row .ofertaPrice {
-  color: #737373 !important;
-}
-
-body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible,
-body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus-visible {
-  outline: 2px solid #151515 !important;
-  outline-offset: 3px !important;
-  border-radius: 1px !important;
-}
-
-body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
-body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after,
-body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before,
-body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
-  content: '' !important;
-  display: block !important;
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  width: 22px !important;
-  pointer-events: none !important;
-  z-index: 50 !important;
-}
-body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
-body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before {
-  left: 0 !important;
-  background: linear-gradient(90deg,#fff 18%,rgba(255,255,255,0)) !important;
-}
-body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after,
-body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
-  right: 0 !important;
-  background: linear-gradient(270deg,#fff 18%,rgba(255,255,255,0)) !important;
-}
-
-body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
-  display: none !important;
-}
-body.sushiShop .listadoShop .productoShop .sc-product-flavors {
-  box-sizing: border-box !important;
-  display: flex !important;
-  grid-column: 1 / -1 !important;
-  grid-row: 4 !important;
-  align-items: center !important;
-  gap: 7px !important;
-  width: 100% !important;
-  height: 20px !important;
-  margin: 4px 0 0 !important;
-  padding: 0 !important;
-  line-height: 0 !important;
-}
-body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
-  display: block !important;
-  width: 18px !important;
-  height: 18px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  object-fit: contain !important;
-}
-body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'] {
-  visibility: hidden !important;
-}
-
-@media (hover: none), (pointer: coarse) {
-  body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-    opacity: 1 !important;
-  }
-}
-
-@media (max-width: 992px) {
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
-    height: 46px !important;
-    min-height: 46px !important;
-  }
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabsTopShop,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li {
-    height: 46px !important;
-    min-height: 46px !important;
-    align-items: center !important;
-  }
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li {
-    display: flex !important;
-  }
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink {
-    display: inline-flex !important;
-    align-items: center !important;
-    min-height: 44px !important;
-    padding: 0 2px !important;
-  }
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink.sc-motion-current::after,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink[aria-current='location']::after,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink::after {
-    bottom: 0 !important;
-  }
-
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
-    width: 44px !important;
-    height: 44px !important;
-    background: transparent !important;
-  }
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before {
-    content: '' !important;
-    position: absolute !important;
-    inset: 4px !important;
-    border-radius: 4px !important;
-    background: #111 !important;
-    z-index: 0 !important;
-  }
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon {
-    position: relative !important;
-    z-index: 1 !important;
-  }
-}
-
 body.sushiShop.sc-product-modal-open {
   overflow: hidden !important;
 }
@@ -295,7 +149,6 @@ body.sushiShop .sc-product-modal__cart-button:focus-visible {
   outline: 2px solid #151515 !important;
   outline-offset: 3px !important;
 }
-
 body.sushiShop .sc-product-modal__close {
   box-sizing: border-box !important;
   display: grid !important;
@@ -349,7 +202,6 @@ body.sushiShop .sc-product-modal__close:focus-visible {
   outline-offset: 1px !important;
   color: #151515 !important;
 }
-
 @media (max-width: 640px) {
   body.sushiShop .sc-product-modal {padding: 8px !important;}
   body.sushiShop .sc-product-modal__dialog {width: calc(100vw - 16px) !important;max-height: calc(100dvh - 16px) !important;}
@@ -358,12 +210,4 @@ body.sushiShop .sc-product-modal__close:focus-visible {
   body.sushiShop .sc-product-modal__footer {flex-direction: column !important;align-items: stretch !important;gap: 12px !important;}
   body.sushiShop .sc-product-modal__actions {flex: 0 0 auto !important;min-width: 0 !important;width: 100% !important;}
   body.sushiShop .sc-product-modal__price-row {width: 100% !important;}
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
-  body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink,
-  body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-    transition: none !important;
-  }
 }

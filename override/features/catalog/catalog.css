@@ -1,0 +1,88 @@
+/* SushiClub catalogue foundation.
+   Shared tokens and desktop container/base state. Component styling lives with each component. */
+
+@font-face {
+  font-family: 'SC Acumin';
+  src: url('../../../fuentes/AcuminPro-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SC Acumin';
+  src: url('../../../fuentes/AcuminPro-Semibold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+body.sushiShop #busquedaJSBox,
+body.sushiShop #busquedaJSBox + div {
+  display: none !important;
+}
+
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready {
+    --sc-catalog-ink: #151515;
+    --sc-catalog-copy: #696969;
+    --sc-catalog-muted: #909090;
+    --sc-catalog-line: #e7e7e2;
+    --sc-catalog-surface: #f3f3ef;
+    --sc-catalog-gutter: 32px;
+    --sc-catalog-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    z-index: auto !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile > .topShop {
+    display: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .topShop.bottomShop,
+  body.sushiShop.sc-catalog-layout-ready .productoShop .sumar {
+    display: none !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .containerShop {
+    box-sizing: border-box;
+    width: calc(100% - 64px) !important;
+    max-width: 1240px !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .containerShop > .row {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .containerShop .col-md-9.normCols {
+    float: none !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+}
+
+@media (min-width: 993px) and (max-width: 1120px) {
+  body.sushiShop.sc-catalog-layout-ready {
+    --sc-catalog-gutter: 24px;
+  }
+
+  body.sushiShop.sc-catalog-layout-ready .containerShop {
+    width: calc(100% - 48px) !important;
+  }
+}
