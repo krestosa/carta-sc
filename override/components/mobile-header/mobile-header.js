@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,utils=SC&&SC.utils,config=SC&&SC.config;
 if(!SC||!utils||!config||SC.__mobileHeaderBooted)return;SC.__mobileHeaderBooted=true;
-var desktopQuery=config.desktopQuery,retryTimer=0;
+var desktopQuery=config.queries.desktop,retryTimer=0;
 
 function syncMenuButton(button,nav){
   if(!button||!nav)return;

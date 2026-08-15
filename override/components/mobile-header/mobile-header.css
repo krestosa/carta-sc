@@ -10,12 +10,12 @@
     display: block !important;
     position: relative !important;
     width: 100% !important;
-    height: 100px !important;
-    min-height: 100px !important;
+    height: var(--sc-mobile-header-height) !important;
+    min-height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
-    background: #fff !important;
+    background: var(--sc-color-surface) !important;
     line-height: 0 !important;
     text-align: center !important;
     z-index: 20 !important;
@@ -26,9 +26,9 @@
     position: absolute !important;
     top: 50% !important;
     left: 50% !important;
-    width: 333px !important;
+    width: var(--sc-mobile-logo-width) !important;
     max-width: calc(100vw - 72px) !important;
-    height: 100px !important;
+    height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
     transform: translate(-50%, -50%) !important;
@@ -36,10 +36,10 @@
 
   body.sushiShop .brandOnlyMobile img {
     display: block !important;
-    width: 333px !important;
+    width: var(--sc-mobile-logo-width) !important;
     max-width: 100% !important;
-    height: 100px !important;
-    max-height: 100px !important;
+    height: var(--sc-mobile-header-height) !important;
+    max-height: var(--sc-mobile-header-height) !important;
     margin: 0 auto !important;
     padding: 0 !important;
     object-fit: contain !important;
@@ -72,8 +72,8 @@
     right: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: 100px !important;
-    min-height: 100px !important;
+    height: var(--sc-mobile-header-height) !important;
+    min-height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
@@ -91,8 +91,8 @@
     float: none !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 44px !important;
-    height: 44px !important;
+    width: var(--sc-touch-target) !important;
+    height: var(--sc-touch-target) !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
@@ -110,7 +110,7 @@
     position: absolute !important;
     inset: 4px !important;
     border-radius: 4px !important;
-    background: #111 !important;
+    background: var(--sc-color-strong) !important;
     z-index: 0 !important;
   }
 
@@ -138,24 +138,24 @@
     height: 2px !important;
     margin: 0 !important;
     border-radius: 0 !important;
-    background: #fff !important;
+    background: var(--sc-color-surface) !important;
     box-shadow: none !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     box-sizing: border-box !important;
     position: absolute !important;
-    top: 100px !important;
+    top: var(--sc-mobile-header-height) !important;
     right: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    max-height: calc(100vh - 100px) !important;
+    max-height: calc(100vh - var(--sc-mobile-header-height)) !important;
     margin: 0 !important;
     padding: 8px 12px 14px !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    background: #111 !important;
-    color: #fff !important;
+    background: var(--sc-color-strong) !important;
+    color: var(--sc-color-surface) !important;
     pointer-events: auto !important;
     z-index: 1001 !important;
   }
@@ -164,22 +164,22 @@
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
     border-radius: 0 !important;
     background: transparent !important;
-    color: #fff !important;
+    color: var(--sc-color-surface) !important;
     box-shadow: none !important;
   }
 }
 
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
-    width: 333px !important;
+    width: var(--sc-mobile-logo-width) !important;
     max-width: calc(100vw - 64px) !important;
   }
 
   body.sushiShop .brandOnlyMobile img {
-    width: 333px !important;
+    width: var(--sc-mobile-logo-width) !important;
     max-width: 100% !important;
-    height: 100px !important;
-    max-height: 100px !important;
+    height: var(--sc-mobile-header-height) !important;
+    max-height: var(--sc-mobile-header-height) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {

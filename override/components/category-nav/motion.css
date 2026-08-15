@@ -19,14 +19,14 @@
 .sushiShop .sc-category-motion-root {position: relative !important;}
 .sushiShop .sc-category-indicator {
   display: block;position: absolute;left: 0;bottom: 0;width: 1px;height: 1px;margin: 0;padding: 0;border: 0;border-radius: 0;
-  background: #fff;box-shadow: none;pointer-events: none;opacity: 0;z-index: 4;
+  background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: 4;
   -webkit-transform: translate3d(0,0,0) scaleX(1);transform: translate3d(0,0,0) scaleX(1);
   -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;will-change: transform;
 }
 .sushiShop .topPullDown {
   -webkit-transform: translateY(-6px);transform: translateY(-6px);
-  -webkit-transition: opacity 120ms var(--sc-motion-ease-out),-webkit-transform 120ms var(--sc-motion-ease-out) !important;
-  transition: opacity 120ms var(--sc-motion-ease-out),transform 120ms var(--sc-motion-ease-out) !important;
+  -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
+  transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out),transform var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
   -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
 }
 .sushiShop .topPullDown.open {
@@ -40,7 +40,7 @@
 @media (prefers-reduced-motion: reduce) {
   .sushiShop .topPullDown,.sushiShop .topPullDown.open {
     -webkit-transform: none !important;transform: none !important;
-    -webkit-transition: opacity 120ms var(--sc-motion-ease-out) !important;transition: opacity 120ms var(--sc-motion-ease-out) !important;
+    -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out) !important;transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
   }
   .sushiShop .sc-category-indicator {will-change: auto;}
 }

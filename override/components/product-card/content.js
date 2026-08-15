@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardContentBooted)return;SC.__productCardContentBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardContentBooted)return;SC.__productCardContentBooted=true;
 var each=U.each,descriptionRaf=0;
 
 function clearFlavorRows(){
@@ -8,8 +8,8 @@ function clearFlavorRows(){
 }
 function installFlavorRows(){
   clearFlavorRows();
-  each(document.querySelectorAll('.productoShop > a.fancyboxModalAddProd'),function(link){
-    var title=link.querySelector('.title-shop1'),source=title&&title.querySelector('.sabores');
+  each(document.querySelectorAll(S.productCard+' > '+S.productLink),function(link){
+    var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits);
     if(source)source.setAttribute('aria-hidden','true');
     var row=document.createElement('span');row.className='sc-product-flavors';
     var labels=D.traitLabels(source||link);
@@ -30,9 +30,9 @@ function installFlavorRows(){
 }
 function measureDescriptions(){
   descriptionRaf=0;
-  each(document.querySelectorAll('.listadoShop .productoShop .descrip'),function(desc){
-    desc.classList.remove('sc-description-truncated');
-    if(desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1)desc.classList.add('sc-description-truncated');
+  each(document.querySelectorAll(S.productCards+' '+S.productDescription),function(desc){
+    desc.classList.remove(K.descriptionTruncated);
+    if(desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1)desc.classList.add(K.descriptionTruncated);
   });
 }
 function scheduleDescriptionMeasure(){

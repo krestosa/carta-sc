@@ -18,11 +18,6 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
 }
 
 @media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready {
-    --sc-card-rule: #171717;
-    --sc-card-subrule: #deded8;
-  }
-
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop,
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop.ConCarr {
     box-sizing: border-box;
@@ -43,8 +38,8 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     position: relative !important;
     flex: 1 1 auto;
     grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-rows: auto auto auto 24px !important;
-    column-gap: 18px;
+    grid-template-rows: auto auto auto var(--sc-card-meta-row-height) !important;
+    column-gap: var(--sc-card-content-gap);
     align-content: start;
     min-width: 0;
     height: 100%;
@@ -62,7 +57,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     width: 100% !important;
     margin: 0 !important;
     border: 0 !important;
-    border-bottom: 1px solid var(--sc-card-rule, #171717) !important;
+    border-bottom: 1px solid var(--sc-card-rule) !important;
     border-radius: 0 !important;
     overflow: hidden !important;
   }
@@ -76,7 +71,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
-    outline: 1px solid #171717;
+    outline: 1px solid var(--sc-color-rule);
     outline-offset: 6px;
   }
 }
@@ -100,9 +95,9 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     display: grid !important;
     position: relative !important;
     flex: 1 1 auto;
-    grid-template-columns: minmax(0, 1fr) 76px;
-    grid-template-rows: auto auto auto 24px;
-    column-gap: 18px;
+    grid-template-columns: minmax(0, 1fr) var(--sc-card-price-width);
+    grid-template-rows: auto auto auto var(--sc-card-meta-row-height);
+    column-gap: var(--sc-card-content-gap);
     align-content: start;
     min-width: 0;
     height: 100%;
@@ -118,11 +113,11 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    aspect-ratio: 286 / 200;
+    aspect-ratio: var(--sc-product-image-ratio);
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    border-bottom: 1px solid var(--sc-r-card-rule) !important;
+    border-bottom: 1px solid var(--sc-card-rule) !important;
     border-radius: 0 !important;
     background-color: transparent !important;
     overflow: hidden !important;

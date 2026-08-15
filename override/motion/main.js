@@ -2,14 +2,12 @@
 'use strict';
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
-var SC=window.SCOverride=window.SCOverride||{};
+var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
 var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0;
-var GSAP_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js';
-var ST_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js';
-var SCROLL_TO_SRC='https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollToPlugin.min.js';
+var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo;
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
-function reduced(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
+function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion||'(prefers-reduced-motion: reduce)')).matches;}
 function loadScript(src,id,done){
   var old=document.getElementById(id);
   if(old){
@@ -46,8 +44,8 @@ function refresh(delay){
 }
 function installRefreshLifecycle(){
   if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;
-  if(document.readyState==='complete')refresh(120);else window.addEventListener('load',function(){refresh(120);},{once:true});
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(120);}).catch(function(){});
+  if(document.readyState==='complete')refresh(M.refreshDelay);else window.addEventListener('load',function(){refresh(M.refreshDelay);},{once:true});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(M.refreshDelay);}).catch(function(){});
 }
 function unlock(){unlocked=true;installRefreshLifecycle();flush();}
 function initialize(){

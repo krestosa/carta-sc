@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,D=SC&&SC.productCardData,T=SC&&SC.templates;if(!SC||!U||!D||!T||SC.__productCardA11yBooted)return;SC.__productCardA11yBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,D=SC&&SC.productCardData,T=SC&&SC.templates;if(!SC||!U||!D||!T||SC.__productCardA11yBooted)return;SC.__productCardA11yBooted=true;
 var each=U.each,text=U.text,cardSequence=0;
 
 function cardKey(card){
@@ -11,9 +11,9 @@ function cardKey(card){
   key=base+'-'+(++cardSequence);card.setAttribute('data-sc-a11y-key',key);return key;
 }
 function enhanceCardLink(link){
-  var card=link.closest('.productoShop');if(!card)return;
+  var card=link.closest(S.productCard);if(!card)return;
   var key=cardKey(card);
-  var title=card.querySelector('.title-shop1'),desc=card.querySelector('.descrip');
+  var title=card.querySelector(S.productTitle),desc=card.querySelector(S.productDescription);
   var current=card.querySelector('.priceRow .priceHijass, .priceRow .price'),previous=card.querySelector('.priceRow .ofertaPrice');
   var titleId=D.ensureId(title,'sc-product-'+key+'-title'),descId=desc&&text(desc)?D.ensureId(desc,'sc-product-'+key+'-desc'):'';
   var currentText=D.cleanPriceText(current),previousText=D.cleanPriceText(previous),traits=D.traitLabels(card);
@@ -32,7 +32,7 @@ function enhanceCardLink(link){
   described.length?link.setAttribute('aria-describedby',described.join(' ')):link.removeAttribute('aria-describedby');
   link.setAttribute('aria-haspopup','dialog');
 }
-function enhanceProductLinks(){each(document.querySelectorAll('a.fancyboxModalAddProd'),enhanceCardLink);}
+function enhanceProductLinks(){each(document.querySelectorAll(S.productLink),enhanceCardLink);}
 
 SC.productCardA11y={enhanceLink:enhanceCardLink,enhanceAll:enhanceProductLinks};
 })();

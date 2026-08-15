@@ -19,8 +19,8 @@
 
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop {
     box-sizing: border-box;
-    width: calc(100% - 64px) !important;
-    max-width: 1240px !important;
+    width: calc(100% - var(--sc-catalog-inline-space)) !important;
+    max-width: var(--sc-content-max-width) !important;
     margin-right: auto !important;
     margin-left: auto !important;
     padding-right: 0 !important;
@@ -48,10 +48,10 @@
     display: block;
     box-sizing: border-box;
     width: 100%;
-    height: 47px;
-    margin: 16px 0 14px;
+    height: var(--sc-category-rail-reserved-height);
+    margin: var(--sc-category-toolbar-margin-top) 0 var(--sc-category-toolbar-margin-bottom);
     border: 0;
-    border-bottom: 1px solid #e7e7e2;
+    border-bottom: 1px solid var(--sc-color-line);
     background: transparent;
   }
 
@@ -59,10 +59,10 @@
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 32px;
-    row-gap: 36px !important;
+    column-gap: var(--sc-catalog-gutter);
+    row-gap: var(--sc-catalog-grid-row-gap) !important;
     width: 100% !important;
-    margin: 0 0 74px !important;
+    margin: 0 0 var(--sc-catalog-section-bottom) !important;
     padding: 0 !important;
     font-size: initial !important;
     align-items: stretch;
@@ -103,8 +103,8 @@
     position: relative !important;
     flex: 1 1 auto;
     grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-rows: auto auto auto 24px !important;
-    column-gap: 18px;
+    grid-template-rows: auto auto auto var(--sc-card-meta-row-height) !important;
+    column-gap: var(--sc-card-content-gap);
     align-content: start;
     min-width: 0;
     height: 100%;
@@ -117,7 +117,7 @@
     height: auto !important;
     min-height: 0 !important;
     padding: 0 !important;
-    aspect-ratio: 286 / 200;
+    aspect-ratio: var(--sc-product-image-ratio);
     margin: 0 !important;
     overflow: hidden !important;
   }

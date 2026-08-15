@@ -3,10 +3,10 @@
   body.sushiShop.sc-catalog-layout-ready .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: var(--sc-catalog-gutter, 32px);
-    row-gap: 36px !important;
+    column-gap: var(--sc-catalog-gutter);
+    row-gap: var(--sc-catalog-grid-row-gap) !important;
     width: 100% !important;
-    margin: 0 0 74px !important;
+    margin: 0 0 var(--sc-catalog-section-bottom) !important;
     padding: 0 !important;
     font-size: initial !important;
     align-items: stretch;
@@ -35,15 +35,6 @@
 }
 
 @media (max-width: 992px) {
-  body.sushiShop {
-    --sc-r-ink: #151515;
-    --sc-r-copy: #696969;
-    --sc-r-muted: #737373;
-    --sc-r-line: #e7e7e2;
-    --sc-r-card-rule: #171717;
-    --sc-r-card-subrule: #deded8;
-  }
-
   body.sushiShop .topShop.bottomShop,
   body.sushiShop .productoShop .sumar {
     display: none !important;
@@ -51,8 +42,8 @@
 
   body.sushiShop .containerShop {
     box-sizing: border-box;
-    width: calc(100% - 40px) !important;
-    max-width: 940px !important;
+    width: calc(100% - var(--sc-compact-container-inline-space)) !important;
+    max-width: var(--sc-content-max-width-compact) !important;
     margin-right: auto !important;
     margin-left: auto !important;
     padding-right: 0 !important;
@@ -76,10 +67,10 @@
   body.sushiShop .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 24px;
-    row-gap: 34px;
+    column-gap: var(--sc-compact-grid-column-gap);
+    row-gap: var(--sc-compact-grid-row-gap);
     width: 100% !important;
-    margin: 0 0 64px !important;
+    margin: 0 0 var(--sc-compact-section-bottom) !important;
     padding: 0 !important;
     font-size: initial !important;
     align-items: stretch;
@@ -109,12 +100,12 @@
 
 @media (max-width: 640px) {
   body.sushiShop .containerShop {
-    width: calc(100% - 32px) !important;
+    width: calc(100% - var(--sc-phone-container-inline-space)) !important;
   }
 
   body.sushiShop .listadoShop {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 28px !important;
-    margin-bottom: 44px !important;
+    row-gap: var(--sc-phone-grid-row-gap) !important;
+    margin-bottom: var(--sc-phone-section-bottom) !important;
   }
 }

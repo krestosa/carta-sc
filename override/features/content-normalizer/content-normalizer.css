@@ -6,7 +6,7 @@
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {
-    font-weight: 400 !important;
+    font-weight: var(--sc-font-weight-regular) !important;
     font-style: normal !important;
     text-transform: none !important;
   }
@@ -19,6 +19,6 @@
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip b,
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip strong {
-    font-weight: 400 !important;
+    font-weight: var(--sc-font-weight-regular) !important;
   }
 }

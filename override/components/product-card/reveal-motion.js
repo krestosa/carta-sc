@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-var SC=window.SCOverride;if(!SC||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG=C&&C.productCard;if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
 parts.setupReveal=function(gsap,ST,profile,reduce){
-  var cards=gsap.utils.toArray('.listadoShop .productoShop'),triggers=[],timer=0,rafA=0,rafB=0;
+  var cards=gsap.utils.toArray(S.productCards),triggers=[],timer=0,rafA=0,rafB=0;
   function noop(){}
   function suppressReveal(){var state=SC.scrollState;return!!(state&&(state.programmatic||performance.now()<(state.suppressRevealUntil||0)));}
   function showNow(batch){gsap.killTweensOf(batch);gsap.set(batch,{autoAlpha:1,clearProps:'opacity,visibility'});}
@@ -12,13 +12,13 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   if(reduce){gsap.set(cards,{clearProps:'opacity,visibility'});return noop;}
   var initial=[],deferred=[];
   cards.forEach(function(card){
-    if(card.classList.contains('sc-static-initial-card')){
+    if(card.classList.contains(K.staticInitialCard)){
       gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
       return;
     }
     var rect=card.getBoundingClientRect();
-    if(rect.bottom<-20)gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
-    else if(rect.top<=window.innerHeight*0.96)initial.push(card);
+    if(rect.bottom<CFG.behindViewportOffset)gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
+    else if(rect.top<=window.innerHeight*CFG.initialViewportRatio)initial.push(card);
     else deferred.push(card);
   });
   if(initial.length){
@@ -27,28 +27,28 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
       rafA=0;
       rafB=requestAnimationFrame(function(){
         rafB=0;
-        gsap.to(initial,{autoAlpha:1,duration:0.34,stagger:0.032,ease:'power2.out',overwrite:'auto',onComplete:function(){gsap.set(initial,{clearProps:'opacity,visibility'});}});
+        gsap.to(initial,{autoAlpha:1,duration:CFG.initialDuration,stagger:CFG.initialStagger,ease:M.easings.out,overwrite:'auto',onComplete:function(){gsap.set(initial,{clearProps:'opacity,visibility'});}});
       });
     });
   }
   function reveal(batch){
     if(suppressReveal()){showNow(batch);return;}
-    gsap.to(batch,{autoAlpha:1,duration:0.34,stagger:0.03,ease:'power2.out',overwrite:'auto',onComplete:function(){gsap.set(batch,{clearProps:'opacity,visibility'});}});
+    gsap.to(batch,{autoAlpha:1,duration:CFG.revealDuration,stagger:CFG.revealStagger,ease:M.easings.out,overwrite:'auto',onComplete:function(){gsap.set(batch,{clearProps:'opacity,visibility'});}});
   }
   if(deferred.length){
     gsap.set(deferred,{autoAlpha:0});
-    triggers=ST.batch(deferred,{start:profile.start,once:true,interval:0.06,batchMax:profile.batchMax,onEnter:reveal,onEnterBack:reveal})||[];
+    triggers=ST.batch(deferred,{start:profile.start,once:true,interval:CFG.batchInterval,batchMax:profile.batchMax,onEnter:reveal,onEnterBack:reveal})||[];
     timer=window.setTimeout(function(){
       deferred.forEach(function(card){
         var rect=card.getBoundingClientRect(),style=getComputedStyle(card);
-        if(rect.top<=innerHeight*1.03&&rect.bottom>=-30&&(style.visibility==='hidden'||parseFloat(style.opacity)<0.05)){
+        if(rect.top<=innerHeight*CFG.rescueViewportRatio&&rect.bottom>=CFG.rescueBottomOffset&&(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold)){
           gsap.killTweensOf(card);
           if(suppressReveal())gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
-          else gsap.to(card,{autoAlpha:1,duration:0.20,ease:'power2.out',overwrite:true,clearProps:'opacity,visibility'});
+          else gsap.to(card,{autoAlpha:1,duration:CFG.rescueDuration,ease:M.easings.out,overwrite:true,clearProps:'opacity,visibility'});
         }
       });
       if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);
-    },900);
+    },CFG.rescueDelay);
   }
   return function(){
     if(rafA)cancelAnimationFrame(rafA);

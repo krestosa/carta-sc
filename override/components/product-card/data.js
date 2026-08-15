@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,T=SC&&SC.templates;if(!SC||!U||!T||SC.__productCardDataBooted)return;SC.__productCardDataBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,T=SC&&SC.templates;if(!SC||!U||!T||SC.__productCardDataBooted)return;SC.__productCardDataBooted=true;
 var each=U.each,text=U.text;
 
 function imageSource(card){
@@ -19,7 +19,7 @@ function cleanPriceText(node){
 function ensureId(node,base){if(!node)return'';if(!node.id)node.id=base;return node.id;}
 function traitLabels(source){
   var seen={},labels=[];
-  var root=source&&source.matches&&source.matches('.productoShop')?source:source&&source.closest?source.closest('.productoShop'):null;
+  var root=source&&source.matches&&source.matches(S.productCard)?source:source&&source.closest?source.closest(S.productCard):null;
   var selector=root?'.title-shop1 .sabores img[data-original-title]':'img[data-original-title]';
   each((root||source)?(root||source).querySelectorAll(selector):[],function(img){
     var label=(img.getAttribute('data-original-title')||'').trim();

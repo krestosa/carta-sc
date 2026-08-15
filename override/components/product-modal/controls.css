@@ -7,22 +7,22 @@ body.sushiShop .sc-product-modal__cart-button {
   width: 100% !important;
   min-height: 46px !important;
   padding: 12px 18px !important;
-  border: 1px solid #151515 !important;
+  border: 1px solid var(--sc-color-text) !important;
   border-radius: 0 !important;
-  background: #151515 !important;
-  color: #fff !important;
-  font: 600 14px/1.2 'SC Acumin',Arial,sans-serif !important;
+  background: var(--sc-color-text) !important;
+  color: var(--sc-color-surface) !important;
+  font: var(--sc-font-weight-semibold) 14px/1.2 var(--sc-font-primary) !important;
   text-decoration: none !important;
   text-align: center !important;
 }
 body.sushiShop .sc-product-modal__cart-button:hover,
 body.sushiShop .sc-product-modal__cart-button:focus-visible {
-  background: #000 !important;
-  border-color: #000 !important;
-  color: #fff !important;
+  background: var(--sc-color-background) !important;
+  border-color: var(--sc-color-background) !important;
+  color: var(--sc-color-surface) !important;
 }
 body.sushiShop .sc-product-modal__cart-button:focus-visible {
-  outline: 2px solid #151515 !important;
+  outline: 2px solid var(--sc-color-text) !important;
   outline-offset: 3px !important;
 }
 body.sushiShop .sc-product-modal__close {
@@ -32,18 +32,18 @@ body.sushiShop .sc-product-modal__close {
   position: absolute !important;
   top: 6px !important;
   right: 6px !important;
-  width: 44px !important;
-  min-width: 44px !important;
-  max-width: 44px !important;
-  height: 44px !important;
-  min-height: 44px !important;
-  max-height: 44px !important;
+  width: var(--sc-touch-target) !important;
+  min-width: var(--sc-touch-target) !important;
+  max-width: var(--sc-touch-target) !important;
+  height: var(--sc-touch-target) !important;
+  min-height: var(--sc-touch-target) !important;
+  max-height: var(--sc-touch-target) !important;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 50% !important;
   background: transparent !important;
-  color: #707070 !important;
+  color: var(--sc-color-close) !important;
   box-shadow: none !important;
   appearance: none !important;
   -webkit-appearance: none !important;
@@ -55,9 +55,9 @@ body.sushiShop .sc-product-modal__close::before {
   position: absolute !important;
   width: 28px !important;
   height: 28px !important;
-  border: 1px solid rgba(0,0,0,.07) !important;
+  border: 1px solid var(--sc-modal-close-border) !important;
   border-radius: 50% !important;
-  background: rgba(255,255,255,.86) !important;
+  background: var(--sc-modal-close-surface) !important;
   z-index: 0 !important;
 }
 body.sushiShop .sc-product-modal__close svg {
@@ -70,11 +70,11 @@ body.sushiShop .sc-product-modal__close svg {
 }
 body.sushiShop .sc-product-modal__close:hover::before,
 body.sushiShop .sc-product-modal__close:focus-visible::before {
-  border-color: rgba(0,0,0,.16) !important;
-  background: rgba(255,255,255,.98) !important;
+  border-color: var(--sc-modal-close-border-hover) !important;
+  background: var(--sc-modal-close-surface-hover) !important;
 }
 body.sushiShop .sc-product-modal__close:focus-visible {
-  outline: 2px solid #151515 !important;
+  outline: 2px solid var(--sc-color-text) !important;
   outline-offset: 1px !important;
-  color: #151515 !important;
+  color: var(--sc-color-text) !important;
 }

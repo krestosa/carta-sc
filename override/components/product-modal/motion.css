@@ -1,13 +1,13 @@
 @media (min-width: 993px) {
   .sushiShop .sc-product-modal {
     opacity: 0;visibility: hidden;
-    -webkit-transition: opacity 180ms var(--sc-motion-ease-out),visibility 0s linear 180ms;
-    transition: opacity 180ms var(--sc-motion-ease-out),visibility 0s linear 180ms;
+    -webkit-transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),visibility 0s linear var(--sc-motion-ui);
+    transition: opacity var(--sc-motion-ui) var(--sc-motion-ease-out),visibility 0s linear var(--sc-motion-ui);
   }
   .sushiShop .sc-product-modal .sc-product-modal__dialog {
     opacity: 0;-webkit-transform: translateY(10px);transform: translateY(10px);
-    -webkit-transition: opacity 220ms var(--sc-motion-ease-out),-webkit-transform 260ms var(--sc-motion-ease-out);
-    transition: opacity 220ms var(--sc-motion-ease-out),transform 260ms var(--sc-motion-ease-out);will-change: transform,opacity;
+    -webkit-transition: opacity var(--sc-motion-panel) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-medium) var(--sc-motion-ease-out);
+    transition: opacity var(--sc-motion-panel) var(--sc-motion-ease-out),transform var(--sc-motion-medium) var(--sc-motion-ease-out);will-change: transform,opacity;
   }
   .sushiShop .sc-product-modal.is-visible {opacity: 1;visibility: visible;-webkit-transition-delay: 0s;transition-delay: 0s;}
   .sushiShop .sc-product-modal.is-visible .sc-product-modal__dialog {opacity: 1;-webkit-transform: translateY(0);transform: translateY(0);}

@@ -1,14 +1,117 @@
 :root {
+  /* Palette */
   --sc-color-text: #151515;
+  --sc-color-copy: #696969;
   --sc-color-muted: #737373;
+  --sc-color-nav-muted: #777;
+  --sc-color-control-muted: #666;
   --sc-color-surface: #fff;
+  --sc-color-surface-muted: #f3f3ef;
+  --sc-color-surface-transparent: rgba(255,255,255,0);
   --sc-color-background: #000;
+  --sc-color-strong: #111;
+  --sc-color-title: #303030;
+  --sc-color-subtitle: #343434;
+  --sc-color-description: #656565;
+  --sc-color-input-line: #d7d7d2;
+  --sc-color-placeholder: #888;
+  --sc-color-view-icon: #626262;
+  --sc-color-close: #707070;
+  --sc-color-detail: #555;
+  --sc-color-line: #e7e7e2;
+  --sc-color-rule: #171717;
+  --sc-color-subrule: #deded8;
+
+  /* Typography */
   --sc-font-primary: 'SC Acumin', Arial, sans-serif;
+  --sc-font-weight-regular: 400;
+  --sc-font-weight-semibold: 600;
+
+  /* Shared catalogue geometry */
+  --sc-content-max-width: 1240px;
+  --sc-content-max-width-compact: 940px;
+  --sc-catalog-gutter: 32px;
+  --sc-catalog-inline-space: 64px;
+  --sc-catalog-grid-row-gap: 36px;
+  --sc-catalog-section-bottom: 74px;
+  --sc-compact-container-inline-space: 40px;
+  --sc-phone-container-inline-space: 32px;
+  --sc-compact-grid-column-gap: 24px;
+  --sc-compact-grid-row-gap: 34px;
+  --sc-compact-section-bottom: 64px;
+  --sc-phone-grid-row-gap: 28px;
+  --sc-phone-section-bottom: 44px;
+  --sc-product-image-ratio: 286 / 200;
+
+  /* Category navigation */
   --sc-category-height: 46px;
+  --sc-category-gap: 25px;
+  --sc-category-gap-compact: 18px;
+  --sc-category-indicator-height: 2px;
+  --sc-category-sticky-z: 120;
+  --sc-category-rail-reserved-height: 47px;
+  --sc-category-toolbar-margin-top: 16px;
+  --sc-category-toolbar-margin-bottom: 14px;
+  --sc-section-rule-scale: 1;
   --sc-touch-target: 44px;
+
+  /* Product cards */
+  --sc-card-rule: var(--sc-color-rule);
+  --sc-card-subrule: var(--sc-color-subrule);
+  --sc-card-meta-row-height: 24px;
+  --sc-card-content-gap: 18px;
+  --sc-card-title-height: 54px;
+  --sc-card-title-padding-top: 13px;
+  --sc-card-title-size: 15.5px;
+  --sc-card-description-height: 59px;
+  --sc-card-description-offset: 10px;
+  --sc-card-description-size: 12.5px;
+  --sc-card-description-line-height: 16px;
+  --sc-card-price-width: 76px;
+  --sc-card-price-size: 15.5px;
+  --sc-card-price-line-height: 18px;
+  --sc-card-offer-size: 11.5px;
+  --sc-card-offer-line-height: 14px;
+
+  /* Product modal */
+  --sc-modal-max-width: 560px;
+  --sc-modal-z: 9000;
+  --sc-modal-overlay: rgba(0,0,0,.62);
+  --sc-modal-shadow: 0 18px 55px rgba(0,0,0,.22);
+  --sc-modal-close-border: rgba(0,0,0,.07);
+  --sc-modal-close-border-hover: rgba(0,0,0,.16);
+  --sc-modal-close-surface: rgba(255,255,255,.86);
+  --sc-modal-close-surface-hover: rgba(255,255,255,.98);
+
+  /* Mobile header */
+  --sc-mobile-header-height: 100px;
+  --sc-mobile-logo-width: 333px;
+
+  /* Motion */
   --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --sc-motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --sc-motion-micro: 120ms;
   --sc-motion-fast: 140ms;
+  --sc-motion-color: 160ms;
   --sc-motion-ui: 180ms;
+  --sc-motion-panel: 220ms;
+  --sc-motion-medium: 260ms;
   --sc-motion-normal: 320ms;
+  --sc-motion-card: 340ms;
+  --sc-motion-search: 380ms;
+  --sc-motion-search-ease: cubic-bezier(.22,1,.36,1);
+
+  /* Compatibility aliases used by existing component contracts. */
+  --sc-catalog-ink: var(--sc-color-text);
+  --sc-catalog-copy: var(--sc-color-copy);
+  --sc-catalog-muted: var(--sc-color-muted);
+  --sc-catalog-line: var(--sc-color-line);
+  --sc-catalog-surface: var(--sc-color-surface-muted);
+  --sc-catalog-ease: var(--sc-motion-ease-out);
+  --sc-r-ink: var(--sc-color-text);
+  --sc-r-copy: var(--sc-color-copy);
+  --sc-r-muted: var(--sc-color-muted);
+  --sc-r-line: var(--sc-color-line);
+  --sc-r-card-rule: var(--sc-color-rule);
+  --sc-r-card-subrule: var(--sc-color-subrule);
 }

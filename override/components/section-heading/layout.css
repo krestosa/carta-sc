@@ -9,11 +9,11 @@
     margin: 6px 0 -3px !important;
     padding: 0 !important;
     background: transparent !important;
-    color: var(--sc-catalog-ink, #151515) !important;
-    font-family: 'SC Acumin', Arial, sans-serif !important;
+    color: var(--sc-color-text) !important;
+    font-family: var(--sc-font-primary) !important;
     font-size: 28px !important;
     line-height: 1.08 !important;
-    font-weight: 600 !important;
+    font-weight: var(--sc-font-weight-semibold) !important;
     letter-spacing: -0.04em !important;
     text-transform: none !important;
     z-index: 1;
@@ -25,7 +25,7 @@
     width: 100% !important;
     padding: 18px 0 12px !important;
     border-top: 0 !important;
-    border-bottom: 1px solid var(--sc-catalog-line, #e7e7e2) !important;
+    border-bottom: 1px solid var(--sc-color-line) !important;
     background: transparent !important;
   }
 
@@ -44,11 +44,11 @@
     width: 100% !important;
     margin: 8px 0 -3px !important;
     padding: 0 !important;
-    color: #343434 !important;
-    font-family: 'SC Acumin', Arial, sans-serif !important;
+    color: var(--sc-color-subtitle) !important;
+    font-family: var(--sc-font-primary) !important;
     font-size: 18.5px !important;
     line-height: 1.15 !important;
-    font-weight: 600 !important;
+    font-weight: var(--sc-font-weight-semibold) !important;
     letter-spacing: -0.025em !important;
     text-transform: none !important;
   }
@@ -62,11 +62,11 @@
     margin: 6px 0 -3px !important;
     padding: 0 !important;
     background: transparent !important;
-    color: var(--sc-r-ink) !important;
-    font-family: 'SC Acumin', Arial, sans-serif !important;
+    color: var(--sc-color-text) !important;
+    font-family: var(--sc-font-primary) !important;
     font-size: 26px !important;
     line-height: 1.08 !important;
-    font-weight: 600 !important;
+    font-weight: var(--sc-font-weight-semibold) !important;
     letter-spacing: -0.038em !important;
     text-transform: none !important;
   }
@@ -76,7 +76,7 @@
     width: 100% !important;
     padding: 18px 0 12px !important;
     border-top: 0 !important;
-    border-bottom: 1px solid var(--sc-r-line) !important;
+    border-bottom: 1px solid var(--sc-color-line) !important;
     background: transparent !important;
   }
 
@@ -85,11 +85,11 @@
     width: 100% !important;
     margin: 8px 0 -3px !important;
     padding: 0 !important;
-    color: #343434 !important;
-    font-family: 'SC Acumin', Arial, sans-serif !important;
+    color: var(--sc-color-subtitle) !important;
+    font-family: var(--sc-font-primary) !important;
     font-size: 18.5px !important;
     line-height: 1.15 !important;
-    font-weight: 600 !important;
+    font-weight: var(--sc-font-weight-semibold) !important;
     letter-spacing: -0.025em !important;
     text-transform: none !important;
   }

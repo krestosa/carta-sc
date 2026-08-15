@@ -33,7 +33,7 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
     height: auto !important;
     min-height: 0 !important;
     padding: 0 !important;
-    aspect-ratio: 286 / 200;
+    aspect-ratio: var(--sc-product-image-ratio);
     margin: 0 !important;
   }
 }

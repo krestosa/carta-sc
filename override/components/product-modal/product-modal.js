@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,V=SC&&SC.productModalView,A=SC&&SC.productModalA11y,M=SC&&SC.productModalMotion;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,CFG=C&&C.motion,V=SC&&SC.productModalView,A=SC&&SC.productModalA11y,M=SC&&SC.productModalMotion;
 if(!SC||!U||!V||!A||!M||SC.__productModalBooted)return;SC.__productModalBooted=true;
 var ready=U.ready,activeModal=null,closingModal=null,previousFocus=null,releaseBackground=null;
 
@@ -12,10 +12,10 @@ function closeModal(event){
   activeModal=null;closingModal=modal;previousFocus=null;releaseBackground=null;
   modal.classList.remove('is-visible');
   M.close(modal);
-  var delay=matchMedia('(prefers-reduced-motion: reduce)').matches?0:190;
+  var delay=C.queries.reducedMotion.matches?0:CFG.productModalCloseDelay;
   window.setTimeout(function(){
     if(modal.parentNode)modal.parentNode.removeChild(modal);
-    document.body.classList.remove('sc-product-modal-open');
+    document.body.classList.remove(K.productModalOpen);
     release();
     if(closingModal===modal)closingModal=null;
     if(restore&&document.documentElement.contains(restore)){
@@ -28,20 +28,20 @@ function openModal(link){
   var modal=V.build(link);if(!modal)return;
   previousFocus=link;
   document.body.appendChild(modal);
-  document.body.classList.add('sc-product-modal-open');
+  document.body.classList.add(K.productModalOpen);
   activeModal=modal;
   releaseBackground=A.lockBackground(modal)||noop;
-  var close=modal.querySelector('.sc-product-modal__close');
+  var close=modal.querySelector(S.productModalClose);
   try{close.focus({preventScroll:true});}catch(_){close.focus();}
   requestAnimationFrame(function(){if(activeModal===modal){modal.classList.add('is-visible');M.open(modal);}});
 }
 function onClick(event){
-  var close=event.target.closest&&event.target.closest('.sc-product-modal__close');
+  var close=event.target.closest&&event.target.closest(S.productModalClose);
   if(close&&activeModal&&activeModal.contains(close)){
     event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();
     closeModal();return;
   }
-  var link=event.target.closest&&event.target.closest('a.fancyboxModalAddProd');if(!link)return;
+  var link=event.target.closest&&event.target.closest(S.productLink);if(!link)return;
   if((event.button&&event.button!==0)||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
   event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();
   openModal(link);

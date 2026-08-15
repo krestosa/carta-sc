@@ -1,6 +1,6 @@
 /* Product-card pricing column. */
 body.sushiShop .listadoShop .productoShop .ofertaPrice {
-  color: #737373 !important;
+  color: var(--sc-color-muted) !important;
 }
 
 @media (min-width: 993px) {
@@ -16,13 +16,13 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     justify-content: flex-start !important;
     align-self: start;
     gap: 1px !important;
-    min-width: 76px !important;
-    min-height: 54px !important;
+    min-width: var(--sc-card-price-width) !important;
+    min-height: var(--sc-card-title-height) !important;
     margin: 0 !important;
-    padding: 13px 0 0 !important;
+    padding: var(--sc-card-title-padding-top) 0 0 !important;
     float: none !important;
     white-space: nowrap;
-    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-family: var(--sc-font-primary) !important;
     font-variant-numeric: tabular-nums;
   }
 
@@ -32,11 +32,11 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: var(--sc-catalog-ink, #151515) !important;
+    color: var(--sc-color-text) !important;
     font-family: inherit !important;
-    font-size: 15.5px !important;
-    line-height: 18px !important;
-    font-weight: 600 !important;
+    font-size: var(--sc-card-price-size) !important;
+    line-height: var(--sc-card-price-line-height) !important;
+    font-weight: var(--sc-font-weight-semibold) !important;
     letter-spacing: -0.018em !important;
   }
 
@@ -46,9 +46,9 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     margin: 0 !important;
     padding: 0 !important;
     font-family: inherit !important;
-    font-size: 11.5px !important;
-    line-height: 14px !important;
-    font-weight: 400 !important;
+    font-size: var(--sc-card-offer-size) !important;
+    line-height: var(--sc-card-offer-line-height) !important;
+    font-weight: var(--sc-font-weight-regular) !important;
     letter-spacing: 0 !important;
     text-decoration: line-through;
     opacity: 1 !important;
@@ -66,14 +66,14 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     align-items: flex-end !important;
     justify-content: flex-start !important;
     align-self: start;
-    min-width: 76px !important;
-    min-height: 54px !important;
+    min-width: var(--sc-card-price-width) !important;
+    min-height: var(--sc-card-title-height) !important;
     margin: 0 !important;
-    padding: 13px 0 0 !important;
+    padding: var(--sc-card-title-padding-top) 0 0 !important;
     gap: 1px !important;
     float: none !important;
     white-space: nowrap;
-    font-family: 'SC Acumin', Arial, sans-serif !important;
+    font-family: var(--sc-font-primary) !important;
     font-variant-numeric: tabular-nums;
   }
 
@@ -83,11 +83,11 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     float: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    color: var(--sc-r-ink) !important;
+    color: var(--sc-color-text) !important;
     font-family: inherit !important;
-    font-size: 15.5px !important;
-    line-height: 18px !important;
-    font-weight: 600 !important;
+    font-size: var(--sc-card-price-size) !important;
+    line-height: var(--sc-card-price-line-height) !important;
+    font-weight: var(--sc-font-weight-semibold) !important;
     letter-spacing: -0.018em !important;
   }
 
@@ -97,9 +97,9 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     margin: 0 !important;
     padding: 0 !important;
     font-family: inherit !important;
-    font-size: 11.5px !important;
-    line-height: 14px !important;
-    font-weight: 400 !important;
+    font-size: var(--sc-card-offer-size) !important;
+    line-height: var(--sc-card-offer-line-height) !important;
+    font-weight: var(--sc-font-weight-regular) !important;
     letter-spacing: 0 !important;
     text-decoration: line-through;
     opacity: 1 !important;

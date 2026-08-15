@@ -1,16 +1,16 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,T=SC&&SC.templates;if(!SC||!U||!C||!T||SC.__productModalViewBooted)return;SC.__productModalViewBooted=true;
-var each=U.each,text=U.text;
+var each=U.each,text=U.text,S=C.selectors;
 
 function build(link){
-  var card=link.closest('.productoShop');if(!card)return null;
+  var card=link.closest(S.productCard);if(!card)return null;
   var cardApi=SC.productCard||{};
-  var name=text(card.querySelector('.title-shop1')),description=text(card.querySelector('.descrip'));
+  var name=text(card.querySelector(S.productTitle)),description=text(card.querySelector(S.productDescription));
   var src=cardApi.imageSource?cardApi.imageSource(card):'';
   var titleId='sc-product-modal-title-'+Date.now();
   var overlay=T.clone('product-modal');
-  var dialog=overlay.querySelector('.sc-product-modal__dialog');
+  var dialog=overlay.querySelector(S.productModalDialog);
   var image=overlay.querySelector('.sc-product-modal__image');
   var title=overlay.querySelector('.sc-product-modal__title');
   var copy=overlay.querySelector('.sc-product-modal__description');

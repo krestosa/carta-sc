@@ -1,11 +1,11 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
 if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
 var each=U.each,ready=U.ready,mq=N.mq,boundScrollers=new WeakSet(),resizeRaf=0;
 
 function bindRailScrollers(){
-  each(document.querySelectorAll('.sc-catalog-categories,.topShopMenuMobileScroller'),function(scroller){
+  each(document.querySelectorAll(S.categoryScroller+','+S.categoryMobileScroller),function(scroller){
     if(boundScrollers.has(scroller))return;
     boundScrollers.add(scroller);
     scroller.addEventListener('scroll',N.scheduleRail,{passive:true});
@@ -30,7 +30,7 @@ window.addEventListener('resize',resize,{passive:true});
 ready(function(){
   invalidateOffset();N.semantics();N.layout();bindRailScrollers();
   if(N.installMotion)N.installMotion();
-  setTimeout(function(){N.semantics();refreshGeometry();},180);
+  setTimeout(function(){N.semantics();refreshGeometry();},M.geometryRefreshDelay);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshGeometry).catch(function(){});
 });
 if(mq.addEventListener)mq.addEventListener('change',breakpoint);else mq.addListener(breakpoint);

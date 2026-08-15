@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride;if(!SC||SC.__cartScrollMotionBooted)return;SC.__cartScrollMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG=C&&C.cart;if(!SC||!C||SC.__cartScrollMotionBooted)return;SC.__cartScrollMotionBooted=true;
 var parts=SC.cartParts=SC.cartParts||{};
 
 parts.setupScroll=function(gsap,ST,profile,reduce){
@@ -9,12 +9,12 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
   function entryFor(wrapper){return entries.find(function(entry){return entry.wrapper===wrapper;});}
   function clearTarget(el){
     if(!el)return;
-    gsap.killTweensOf(el);gsap.set(el,{y:0,clearProps:'transform'});el.classList.remove('sc-cart-scroll-motion');
+    gsap.killTweensOf(el);gsap.set(el,{y:0,clearProps:'transform'});el.classList.remove(K.cartScrollMotion);
   }
   function configure(entry,el){
     if(entry.target&&entry.target!==el)clearTarget(entry.target);
-    entry.target=el;entry.move=reduce?null:gsap.quickTo(el,'y',{duration:0.14,ease:'power3.out',overwrite:'auto'});
-    el.classList.add('sc-cart-scroll-motion');
+    entry.target=el;entry.move=reduce?null:gsap.quickTo(el,'y',{duration:CFG.scrollQuickDuration,ease:M.easings.strongOut,overwrite:'auto'});
+    el.classList.add(K.cartScrollMotion);
   }
   function discover(){
     raf=0;
@@ -22,7 +22,7 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
       if(document.documentElement.contains(entry.wrapper))return true;
       clearTarget(entry.target);return false;
     });
-    gsap.utils.toArray('.carritoFixed').forEach(function(wrapper){
+    gsap.utils.toArray(S.cartFixed).forEach(function(wrapper){
       var el=target(wrapper);if(!el)return;
       var entry=entryFor(wrapper);
       if(!entry){entry={wrapper:wrapper,target:null,move:null};entries.push(entry);}
@@ -31,10 +31,10 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
   }
   function affectsCart(mutation){
     var targetNode=mutation.target&&mutation.target.nodeType===1?mutation.target:mutation.target&&mutation.target.parentElement;
-    if(targetNode&&targetNode.closest&&targetNode.closest('.carritoFixed'))return true;
+    if(targetNode&&targetNode.closest&&targetNode.closest(S.cartFixed))return true;
     for(var i=0;i<(mutation.addedNodes||[]).length;i+=1){
       var node=mutation.addedNodes[i];if(!node||node.nodeType!==1)continue;
-      if(node.matches('.carritoFixed')||(node.querySelector&&node.querySelector('.carritoFixed')))return true;
+      if(node.matches(S.cartFixed)||(node.querySelector&&node.querySelector(S.cartFixed)))return true;
     }
     return false;
   }
@@ -51,8 +51,8 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
     if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);entries.forEach(function(entry){clearTarget(entry.target);});
   };
   var tracker=ST.create({start:0,end:'max',onUpdate:function(self){
-    var velocity=self.getVelocity();move(Math.abs(velocity)<55?0:clamp(velocity*profile.velocityScale));
-    if(settle)clearTimeout(settle);settle=setTimeout(function(){settle=0;move(0);},70);
+    var velocity=self.getVelocity();move(Math.abs(velocity)<CFG.scrollVelocityFloor?0:clamp(velocity*profile.velocityScale));
+    if(settle)clearTimeout(settle);settle=setTimeout(function(){settle=0;move(0);},CFG.scrollSettleDelay);
   },onRefresh:function(){move(0);}});
   return function(){
     if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);if(settle)clearTimeout(settle);tracker.kill();
