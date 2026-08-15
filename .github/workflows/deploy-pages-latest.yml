@@ -113,6 +113,7 @@ jobs:
               'scripts/flatten-pages-bootstrap.py',
               'scripts/bundle-pages-legacy-css.py',
               'scripts/bundle-pages-legacy-js.py',
+              'scripts/bundle-pages-shop-js.py',
           ):
               ast.parse(Path(script).read_text(encoding='utf-8'))
           PY
@@ -131,8 +132,10 @@ jobs:
           python3 scripts/flatten-pages-bootstrap.py
           python3 scripts/bundle-pages-legacy-css.py
           python3 scripts/bundle-pages-legacy-js.py
+          python3 scripts/bundle-pages-shop-js.py
           node --check .pages-site/override/main.js
           node --check .pages-site/_pages/legacy.js
+          node --check .pages-site/_pages/shop.js
 
           if grep -F 'src="_js_dev/main.js?v=' .pages-site/index.html >/dev/null; then
             echo 'Development bootstrap remains in Pages index'
@@ -144,8 +147,10 @@ jobs:
           grep -F "var version='${GITHUB_SHA}';" .pages-site/_js_dev/main.js >/dev/null
           grep -F "_pages/legacy.css?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
           grep -F "_pages/legacy.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
+          grep -F "_pages/shop.js?v=${GITHUB_SHA}" .pages-site/index.html >/dev/null
           test -s .pages-site/_pages/legacy.css
           test -s .pages-site/_pages/legacy.js
+          test -s .pages-site/_pages/shop.js
           if grep -F '@import' .pages-site/override/main.css >/dev/null; then
             echo 'CSS imports remain in bundled Pages artifact'
             exit 1
@@ -157,6 +162,7 @@ jobs:
           test "$(grep -c '^/\* source:' .pages-site/override/main.css)" -ge 1
           test "$(grep -c '^/\* source:' .pages-site/_pages/legacy.css)" -eq 16
           test "$(grep -c '^/\* source:' .pages-site/_pages/legacy.js)" -eq 16
+          test "$(grep -c '^/\* source:' .pages-site/_pages/shop.js)" -eq 2
           test "$(grep -c '^/\* module:' .pages-site/override/main.js)" -ge 1
 
       - name: Upload prepared Pages artifact
