@@ -9,11 +9,6 @@ function railState(){railRaf=0;var desktop=document.querySelector('.sc-catalog-t
 function scheduleFrame(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
 function scheduleRail(){overflowDirty=true;scheduleFrame();}
 function scheduleSticky(){scheduleFrame();}
-function requestCenter(){
-  if(document.body.classList.contains('sc-catalog-searching')){scheduleRail();return;}
-  if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop);}
-  else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}
-  scheduleRail();
-}
+function requestCenter(previous,target){if(document.body.classList.contains('sc-catalog-searching')){scheduleRail();return;}if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleRail();}
 N.scheduleRail=scheduleRail;N.scheduleSticky=scheduleSticky;N.requestCenterActive=requestCenter;N.scheduleRailState=scheduleRail;N.railState=railState;
 })();
