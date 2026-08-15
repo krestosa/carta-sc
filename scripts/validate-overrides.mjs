@@ -18,6 +18,10 @@ function relative(file) {
   return path.relative(root, file).replaceAll(path.sep, '/');
 }
 
+function relativeToOverride(file) {
+  return path.relative(overrideDir, file).replaceAll(path.sep, '/');
+}
+
 const overrideDir = path.join(root, 'override');
 const mainJsPath = path.join(overrideDir, 'main.js');
 const mainCssPath = path.join(overrideDir, 'main.css');
@@ -31,7 +35,9 @@ for (const required of [overrideDir, mainJsPath, mainCssPath, bootstrapPath, ind
 }
 
 if (!errors.length) {
-  const overrideJsFiles = walk(overrideDir).filter((file) => file.endsWith('.js'));
+  const overrideFiles = walk(overrideDir);
+  const overrideJsFiles = overrideFiles.filter((file) => file.endsWith('.js'));
+  const overrideCssFiles = overrideFiles.filter((file) => file.endsWith('.css'));
   const jsFiles = overrideJsFiles.concat(bootstrapPath);
   for (const file of jsFiles) {
     const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
@@ -49,6 +55,19 @@ if (!errors.length) {
   }
   if (fs.existsSync(manualScrollRestorationPath)) {
     fail('override/mutations/scroll-restoration.js must not be reintroduced');
+  }
+
+  const guardOwners = new Map();
+  for (const file of overrideJsFiles) {
+    const guards = new Set([...read(file).matchAll(/(?:window|SC)\.(__[A-Za-z0-9_$]*Booted)\b/g)].map((match) => match[1]));
+    for (const guard of guards) {
+      const owners = guardOwners.get(guard) || [];
+      owners.push(relative(file));
+      guardOwners.set(guard, owners);
+    }
+  }
+  for (const [guard, owners] of guardOwners) {
+    if (owners.length > 1) fail(`Duplicate override boot guard ${guard}: ${owners.join(', ')}`);
   }
 
   const mainJs = read(mainJsPath);
@@ -72,6 +91,14 @@ if (!errors.length) {
     fail(`Required content normalizer is not loaded: override/${contentNormalizerRef}`);
   }
 
+  const unreferencedJs = overrideJsFiles
+    .filter((file) => file !== mainJsPath)
+    .map(relativeToOverride)
+    .filter((ref) => !uniqueJsRefs.has(ref));
+  if (unreferencedJs.length) {
+    fail(`Unreferenced override JavaScript files: ${unreferencedJs.join(', ')}`);
+  }
+
   const idRefs = [];
   for (const match of mainJs.matchAll(/\[\s*['"][^'"]+\.js['"]\s*,\s*['"]([^'"]+)['"]\s*\]/g)) idRefs.push(match[1]);
   for (const match of mainJs.matchAll(/loadScript\(\s*['"][^'"]+\.js['"]\s*,\s*['"]([^'"]+)['"]\s*\)/g)) idRefs.push(match[1]);
@@ -87,7 +114,8 @@ if (!errors.length) {
   const cssPaths = [];
   for (const ref of cssRefs) {
     const [assetPath, query = ''] = ref.split('?');
-    cssPaths.push(assetPath);
+    const normalizedPath = path.posix.normalize(assetPath.replace(/^\.\//, ''));
+    cssPaths.push(normalizedPath);
     if (query !== 'v=unversioned') fail(`CSS import must use ?v=unversioned in source: ${ref}`);
     const file = path.resolve(path.dirname(mainCssPath), assetPath);
     if (!fs.existsSync(file)) {
@@ -99,6 +127,15 @@ if (!errors.length) {
   const seenCss = new Set();
   const duplicateCss = [...new Set(cssPaths.filter((item) => seenCss.has(item) || !seenCss.add(item)))];
   if (duplicateCss.length) fail(`Duplicate CSS imports in override/main.css: ${duplicateCss.join(', ')}`);
+
+  const referencedCss = new Set(cssPaths);
+  const unreferencedCss = overrideCssFiles
+    .filter((file) => file !== mainCssPath)
+    .map(relativeToOverride)
+    .filter((ref) => !referencedCss.has(ref));
+  if (unreferencedCss.length) {
+    fail(`Unreferenced override CSS files: ${unreferencedCss.join(', ')}`);
+  }
 
   const bootstrap = read(bootstrapPath);
   const bootstrapVersions = bootstrap.match(/var version='unversioned';/g) || [];
