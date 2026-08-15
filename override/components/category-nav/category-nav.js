@@ -13,7 +13,7 @@ function bindRailScrollers(){
 }
 function runResize(){resizeRaf=0;N.refreshMetrics();N.scheduleRail();}
 function resize(){if(!resizeRaf)resizeRaf=requestAnimationFrame(runResize);}
-function windowScroll(){N.scheduleRail();N.scheduleSpy();}
+function windowScroll(){(N.scheduleSticky||N.scheduleRail)();N.scheduleSpy();}
 function breakpoint(){N.layout();N.semantics();bindRailScrollers();resize();}
 
 document.addEventListener('click',N.onCategory,true);

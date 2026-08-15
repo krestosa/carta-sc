@@ -58,7 +58,8 @@ function setActive(target,animate){
   each(document.querySelectorAll('.JSgoMenu'),function(select){
     for(var i=0;i<select.options.length;i++)if(N.anchor(select.options[i].value)===target){if(select.value!==select.options[i].value)select.value=select.options[i].value;break;}
   });
-  moveIndicator(target,animate&&changed);if(N.scheduleRail)N.scheduleRail();
+  moveIndicator(target,animate&&changed);
+  if(changed&&N.requestCenterActive)N.requestCenterActive();else if(N.scheduleRail)N.scheduleRail();
 }
 function spy(){spyRaf=0;var target=current();if(target&&target!==active)setActive(target,true);else if(target)moveIndicator(target,false);}
 function scheduleSpy(){if(!spyRaf)spyRaf=requestAnimationFrame(spy);}

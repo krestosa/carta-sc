@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav;if(!SC||!U||!N||SC.__categoryNavRailBooted)return;SC.__categoryNavRailBooted=true;
-var each=U.each,railRaf=0;
+var each=U.each,railRaf=0,overflowDirty=true,centerPending=true;
 
 function arrow(host,scroller,dir){
   var button=host.querySelector('.sc-rail-arrow--'+dir);if(button)return button;
@@ -40,20 +40,32 @@ function railState(){
   railRaf=0;
   var desktop=document.querySelector('.sc-catalog-toolbar');
   if(desktop){
-    var scroller=desktop.querySelector('.sc-catalog-categories');overflow(desktop,scroller);
+    var scroller=desktop.querySelector('.sc-catalog-categories');
+    if(overflowDirty)overflow(desktop,scroller);
     var rect=desktop.getBoundingClientRect();desktop.classList.toggle('sc-is-stuck',N.mq.matches&&scrollY>0&&rect.top<=.5&&rect.bottom>0);
   }
   var wrapper=document.querySelector('.fixedTopShop.wtopShopMenuMobile');
   var rail=wrapper&&wrapper.querySelector('.topShopMenuMobile'),mobileScroller=rail&&rail.querySelector('.topShopMenuMobileScroller');
   if(rail){
-    if(N.mq.matches){rail.classList.remove('sc-overflow-left','sc-overflow-right');each(rail.querySelectorAll('.sc-rail-arrow'),function(button){arrowVisible(button,false);});}
-    else{overflow(rail,mobileScroller);centerActive(mobileScroller);}
+    if(N.mq.matches){
+      centerPending=true;
+      if(overflowDirty){rail.classList.remove('sc-overflow-left','sc-overflow-right');each(rail.querySelectorAll('.sc-rail-arrow'),function(button){arrowVisible(button,false);});}
+    }else{
+      if(overflowDirty)overflow(rail,mobileScroller);
+      if(centerPending){centerActive(mobileScroller);centerPending=false;}
+    }
   }
   if(wrapper){var wr=wrapper.getBoundingClientRect();wrapper.classList.toggle('sc-is-stuck',!N.mq.matches&&scrollY>0&&wr.top<=.5&&wr.bottom>0);}
+  overflowDirty=false;
 }
-function scheduleRail(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
+function scheduleFrame(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
+function scheduleRail(){overflowDirty=true;scheduleFrame();}
+function scheduleSticky(){scheduleFrame();}
+function requestCenter(){centerPending=true;scheduleFrame();}
 
 N.scheduleRail=scheduleRail;
+N.scheduleSticky=scheduleSticky;
+N.requestCenterActive=requestCenter;
 N.scheduleRailState=scheduleRail;
 N.railState=railState;
 N.centerActive=centerActive;
