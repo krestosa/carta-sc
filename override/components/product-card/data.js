@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils;if(!SC||!U||SC.__productCardDataBooted)return;SC.__productCardDataBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,T=SC&&SC.templates;if(!SC||!U||!T||SC.__productCardDataBooted)return;SC.__productCardDataBooted=true;
 var each=U.each,text=U.text;
 
 function imageSource(card){
@@ -30,8 +30,8 @@ function traitLabels(source){
 function buildTraitGroup(card,className){
   var labels=traitLabels(card);if(!labels.length)return null;
   var source=card.querySelector('.title-shop1 .sabores');if(!source)return null;
-  var group=document.createElement('span');group.className=className||'sabores';
-  group.setAttribute('role','img');group.setAttribute('aria-label','Características: '+labels.join(', '));
+  var group=T.clone('product-trait-group');group.className=className||'sabores';
+  group.setAttribute('aria-label','Características: '+labels.join(', '));
   each(source.querySelectorAll('img'),function(img){
     var clone=img.cloneNode(true);clone.setAttribute('alt','');clone.setAttribute('aria-hidden','true');
     clone.removeAttribute('data-toggle');clone.removeAttribute('title');group.appendChild(clone);

@@ -1,9 +1,9 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav;
-if(!SC||!U||!N||SC.__categoryNavIndicatorBooted)return;SC.__categoryNavIndicatorBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav,T=SC&&SC.templates;
+if(!SC||!U||!N||!T||SC.__categoryNavIndicatorBooted)return;SC.__categoryNavIndicatorBooted=true;
 var each=U.each,entries=[],dirty=true;
-function entry(root){for(var i=0;i<entries.length;i++)if(entries[i].root===root)return entries[i];var line=document.createElement('span');line.className='sc-category-indicator';line.setAttribute('aria-hidden','true');root.classList.add('sc-category-motion-root');root.appendChild(line);var item={root:root,line:line,x:0,w:1,init:false};entries.push(item);return item;}
+function entry(root){for(var i=0;i<entries.length;i++)if(entries[i].root===root)return entries[i];var line=T.clone('category-indicator');root.classList.add('sc-category-motion-root');root.appendChild(line);var item={root:root,line:line,x:0,w:1,init:false};entries.push(item);return item;}
 function visual(link){var fallback=link.getBoundingClientRect();try{var range=document.createRange();range.selectNodeContents(link);var rect=range.getBoundingClientRect();if(rect&&rect.width>1&&rect.height>0)return rect;}catch(_){}return fallback;}
 function move(target,animate){
   entries=entries.filter(function(item){return document.documentElement.contains(item.root);});

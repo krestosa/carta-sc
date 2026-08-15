@@ -7,11 +7,12 @@ function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){return new Promise(function(resolve,reject){var existing=id&&document.getElementById(id);if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}var script=document.createElement('script');if(id)script.id=id;script.src=asset(path);script.async=false;script.onload=function(){script.dataset.loaded='true';resolve();};script.onerror=reject;document.head.appendChild(script);});}
 function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
-loadStages([
+var beforeTemplates=[
   [
     ['core/variables.js','sc-override-variables-js'],
     ['core/utils.js','sc-override-utils-js'],
     ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
+    ['templates/registry.js','sc-override-template-registry-js'],
     ['motion/main.js','sc-override-motion-js']
   ],
   [
@@ -31,7 +32,9 @@ loadStages([
     ['components/cart/list-motion.js','sc-cart-list-motion-js'],
     ['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],
     ['components/cart/badge-motion.js','sc-cart-badge-motion-js']
-  ],
+  ]
+];
+var afterTemplates=[
   [
     ['features/content-normalizer/dom.js','sc-content-normalizer-dom-js'],
     ['components/category-nav/layout.js','sc-category-nav-layout-js'],
@@ -57,5 +60,10 @@ loadStages([
     ['components/product-card/product-card.js','sc-override-product-card-js'],
     ['components/product-modal/product-modal.js','sc-override-product-modal-js']
   ]
-]).then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();}).then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');}).catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
+];
+loadStages(beforeTemplates).then(function(){
+  var templates=window.SCOverride&&window.SCOverride.templates;
+  if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');
+  return templates.ready();
+}).then(function(){return loadStages(afterTemplates);}).then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();}).then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');}).catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
 })();

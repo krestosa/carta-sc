@@ -1,12 +1,9 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav;if(!SC||!U||!N||SC.__categoryNavLayoutBooted)return;SC.__categoryNavLayoutBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,N=SC&&SC.categoryNav,T=SC&&SC.templates;if(!SC||!U||!N||!T||SC.__categoryNavLayoutBooted)return;SC.__categoryNavLayoutBooted=true;
 var each=U.each,nav=null,home=null,next=null,toolbar=null,styles=new Map();
 
-function toolbarNode(container){
-  var node=document.createElement('nav');node.className='sc-catalog-toolbar';node.setAttribute('aria-label','Categorías de la carta');
-  var scroller=document.createElement('div');scroller.className='sc-catalog-categories';node.appendChild(scroller);container.insertBefore(node,container.firstChild);return node;
-}
+function toolbarNode(container){var node=T.clone('category-toolbar');container.insertBefore(node,container.firstChild);return node;}
 function normalize(root){
   each(root.querySelectorAll('.nav-top-li > a.anchorLink'),function(link){
     if(!styles.has(link))styles.set(link,link.getAttribute('style'));

@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardA11yBooted)return;SC.__productCardA11yBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,D=SC&&SC.productCardData,T=SC&&SC.templates;if(!SC||!U||!D||!T||SC.__productCardA11yBooted)return;SC.__productCardA11yBooted=true;
 var each=U.each,text=U.text,cardSequence=0;
 
 function cardKey(card){
@@ -20,7 +20,7 @@ function enhanceCardLink(link){
   if(current&&currentText)current.setAttribute('aria-label',(/^\$/.test(currentText)?'Precio actual: ':'Estado del producto: ')+currentText);
   if(previous&&previousText)previous.setAttribute('aria-label','Precio anterior: '+previousText);
   var meta=link.querySelector('.sc-card-a11y-meta');
-  if(!meta){meta=document.createElement('span');meta.className='sc-card-a11y-meta sc-sr-only';link.appendChild(meta);}
+  if(!meta){meta=T.clone('product-card-a11y-meta');link.appendChild(meta);}
   meta.id='sc-product-'+key+'-meta';
   var parts=[];
   if(currentText)parts.push((/^\$/.test(currentText)?'Precio actual ':'Estado ')+currentText);
