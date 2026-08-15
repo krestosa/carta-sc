@@ -1,18 +1,55 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils;if(!SC||!U||SC.__catalogToolsSearchBooted)return;SC.__catalogToolsSearchBooted=true;
-var C=SC.catalogTools=SC.catalogTools||{},inventory=[],raf=0,active=false;
+var C=SC.catalogTools=SC.catalogTools||{},inventory=[],groups=[],raf=0,active=false,lastQuery=null;
 function normalize(value){var text=String(value||'').toLowerCase().trim();if(text.normalize)text=text.normalize('NFD').replace(/[\u0300-\u036f]/g,'');return text.replace(/\s+/g,' ');}
-function capture(){inventory=[];U.each(document.querySelectorAll('.listadoShop:not(.sc-catalog-search-results) .productoShop'),function(card,index){var title=card.querySelector('.title-shop1'),description=card.querySelector('.descrip');inventory.push({card:card,parent:card.parentNode,next:card.nextSibling,order:index,title:normalize(title&&title.textContent),description:normalize(description&&description.textContent)});card.classList.remove('sc-search-hidden');});}
-function restore(){for(var i=inventory.length-1;i>=0;i--){var item=inventory[i];if(!item.parent)continue;if(item.next&&item.next.parentNode===item.parent)item.parent.insertBefore(item.card,item.next);else item.parent.appendChild(item.card);item.card.classList.remove('sc-search-result','sc-search-hidden');}}
-function score(item,query,tokens){var joined=(item.title+' '+item.description).trim();for(var i=0;i<tokens.length;i++)if(joined.indexOf(tokens[i])<0)return-1;if(item.title===query)return 0;if(item.title.indexOf(query)===0)return 1;if(item.title.indexOf(query)>=0)return 2;for(var j=0;j<tokens.length;j++)if(item.title.indexOf(tokens[j])<0){j=-1;break;}if(j!==-1)return 3;if(item.description.indexOf(query)>=0)return 4;return 5;}
-function refreshGeometry(searching){if(!searching&&SC.categoryNav&&SC.categoryNav.refreshMetrics)SC.categoryNav.refreshMetrics();if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);}
-function apply(root,value){var query=normalize(value),tokens=query?query.split(' '):[],results=root.querySelector('.sc-catalog-search-results'),empty=root.querySelector('.sc-catalog-search-empty-message'),status=root.querySelector('.sc-catalog-search-status');if(!results)return;
-  if(!query){if(active)restore();active=false;document.body.classList.remove('sc-catalog-searching');root.classList.remove('sc-search-has-value');results.hidden=true;if(empty)empty.hidden=true;if(status)status.textContent='';refreshGeometry(false);return;}
-  if(!active)capture();else restore();active=true;document.body.classList.add('sc-catalog-searching');root.classList.add('sc-search-has-value');
-  var ranked=[];inventory.forEach(function(item){var rank=score(item,query,tokens);if(rank>=0)ranked.push({item:item,rank:rank});});ranked.sort(function(a,b){return a.rank-b.rank||a.item.order-b.item.order;});
-  ranked.forEach(function(entry){entry.item.card.classList.add('sc-search-result');results.appendChild(entry.item.card);});results.hidden=false;if(empty)empty.hidden=ranked.length!==0;if(status)status.textContent=ranked.length===1?'1 producto encontrado':ranked.length+' productos encontrados';refreshGeometry(true);
+function categoryLabel(value){return String(value||'').replace(/\s+/g,' ').replace(/\s*-\s*\d+\s*%\s*OFF\b.*$/i,'').trim()||'OTROS';}
+function capture(root){
+  inventory=[];groups=[];var results=root.querySelector('.sc-catalog-search-results'),prototype=results&&results.querySelector('[data-sc-search-group-prototype]');if(!results||!prototype)return;
+  U.each(document.querySelectorAll('.containerShop .listadoShop'),function(section){
+    if(section.closest('.sc-catalog-search-results')||!section.querySelector('.productoShop'))return;
+    var heading=section.querySelector('.titleShopSeccion'),node=prototype.cloneNode(true),titleNode=node.querySelector('.sc-catalog-search-group-title'),grid=node.querySelector('.sc-catalog-search-grid');
+    node.removeAttribute('data-sc-search-group-prototype');node.hidden=true;if(titleNode)titleNode.textContent=categoryLabel(heading&&heading.textContent);results.insertBefore(node,prototype);
+    var group={node:node,grid:grid,items:[],order:groups.length,count:0,best:99,lastOrder:null};groups.push(group);section.classList.add('sc-search-source');
+    U.each(section.querySelectorAll('.productoShop'),function(card){
+      var title=card.querySelector('.title-shop1'),description=card.querySelector('.descrip'),titleText=normalize(title&&title.textContent),descriptionText=normalize(description&&description.textContent);
+      var item={card:card,parent:card.parentNode,next:card.nextSibling,order:inventory.length,title:titleText,description:descriptionText,text:(titleText+' '+descriptionText).trim(),group:group,wasHidden:card.hidden,visible:null,lastOrder:null};inventory.push(item);group.items.push(item);
+    });
+  });
 }
-function install(root){var input=root&&root.querySelector('.sc-catalog-search-input');if(!input)return;function schedule(){if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){raf=0;apply(root,input.value);});}input.addEventListener('input',schedule);input.addEventListener('keydown',function(event){if(event.key!=='Escape'||!input.value)return;input.value='';schedule();input.focus();});}
+function score(item,query,tokens){
+  for(var i=0;i<tokens.length;i++)if(item.text.indexOf(tokens[i])<0)return-1;
+  if(item.title===query)return 0;if(item.title.indexOf(query)===0)return 1;if(item.title.indexOf(query)>=0)return 2;
+  var allTitle=true;for(var j=0;j<tokens.length;j++)if(item.title.indexOf(tokens[j])<0){allTitle=false;break;}if(allTitle)return 3;
+  if(item.description.indexOf(query)>=0)return 4;return 5;
+}
+function enter(root){
+  if(active)return;active=true;document.body.classList.add('sc-catalog-searching');root.classList.add('sc-search-has-value');
+  groups.forEach(function(group){group.items.forEach(function(item){group.grid.appendChild(item.card);});});
+}
+function restore(root){
+  var results=root.querySelector('.sc-catalog-search-results');if(results)results.hidden=true;
+  for(var i=inventory.length-1;i>=0;i--){var item=inventory[i];item.card.hidden=item.wasHidden;item.card.style.removeProperty('order');item.visible=null;item.lastOrder=null;if(!item.parent)continue;if(item.next&&item.next.parentNode===item.parent)item.parent.insertBefore(item.card,item.next);else item.parent.appendChild(item.card);}
+  groups.forEach(function(group){group.node.hidden=true;group.node.style.removeProperty('order');group.lastOrder=null;});
+  active=false;lastQuery=null;document.body.classList.remove('sc-catalog-searching');root.classList.remove('sc-search-has-value');
+  requestAnimationFrame(function(){if(SC.categoryNav&&SC.categoryNav.refreshMetrics)SC.categoryNav.refreshMetrics();if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);});
+}
+function apply(root,value){
+  var query=normalize(value),status=root.querySelector('.sc-catalog-search-status'),results=root.querySelector('.sc-catalog-search-results'),empty=root.querySelector('.sc-catalog-search-empty-message');if(!results)return;
+  if(!query){if(active)restore(root);else root.classList.remove('sc-search-has-value');if(empty)empty.hidden=true;if(status)status.textContent='';return;}
+  if(query===lastQuery)return;enter(root);lastQuery=query;var tokens=query.split(' '),total=0;
+  groups.forEach(function(group){group.count=0;group.best=99;});
+  inventory.forEach(function(item){
+    var rank=score(item,query,tokens),visible=rank>=0;if(item.visible!==visible){item.card.hidden=!visible;item.visible=visible;}if(!visible)return;
+    total++;item.group.count++;if(rank<item.group.best)item.group.best=rank;var order=rank*100000+item.order;if(item.lastOrder!==order){item.card.style.order=order;item.lastOrder=order;}
+  });
+  groups.forEach(function(group){var visible=group.count>0;group.node.hidden=!visible;if(!visible)return;var order=group.best*1000+group.order;if(group.lastOrder!==order){group.node.style.order=order;group.lastOrder=order;}});
+  results.hidden=false;if(empty)empty.hidden=total!==0;if(status)status.textContent=total===1?'1 producto encontrado':total+' productos encontrados';
+}
+function install(root){
+  var input=root&&root.querySelector('.sc-catalog-search-input');if(!input)return;capture(root);
+  function schedule(){if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){raf=0;apply(root,input.value);});}
+  input.addEventListener('input',schedule);input.addEventListener('keydown',function(event){if(event.key!=='Escape'||!input.value)return;input.value='';schedule();input.focus();});
+}
 C.search={install:install,apply:apply};
 })();

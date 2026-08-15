@@ -18,8 +18,17 @@ bootstrap = re.compile(
     rf'<script\b(?=[^>]*\bsrc=["\']_js_dev/main\.js\?v={re.escape(SHA)}["\'])[^>]*>\s*</script>',
     re.IGNORECASE,
 )
+view_prepaint = (
+    "(function(){var r=document.documentElement,w=window.innerWidth||r.clientWidth||0,"
+    "c=w<=640?'phone':w<=992?'tablet':'desktop',"
+    "a=c==='phone'?['one','two','list']:c==='tablet'?['two','three','four','list']:['three','four','list'],v='';"
+    "try{v=localStorage.getItem('scCatalogView:v2:'+c)||localStorage.getItem(c==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||''}catch(e){}"
+    "if(a.indexOf(v)<0)v=c==='phone'?'one':c==='tablet'?'two':'three';"
+    "r.setAttribute('data-sc-catalog-view',v);r.setAttribute('data-sc-catalog-view-context',c);"
+    "r.classList.add('sc-catalog-prepaint','sc-no-loading-state')})();"
+)
 replacement = '\n'.join([
-    f"<script>document.documentElement.classList.add('sc-catalog-prepaint','sc-no-loading-state');window.__scCatalogAssetVersion='{SHA}';</script>",
+    f"<script>{view_prepaint}window.__scCatalogAssetVersion='{SHA}';</script>",
     f'<script src="_js_dev/main-legacy.js?v={SHA}" type="text/javascript"></script>',
     f'<link rel="stylesheet" href="override/main.css?v={SHA}">',
     f'<script src="override/main.js?v={SHA}" type="text/javascript"></script>',
@@ -30,6 +39,8 @@ if count != 1:
 
 if bootstrap.search(html):
     raise SystemExit('Development bootstrap script remains in Pages index')
+if 'data-sc-catalog-view' not in html or 'scCatalogView:v2:' not in html:
+    raise SystemExit('Remembered catalogue view prepaint bootstrap is missing')
 if len(re.findall(rf'<script\b[^>]*\bsrc=["\']_js_dev/main-legacy\.js\?v={re.escape(SHA)}["\'][^>]*>\s*</script>', html, re.IGNORECASE)) != 1:
     raise SystemExit('Direct main-legacy script must appear exactly once')
 if len(re.findall(rf'<link\b[^>]*\bhref=["\']override/main\.css\?v={re.escape(SHA)}["\'][^>]*>', html, re.IGNORECASE)) != 2:
@@ -38,4 +49,4 @@ if len(re.findall(rf'<script\b[^>]*\bsrc=["\']override/main\.js\?v={re.escape(SH
     raise SystemExit('Direct override runtime script must appear exactly once')
 
 index_path.write_text(html, encoding='utf-8')
-print('Flattened Pages bootstrap while preserving main-legacy -> CSS -> override order')
+print('Flattened Pages bootstrap with remembered view prepaint and main-legacy -> CSS -> override order')
