@@ -115,6 +115,7 @@ jobs:
               'scripts/bundle-pages-legacy-css.py',
               'scripts/bundle-pages-legacy-js.py',
               'scripts/bundle-pages-shop-js.py',
+              'scripts/validate-pages-local-assets.py',
           ):
               ast.parse(Path(script).read_text(encoding='utf-8'))
           PY
@@ -138,6 +139,7 @@ jobs:
           node --check .pages-site/override/main.js
           node --check .pages-site/_pages/legacy.js
           node --check .pages-site/_pages/shop.js
+          python3 scripts/validate-pages-local-assets.py
 
           if grep -F 'src="_js_dev/main.js?v=' .pages-site/index.html >/dev/null; then
             echo 'Development bootstrap remains in Pages index'
