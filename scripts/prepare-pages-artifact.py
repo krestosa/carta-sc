@@ -68,6 +68,8 @@ def stamp_entrypoint():
         re.IGNORECASE,
     )
     hints = '\n'.join([
+        '<link rel="preconnect" href="https://fonts.googleapis.com">',
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
         '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>',
         f'<link rel="preload" as="script" href="_js_dev/main-legacy.js?v={SHA}">',
         f'<link rel="preload" as="style" href="override/main.css?v={SHA}">',
@@ -84,6 +86,23 @@ def stamp_entrypoint():
     text, font_count = font_preload_re.subn(lambda match: match.group('tag') + ' crossorigin' + match.group('end'), text)
     if font_count != 2:
         raise SystemExit(f'Expected two Acumin font preloads, found {font_count}')
+
+    banner_image_re = re.compile(
+        r'(?P<prefix><img\b(?=[^>]*\bclass="[^"]*\bimgBannerShop\b[^"]*")(?P<attrs>[^>]*))(?P<close>>)',
+        re.IGNORECASE,
+    )
+
+    def prioritize_banner_image(match):
+        attrs = match.group('attrs')
+        attrs = re.sub(r'\s+loading="[^"]*"', '', attrs, flags=re.IGNORECASE)
+        attrs = re.sub(r'\s+decoding="[^"]*"', '', attrs, flags=re.IGNORECASE)
+        attrs = re.sub(r'\s+fetchpriority="[^"]*"', '', attrs, flags=re.IGNORECASE)
+        attrs += ' loading="eager" decoding="async" fetchpriority="high"'
+        return '<img' + attrs + match.group('close')
+
+    text, banner_count = banner_image_re.subn(prioritize_banner_image, text, count=1)
+    if banner_count != 1:
+        raise SystemExit(f'Expected one catalogue banner image, found {banner_count}')
 
     product_image_re = re.compile(
         r'(?P<prefix><div\b[^>]*class="[^"]*\bimgShop\b[^"]*"[^>]*>\s*<img\b)(?P<attrs>[^>]*)(?P<close>>)',
@@ -256,10 +275,13 @@ def verify():
     ):
         if f'rel="preload"' not in index or asset not in index:
             raise SystemExit(f'Preload hint is missing for {asset}')
-    if 'rel="preconnect" href="https://cdn.jsdelivr.net"' not in index:
-        raise SystemExit('jsDelivr preconnect hint is missing')
+    for origin in ('https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'):
+        if f'rel="preconnect" href="{origin}"' not in index:
+            raise SystemExit(f'Preconnect hint is missing for {origin}')
     if len(re.findall(r'<link\s+rel="preload"\s+href="fuentes/AcuminPro-(?:Regular|Semibold)\.woff2"\s+as="font"\s+type="font/woff2"\s+crossorigin>', index, re.IGNORECASE)) != 2:
         raise SystemExit('Acumin font preloads must include crossorigin')
+    if not re.search(r'<img\b(?=[^>]*\bclass="[^"]*\bimgBannerShop\b[^"]*")(?=[^>]*\bloading="eager")(?=[^>]*\bdecoding="async")(?=[^>]*\bfetchpriority="high")[^>]*>', index, re.IGNORECASE):
+        raise SystemExit('Catalogue banner must be eager, async-decoded and high priority')
     if 'loading="lazy"' not in index or 'decoding="async"' not in index:
         raise SystemExit('Native lazy product image attributes are missing')
     if 'maps.googleapis.com/maps/api/js' in index or '_js_dev/mapKrc.js' in index or 'js/main_shop_maps__q_9fc895e1.js' in index:
