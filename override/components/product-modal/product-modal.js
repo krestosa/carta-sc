@@ -2,34 +2,37 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,V=SC&&SC.productModalView,A=SC&&SC.productModalA11y,M=SC&&SC.productModalMotion;
 if(!SC||!U||!V||!A||!M||SC.__productModalBooted)return;SC.__productModalBooted=true;
-var ready=U.ready,activeModal=null,previousFocus=null;
+var ready=U.ready,activeModal=null,closingModal=null,previousFocus=null,releaseBackground=null;
 
+function noop(){}
 function closeModal(event){
-  if(event)event.preventDefault();if(!activeModal)return;
-  var modal=activeModal;activeModal=null;
+  if(event)event.preventDefault();
+  if(!activeModal||closingModal)return;
+  var modal=activeModal,restore=previousFocus,release=releaseBackground||noop;
+  activeModal=null;closingModal=modal;previousFocus=null;releaseBackground=null;
   modal.classList.remove('is-visible');
   M.close(modal);
   document.body.classList.remove('sc-product-modal-open');
-  var restore=previousFocus;previousFocus=null;
   var delay=matchMedia('(prefers-reduced-motion: reduce)').matches?0:190;
   window.setTimeout(function(){
     if(modal.parentNode)modal.parentNode.removeChild(modal);
-    A.unlockBackground();
+    release();
+    if(closingModal===modal)closingModal=null;
     if(restore&&document.documentElement.contains(restore)){
       try{restore.focus({preventScroll:true});}catch(_){restore.focus();}
     }
   },delay);
 }
 function openModal(link){
-  if(activeModal)return;
+  if(activeModal||closingModal)return;
   var modal=V.build(link);if(!modal)return;
   previousFocus=link;
   document.body.appendChild(modal);
   document.body.classList.add('sc-product-modal-open');
   activeModal=modal;
+  releaseBackground=A.lockBackground(modal)||noop;
   var close=modal.querySelector('.sc-product-modal__close');
   try{close.focus({preventScroll:true});}catch(_){close.focus();}
-  A.lockBackground(modal);
   requestAnimationFrame(function(){if(activeModal===modal){modal.classList.add('is-visible');M.open(modal);}});
 }
 function onClick(event){
@@ -64,5 +67,10 @@ function install(){
   document.addEventListener('focusin',onFocusIn);
 }
 ready(install);
-SC.productModal={open:openModal,close:closeModal,getActive:function(){return activeModal;}};
+SC.productModal={
+  open:openModal,
+  close:closeModal,
+  getActive:function(){return activeModal;},
+  isClosing:function(){return!!closingModal;}
+};
 })();

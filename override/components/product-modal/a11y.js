@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils;if(!SC||!U||SC.__productModalA11yBooted)return;SC.__productModalA11yBooted=true;
-var each=U.each,backgroundState=[];
+var each=U.each;
 
 function focusableElements(dialog){
   return Array.prototype.filter.call(
@@ -10,7 +10,7 @@ function focusableElements(dialog){
   );
 }
 function lockBackground(modal){
-  backgroundState=[];
+  var backgroundState=[];
   var inertSupported=typeof HTMLElement!=='undefined'&&'inert' in HTMLElement.prototype;
   each(document.body.children,function(node){
     if(node===modal)return;
@@ -19,15 +19,17 @@ function lockBackground(modal){
     else{state.ariaHidden=node.getAttribute('aria-hidden');node.setAttribute('aria-hidden','true');}
     backgroundState.push(state);
   });
-}
-function unlockBackground(){
-  backgroundState.forEach(function(state){
-    if(!state.node||!document.documentElement.contains(state.node))return;
-    if(state.inertSupported)state.node.inert=state.inert;
-    else if(state.ariaHidden===null)state.node.removeAttribute('aria-hidden');
-    else state.node.setAttribute('aria-hidden',state.ariaHidden);
-  });
-  backgroundState=[];
+  var released=false;
+  return function(){
+    if(released)return;released=true;
+    backgroundState.forEach(function(state){
+      if(!state.node||!document.documentElement.contains(state.node))return;
+      if(state.inertSupported)state.node.inert=state.inert;
+      else if(state.ariaHidden===null)state.node.removeAttribute('aria-hidden');
+      else state.node.setAttribute('aria-hidden',state.ariaHidden);
+    });
+    backgroundState=[];
+  };
 }
 function trapTab(modal,event){
   var dialog=modal&&modal.querySelector('.sc-product-modal__dialog');if(!dialog)return;
@@ -43,5 +45,5 @@ function containFocus(modal,event){
   (items[0]||dialog).focus();
 }
 
-SC.productModalA11y={focusableElements:focusableElements,lockBackground:lockBackground,unlockBackground:unlockBackground,trapTab:trapTab,containFocus:containFocus};
+SC.productModalA11y={focusableElements:focusableElements,lockBackground:lockBackground,trapTab:trapTab,containFocus:containFocus};
 })();
