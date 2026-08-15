@@ -24,7 +24,6 @@ var beforeTemplates=[
     ['features/content-normalizer/rules.js','sc-content-normalizer-rules-js'],
     ['components/product-card/data.js','sc-product-card-data-js'],
     ['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],
-    ['components/product-card/image-parallax.js','sc-product-card-parallax-motion-js'],
     ['components/product-modal/view.js','sc-product-modal-view-js'],
     ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
     ['components/product-modal/motion.js','sc-product-modal-motion-js'],
