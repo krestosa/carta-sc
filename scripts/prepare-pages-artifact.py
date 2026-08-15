@@ -131,6 +131,15 @@ def bundle_js():
     if len(ids) != len(set(ids)):
         raise SystemExit('Duplicate JS module ids found while bundling')
 
+    declared_paths = set(re.findall(r"'([^']+\.js)'", loader))
+    captured_paths = set(paths)
+    if declared_paths != captured_paths:
+        missing = sorted(declared_paths - captured_paths)
+        extra = sorted(captured_paths - declared_paths)
+        raise SystemExit(
+            f'JS bundle manifest mismatch; uncaptured={missing}, unexpected={extra}'
+        )
+
     modules = []
     for module_path, _ in entries:
         source = path.parent / module_path
