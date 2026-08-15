@@ -109,6 +109,7 @@ jobs:
           from pathlib import Path
           for script in (
               'scripts/prepare-pages-artifact.py',
+              'scripts/optimize-pages-critical-path.py',
               'scripts/clean-pages-product-images.py',
               'scripts/clean-pages-snapshot.py',
               'scripts/flatten-pages-bootstrap.py',
@@ -130,6 +131,7 @@ jobs:
           mkdir -p .pages-site
           rsync -a --exclude='.git' --exclude='.pages-site' ./ .pages-site/
           python3 scripts/prepare-pages-artifact.py
+          python3 scripts/optimize-pages-critical-path.py
           python3 scripts/clean-pages-product-images.py
           python3 scripts/clean-pages-snapshot.py
           python3 scripts/flatten-pages-bootstrap.py
