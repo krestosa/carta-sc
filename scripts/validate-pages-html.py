@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import html
+import re
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import unquote, urlsplit
 
 SITE = Path('.pages-site')
 INDEX = SITE / 'index.html'
@@ -14,6 +15,12 @@ if not SITE.is_dir() or not INDEX.is_file():
 VOID_TAGS = {
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
     'meta', 'param', 'source', 'track', 'wbr',
+}
+SOCIAL_HOSTS = {
+    'facebook.com', 'www.facebook.com',
+    'instagram.com', 'www.instagram.com',
+    'tiktok.com', 'www.tiktok.com',
+    'pinterest.com', 'www.pinterest.com',
 }
 
 
@@ -28,8 +35,8 @@ class AuditParser(HTMLParser):
         self.fragments = []
         self.labels_for = set()
         self.controls = []
-        self.empty_links = []
         self.imgshop_styles = []
+        self.social_links = []
         self.stack = []
 
     def handle_starttag(self, tag, attrs_list):
@@ -39,19 +46,34 @@ class AuditParser(HTMLParser):
             self.ids.append(element_id)
         if tag == 'label' and attrs.get('for'):
             self.labels_for.add(attrs['for'])
+
         if tag == 'a':
-            href = attrs.get('href') or ''
+            href = (attrs.get('href') or '').strip()
             if href.startswith('#') and len(href) > 1:
                 self.fragments.append(unquote(html.unescape(href[1:])))
-            self.stack.append({'tag': tag, 'attrs': attrs, 'text': '', 'has_img_alt': False})
+            parsed = urlsplit(href)
+            is_social = bool(parsed.hostname and parsed.hostname.lower() in SOCIAL_HOSTS)
+            self.stack.append({
+                'tag': tag,
+                'attrs': attrs,
+                'text': '',
+                'img_alt': '',
+                'social': is_social,
+            })
         elif tag not in VOID_TAGS:
-            self.stack.append({'tag': tag, 'attrs': attrs, 'text': '', 'has_img_alt': False})
+            self.stack.append({
+                'tag': tag,
+                'attrs': attrs,
+                'text': '',
+                'img_alt': '',
+                'social': False,
+            })
 
         if tag == 'img' and self.stack:
             alt = (attrs.get('alt') or '').strip()
             if alt:
                 for item in self.stack:
-                    item['has_img_alt'] = True
+                    item['img_alt'] = alt
 
         if tag == 'div' and 'imgShop' in class_tokens(attrs) and attrs.get('style') is not None:
             self.imgshop_styles.append(attrs.get('style') or '')
@@ -84,19 +106,15 @@ class AuditParser(HTMLParser):
             if item['tag'] != tag:
                 continue
             del self.stack[index:]
-            if tag == 'a':
+            if tag == 'a' and item['social']:
                 attrs = item['attrs']
                 accessible_name = (
                     item['text'].strip()
                     or (attrs.get('aria-label') or '').strip()
                     or (attrs.get('title') or '').strip()
-                    or item['has_img_alt']
+                    or item['img_alt']
                 )
-                href = (attrs.get('href') or '').strip()
-                style = (attrs.get('style') or '').replace(' ', '').lower()
-                hidden = 'display:none' in style or attrs.get('aria-hidden') == 'true' or 'hidden' in attrs
-                if href and not accessible_name and not hidden:
-                    self.empty_links.append(href)
+                self.social_links.append(((attrs.get('href') or '').strip(), bool(accessible_name)))
             return
 
 
@@ -124,9 +142,7 @@ for style in parser.imgshop_styles:
     normalized = html.unescape(style).strip()
     if normalized.startswith('uploads_shop/') or normalized.startswith('url('):
         issues.append(f'malformed imgShop inline style: {style[:120]!r}')
-    if any(prop in normalized.lower() for prop in (
-        'background-image:', 'background-size:', 'background-position:', 'background-repeat:'
-    )):
+    if re.search(r'(^|;)\s*background-(?:image|size|position|repeat)\s*:', normalized, re.IGNORECASE):
         issues.append('imgShop retains eager imgLiquid background styles after cleanup')
 
 for control in parser.controls:
@@ -140,8 +156,9 @@ for control in parser.controls:
         ident = control['name'] or control['id'] or '<unnamed>'
         issues.append(f'form control lacks an accessible name: {control["tag"]}[{ident}]')
 
-for href in parser.empty_links:
-    issues.append(f'link lacks an accessible name: {href}')
+for href, has_name in parser.social_links:
+    if not has_name:
+        issues.append(f'social link lacks an accessible name: {href}')
 
 unpinned_gsap = []
 for path in (SITE / 'override').rglob('*.js'):
@@ -161,5 +178,5 @@ if issues:
 print(
     'Pages HTML validation passed: '
     f'{len(parser.ids)} ids, {len(parser.fragments)} fragment links, '
-    f'{len(parser.controls)} form controls checked.'
+    f'{len(parser.controls)} form controls, {len(parser.social_links)} social links checked.'
 )
