@@ -5,8 +5,8 @@ var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
 parts.installParallax=function(gsap,ST){
   var mm=gsap.matchMedia();
-  mm.add('(prefers-reduced-motion: no-preference)',function(){
-    var desktop=window.matchMedia('(min-width: 993px)').matches,distance=desktop?8:6;
+  mm.add('(min-width: 993px) and (prefers-reduced-motion: no-preference)',function(){
+    var distance=8;
     var images=gsap.utils.toArray('.listadoShop .productoShop .imgShop > img'),tweens=[];
     images.forEach(function(img){
       var frame=img.closest('.imgShop');if(!frame)return;

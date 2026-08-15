@@ -37,6 +37,23 @@ def stamp_entrypoint():
     text, count = entry_re.subn(lambda match: hints + '\n' + match.group('tag'), text, count=1)
     if count != 1:
         raise SystemExit('Could not inject override preload hints exactly once')
+
+    product_image_re = re.compile(
+        r'(?P<prefix><div\b[^>]*class="[^"]*\bimgShop\b[^"]*"[^>]*>\s*<img\b)(?P<attrs>[^>]*)(?P<close>>)',
+        re.IGNORECASE,
+    )
+
+    def lazy_product_image(match):
+        attrs = match.group('attrs')
+        if not re.search(r'\bloading\s*=', attrs, re.IGNORECASE):
+            attrs += ' loading="lazy"'
+        if not re.search(r'\bdecoding\s*=', attrs, re.IGNORECASE):
+            attrs += ' decoding="async"'
+        return match.group('prefix') + attrs + match.group('close')
+
+    text, image_count = product_image_re.subn(lazy_product_image, text)
+    if image_count < 1:
+        raise SystemExit('No product images were found for native lazy loading')
     path.write_text(text, encoding='utf-8')
 
 
@@ -192,6 +209,8 @@ def verify():
             raise SystemExit(f'Preload hint is missing for {asset}')
     if 'rel="preconnect" href="https://cdn.jsdelivr.net"' not in index:
         raise SystemExit('jsDelivr preconnect hint is missing')
+    if 'loading="lazy"' not in index or 'decoding="async"' not in index:
+        raise SystemExit('Native lazy product image attributes are missing')
     if f"var version='{SHA}';" not in bootstrap:
         raise SystemExit('Stamped bootstrap version is missing')
     if '@import' in css:

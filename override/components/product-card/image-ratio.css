@@ -3,13 +3,26 @@
 
 body.sushiShop .listadoShop .productoShop .imgShop {
   overflow: hidden !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  line-height: 0 !important;
 }
 
 body.sushiShop .listadoShop .productoShop .imgShop > img {
-  --sc-image-parallax-y: 0px;
-  transform: translate3d(0, var(--sc-image-parallax-y), 0) scale(1.04) !important;
-  transform-origin: 50% 50% !important;
-  backface-visibility: hidden;
+  display: block !important;
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
 }
 
 @media (min-width: 993px) {
@@ -20,29 +33,15 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
     height: auto !important;
     min-height: 0 !important;
     padding: 0 !important;
-    aspect-ratio: 286 / 200 !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    background-image: none !important;
-    line-height: 0 !important;
-    overflow: hidden !important;
+    aspect-ratio: 286 / 200;
+    margin: 0 !important;
   }
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop > img {
-    display: block !important;
-    position: static !important;
-    inset: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
-    max-height: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    object-fit: contain !important;
-    object-position: center !important;
+  body.sushiShop .listadoShop .productoShop .imgShop > img {
+    --sc-image-parallax-y: 0px;
+    transform: translate3d(0, var(--sc-image-parallax-y), 0) scale(1.04) !important;
+    transform-origin: 50% 50% !important;
+    backface-visibility: hidden;
   }
 }
 
@@ -53,4 +52,4 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
   }
 }
 
-/* Deploy marker: internal-image-parallax-v1. */
+/* Deploy marker: native-product-image-v2. */
