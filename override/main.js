@@ -42,6 +42,8 @@ var afterTemplates=[
     ['components/category-nav/rail-position.js','sc-category-nav-rail-position-js'],
     ['components/category-nav/sticky-state.js','sc-category-nav-sticky-state-js'],
     ['components/category-nav/indicator.js','sc-category-nav-indicator-js'],
+    ['components/catalog-tools/search.js','sc-catalog-tools-search-js'],
+    ['components/catalog-tools/view.js','sc-catalog-tools-view-js'],
     ['components/product-card/a11y.js','sc-product-card-a11y-js'],
     ['components/product-card/content.js','sc-product-card-content-js'],
     ['components/product-card/motion.js','sc-product-card-motion-js'],
@@ -58,7 +60,8 @@ var afterTemplates=[
   [
     ['components/category-nav/category-nav.js','sc-override-category-nav-js'],
     ['components/product-card/product-card.js','sc-override-product-card-js'],
-    ['components/product-modal/product-modal.js','sc-override-product-modal-js']
+    ['components/product-modal/product-modal.js','sc-override-product-modal-js'],
+    ['components/catalog-tools/catalog-tools.js','sc-catalog-tools-js']
   ]
 ];
 loadStages(beforeTemplates).then(function(){

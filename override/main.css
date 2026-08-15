@@ -13,6 +13,7 @@
 @import "./components/product-modal/motion.css?v=unversioned";
 @import "./components/product-card/image-ratio.css?v=unversioned";
 @import "./features/catalog/layout.css?v=unversioned";
+@import "./components/catalog-tools/catalog-tools.css?v=unversioned";
 @import "./components/section-heading/layout.css?v=unversioned";
 @import "./components/product-card/layout.css?v=unversioned";
 @import "./components/product-card/content.css?v=unversioned";

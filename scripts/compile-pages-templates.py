@@ -9,6 +9,7 @@ TEMPLATE_FILES = (
     'components/product-modal/product-modal.html',
     'components/category-nav/category-nav.html',
     'components/product-card/product-card.html',
+    'components/catalog-tools/catalog-tools.html',
 )
 REQUIRED_TEMPLATES = {
     'product-modal',
@@ -18,6 +19,7 @@ REQUIRED_TEMPLATES = {
     'category-indicator',
     'product-card-a11y-meta',
     'product-trait-group',
+    'catalog-tools',
 }
 MARKER = 'var COMPILED_TEMPLATES=null;/*__SC_TEMPLATE_PAYLOAD__*/'
 TEMPLATE_RE = re.compile(
@@ -64,13 +66,8 @@ if registry.count(MARKER) != 1:
     raise SystemExit('Template registry compile marker must exist exactly once')
 serialized = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
 serialized = serialized.replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
-registry = registry.replace(
-    MARKER,
-    f'var COMPILED_TEMPLATES={serialized};/*__SC_TEMPLATE_PAYLOAD__*/',
-    1,
-)
+registry = registry.replace(MARKER,f'var COMPILED_TEMPLATES={serialized};/*__SC_TEMPLATE_PAYLOAD__*/',1)
 REGISTRY.write_text(registry, encoding='utf-8')
-
 if 'var COMPILED_TEMPLATES=null;' in registry:
     raise SystemExit('Template payload was not compiled into the staging registry')
 print(f'Compiled {len(payload)} override templates from {len(TEMPLATE_FILES)} HTML sources.')

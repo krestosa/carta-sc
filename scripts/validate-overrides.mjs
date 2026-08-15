@@ -38,6 +38,7 @@ const requiredTemplates = new Set([
   'category-indicator',
   'product-card-a11y-meta',
   'product-trait-group',
+  'catalog-tools',
 ]);
 const structuralUiFiles = [
   'components/product-modal/view.js',
@@ -46,6 +47,7 @@ const structuralUiFiles = [
   'components/category-nav/indicator.js',
   'components/product-card/data.js',
   'components/product-card/a11y.js',
+  'components/catalog-tools/catalog-tools.js',
 ];
 
 for (const required of [overrideDir, mainJsPath, mainCssPath, bootstrapPath, indexPath, templateRegistryPath]) {
