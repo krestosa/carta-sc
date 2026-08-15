@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: read
   pages: write
   id-token: write
@@ -23,25 +24,40 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Prefer workflow mode for Pages
-        continue-on-error: true
+      - name: Cancel competing legacy Pages runs
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          code=$(curl -sS -o /tmp/pages-mode.txt -w '%{http_code}' \
-            -L -X PUT \
+          curl -fsSL \
             -H 'Accept: application/vnd.github+json' \
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H 'X-GitHub-Api-Version: 2022-11-28' \
-            -H 'Content-Type: application/json' \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages" \
-            -d '{"build_type":"workflow"}')
-          if [ "$code" != '204' ]; then
-            echo "Pages mode update returned HTTP $code"
-            cat /tmp/pages-mode.txt
-            exit 1
-          fi
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?branch=ux&per_page=100" \
+            > /tmp/pages-runs.json
+
+          python3 - <<'PY' > /tmp/pages-run-ids.txt
+          import json
+          data=json.load(open('/tmp/pages-runs.json'))
+          active={'queued','in_progress','pending','waiting','requested'}
+          for run in data.get('workflow_runs',[]):
+              if run.get('path')=='dynamic/pages/pages-build-deployment' and run.get('status') in active:
+                  print(run['id'])
+          PY
+
+          while read -r run_id; do
+            [ -n "$run_id" ] || continue
+            code=$(curl -sS -o /tmp/pages-run-cancel.txt -w '%{http_code}' \
+              -L -X POST \
+              -H 'Accept: application/vnd.github+json' \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel")
+            case "$code" in
+              202|409) ;;
+              *) cat /tmp/pages-run-cancel.txt; exit 1 ;;
+            esac
+          done < /tmp/pages-run-ids.txt
 
       - name: Cancel previous Pages deployment when possible
         if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
@@ -57,7 +73,7 @@ jobs:
             -H 'X-GitHub-Api-Version: 2022-11-28' \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/deployments/${PREVIOUS_SHA}/cancel")
           case "$code" in
-            204|404|409|422) ;;
+            204|400|404|409|422) ;;
             *) cat /tmp/pages-cancel.txt; exit 1 ;;
           esac
 
