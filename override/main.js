@@ -59,7 +59,6 @@ loadStages([
     ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
     ['mutations/history.js','sc-override-history-js'],
     ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
-    ['mutations/scroll-restoration.js','sc-override-scroll-restoration-js'],
     ['components/category-nav/core.js','sc-category-nav-core-js'],
     ['components/product-card/data.js','sc-product-card-data-js'],
     ['components/product-card/motion.js','sc-product-card-motion-js'],
