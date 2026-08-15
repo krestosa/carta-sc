@@ -150,6 +150,7 @@ function flush(){
   var hosts=Array.from(pending);
   pending.clear();
   hosts.forEach(normalizeHost);
+  if(observer)observer.takeRecords();
 }
 
 function schedule(){
