@@ -1,0 +1,43 @@
+/* Product modal text, traits and pricing typography. */
+body.sushiShop .sc-product-modal__title {
+  margin: 0 !important;
+  color: #151515 !important;
+  font-family: 'SC Acumin',Arial,sans-serif !important;
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: -.025em !important;
+}
+body.sushiShop .sc-product-modal__traits {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin-right: 7px !important;
+  vertical-align: -2px !important;
+}
+body.sushiShop .sc-product-modal__traits img {
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+}
+body.sushiShop .sc-product-modal__description {
+  margin: 10px 0 0 !important;
+  color: #656565 !important;
+  font-family: 'SC Acumin',Arial,sans-serif !important;
+  font-size: 13.5px !important;
+  line-height: 1.52 !important;
+  font-weight: 400 !important;
+}
+body.sushiShop .sc-product-modal__price-row .price,
+body.sushiShop .sc-product-modal__price-row .priceHijass {
+  margin: 0 !important;
+  color: #151515 !important;
+  font: 600 17px/1.2 'SC Acumin',Arial,sans-serif !important;
+}
+body.sushiShop .sc-product-modal__price-row .ofertaPrice {
+  margin: 0 !important;
+  color: #737373 !important;
+  font: 400 12px/1.2 'SC Acumin',Arial,sans-serif !important;
+  text-decoration: line-through !important;
+}

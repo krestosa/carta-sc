@@ -1,0 +1,29 @@
+/* Product modal compact viewport adjustments. */
+@media (max-width: 640px) {
+  body.sushiShop .sc-product-modal {
+    padding: 8px !important;
+  }
+  body.sushiShop .sc-product-modal__dialog {
+    width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+  body.sushiShop .sc-product-modal__content {
+    padding: 18px 18px 20px !important;
+  }
+  body.sushiShop .sc-product-modal__title {
+    font-size: 19px !important;
+  }
+  body.sushiShop .sc-product-modal__footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  body.sushiShop .sc-product-modal__actions {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  body.sushiShop .sc-product-modal__price-row {
+    width: 100% !important;
+  }
+}
