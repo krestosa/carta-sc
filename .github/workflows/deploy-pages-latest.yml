@@ -23,6 +23,26 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Prefer workflow mode for Pages
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          code=$(curl -sS -o /tmp/pages-mode.txt -w '%{http_code}' \
+            -L -X PUT \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            -H 'Content-Type: application/json' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages" \
+            -d '{"build_type":"workflow"}')
+          if [ "$code" != '204' ]; then
+            echo "Pages mode update returned HTTP $code"
+            cat /tmp/pages-mode.txt
+            exit 1
+          fi
+
       - name: Cancel previous Pages deployment when possible
         if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
         env:
