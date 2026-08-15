@@ -1,5 +1,5 @@
 /* SushiClub product media.
-   Owns product image stage, raster fitting and the clipped parallax surface. */
+   Owns product image stage and raster fitting. */
 
 body.sushiShop .listadoShop .productoShop .imgShop {
   overflow: hidden !important;
@@ -36,18 +36,10 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
     aspect-ratio: 286 / 200;
     margin: 0 !important;
   }
-
-  body.sushiShop .listadoShop .productoShop .imgShop > img {
-    --sc-image-parallax-y: 0px;
-    transform: translate3d(0, var(--sc-image-parallax-y), 0) scale(1.04) !important;
-    transform-origin: 50% 50% !important;
-    backface-visibility: hidden;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .listadoShop .productoShop .imgShop > img {
-    --sc-image-parallax-y: 0px !important;
     transform: none !important;
   }
 }
