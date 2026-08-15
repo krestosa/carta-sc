@@ -118,6 +118,20 @@
     text-transform: none !important;
     white-space: nowrap !important;
     text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus,
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:active {
+    outline: none !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus-visible {
+    outline: 1px solid #151515 !important;
+    outline-offset: 2px !important;
   }
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:hover,
