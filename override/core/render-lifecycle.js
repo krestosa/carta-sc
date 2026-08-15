@@ -19,17 +19,31 @@ function markInitialViewport(){
   });
 }
 
+function afterLayoutFrame(resolve){
+  requestAnimationFrame(function(){requestAnimationFrame(resolve);});
+}
 function waitForStableLayout(){
   return new Promise(function(resolve){
-    var attempts=0;
-    function check(){
-      if(!document.body)return requestAnimationFrame(check);
-      if(desktopQuery.matches&&!document.body.classList.contains('sc-catalog-layout-ready')&&attempts++<45){
-        return requestAnimationFrame(check);
+    function start(){
+      if(!document.body||!desktopQuery.matches||document.body.classList.contains('sc-catalog-layout-ready')){
+        afterLayoutFrame(resolve);
+        return;
       }
-      requestAnimationFrame(function(){requestAnimationFrame(resolve);});
+      var settled=false,observer=null,timer=0;
+      function finish(){
+        if(settled)return;settled=true;
+        if(observer)observer.disconnect();
+        if(timer)clearTimeout(timer);
+        afterLayoutFrame(resolve);
+      }
+      observer=new MutationObserver(function(){
+        if(document.body.classList.contains('sc-catalog-layout-ready'))finish();
+      });
+      observer.observe(document.body,{attributes:true,attributeFilter:['class']});
+      timer=window.setTimeout(finish,750);
     }
-    check();
+    if(document.body)start();
+    else document.addEventListener('DOMContentLoaded',start,{once:true});
   });
 }
 
