@@ -1,17 +1,15 @@
-/* Search-state visibility must win over responsive product-card display rules. */
-body.sushiShop.sc-catalog-searching .sc-catalog-search-grid > .productoShop[hidden] {
+/* Search never owns a parallel results grid. The original catalogue sections stay
+   mounted and the canonical list view owns their responsive geometry. */
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source {
+  display: grid !important;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source[hidden],
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop[hidden] {
   display: none !important;
 }
-
-/* Search highlighting stays typographic: no badge/pill treatment inside titles. */
-body.sushiShop mark.sc-search-hit {
-  padding: 0 !important;
-  background: transparent !important;
-  color: inherit !important;
-  text-decoration: underline !important;
-  text-decoration-thickness: 1px !important;
-  text-underline-offset: 2px !important;
-  text-decoration-color: var(--sc-color-muted) !important;
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* The existing spice/vegetarian legend is the quick-filter row. */
