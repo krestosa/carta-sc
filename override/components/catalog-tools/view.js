@@ -60,7 +60,9 @@ function sync(root,mode,animate){
   if(previous===key){if(!host.__scViewIconMotion)setViewIcon(host,key);return;}if(animate!==false&&previous)animateViewIcon(host,key);else{clearViewIconMotion(host);setViewIcon(host,key);}host.setAttribute('data-sc-icon-state',key);
 }
 function viewportAnchor(){
-  var nodes=document.querySelectorAll('.listadoShop .titleShopSeccion,.listadoShop .subTitleShopSeccion,.listadoShop .productoShop'),height=window.innerHeight||doc.clientHeight||0,probe=Math.min(Math.max(height*.28,110),240),best=null,bestDistance=Infinity;
+  var height=window.innerHeight||doc.clientHeight||0,tools=document.querySelector('.sc-catalog-tools'),toolsRect=tools&&tools.getBoundingClientRect();
+  if(toolsRect&&toolsRect.bottom>0&&toolsRect.top<height)return tools;
+  var nodes=document.querySelectorAll('.listadoShop .titleShopSeccion,.listadoShop .subTitleShopSeccion,.listadoShop .productoShop'),probe=Math.min(Math.max(height*.28,110),240),best=null,bestDistance=Infinity;
   for(var i=0;i<nodes.length;i++){
     var node=nodes[i],rect=node.getBoundingClientRect();if(rect.bottom<=0||rect.top>=height)continue;
     var distance=rect.top<=probe&&rect.bottom>=probe?0:Math.abs(rect.top-probe);
@@ -68,7 +70,10 @@ function viewportAnchor(){
   }
   return best;
 }
-function captureViewport(){var anchor=viewportAnchor(),rect=anchor&&anchor.getBoundingClientRect();return{x:window.scrollX||window.pageXOffset||0,y:window.scrollY||window.pageYOffset||0,anchor:anchor,anchorTop:rect?rect.top:null};}
+function captureViewport(){
+  var x=window.scrollX||window.pageXOffset||0,y=window.scrollY||window.pageYOffset||0;if(y<=1)return{x:x,y:y,anchor:null,anchorTop:null};
+  var anchor=viewportAnchor(),rect=anchor&&anchor.getBoundingClientRect();return{x:x,y:y,anchor:anchor,anchorTop:rect?rect.top:null};
+}
 function restoreViewport(viewport){
   if(!viewport)return;var currentX=window.scrollX||window.pageXOffset||0,currentY=window.scrollY||window.pageYOffset||0,anchor=viewport.anchor;
   if(anchor&&doc.contains(anchor)&&viewport.anchorTop!==null){
