@@ -3,6 +3,14 @@
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var version=window.__scCatalogAssetVersion||'unversioned';
 var base='override/';
+function bootstrapStaticNetwork(){
+  if(window.__scStaticNetworkBooted)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticNetworkBooted=true;
+  var ajax=$.ajax;
+  function urlOf(first,second){if(typeof first==='string')return first;if(first&&typeof first.url==='string')return first.url;return second&&typeof second.url==='string'?second.url:'';}
+  function isKeepalive(url){if(!url)return false;try{var target=new URL(url,location.href);return target.origin===location.origin&&/\/carta_delivery\.php$/i.test(target.pathname)&&target.searchParams.get('keepalive')==='1';}catch(_){return false;}}
+  $.ajax=function(first,second){if(!isKeepalive(urlOf(first,second)))return ajax.apply(this,arguments);return $.Deferred().resolve('', 'nocontent', null).promise();};
+}
+bootstrapStaticNetwork();
 var VIEW_MODES=['compact','normal','list'],VIEW_STORE_KEY='scCatalogView:v3';
 function bootstrapCatalogView(){
   var root=document.documentElement,mode='',ctx='',legacy='';if(!root)return;
@@ -29,7 +37,6 @@ function loadAll(items){return Promise.all(items.map(function(item){return loadS
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
 var beforeTemplates=[
   [
-    ['mutations/static-network.js','sc-static-network-js'],
     ['core/variables.js','sc-override-variables-js'],
     ['core/utils.js','sc-override-utils-js'],
     ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
