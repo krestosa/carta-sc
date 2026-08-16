@@ -3,7 +3,7 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
-var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,REFRESH_DELAY=120;
+var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
 var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger',scrollTo:'sc-gsap-scrollto'};
 var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo;
 
@@ -36,10 +36,18 @@ function flush(){
 }
 function whenReady(fn){if(typeof fn!=='function')return;if(unlocked&&deps)fn(deps);else queue.push(fn);}
 function run(fn){if(!deps||!unlocked||typeof fn!=='function')return false;fn(deps);return true;}
+function runRefresh(){
+  refreshTimer=0;if(!deps||!deps.ScrollTrigger||refreshing)return;
+  refreshing=true;lastRefreshAt=performance.now();
+  try{deps.ScrollTrigger.refresh();}
+  catch(error){if(!(error&&error.name==='SecurityError')&&window.console&&console.error)console.error('[SushiClub motion]',error);}
+  finally{refreshing=false;}
+}
 function refresh(delay){
   if(!deps||!deps.ScrollTrigger)return;
   if(refreshTimer)window.clearTimeout(refreshTimer);
-  refreshTimer=window.setTimeout(function(){refreshTimer=0;deps.ScrollTrigger.refresh();},delay==null?0:delay);
+  var requested=Math.max(0,delay==null?0:delay),elapsed=performance.now()-lastRefreshAt,wait=Math.max(requested,Math.max(0,MIN_REFRESH_GAP-elapsed));
+  refreshTimer=window.setTimeout(runRefresh,wait);
 }
 function clearIconMotion(host){
   var state=host&&host.__scIconMotion;if(!state)return;
