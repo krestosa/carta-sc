@@ -20,9 +20,10 @@ function current(){
 function hold(target){heldTarget=target||null;heldUntil=heldTarget?performance.now()+SPY_HOLD_MS:0;}
 function release(){heldTarget=null;heldUntil=0;}
 function spy(){
-  spyRaf=0;if(locked())return;var target=current(),active=A.current();
+  spyRaf=0;if(locked())return;var active=A.current(),target;
+  if(heldTarget&&scrollState&&scrollState.programmatic){if(active!==heldTarget)A.set(heldTarget,false);else if(I.isDirty())I.move(heldTarget,false);return;}
+  target=current();
   if(heldTarget){
-    if(scrollState&&scrollState.programmatic){if(active!==heldTarget)A.set(heldTarget,false);else if(I.isDirty())I.move(heldTarget,false);return;}
     if(target===heldTarget||performance.now()>=heldUntil)release();else{if(active&&I.isDirty())I.move(active,false);return;}
   }
   if(target&&target!==active)A.set(target,true);else if(target&&I.isDirty())I.move(target,false);
