@@ -98,6 +98,16 @@ html.sc-catalog-prepaint body.sushiShop :where(
     opacity: 0 !important;
   }
 
+  html.sc-catalog-prepaint.sc-mobile-logo-ready body.sushiShop .brandOnlyMobile > a {
+    background-color: transparent !important;
+    background-image: none !important;
+    animation: none !important;
+  }
+
+  html.sc-catalog-prepaint.sc-mobile-logo-ready body.sushiShop .brandOnlyMobile img {
+    opacity: 1 !important;
+  }
+
   /* SlickNav is created by legacy code before our repair marks the canonical
      instance. Keep provisional copies completely out of flow so they cannot
      expand/collapse the document while the header initializes. */
@@ -128,6 +138,14 @@ html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
   display: block !important;
   width: 100% !important;
   opacity: 0 !important;
+}
+
+html.sc-catalog-prepaint.sc-banner-media-ready body.sushiShop .bannerShop .BanContShop {
+  background: transparent !important;
+}
+
+html.sc-catalog-prepaint.sc-banner-media-ready body.sushiShop .bannerShop .imgBannerShop {
+  opacity: 1 !important;
 }
 
 @media (min-width: 993px) {
@@ -168,6 +186,11 @@ html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop::after {
   background-image: linear-gradient(100deg,transparent 18%,var(--sc-shell-highlight) 50%,transparent 82%);
   background-size: 220% 100%;
   animation: sc-site-shell-shimmer 1.25s linear infinite;
+}
+
+html.sc-catalog-prepaint.sc-banner-media-ready body.sushiShop .bannerShop .BanContShop::after {
+  opacity: 0;
+  animation: none;
 }
 
 html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div {

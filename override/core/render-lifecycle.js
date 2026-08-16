@@ -48,13 +48,17 @@ function waitForImage(img){
   if(img.complete){if(img.naturalWidth&&typeof img.decode==='function')return withTimeout(img.decode(),MEDIA_TIMEOUT);return Promise.resolve();}
   return withTimeout(new Promise(function(resolve){function done(){img.removeEventListener('load',done);img.removeEventListener('error',done);resolve();}img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});}),MEDIA_TIMEOUT);
 }
+function waitForVisibleMedia(img,className){return waitForImage(img).then(function(){if(root&&img&&img.complete&&img.naturalWidth)root.classList.add(className);});}
 function waitForCriticalMedia(){
   return waitFor(function(){return!!document.querySelector('.bannerShop .imgBannerShop');},STABLE_LAYOUT_TIMEOUT).then(function(){
-    var images=[document.querySelector('.bannerShop .imgBannerShop')];if(!desktopQuery.matches)images.push(document.querySelector('.brandOnlyMobile img'));return withTimeout(Promise.all(images.map(waitForImage)),MEDIA_TIMEOUT);
+    var waits=[],banner=document.querySelector('.bannerShop .imgBannerShop');waits.push(waitForVisibleMedia(banner,'sc-banner-media-ready'));
+    if(!desktopQuery.matches)waits.push(waitForVisibleMedia(document.querySelector('.brandOnlyMobile img'),'sc-mobile-logo-ready'));
+    return withTimeout(Promise.all(waits),MEDIA_TIMEOUT);
   });
 }
+function clearPrepaint(){if(!root)return;root.classList.remove('sc-catalog-prepaint');root.classList.remove('sc-banner-media-ready');root.classList.remove('sc-mobile-logo-ready');}
 function waitForStableLayout(){
-  return whenDomReady().then(function(){return Promise.all([waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader(),waitForFonts(),waitForCriticalMedia()]);}).then(function(){return new Promise(afterLayoutFrame);}).then(function(){if(root)root.classList.remove('sc-catalog-prepaint');});
+  return whenDomReady().then(function(){return Promise.all([waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader(),waitForFonts(),waitForCriticalMedia()]);}).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);
 }
 SC.renderLifecycle={markInitialViewport:markInitialViewport,waitForStableLayout:waitForStableLayout};
 })();

@@ -16,8 +16,9 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     var batch=[];
     cards.forEach(function(card){
       if(card.hidden||card.offsetParent===null)return;
-      var rect=card.getBoundingClientRect(),style=getComputedStyle(card);
+      var rect=card.getBoundingClientRect();
       if(rect.top>innerHeight||rect.bottom<0)return;
+      var style=getComputedStyle(card);
       if(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold)batch.push(card);
     });
     if(!batch.length)return;
@@ -54,8 +55,10 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     timer=window.setTimeout(function(){
       var rescue=[];
       deferred.forEach(function(card){
-        var rect=card.getBoundingClientRect(),style=getComputedStyle(card);
-        if(rect.top<=innerHeight*CFG.rescueViewportRatio&&rect.bottom>=CFG.rescueBottomOffset&&(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold))rescue.push(card);
+        var rect=card.getBoundingClientRect();
+        if(rect.top>innerHeight*CFG.rescueViewportRatio||rect.bottom<CFG.rescueBottomOffset)return;
+        var style=getComputedStyle(card);
+        if(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold)rescue.push(card);
       });
       if(rescue.length){
         gsap.killTweensOf(rescue);
