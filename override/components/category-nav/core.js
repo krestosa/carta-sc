@@ -35,10 +35,11 @@ function onCategory(event){
   var submenuLink=link.classList.contains('sc-category-submenu-link'),nestedLegacy=!!link.closest('.topPullDown,.dropdown-menu');
   if(nestedLegacy&&!submenuLink)return;
   if(!(link.closest(S.categoryToolbar)||link.closest(N.selectors.mobileWrapper+' '+N.selectors.mobileRail)||link.closest('.sc-category-submenu')))return;
-  var target=anchor(link.getAttribute('href'));if(!target)return;var owner=submenuLink?subcategoryOwner(link):null;
+  var target=anchor(link.getAttribute('href'));if(!target)return;var owner=submenuLink?subcategoryOwner(link):null,hasChildren=!submenuLink&&N.categorySubmenu&&N.categorySubmenu.has(link),compact=!N.mq.matches;
   event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();
   if(submenuLink){if(N.categorySubmenu)N.categorySubmenu.close(false);activateAndScroll(target,owner||target);return;}
-  if(N.categorySubmenu&&N.categorySubmenu.has(link))N.categorySubmenu.open(link,true);
+  if(hasChildren&&compact){N.categorySubmenu.open(link,true);return;}
+  if(hasChildren)N.categorySubmenu.open(link,true);
   activateAndScroll(target,target);
 }
 function onSelect(event){var select=event.target;if(!select||!select.matches||!select.matches(N.selectors.select))return;var target=anchor(select.value);if(!target)return;event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();if(N.categorySubmenu)N.categorySubmenu.close(false);activateAndScroll(target,target);}
