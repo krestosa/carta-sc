@@ -3,11 +3,10 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
-var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
+var queue=[],deps=null,unlocked=false,dependenciesRequested=false,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
 var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger'};
 var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger;
 
-function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion)).matches;}
 function loadScript(src,id,done){
   if(!src)return done(false);
@@ -79,7 +78,11 @@ function installRefreshLifecycle(){
   if(document.readyState==='complete')refresh(REFRESH_DELAY);else window.addEventListener('load',function(){refresh(REFRESH_DELAY);},{once:true});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});
 }
-function unlock(){unlocked=true;installRefreshLifecycle();flush();}
+function requestDependencies(){
+  if(dependenciesRequested||deps)return;dependenciesRequested=true;
+  loadScript(GSAP_SRC,IDS.core,function(ok){if(!ok)return;loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});});
+}
+function unlock(){unlocked=true;requestDependencies();installRefreshLifecycle();flush();}
 function initialize(){
   if(!window.gsap||!window.ScrollTrigger)return;
   window.gsap.registerPlugin(window.ScrollTrigger);
@@ -90,7 +93,4 @@ function initialize(){
 
 SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,unlock:unlock,isReady:function(){return!!(deps&&unlocked);},isMorphReady:function(){return true;}};
 
-ready(function(){
-  loadScript(GSAP_SRC,IDS.core,function(ok){if(!ok)return;loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});});
-});
 })();
