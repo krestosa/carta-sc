@@ -32,7 +32,7 @@ function restore(root){
   for(var i=inventory.length-1;i>=0;i--){var item=inventory[i];item.card.hidden=item.wasHidden;item.card.style.removeProperty('order');item.visible=null;item.lastOrder=null;if(!item.parent)continue;if(item.next&&item.next.parentNode===item.parent)item.parent.insertBefore(item.card,item.next);else item.parent.appendChild(item.card);}
   groups.forEach(function(group){group.node.hidden=true;group.node.style.removeProperty('order');group.lastOrder=null;});
   active=false;lastQuery=null;document.body.classList.remove(K.catalogSearching);root.classList.remove("sc-search-has-value");
-  requestAnimationFrame(function(){if(SC.categoryNav&&SC.categoryNav.refreshMetrics)SC.categoryNav.refreshMetrics();if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);});
+  requestAnimationFrame(function(){if(SC.categoryNav&&SC.categoryNav.refreshMetrics)SC.categoryNav.refreshMetrics();if(SC.productCardMotion&&SC.productCardMotion.reflow)SC.productCardMotion.reflow();else if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);});
 }
 function apply(root,value){
   var query=normalize(value),status=root.querySelector(".sc-catalog-search-status"),results=root.querySelector(".sc-catalog-search-results"),empty=root.querySelector(".sc-catalog-search-empty-message");if(!results)return;
@@ -44,7 +44,7 @@ function apply(root,value){
     total++;item.group.count++;if(rank<item.group.best)item.group.best=rank;var order=rank*100000+item.order;if(item.lastOrder!==order){item.card.style.order=order;item.lastOrder=order;}
   });
   groups.forEach(function(group){var visible=group.count>0;group.node.hidden=!visible;if(!visible)return;var order=group.best*1000+group.order;if(group.lastOrder!==order){group.node.style.order=order;group.lastOrder=order;}});
-  results.hidden=false;if(empty)empty.hidden=total!==0;if(status)status.textContent=total===1?'1 producto encontrado':total+' productos encontrados';
+  results.hidden=false;if(empty)empty.hidden=total!==0;if(status)status.textContent=total===1?'1 producto encontrado':total+' productos encontrados';if(C.view&&C.view.refreshLayout)C.view.refreshLayout();
 }
 function install(root){
   var input=root&&root.querySelector(".sc-catalog-search-input");if(!input)return;capture(root);

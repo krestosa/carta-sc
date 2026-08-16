@@ -20,11 +20,13 @@ bootstrap = re.compile(
 )
 view_prepaint = (
     "(function(){var r=document.documentElement,w=window.innerWidth||r.clientWidth||0,"
-    "c=w<=640?'phone':w<=992?'tablet':'desktop',"
-    "a=c==='phone'?['one','two','list']:c==='tablet'?['two','three','four','list']:['three','four','list'],v='';"
-    "try{v=localStorage.getItem('scCatalogView:v2:'+c)||localStorage.getItem(c==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||''}catch(e){}"
-    "if(a.indexOf(v)<0)v=c==='phone'?'one':c==='tablet'?'two':'three';"
-    "r.setAttribute('data-sc-catalog-view',v);r.setAttribute('data-sc-catalog-view-context',c);"
+    "c=w<=640?'phone':w<=992?'tablet':'desktop',v='',l='';"
+    "function m(x){if(x==='list')return'list';if(c==='phone')return x==='two'?'compact':x==='one'?'normal':'';"
+    "if(c==='tablet')return x==='three'||x==='four'?'compact':x==='two'?'normal':'';return x==='four'?'compact':x==='three'?'normal':''}"
+    "try{v=localStorage.getItem('scCatalogView:v3')||'';if(['normal','compact','list'].indexOf(v)<0){"
+    "l=localStorage.getItem('scCatalogView:v2:'+c)||localStorage.getItem(c==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';"
+    "v=m(l);if(v){try{localStorage.setItem('scCatalogView:v3',v)}catch(e2){}}}}catch(e){v=''}"
+    "if(['normal','compact','list'].indexOf(v)<0)v='normal';r.setAttribute('data-sc-catalog-view',v);"
     "r.classList.add('sc-catalog-prepaint','sc-no-loading-state')})();"
 )
 replacement = '\n'.join([
@@ -39,8 +41,8 @@ if count != 1:
 
 if bootstrap.search(html):
     raise SystemExit('Development bootstrap script remains in Pages index')
-if 'data-sc-catalog-view' not in html or 'scCatalogView:v2:' not in html:
-    raise SystemExit('Remembered catalogue view prepaint bootstrap is missing')
+if 'data-sc-catalog-view' not in html or 'scCatalogView:v3' not in html:
+    raise SystemExit('Remembered unified catalogue view prepaint bootstrap is missing')
 if len(re.findall(rf'<script\b[^>]*\bsrc=["\']_js_dev/main-legacy\.js\?v={re.escape(SHA)}["\'][^>]*>\s*</script>', html, re.IGNORECASE)) != 1:
     raise SystemExit('Direct main-legacy script must appear exactly once')
 if len(re.findall(rf'<link\b[^>]*\bhref=["\']override/main\.css\?v={re.escape(SHA)}["\'][^>]*>', html, re.IGNORECASE)) != 2:
