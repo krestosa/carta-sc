@@ -3,6 +3,26 @@
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var version=window.__scCatalogAssetVersion||'unversioned';
 var base='override/';
+var VIEW_MODES=['compact','normal','list'],VIEW_STORE_KEY='scCatalogView:v3';
+function bootstrapCatalogView(){
+  var root=document.documentElement,mode='',ctx='',legacy='';if(!root)return;
+  try{
+    mode=localStorage.getItem(VIEW_STORE_KEY)||'';
+    if(VIEW_MODES.indexOf(mode)<0){
+      ctx=window.matchMedia('(max-width: 640px)').matches?'phone':window.matchMedia('(max-width: 992px)').matches?'tablet':'desktop';
+      legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';
+      if(legacy==='list')mode='list';
+      else if(ctx==='phone')mode=legacy==='two'?'compact':legacy==='one'?'normal':'';
+      else if(ctx==='tablet')mode=legacy==='three'||legacy==='four'?'compact':legacy==='two'?'normal':'';
+      else mode=legacy==='four'?'compact':legacy==='three'?'normal':'';
+      if(VIEW_MODES.indexOf(mode)>=0){try{localStorage.setItem(VIEW_STORE_KEY,mode);}catch(_){}}
+    }
+  }catch(_){mode='';}
+  if(VIEW_MODES.indexOf(mode)<0)mode='compact';
+  root.setAttribute('data-sc-catalog-view',mode);
+  if(document.body)document.body.setAttribute('data-sc-catalog-view',mode);
+}
+bootstrapCatalogView();
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){return new Promise(function(resolve,reject){var existing=id&&document.getElementById(id);if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}var script=document.createElement('script');if(id)script.id=id;script.src=asset(path);script.async=false;script.onload=function(){script.dataset.loaded='true';resolve();};script.onerror=reject;document.head.appendChild(script);});}
 function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
