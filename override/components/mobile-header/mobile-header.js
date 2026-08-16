@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,H={pluginDataKey:'plugin_slicknav',repairDelays:[0,60,120,240]};
 if(!SC||!U||!C||SC.__mobileHeaderBooted)return;SC.__mobileHeaderBooted=true;
-var desktopQuery=C.queries.desktop,retryTimer=0,SVG_NS='http://www.w3.org/2000/svg';
+var desktopQuery=C.queries.desktop,retryTimer=0,syncTimers=new Set(),bindings=[],initialized=false,SVG_NS='http://www.w3.org/2000/svg';
 var MENU_ICON='M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z';
 var CLOSE_ICON='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 
@@ -22,52 +22,68 @@ function syncMenuButton(button,nav){
   if(!button||!nav)return;
   var open=button.classList.contains('slicknav_open')||nav.getAttribute('aria-hidden')==='false'||nav.style.display==='block';
   if(!nav.id)nav.id='sc-mobile-primary-menu';
-  button.setAttribute('aria-controls',nav.id);
-  button.setAttribute('aria-expanded',open?'true':'false');
-  button.setAttribute('aria-label',open?'Cerrar menú de navegación':'Abrir menú de navegación');
-  button.setAttribute('title',open?'Cerrar menú':'Abrir menú');
-  syncIcon(button,open);
+  button.setAttribute('aria-controls',nav.id);button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'Cerrar menú de navegación':'Abrir menú de navegación');button.setAttribute('title',open?'Cerrar menú':'Abrir menú');syncIcon(button,open);
 }
 function pluginMenu(){
-  var source=document.getElementById('menuMobile'),jq=window.jQuery;
-  if(!source||!jq)return null;
+  var source=document.getElementById('menuMobile'),jq=window.jQuery;if(!source||!jq)return null;
   try{var instance=jq(source).data(H.pluginDataKey);var button=instance&&instance.btn&&instance.btn[0];return button&&button.closest?button.closest('.slicknav_menu'):null;}catch(_){return null;}
 }
 function isPluginMenu(menu){var live=pluginMenu();return !!(live&&live===menu);}
-function installFallbackMenuToggle(menu){
-  var button=menu&&menu.querySelector('.slicknav_btn'),nav=menu&&menu.querySelector('.slicknav_nav');
-  if(!button||!nav||button.getAttribute('data-sc-fallback-toggle')==='true')return;
-  button.setAttribute('data-sc-fallback-toggle','true');
-  button.addEventListener('click',function(e){
-    e.preventDefault();
-    var open=button.classList.contains('slicknav_open')||nav.getAttribute('aria-hidden')==='false'||nav.style.display==='block',next=!open;
-    button.classList.toggle('slicknav_open',next);button.classList.toggle('slicknav_collapsed',!next);
-    nav.classList.toggle('slicknav_hidden',!next);nav.setAttribute('aria-hidden',next?'false':'true');nav.style.display=next?'block':'none';
-    syncMenuButton(button,nav);
-  });
+function bindingFor(button){
+  for(var i=0;i<bindings.length;i++)if(bindings[i].button===button)return bindings[i];
+  var binding={button:button,nav:null,fallback:null,sync:null};bindings.push(binding);return binding;
 }
+function removeFallbackToggle(button){
+  for(var i=0;i<bindings.length;i++){var binding=bindings[i];if(binding.button!==button||!binding.fallback)continue;button.removeEventListener('click',binding.fallback);binding.fallback=null;button.removeAttribute('data-sc-fallback-toggle');return;}
+}
+function installFallbackMenuToggle(menu){
+  var button=menu&&menu.querySelector('.slicknav_btn'),nav=menu&&menu.querySelector('.slicknav_nav');if(!button||!nav)return;
+  var binding=bindingFor(button);binding.nav=nav;if(binding.fallback)return;
+  binding.fallback=function(e){
+    e.preventDefault();var currentNav=binding.nav;if(!currentNav)return;
+    var open=button.classList.contains('slicknav_open')||currentNav.getAttribute('aria-hidden')==='false'||currentNav.style.display==='block',next=!open;
+    button.classList.toggle('slicknav_open',next);button.classList.toggle('slicknav_collapsed',!next);currentNav.classList.toggle('slicknav_hidden',!next);currentNav.setAttribute('aria-hidden',next?'false':'true');currentNav.style.display=next?'block':'none';syncMenuButton(button,currentNav);
+  };
+  button.setAttribute('data-sc-fallback-toggle','true');button.addEventListener('click',binding.fallback);
+}
+function installA11ySync(button,nav){
+  if(!button||!nav)return;var binding=bindingFor(button);binding.nav=nav;if(binding.sync)return;
+  binding.sync=function(){
+    var timer=window.setTimeout(function(){syncTimers.delete(timer);if(initialized&&document.documentElement.contains(button))syncMenuButton(button,binding.nav);},0);syncTimers.add(timer);
+  };
+  button.setAttribute('data-sc-a11y-sync','true');button.addEventListener('click',binding.sync);
+}
+function unbind(binding){
+  if(!binding||!binding.button)return;var button=binding.button;
+  if(binding.fallback)button.removeEventListener('click',binding.fallback);if(binding.sync)button.removeEventListener('click',binding.sync);
+  button.removeAttribute('data-sc-fallback-toggle');button.removeAttribute('data-sc-a11y-sync');binding.fallback=null;binding.sync=null;binding.nav=null;
+}
+function pruneBindings(){for(var i=bindings.length-1;i>=0;i--){if(document.documentElement.contains(bindings[i].button))continue;unbind(bindings[i]);bindings.splice(i,1);}}
+function clearSyncTimers(){syncTimers.forEach(function(timer){clearTimeout(timer);});syncTimers.clear();}
 function repairMobileHeader(finalAttempt){
-  if(desktopQuery.matches)return true;
+  pruneBindings();if(desktopQuery.matches)return true;
   var menus=Array.prototype.slice.call(document.querySelectorAll('body > .slicknav_menu'));if(!menus.length)return false;
   var live=pluginMenu();if(live&&menus.indexOf(live)===-1)live=null;if(!live&&!finalAttempt)return false;if(!live)live=menus[0];
-  menus.forEach(function(menu){if(menu!==live&&menu.parentNode)menu.parentNode.removeChild(menu);});
+  menus.forEach(function(menu){if(menu!==live&&menu.parentNode)menu.parentNode.removeChild(menu);});pruneBindings();
   live.classList.add('sc-mobile-main-menu');live.style.removeProperty('visibility');live.style.removeProperty('pointer-events');
   var button=live.querySelector('.slicknav_btn'),nav=live.querySelector('.slicknav_nav');
-  if(!isPluginMenu(live))installFallbackMenuToggle(live);syncMenuButton(button,nav);
-  if(button&&button.getAttribute('data-sc-a11y-sync')!=='true'){
-    button.setAttribute('data-sc-a11y-sync','true');
-    button.addEventListener('click',function(){window.setTimeout(function(){syncMenuButton(button,nav);},0);});
-  }
+  if(isPluginMenu(live))removeFallbackToggle(button);else installFallbackMenuToggle(live);syncMenuButton(button,nav);installA11ySync(button,nav);
   var logo=document.querySelector('.brandOnlyMobile img');if(logo){logo.style.removeProperty('margin-left');logo.style.removeProperty('transform');}
   return true;
 }
+function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=0;}}
 function schedule(){
-  if(retryTimer){clearTimeout(retryTimer);retryTimer=0;}if(desktopQuery.matches)return;
+  clearRetry();if(!initialized||desktopQuery.matches)return;
   var delays=H.repairDelays,index=0;
-  function attempt(){retryTimer=0;var finalAttempt=index===delays.length-1;if(repairMobileHeader(finalAttempt))return;index+=1;if(index<delays.length)retryTimer=window.setTimeout(attempt,delays[index]);}
+  function attempt(){retryTimer=0;if(!initialized)return;var finalAttempt=index===delays.length-1;if(repairMobileHeader(finalAttempt))return;index+=1;if(index<delays.length)retryTimer=window.setTimeout(attempt,delays[index]);}
   retryTimer=window.setTimeout(attempt,delays[0]);
 }
-U.ready(schedule);
-if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',schedule);else desktopQuery.addListener(schedule);
-SC.mobileHeader={repair:repairMobileHeader,schedule:schedule};
+function addBreakpointListener(){if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',schedule);else desktopQuery.addListener(schedule);}
+function removeBreakpointListener(){if(desktopQuery.removeEventListener)desktopQuery.removeEventListener('change',schedule);else desktopQuery.removeListener(schedule);}
+function init(){if(initialized)return;initialized=true;addBreakpointListener();schedule();}
+function destroy(){
+  if(initialized){initialized=false;removeBreakpointListener();}clearRetry();clearSyncTimers();bindings.forEach(unbind);bindings=[];
+}
+U.ready(init);
+SC.mobileHeader={repair:repairMobileHeader,schedule:schedule,init:init,destroy:destroy};
 })();
