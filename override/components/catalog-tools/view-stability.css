@@ -6,8 +6,7 @@ body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
 }
 
 /* List geometry tokens are canonical for both the normal list and search list.
-   They must not depend on the persisted view attribute because compact-view
-   searches intentionally render their result surface as a list. */
+   Fixed media widths plus the shared product ratio make every image box identical. */
 body.sushiShop {
   --sc-view-list-desktop-image-width: 210px;
   --sc-view-list-compact-image-width: 160px;
@@ -38,8 +37,8 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-/* Price and sold-out state are one compact decision block with the title. The
-   flexible track lives after this row, never between title and price. */
+/* Price and sold-out state stay attached to the title. Any remaining vertical
+   room belongs between that decision block and the bottom-anchored description. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   position: static !important;
@@ -74,13 +73,17 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
+/* The media box is the height authority. The card/link are deliberately left on
+   auto height: the fixed-width image contributes its full aspect-ratio height to
+   the four spanned grid tracks, so text can never shorten or distort the media. */
 @media (min-width: 993px) {
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop,
   html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop {
-    height: 146.85px !important;
-    min-height: 146.85px !important;
-    max-height: 146.85px !important;
-    overflow: hidden !important;
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,
@@ -89,27 +92,31 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
     grid-template-rows: auto 18px minmax(0, 1fr) auto !important;
     column-gap: 18px !important;
     align-content: stretch !important;
-    min-height: 146.85px !important;
-    height: 146.85px !important;
-    max-height: 146.85px !important;
-    overflow: hidden !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
   html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop .imgShop {
+    box-sizing: border-box !important;
     grid-column: 1 !important;
     grid-row: 1 / 5 !important;
-    align-self: stretch !important;
+    align-self: start !important;
     width: var(--sc-view-list-desktop-image-width) !important;
-    height: 146.85px !important;
-    min-height: 146.85px !important;
-    max-height: 146.85px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     aspect-ratio: var(--sc-product-image-ratio) !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img,
   html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop .imgShop > img {
+    width: 100% !important;
+    height: 100% !important;
     object-fit: contain !important;
+    object-position: center !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
@@ -128,10 +135,11 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
 @media (min-width: 641px) and (max-width: 992px) {
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
-    height: 111.89px !important;
-    min-height: 111.89px !important;
-    max-height: 111.89px !important;
-    overflow: hidden !important;
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
@@ -140,27 +148,31 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
     grid-template-rows: auto 18px minmax(0, 1fr) auto !important;
     column-gap: 14px !important;
     align-content: stretch !important;
-    min-height: 111.89px !important;
-    height: 111.89px !important;
-    max-height: 111.89px !important;
-    overflow: hidden !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
+    box-sizing: border-box !important;
     grid-column: 1 !important;
     grid-row: 1 / 5 !important;
-    align-self: stretch !important;
+    align-self: start !important;
     width: var(--sc-view-list-compact-image-width) !important;
-    height: 111.89px !important;
-    min-height: 111.89px !important;
-    max-height: 111.89px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     aspect-ratio: var(--sc-product-image-ratio) !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
+    width: 100% !important;
+    height: 100% !important;
     object-fit: contain !important;
+    object-position: center !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
@@ -179,10 +191,11 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
 @media (max-width: 640px) {
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
-    height: 104.90px !important;
-    min-height: 104.90px !important;
-    max-height: 104.90px !important;
-    overflow: hidden !important;
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
@@ -191,27 +204,31 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
     grid-template-rows: auto 18px minmax(0, 1fr) auto !important;
     column-gap: 12px !important;
     align-content: stretch !important;
-    min-height: 104.90px !important;
-    height: 104.90px !important;
-    max-height: 104.90px !important;
-    overflow: hidden !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
+    box-sizing: border-box !important;
     grid-column: 1 !important;
     grid-row: 1 / 5 !important;
-    align-self: stretch !important;
+    align-self: start !important;
     width: var(--sc-view-list-phone-image-width) !important;
-    height: 104.90px !important;
-    min-height: 104.90px !important;
-    max-height: 104.90px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     aspect-ratio: var(--sc-product-image-ratio) !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
+    width: 100% !important;
+    height: 100% !important;
     object-fit: contain !important;
+    object-position: center !important;
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
