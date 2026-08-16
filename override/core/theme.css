@@ -1,5 +1,5 @@
-/* Global color-mode contract. Theme changes are intentionally instantaneous:
-   one root-state flip updates the palette without full-page snapshots or per-element fades. */
+/* Global color-mode contract. Manual theme changes flip one root state; system
+   theme changes are CSS-only so OS appearance updates cannot trigger JS work. */
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;
@@ -20,6 +20,39 @@ html[data-sc-theme-resolved='dark'] {
   --sc-color-surface-transparent: rgba(10,10,10,0);
   --sc-color-border: #2d2d29;
   --sc-color-border-strong: #44443e;
+}
+
+/* In system mode, the OS media query is the source of truth. These blocks are
+   deliberately after the resolved-state rules so they also override a stale
+   data-sc-theme-resolved value if a mobile browser recreates UI chrome. */
+@media (prefers-color-scheme: light) {
+  html[data-sc-theme='system'] {
+    color-scheme: light;
+    --sc-color-ink: #0a0a0a;
+    --sc-color-heading: #303030;
+    --sc-color-copy: #5f5f5f;
+    --sc-color-muted: #767676;
+    --sc-color-trait: #989898;
+    --sc-color-surface: #fff;
+    --sc-color-surface-transparent: rgba(255,255,255,0);
+    --sc-color-border: #e7e7e2;
+    --sc-color-border-strong: #d4d4ce;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-sc-theme='system'] {
+    color-scheme: dark;
+    --sc-color-ink: #f3f3f0;
+    --sc-color-heading: #fff;
+    --sc-color-copy: #c8c8c2;
+    --sc-color-muted: #9c9c95;
+    --sc-color-trait: #6f6f6f;
+    --sc-color-surface: #0a0a0a;
+    --sc-color-surface-transparent: rgba(10,10,10,0);
+    --sc-color-border: #2d2d29;
+    --sc-color-border-strong: #44443e;
+  }
 }
 
 body.sushiShop,
