@@ -52,7 +52,7 @@ body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
     box-sizing: border-box;
-    display: -webkit-box !important;
+    display: block !important;
     position: relative;
     grid-column: 1 / -1;
     grid-row: 3;
@@ -68,8 +68,14 @@ body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
     line-height: var(--sc-card-description-line-height) !important;
     font-weight: var(--sc-font-weight-regular) !important;
     letter-spacing: 0 !important;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-box-orient: initial !important;
+    -webkit-line-clamp: initial !important;
+  }
+
+  /* List uses two full lines; its former 42px box exposed the top of line 3. */
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {
+    min-height: 40px !important;
+    max-height: 40px !important;
   }
 
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors img,
@@ -125,7 +131,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
 
   body.sushiShop .listadoShop .productoShop .descrip {
     box-sizing: border-box;
-    display: -webkit-box !important;
+    display: block !important;
     position: relative;
     grid-column: 1 / -1;
     grid-row: 3;
@@ -141,8 +147,30 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
     line-height: var(--sc-card-description-line-height) !important;
     font-weight: var(--sc-font-weight-regular) !important;
     letter-spacing: 0 !important;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-box-orient: initial !important;
+    -webkit-line-clamp: initial !important;
+  }
+}
+
+/* Exact content-box heights prevent fractional next-line glyphs. Compact keeps
+   three complete lines at every breakpoint; compact list/search remains two. */
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip {
+  min-height: 47px !important;
+  max-height: 47px !important;
+}
+
+@media (min-width: 641px) and (max-width: 992px) {
+  html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip {
+    min-height: 43.5px !important;
+    max-height: 43.5px !important;
+  }
+}
+
+@media (max-width: 992px) {
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
+    min-height: 32px !important;
+    max-height: 32px !important;
   }
 }
 
