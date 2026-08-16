@@ -32,7 +32,15 @@ function enhanceCardLink(link){
   described.length?link.setAttribute('aria-describedby',described.join(' ')):link.removeAttribute('aria-describedby');
   link.setAttribute('aria-haspopup','dialog');
 }
-function enhanceProductLinks(){each(document.querySelectorAll(S.productLink),enhanceCardLink);}
+function enhanceHeadingLevels(){
+  var level=3,selector=S.productList+' '+S.sectionTitle+','+S.productList+' '+S.sectionSubtitle+','+S.productCards;
+  each(document.querySelectorAll(selector),function(node){
+    if(node.matches(S.sectionTitle)){level=3;return;}
+    if(node.matches(S.sectionSubtitle)){level=4;return;}
+    var title=node.querySelector(S.productTitle);if(title)title.setAttribute('aria-level',String(level));
+  });
+}
+function enhanceProductLinks(){enhanceHeadingLevels();each(document.querySelectorAll(S.productLink),enhanceCardLink);}
 
 SC.productCardA11y={enhanceLink:enhanceCardLink,enhanceAll:enhanceProductLinks};
 })();
