@@ -4,6 +4,8 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source {
   display: grid !important;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source[hidden],
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion[hidden],
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion[hidden],
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop[hidden] {
   display: none !important;
 }
