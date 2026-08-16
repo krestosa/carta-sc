@@ -1,20 +1,33 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardContentBooted)return;SC.__productCardContentBooted=true;
-var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0;
+var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0,referenceStrip=null;
 
 function traitKey(label){return(label||'').trim().toLocaleLowerCase('es-AR');}
 function markTrait(node,key){if(node&&node.setAttribute)node.setAttribute('data-sc-trait',key);return node;}
 function appendTraitVisual(target,source,label){
-  var key=traitKey(label),count=key==='algo picante'?2:key==='poco picante'?1:0,added=false,i,icon,node;
-  if(count){
-    for(i=0;i<count;i++){icon=D.createTraitIcon('algo picante');if(icon){markTrait(icon,key);target.appendChild(icon);added=true;}}
-    if(added)return;
+  var key=traitKey(label),icon,node,set,i;
+  if(key==='algo picante'){
+    set=markTrait(document.createElement('span'),key);set.className='sc-trait-icon-set';set.setAttribute('aria-hidden','true');
+    for(i=0;i<2;i++){icon=D.createTraitIcon('algo picante');if(icon){markTrait(icon,key);set.appendChild(icon);}}
+    if(set.childNodes.length){target.appendChild(set);return set;}
   }
-  node=D.appendTraitVisual(target,source,label);markTrait(node,key);
+  if(key==='poco picante'){
+    icon=D.createTraitIcon('algo picante');
+    if(icon){markTrait(icon,key);target.appendChild(icon);return icon;}
+  }
+  node=D.appendTraitVisual(target,source,label);markTrait(node,key);return node;
 }
 function clearFlavorRows(){
   each(document.querySelectorAll(".sc-product-flavors,.sc-product-price-traits"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
+}
+function positionTraitReferences(){
+  var strip=referenceStrip||document.querySelector('.referencias_picor'),tools=document.querySelector('.sc-catalog-tools'),results,spacer;
+  if(!strip)return;referenceStrip=strip;strip.classList.add('sc-trait-reference-strip');
+  spacer=strip.previousElementSibling;
+  if(spacer&&!(spacer.textContent||'').trim()&&spacer.querySelector&&spacer.querySelector('br'))spacer.classList.add('sc-trait-reference-legacy-spacer');
+  if(!tools)return;results=tools.querySelector('.sc-catalog-search-results');
+  if(strip.parentNode!==tools||strip.nextElementSibling!==results)tools.insertBefore(strip,results||null);
 }
 function installTraitReferences(){
   each(document.querySelectorAll('.referencias_picor .refBox'),function(box){
@@ -27,6 +40,7 @@ function installTraitReferences(){
     }
     icon=D.createTraitIcon(label);if(icon){host.textContent='';markTrait(icon,key);host.appendChild(icon);}
   });
+  positionTraitReferences();
 }
 function buildTraitRow(className,labels,source){
   var row=document.createElement('span');row.className=className;
@@ -61,5 +75,5 @@ function scheduleDescriptionMeasure(){
 }
 function cancelDescriptionMeasure(){if(descriptionRaf)cancelAnimationFrame(descriptionRaf);if(descriptionMeasureRaf)cancelAnimationFrame(descriptionMeasureRaf);descriptionRaf=0;descriptionMeasureRaf=0;}
 
-SC.productCardContent={clearFlavorRows:clearFlavorRows,installFlavorRows:installFlavorRows,buildTraitRow:buildTraitRow,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
+SC.productCardContent={clearFlavorRows:clearFlavorRows,installFlavorRows:installFlavorRows,buildTraitRow:buildTraitRow,positionTraitReferences:positionTraitReferences,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
 })();
