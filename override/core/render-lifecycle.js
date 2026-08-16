@@ -4,16 +4,18 @@ var SC=window.SCOverride=window.SCOverride||{},C=SC.config,S=C&&C.selectors,K=C&
 if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
 var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MEDIA_TIMEOUT=1200,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[];
 function markInitialViewport(){
-  var vh=window.innerHeight||document.documentElement.clientHeight,cards=[],sections=[];
-  document.querySelectorAll(S.productCards).forEach(function(card){
-    var rect=card.getBoundingClientRect();
-    if(rect.top<vh&&rect.bottom>0)cards.push(card);
-  });
-  document.querySelectorAll(S.productList+' '+S.sectionTitle+', '+S.productList+' '+S.sectionSubtitle).forEach(function(section){
-    var rect=section.getBoundingClientRect();
-    if(rect.top>=vh||rect.bottom<=0)return;
+  var vh=window.innerHeight||document.documentElement.clientHeight,cards=[],sections=[],cardNodes=document.querySelectorAll(S.productCards),sectionNodes=document.querySelectorAll(S.productList+' '+S.sectionTitle+', '+S.productList+' '+S.sectionSubtitle),i,rect,section;
+  for(i=0;i<cardNodes.length;i++){
+    rect=cardNodes[i].getBoundingClientRect();
+    if(rect.height>0&&rect.top>=vh)break;
+    if(rect.top<vh&&rect.bottom>0)cards.push(cardNodes[i]);
+  }
+  for(i=0;i<sectionNodes.length;i++){
+    section=sectionNodes[i];rect=section.getBoundingClientRect();
+    if(rect.height>0&&rect.top>=vh)break;
+    if(rect.bottom<=0)continue;
     sections.push({section:section,host:section.matches(S.sectionTitle)?section.querySelector(":scope > div"):section});
-  });
+  }
   cards.forEach(function(card){card.classList.add(K.staticInitialCard);});
   sections.forEach(function(item){item.section.classList.add(K.staticInitialSection);if(item.host)item.host.classList.add(K.staticInitialSection);});
 }

@@ -3,7 +3,7 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
-var queue=[],deps=null,unlocked=false,dependenciesRequested=false,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
+var queue=[],deps=null,unlocked=false,dependenciesRequested=false,dependencyIdle=0,dependencyTimer=0,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
 var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger'};
 var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger;
 
@@ -79,10 +79,16 @@ function installRefreshLifecycle(){
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});
 }
 function requestDependencies(){
-  if(dependenciesRequested||deps)return;dependenciesRequested=true;
+  if(dependenciesRequested||deps)return;dependenciesRequested=true;dependencyIdle=0;dependencyTimer=0;
   loadScript(GSAP_SRC,IDS.core,function(ok){if(!ok)return;loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});});
 }
-function unlock(){unlocked=true;requestDependencies();installRefreshLifecycle();flush();}
+function requestDependenciesWhenIdle(){
+  if(dependenciesRequested||deps||dependencyIdle||dependencyTimer)return;
+  function request(){dependencyIdle=0;dependencyTimer=0;if(unlocked)requestDependencies();}
+  if(typeof window.requestIdleCallback==='function'){dependencyIdle=window.requestIdleCallback(request,{timeout:1200});return;}
+  dependencyTimer=window.setTimeout(request,180);
+}
+function unlock(){if(unlocked)return;unlocked=true;requestDependenciesWhenIdle();installRefreshLifecycle();flush();}
 function initialize(){
   if(!window.gsap||!window.ScrollTrigger)return;
   window.gsap.registerPlugin(window.ScrollTrigger);
