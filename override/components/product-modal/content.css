@@ -21,7 +21,7 @@ body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
   order: 3 !important;
   flex: 0 0 auto !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   align-self: center !important;
   gap: 5px !important;
   height: var(--sc-modal-traits-size) !important;
@@ -38,7 +38,7 @@ body.sushiShop .sc-product-modal__traits img {
 body.sushiShop .sc-product-modal__traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
-  align-self: center !important;
+  align-self: flex-end !important;
   max-width: 16px !important;
   max-height: 13px !important;
   margin: 0 !important;
