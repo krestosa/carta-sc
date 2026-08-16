@@ -54,9 +54,9 @@ function animateGeometry(host,target,duration){
   }
   state.raf=requestAnimationFrame(frame);
 }
-function animateViewIcon(host,key){animateGeometry(host,ICONS[key],280);}
-function hoverPreview(host){var key=iconKey(selectedMode()),target=oppositeKey(key);if(reducedMotion())return;animateGeometry(host,mixGeometry(ICONS[key],ICONS[target],.18),170);}
-function hoverRestore(host){animateGeometry(host,ICONS[iconKey(selectedMode())],190);}
+function animateViewIcon(host,key){animateGeometry(host,ICONS[key],360);}
+function hoverPreview(host){var key=iconKey(selectedMode()),target=oppositeKey(key);if(reducedMotion())return;animateGeometry(host,mixGeometry(ICONS[key],ICONS[target],.18),240);}
+function hoverRestore(host){animateGeometry(host,ICONS[iconKey(selectedMode())],260);}
 function sync(root,mode,animate){
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]'),key=iconKey(mode),text=label(mode),previous=host&&host.getAttribute('data-sc-icon-state');
   if(button){button.setAttribute('aria-label',text);button.setAttribute('title',text);}
