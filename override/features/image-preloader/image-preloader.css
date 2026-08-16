@@ -34,7 +34,8 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 }
 
 /* Keep the skeleton as its own layer so it can fade out while the decoded image
-   fades in underneath it. */
+   fades in underneath it. Offscreen lazy media keeps the static placeholder and
+   only animates once it is actually active. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
   content: '';
@@ -48,8 +49,13 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
     var(--sc-image-preloader-base);
   background-size: 220% 100%, 100% 100%;
   background-position: 120% 0, 0 0;
-  animation: sc-image-preloader-shimmer 1.08s cubic-bezier(.4, 0, .2, 1) infinite;
+  animation: none;
   transition: opacity var(--sc-image-skeleton-exit) var(--sc-motion-ease-out);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active::before {
+  animation: sc-image-preloader-shimmer 1.08s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
@@ -63,6 +69,11 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   transition:
     opacity var(--sc-image-reveal-duration) var(--sc-motion-ease-out),
     transform 320ms var(--sc-motion-ease-out) !important;
+  will-change: auto;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active > img,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active > img {
   will-change: opacity, transform;
 }
 
