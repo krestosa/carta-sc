@@ -115,6 +115,18 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip{grid-column:2!important;grid-row:3!important;min-height:var(--sc-view-list-compact-description-height)!important;max-height:var(--sc-view-list-compact-description-height)!important;margin-top:var(--sc-view-list-compact-description-margin-top)!important;padding-top:var(--sc-view-list-compact-description-padding-top)!important;font-size:var(--sc-view-list-compact-description-size)!important;line-height:var(--sc-view-list-compact-description-line-height)!important;-webkit-line-clamp:2}
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors{grid-column:2!important;grid-row:4!important;margin-top:var(--sc-view-list-compact-flavors-margin-top)!important}}
 
+/* Mobile toolbar is a compact two-row composition: search and actions share the
+   primary row; the trait legend sits directly below and spans the same width. */
+@media(max-width:640px){
+html body.sushiShop .sc-catalog-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:14px;align-items:center;justify-content:stretch;margin:18px 0 22px}
+html body.sushiShop .sc-catalog-tools>.sc-catalog-search{grid-column:1;grid-row:1;width:100%;min-width:0;max-width:none;margin:0}
+html body.sushiShop .sc-catalog-tools>.sc-catalog-actions{grid-column:2;grid-row:1;align-self:center;justify-self:end;gap:2px;margin-left:0}
+html body.sushiShop .sc-catalog-tools>.referencias_picor.sc-trait-reference-strip{grid-column:1/-1;grid-row:2;justify-content:space-between!important;gap:clamp(10px,3vw,16px)!important;width:100%!important;margin:0!important;padding:2px 0 0!important;overflow-x:auto!important;overflow-y:hidden!important}
+html body.sushiShop .sc-catalog-tools>.referencias_picor.sc-trait-reference-strip .refBox{gap:4px!important}
+html body.sushiShop .sc-catalog-tools>.referencias_picor.sc-trait-reference-strip .ref_label{font-size:11px!important;line-height:16px!important}
+html body.sushiShop .sc-catalog-tools>.sc-catalog-search-results{grid-column:1/-1;width:100%!important}
+}
+
 @media(max-width:992px){
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1{font-size:var(--sc-card-title-size)!important;line-height:var(--sc-card-title-line-height)!important}
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .price,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceHijass{font-size:var(--sc-card-price-size)!important;line-height:var(--sc-card-price-line-height)!important}
