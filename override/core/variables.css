@@ -1,6 +1,6 @@
 :root {
   /* Shared palette: roles are intentionally distinct, not component-specific. */
-  --sc-color-ink: #151515;
+  --sc-color-ink: #0a0a0a;
   --sc-color-heading: #303030;
   --sc-color-copy: #5f5f5f;
   --sc-color-muted: #767676;
@@ -33,4 +33,5 @@
   /* Shared motion. */
   --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --sc-motion-fast: 160ms;
+  --sc-motion-theme: 200ms;
 }

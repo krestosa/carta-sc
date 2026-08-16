@@ -10,10 +10,10 @@ html[data-sc-theme-resolved='dark'] body.sushiShop {
 }
 html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close::before {
   border-color: rgba(255,255,255,.12) !important;
-  background: rgba(17,17,15,.88) !important;
+  background: rgba(10,10,10,.88) !important;
 }
 html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close:hover::before,
 html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close:focus-visible::before {
   border-color: rgba(255,255,255,.22) !important;
-  background: rgba(24,24,21,.98) !important;
+  background: rgba(20,20,20,.98) !important;
 }

@@ -10,9 +10,10 @@ body.sushiShop .sc-product-modal__title {
 }
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   gap: 5px !important;
   margin-right: 7px !important;
+  color: var(--sc-color-muted) !important;
   vertical-align: -2px !important;
 }
 body.sushiShop .sc-product-modal__traits img {
@@ -20,6 +21,11 @@ body.sushiShop .sc-product-modal__traits img {
   height: var(--sc-modal-traits-size) !important;
   margin: 0 !important;
   object-fit: contain !important;
+}
+body.sushiShop .sc-product-modal__traits .sc-trait-icon {
+  display: block !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
 }
 body.sushiShop .sc-product-modal__description {
   margin: 10px 0 0 !important;

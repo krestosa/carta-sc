@@ -3,13 +3,27 @@ body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
   display: none !important;
 }
 
-body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
+body.sushiShop .listadoShop .productoShop .sc-product-flavors img,
+body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
   display: block !important;
-  width: var(--sc-card-flavors-size) !important;
-  height: var(--sc-card-flavors-size) !important;
+  flex: 0 0 auto !important;
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
+}
+
+body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
+  width: var(--sc-card-flavors-size) !important;
+  height: var(--sc-card-flavors-size) !important;
+}
+
+body.sushiShop .referencias_picor .imgRef {
+  color: var(--sc-color-muted) !important;
+}
+
+body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
+  display: inline-block !important;
+  vertical-align: bottom !important;
 }
 
 @media (min-width: 993px) {
@@ -58,7 +72,8 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
     -webkit-line-clamp: 3;
   }
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors img {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors img,
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
     opacity: 1 !important;
   }
 }

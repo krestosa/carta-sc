@@ -12,6 +12,9 @@
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .sc-mobile-menu-state-icon path { fill: currentColor !important; }
 
+  body.sushiShop .brandOnlyMobile img {
+    transition: filter var(--sc-motion-theme) var(--sc-motion-ease-out) !important;
+  }
   html[data-sc-theme-resolved='dark'] body.sushiShop .brandOnlyMobile img {
     filter: invert(1) brightness(1.08);
   }
@@ -22,5 +25,11 @@
   html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
   html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
     color: var(--sc-color-ink) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .brandOnlyMobile img {
+    transition: none !important;
   }
 }

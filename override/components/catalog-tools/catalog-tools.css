@@ -13,10 +13,6 @@ body.sushiShop {
   --sc-compact-row-gap: 30px;
   --sc-compact-section-bottom: 60px;
   --sc-compact-meta-height: 24px;
-  --sc-compact-title-height: 46px;
-  --sc-compact-title-padding-top: 11px;
-  --sc-compact-title-size: 14.5px;
-  --sc-compact-title-line-height: 1.2;
   --sc-compact-price-min-height: 32px;
   --sc-compact-price-padding-top: 2px;
   --sc-compact-price-size: 15.5px;
@@ -78,10 +74,11 @@ body.sushiShop.sc-catalog-searching .sc-catalog-toolbar .nav-top-li>a.anchorLink
 
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop{grid-template-columns:minmax(0,1fr)!important}
 
-/* Compact: one extra column at every breakpoint plus genuinely denser cards. */
+/* Compact: one extra column at every breakpoint plus genuinely denser cards.
+   Title typography/offset stays identical to normal so density changes never shift the title baseline. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop{grid-template-columns:repeat(var(--sc-compact-columns),minmax(0,1fr))!important;column-gap:var(--sc-compact-column-gap)!important;row-gap:var(--sc-compact-row-gap)!important;margin-bottom:var(--sc-compact-section-bottom)!important}
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop>a.fancyboxModalAddProd{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto var(--sc-compact-meta-height)!important;column-gap:0!important}
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .title-shop1{grid-column:1!important;grid-row:2!important;min-height:var(--sc-compact-title-height)!important;max-height:var(--sc-compact-title-height)!important;padding-top:var(--sc-compact-title-padding-top)!important;font-size:var(--sc-compact-title-size)!important;line-height:var(--sc-compact-title-line-height)!important}
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .title-shop1{grid-column:1!important;grid-row:2!important;min-height:var(--sc-card-title-height)!important;max-height:var(--sc-card-title-height)!important;padding-top:var(--sc-card-title-padding-top)!important;font-size:var(--sc-card-title-size)!important;line-height:var(--sc-card-title-line-height)!important}
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow{grid-column:1!important;grid-row:3!important;align-items:flex-start!important;min-width:0!important;min-height:var(--sc-compact-price-min-height)!important;padding-top:var(--sc-compact-price-padding-top)!important}
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .price,html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceHijass{font-size:var(--sc-compact-price-size)!important;line-height:var(--sc-compact-price-line-height)!important}
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip{grid-column:1!important;grid-row:4!important;min-height:var(--sc-compact-description-height)!important;max-height:var(--sc-compact-description-height)!important;margin-top:var(--sc-compact-description-margin-top)!important;padding-top:var(--sc-compact-description-padding-top)!important;font-size:var(--sc-compact-description-size)!important;line-height:var(--sc-compact-description-line-height)!important;-webkit-line-clamp:3}
@@ -97,7 +94,7 @@ html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listad
 html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors{grid-column:2/4!important;grid-row:3!important;margin-top:2px!important}}
 
 @media(min-width:641px) and (max-width:992px){
-body.sushiShop{--sc-compact-columns:3;--sc-compact-column-gap:18px;--sc-compact-row-gap:26px;--sc-compact-section-bottom:52px;--sc-compact-meta-height:20px;--sc-compact-title-height:44px;--sc-compact-title-padding-top:9px;--sc-compact-title-size:13.5px;--sc-compact-price-min-height:30px;--sc-compact-price-size:13.5px;--sc-compact-price-line-height:16px;--sc-compact-description-height:42px;--sc-compact-description-margin-top:2px;--sc-compact-description-padding-top:5px;--sc-compact-description-size:11px;--sc-compact-description-line-height:12.5px;--sc-compact-flavors-margin-top:1px}
+body.sushiShop{--sc-compact-columns:3;--sc-compact-column-gap:18px;--sc-compact-row-gap:26px;--sc-compact-section-bottom:52px;--sc-compact-meta-height:20px;--sc-compact-price-min-height:30px;--sc-compact-price-size:13.5px;--sc-compact-price-line-height:16px;--sc-compact-description-height:42px;--sc-compact-description-margin-top:2px;--sc-compact-description-padding-top:5px;--sc-compact-description-size:11px;--sc-compact-description-line-height:12.5px;--sc-compact-flavors-margin-top:1px}
 body.sushiShop .sc-catalog-tools{gap:var(--sc-tools-gap-compact);margin:22px 0 30px}body.sushiShop .sc-catalog-search{max-width:none}
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop{grid-template-columns:minmax(0,1fr)!important;row-gap:var(--sc-view-list-compact-row-gap)!important}
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop>a.fancyboxModalAddProd,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop>a.fancyboxModalAddProd{grid-template-columns:var(--sc-view-list-compact-image-width) minmax(0,1fr)!important;grid-template-rows:auto auto auto var(--sc-view-list-compact-meta-height)!important;column-gap:16px!important;min-height:84px}
@@ -108,7 +105,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .des
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors{grid-column:2!important;grid-row:4!important;margin-top:var(--sc-view-list-compact-flavors-margin-top)!important}}
 
 @media(max-width:640px){
-body.sushiShop{--sc-compact-columns:2;--sc-compact-column-gap:14px;--sc-compact-row-gap:24px;--sc-compact-section-bottom:38px;--sc-compact-meta-height:20px;--sc-compact-title-height:48px;--sc-compact-title-padding-top:10px;--sc-compact-title-size:14.5px;--sc-compact-price-min-height:34px;--sc-compact-price-padding-top:3px;--sc-compact-price-size:15.5px;--sc-compact-price-line-height:18px;--sc-compact-description-height:48px;--sc-compact-description-margin-top:3px;--sc-compact-description-padding-top:7px;--sc-compact-description-size:11.5px;--sc-compact-description-line-height:13px;--sc-compact-flavors-margin-top:2px}
+body.sushiShop{--sc-compact-columns:2;--sc-compact-column-gap:14px;--sc-compact-row-gap:24px;--sc-compact-section-bottom:38px;--sc-compact-meta-height:20px;--sc-compact-price-min-height:34px;--sc-compact-price-padding-top:3px;--sc-compact-price-size:15.5px;--sc-compact-price-line-height:18px;--sc-compact-description-height:48px;--sc-compact-description-margin-top:3px;--sc-compact-description-padding-top:7px;--sc-compact-description-size:11.5px;--sc-compact-description-line-height:13px;--sc-compact-flavors-margin-top:2px}
 body.sushiShop .sc-catalog-tools{gap:var(--sc-tools-gap-compact);margin:18px 0 26px}body.sushiShop .sc-catalog-search{max-width:none;height:40px;padding-bottom:6px}body.sushiShop .sc-catalog-search-input{font-size:14px}
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop{grid-template-columns:minmax(0,1fr)!important;row-gap:var(--sc-view-list-compact-row-gap)!important}
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop>a.fancyboxModalAddProd,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop>a.fancyboxModalAddProd{grid-template-columns:var(--sc-view-list-phone-image-width) minmax(0,1fr)!important;grid-template-rows:auto auto auto var(--sc-view-list-compact-meta-height)!important;column-gap:13px!important;min-height:76px}

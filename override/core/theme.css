@@ -1,11 +1,62 @@
-/* Global color-mode contract. The chosen preference and resolved palette are separate. */
+/* Global color-mode contract. The chosen preference and resolved palette are separate.
+   Palette roles are registered once so every consumer interpolates in the same frame. */
+@property --sc-color-ink {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0a0a0a;
+}
+@property --sc-color-heading {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #303030;
+}
+@property --sc-color-copy {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #5f5f5f;
+}
+@property --sc-color-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #767676;
+}
+@property --sc-color-surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fff;
+}
+@property --sc-color-surface-transparent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(255,255,255,0);
+}
+@property --sc-color-border {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e7e7e2;
+}
+@property --sc-color-border-strong {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #d4d4ce;
+}
+
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;
 }
 
 html[data-sc-theme-resolved] {
-  background: var(--sc-color-surface);
+  background-color: var(--sc-color-surface);
+  transition:
+    --sc-color-ink var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-heading var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-copy var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-muted var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-surface var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-surface-transparent var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-border var(--sc-motion-theme) var(--sc-motion-ease-out),
+    --sc-color-border-strong var(--sc-motion-theme) var(--sc-motion-ease-out);
 }
 
 html[data-sc-theme-resolved='dark'] {
@@ -14,8 +65,8 @@ html[data-sc-theme-resolved='dark'] {
   --sc-color-heading: #fff;
   --sc-color-copy: #c8c8c2;
   --sc-color-muted: #9c9c95;
-  --sc-color-surface: #11110f;
-  --sc-color-surface-transparent: rgba(17,17,15,0);
+  --sc-color-surface: #0a0a0a;
+  --sc-color-surface-transparent: rgba(10,10,10,0);
   --sc-color-border: #2d2d29;
   --sc-color-border-strong: #44443e;
 }
@@ -24,7 +75,6 @@ body.sushiShop,
 body.sushiShop .sepFooter {
   background-color: var(--sc-color-surface) !important;
   color: var(--sc-color-ink);
-  transition: background-color 220ms var(--sc-motion-ease-out), color var(--sc-motion-fast) var(--sc-motion-ease-out);
 }
 
 body.sushiShop input,
@@ -39,6 +89,5 @@ body.sushiShop ::selection {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.sushiShop,
-  body.sushiShop .sepFooter { transition: none !important; }
+  html[data-sc-theme-resolved] { transition: none !important; }
 }

@@ -30,12 +30,13 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   display: flex !important;
   grid-column: 1 / -1 !important;
   grid-row: 4 !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   gap: 7px !important;
   width: 100% !important;
   height: 20px !important;
   margin: 4px 0 0 !important;
   padding: 0 !important;
+  color: var(--sc-color-muted) !important;
   line-height: 0 !important;
 }
 
