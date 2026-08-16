@@ -38,7 +38,9 @@ function writeGeometry(cell,geometry){cell.setAttribute('x',Math.round(geometry[
 function setGeometry(host,target){var nodes=cells(host);if(!target||nodes.length!==target.length)return;nodes.forEach(function(cell,index){writeGeometry(cell,target[index]);});}
 function setViewIcon(host,key){setGeometry(host,ICONS[key]);}
 function clearViewIconMotion(host){var state=host&&host.__scViewIconMotion;if(!state)return;if(state.raf)cancelAnimationFrame(state.raf);host.__scViewIconMotion=null;}
-function ease(t){return 1-Math.pow(1-t,4);}
+function ease(t){var c=1.05,c3=c+1,x=t-1;return 1+c3*x*x*x+c*x*x;}
+function smooth(t){return t*t*(3-2*t);}
+function mix(a,b,t){return a+(b-a)*t;}
 function mixGeometry(from,to,amount){return from.map(function(cell,index){var target=to[index];return[cell[0]+(target[0]-cell[0])*amount,cell[1]+(target[1]-cell[1])*amount,cell[2]+(target[2]-cell[2])*amount,cell[3]+(target[3]-cell[3])*amount];});}
 function animateGeometry(host,target,duration){
   var nodes=cells(host);if(!host||!target||nodes.length!==target.length)return;
@@ -54,9 +56,24 @@ function animateGeometry(host,target,duration){
   }
   state.raf=requestAnimationFrame(frame);
 }
-function animateViewIcon(host,key){animateGeometry(host,ICONS[key],360);}
-function hoverPreview(host){var key=iconKey(selectedMode()),target=oppositeKey(key);if(reducedMotion())return;animateGeometry(host,mixGeometry(ICONS[key],ICONS[target],.18),240);}
-function hoverRestore(host){animateGeometry(host,ICONS[iconKey(selectedMode())],260);}
+function animateViewIcon(host,key){animateGeometry(host,ICONS[key],460);}
+function previewAmount(t){
+  if(t<=.17)return mix(0,-.028,smooth(t/.17));
+  if(t<=.56)return mix(-.028,.32,smooth((t-.17)/.39));
+  if(t<=.79)return mix(.32,.075,smooth((t-.56)/.23));
+  return mix(.075,0,smooth((t-.79)/.21));
+}
+function hoverPreview(host){
+  if(!host||reducedMotion())return;var nodes=cells(host);if(!nodes.length)return;clearViewIconMotion(host);
+  var key=iconKey(selectedMode()),base=ICONS[key],target=ICONS[oppositeKey(key)],started=performance.now(),duration=620,state={raf:0};host.__scViewIconMotion=state;
+  function frame(now){
+    if(host.__scViewIconMotion!==state)return;var progress=Math.min(1,(now-started)/duration),geometry=mixGeometry(base,target,previewAmount(progress));
+    nodes.forEach(function(cell,index){writeGeometry(cell,geometry[index]);});
+    if(progress<1){state.raf=requestAnimationFrame(frame);return;}setGeometry(host,base);host.__scViewIconMotion=null;
+  }
+  state.raf=requestAnimationFrame(frame);
+}
+function hoverRestore(host){animateGeometry(host,ICONS[iconKey(selectedMode())],220);}
 function sync(root,mode,animate){
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]'),key=iconKey(mode),text=label(mode),previous=host&&host.getAttribute('data-sc-icon-state');
   if(button){button.setAttribute('aria-label',text);button.setAttribute('title',text);}
