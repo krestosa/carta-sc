@@ -71,3 +71,38 @@ body.sushiShop ::selection {
   background: var(--sc-color-ink);
   color: var(--sc-color-surface);
 }
+
+/* Manual theme changes are staged as one short crossfade. The veil keeps every
+   component visually synchronized while the theme icon remains above it and
+   continues morphing. The system theme path stays CSS-only and bypasses this. */
+html.sc-theme-transitioning body.sushiShop::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: var(--sc-theme-transition-surface, var(--sc-color-surface));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 135ms cubic-bezier(.4,0,.2,1);
+}
+
+html.sc-theme-transitioning[data-sc-theme-transition-phase='out'] body.sushiShop::after {
+  opacity: .82;
+}
+
+html.sc-theme-transitioning[data-sc-theme-transition-phase='in'] body.sushiShop::after {
+  opacity: 0;
+  transition-duration: 190ms;
+  transition-timing-function: cubic-bezier(.4,0,.2,1);
+}
+
+html.sc-theme-transitioning body.sushiShop .sc-theme-control {
+  z-index: 2147483001;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.sc-theme-transitioning body.sushiShop::after {
+    display: none !important;
+    transition: none !important;
+  }
+}
