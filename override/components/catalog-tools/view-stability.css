@@ -11,6 +11,91 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop:not(.sc-catalog-se
   row-gap: var(--sc-compact-row-gap) !important;
 }
 
+/* List rows reserve exactly two title lines at every breakpoint. A short title
+   therefore consumes the same vertical track as a long one, keeping every item
+   the same height without changing the information hierarchy. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
+  min-height: calc(2.52em + 2px) !important;
+  height: calc(2.52em + 2px) !important;
+  max-height: calc(2.52em + 2px) !important;
+  overflow: hidden !important;
+  -webkit-line-clamp: 2 !important;
+}
+
+/* Enlarge list media by widening its grid column only. The media stage keeps the
+   catalogue aspect ratio and the raster remains contain-fitted, so nothing is
+   cropped or stretched; the content column simply starts farther to the right. */
+html[data-sc-catalog-view='list'] body.sushiShop {
+  --sc-view-list-desktop-image-width: 210px;
+  --sc-view-list-compact-image-width: 160px;
+  --sc-view-list-phone-image-width: 150px;
+  --sc-view-list-compact-description-margin-top: 1px;
+  --sc-view-list-compact-description-padding-top: 4px;
+}
+
+@media (min-width: 993px) {
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd {
+    column-gap: 18px !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {
+    align-self: start !important;
+    width: var(--sc-view-list-desktop-image-width) !important;
+    height: auto !important;
+    aspect-ratio: var(--sc-product-image-ratio) !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img {
+    object-fit: contain !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {
+    margin-top: 3px !important;
+    padding-top: 5px !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 992px) {
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
+    column-gap: 14px !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
+    align-self: start !important;
+    width: var(--sc-view-list-compact-image-width) !important;
+    height: auto !important;
+    aspect-ratio: var(--sc-product-image-ratio) !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
+    object-fit: contain !important;
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
+    column-gap: 12px !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
+    align-self: start !important;
+    width: var(--sc-view-list-phone-image-width) !important;
+    height: auto !important;
+    aspect-ratio: var(--sc-product-image-ratio) !important;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
+    object-fit: contain !important;
+  }
+}
+
 /* The view switch owns viewport compensation. Native scroll anchoring or smooth
    scrolling must not apply a second correction while the grid is relaying out. */
 html.sc-catalog-view-switching,
