@@ -9,6 +9,10 @@ N.mq=C.queries.desktop;
 function anchor(href){if(!href||href[0]!=='#'||href==='#')return null;var id=href.slice(1);try{id=decodeURIComponent(id);}catch(_){}return document.getElementById(id)||document.getElementsByName(id)[0]||null;}
 function parentLink(a){return !!(a&&a.matches&&a.matches("a.anchorLink[href^=\"#\"]")&&!a.classList.contains('anchorLinkSub')&&!a.closest(".topPullDown,.dropdown-menu"));}
 function links(root){return Array.prototype.filter.call((root||document).querySelectorAll("a.anchorLink[href^=\"#\"]"),parentLink);}
+function subcategoryOwner(link){
+  if(!link)return null;var href=link.getAttribute('data-sc-parent-href');if(href)return anchor(href);
+  var nested=link.closest('.topPullDown');if(!nested)return null;var item=nested.closest('.nav-top-li'),parent=item&&item.querySelector(':scope > a.anchorLink[href^="#"]');return parent?anchor(parent.getAttribute('href')):null;
+}
 function invalidateOffset(){offsetCache=null;}
 function offset(){
   if(offsetCache!==null)return offsetCache;var bottom=0;
@@ -24,9 +28,20 @@ function durationFor(distance){var range=CFG.scrollMaxDuration-CFG.scrollMinDura
 function scrollPlan(target){var y=target.getBoundingClientRect().top+(pageYOffset||document.documentElement.scrollTop||0)-offset(),max=Math.max(0,document.documentElement.scrollHeight-innerHeight);y=Math.max(0,Math.min(max,y));var startY=pageYOffset||document.documentElement.scrollTop||0,distance=Math.abs(y-startY),instant=C.queries.reducedMotion.matches||distance<CFG.currentMarkOffset;return{y:y,distance:distance,duration:instant?0:durationFor(distance)};}
 function fallbackScroll(y,token,duration){var startY=pageYOffset||document.documentElement.scrollTop||0,delta=y-startY,start=performance.now(),ms=duration*1000;function frame(now){if(token!==autoToken)return;var p=Math.min(1,(now-start)/ms),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;scrollTo(0,startY+delta*e);if(p<1)autoRaf=requestAnimationFrame(frame);else finishAutoScroll(token);}autoRaf=requestAnimationFrame(frame);}
 function scrollToTarget(target,plan){plan=plan||scrollPlan(target);cancelAutoScroll(false);var token=++autoToken;setProgrammatic(true,false);if(!plan.duration){scrollTo(0,plan.y);finishAutoScroll(token);return;}var duration=plan.duration,used=false;if(SC.motion&&SC.motion.run)used=SC.motion.run(function(deps){var gsap=deps.gsap;autoTween=gsap.to(window,{scrollTo:{y:plan.y,autoKill:true,onAutoKill:function(){if(token===autoToken)cancelAutoScroll(true);}},duration:duration,ease:M.easings.inOut,overwrite:'auto',onComplete:function(){finishAutoScroll(token);},onInterrupt:function(){if(token===autoToken)cancelAutoScroll(true);}});});if(!used)fallbackScroll(plan.y,token,duration);}
-function activateAndScroll(target){var plan=scrollPlan(target);if(N.holdSpy)N.holdSpy(target);if(N.setActive)N.setActive(target,true);scrollToTarget(target,plan);}
-function onCategory(event){if(event.defaultPrevented||event.button>0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;var link=event.target&&event.target.closest?event.target.closest("a.anchorLink, a.anchorLinkSub"):null;if(!link||link.closest(".topPullDown,.dropdown-menu")||!(link.closest(S.categoryToolbar)||link.closest(N.selectors.mobileWrapper+' '+N.selectors.mobileRail)))return;var target=anchor(link.getAttribute('href'));if(!target)return;event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();activateAndScroll(target);}
-function onSelect(event){var select=event.target;if(!select||!select.matches||!select.matches(N.selectors.select))return;var target=anchor(select.value);if(!target)return;event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();activateAndScroll(target);}
+function activateAndScroll(target,activeTarget){activeTarget=activeTarget||target;var plan=scrollPlan(target);if(N.holdSpy)N.holdSpy(activeTarget);if(N.setActive)N.setActive(activeTarget,true);scrollToTarget(target,plan);}
+function onCategory(event){
+  if(event.defaultPrevented||event.button>0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+  var link=event.target&&event.target.closest?event.target.closest('a.anchorLink, a.anchorLinkSub, a.sc-category-submenu-link'):null;if(!link)return;
+  var submenuLink=link.classList.contains('sc-category-submenu-link'),nestedLegacy=!!link.closest('.topPullDown,.dropdown-menu');
+  if(nestedLegacy&&!submenuLink)return;
+  if(!(link.closest(S.categoryToolbar)||link.closest(N.selectors.mobileWrapper+' '+N.selectors.mobileRail)||link.closest('.sc-category-submenu')))return;
+  var target=anchor(link.getAttribute('href'));if(!target)return;var owner=submenuLink?subcategoryOwner(link):null;
+  event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();
+  if(submenuLink){if(N.categorySubmenu)N.categorySubmenu.close(false);activateAndScroll(target,owner||target);return;}
+  if(N.categorySubmenu&&N.categorySubmenu.has(link))N.categorySubmenu.open(link,true);
+  activateAndScroll(target,target);
+}
+function onSelect(event){var select=event.target;if(!select||!select.matches||!select.matches(N.selectors.select))return;var target=anchor(select.value);if(!target)return;event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();if(N.categorySubmenu)N.categorySubmenu.close(false);activateAndScroll(target,target);}
 function interrupt(){if(scrollState.programmatic)cancelAutoScroll(true);}
-N.interruptAutoScroll=interrupt;N.resolveAnchor=N.anchor=anchor;N.parentLink=parentLink;N.links=links;N.offset=offset;N.invalidateOffset=invalidateOffset;N.closeLegacy=closeLegacy;N.cleanHash=cleanHash;N.scrollToTarget=scrollToTarget;N.onCategory=onCategory;N.onSelect=onSelect;N.isAutoScrolling=function(){return!!scrollState.programmatic;};
+N.interruptAutoScroll=interrupt;N.resolveAnchor=N.anchor=anchor;N.parentLink=parentLink;N.links=links;N.subcategoryOwner=subcategoryOwner;N.offset=offset;N.invalidateOffset=invalidateOffset;N.closeLegacy=closeLegacy;N.cleanHash=cleanHash;N.scrollToTarget=scrollToTarget;N.onCategory=onCategory;N.onSelect=onSelect;N.isAutoScrolling=function(){return!!scrollState.programmatic;};
 })();
