@@ -18,7 +18,7 @@ function bindNativeImage(img,stage){
 function unbindNativeImages(){bindings.forEach(function(binding,img){img.removeEventListener('load',binding.load);img.removeEventListener('error',binding.error);});bindings.clear();}
 function ensureIntersection(){
   if(intersection||!window.IntersectionObserver)return intersection;
-  intersection=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var img=entry.target;try{img.loading='eager';img.fetchPriority='auto';}catch(_){}intersection.unobserve(img);});},{rootMargin:'70% 0px'});return intersection;
+  intersection=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var img=entry.target;try{img.loading='eager';img.fetchPriority='auto';}catch(_){}intersection.unobserve(img);});},{rootMargin:'0px'});return intersection;
 }
 function setPriority(img){
   if(!img)return;try{
