@@ -156,7 +156,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   display: inline-flex !important;
   order: 3 !important;
   flex: 0 0 auto !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   align-self: center !important;
   gap: 5px !important;
   width: auto !important;
@@ -174,7 +174,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
-  align-self: center !important;
+  align-self: flex-end !important;
   max-width: 16px !important;
   max-height: 13px !important;
   margin: 0 !important;
@@ -216,7 +216,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
     display: inline-flex !important;
     order: 3 !important;
     flex: 0 0 auto !important;
-    align-items: center !important;
+    align-items: flex-end !important;
     align-self: center !important;
     gap: 5px !important;
     width: auto !important;
@@ -232,7 +232,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits .sc-trait-icon {
     display: block !important;
     flex: 0 0 auto !important;
-    align-self: center !important;
+    align-self: flex-end !important;
     max-width: 16px !important;
     max-height: 13px !important;
     margin: 0 !important;
