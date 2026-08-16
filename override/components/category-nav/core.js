@@ -33,12 +33,14 @@ function cleanHash(){if(SC.mutations&&SC.mutations.cleanCategoryHash)return SC.m
 function setProgrammatic(on,grace){scrollState.programmatic=!!on;scrollState.suppressRevealUntil=on?Infinity:(grace?performance.now()+CFG.programmaticGraceMs:0);}
 function cancelAutoScroll(userInterrupt){autoToken++;if(autoRaf){cancelAnimationFrame(autoRaf);autoRaf=0;}if(userInterrupt){setProgrammatic(false,false);if(N.releaseSpyHold)N.releaseSpyHold();if(N.scheduleSpy)N.scheduleSpy();}}
 function durationFor(distance){var range=CFG.scrollMaxDuration-CFG.scrollMinDuration;return Math.min(CFG.scrollMaxDuration,Math.max(CFG.scrollMinDuration,CFG.scrollMinDuration+Math.pow(Math.min(1,distance/CFG.scrollDistanceScale),CFG.scrollDistancePower)*range));}
-function targetY(target){var y=target.getBoundingClientRect().top+(pageYOffset||document.documentElement.scrollTop||0)-offset(),max=Math.max(0,document.documentElement.scrollHeight-innerHeight);return Math.max(0,Math.min(max,y));}
+function targetY(target){
+  invalidateOffset();var y=target.getBoundingClientRect().top+(pageYOffset||document.documentElement.scrollTop||0)-offset(),max=Math.max(0,document.documentElement.scrollHeight-innerHeight);return Math.max(0,Math.min(max,y));
+}
 function scrollPlan(target){var y=targetY(target),startY=pageYOffset||document.documentElement.scrollTop||0,distance=Math.abs(y-startY),instant=C.queries.reducedMotion.matches||distance<CFG.currentMarkOffset;return{y:y,distance:distance,duration:instant?0:durationFor(distance)};}
 function ease(p){return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;}
 function finishAutoScroll(token,target){
   if(token!==autoToken)return;autoRaf=requestAnimationFrame(function(){if(token!==autoToken)return;autoRaf=requestAnimationFrame(function(){
-    autoRaf=0;if(token!==autoToken)return;invalidateOffset();var finalY=targetY(target),currentY=pageYOffset||document.documentElement.scrollTop||0;if(Math.abs(finalY-currentY)>CFG.settleTolerance)scrollTo(0,finalY);
+    autoRaf=0;if(token!==autoToken)return;var finalY=targetY(target),currentY=pageYOffset||document.documentElement.scrollTop||0;if(Math.abs(finalY-currentY)>CFG.settleTolerance)scrollTo(0,finalY);
     if(N.refreshMetrics)N.refreshMetrics();setProgrammatic(false,true);if(N.releaseSpyHold)N.releaseSpyHold();if(N.scheduleSpy)N.scheduleSpy();
   });});
 }
