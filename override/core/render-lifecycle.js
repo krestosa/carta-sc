@@ -4,18 +4,18 @@ var SC=window.SCOverride=window.SCOverride||{},C=SC.config,S=C&&C.selectors,K=C&
 if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
 var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MEDIA_TIMEOUT=1200,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[];
 function markInitialViewport(){
-  var vh=window.innerHeight||document.documentElement.clientHeight;
+  var vh=window.innerHeight||document.documentElement.clientHeight,cards=[],sections=[];
   document.querySelectorAll(S.productCards).forEach(function(card){
     var rect=card.getBoundingClientRect();
-    if(rect.top<vh&&rect.bottom>0)card.classList.add(K.staticInitialCard);
+    if(rect.top<vh&&rect.bottom>0)cards.push(card);
   });
   document.querySelectorAll(S.productList+' '+S.sectionTitle+', '+S.productList+' '+S.sectionSubtitle).forEach(function(section){
     var rect=section.getBoundingClientRect();
     if(rect.top>=vh||rect.bottom<=0)return;
-    section.classList.add(K.staticInitialSection);
-    var host=section.matches(S.sectionTitle)?section.querySelector(":scope > div"):section;
-    if(host)host.classList.add(K.staticInitialSection);
+    sections.push({section:section,host:section.matches(S.sectionTitle)?section.querySelector(":scope > div"):section});
   });
+  cards.forEach(function(card){card.classList.add(K.staticInitialCard);});
+  sections.forEach(function(item){item.section.classList.add(K.staticInitialSection);if(item.host)item.host.classList.add(K.staticInitialSection);});
 }
 function afterLayoutFrame(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});}
 function whenDomReady(){return document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();}
