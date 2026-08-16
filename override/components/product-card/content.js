@@ -6,7 +6,7 @@ var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0,referenceStrip=null;
 function traitKey(label){return(label||'').trim().toLocaleLowerCase('es-AR');}
 function traitSpec(label){
   var key=traitKey(label);
-  if(key==='poco picante')return{key:'algo picante',label:'Algo Picante',icon:'algo picante'};
+  if(key==='poco picante')return{key:'poco picante',label:'Poco Picante',icon:'algo picante'};
   if(key==='algo picante')return{key:'picante',label:'Picante',icon:'poco picante'};
   if(key==='picante')return{key:'picante',label:'Picante',icon:'poco picante'};
   if(key==='muy picante')return{key:'muy picante',label:'Muy Picante',icon:'muy picante'};
