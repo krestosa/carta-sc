@@ -20,7 +20,6 @@ config.queries=config.queries||{};
 config.urls=merged({
   gsap:GSAP_DIST+'gsap.min.js',
   scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
-  scrollTo:GSAP_DIST+'ScrollToPlugin.min.js',
   splitText:GSAP_DIST+'SplitText.min.js'
 },config.urls);
 
