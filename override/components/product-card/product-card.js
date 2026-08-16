@@ -11,8 +11,8 @@ function scheduleCardRefresh(){if(initialized&&!cardRaf)cardRaf=requestAnimation
 function installResizeTracking(){
   var root=document.querySelector(S.container)||document.body;if(!root)return;
   if(!window.ResizeObserver){window.addEventListener('resize',P.scheduleDescriptionMeasure,{passive:true});resizeFallback=true;return;}
-  lastWidth=root.getBoundingClientRect().width;
-  resizeObserver=new ResizeObserver(function(entries){var width=entries[0]&&entries[0].contentRect?entries[0].contentRect.width:root.getBoundingClientRect().width;if(Math.abs(width-lastWidth)<RESIZE_WIDTH_TOLERANCE)return;lastWidth=width;P.scheduleDescriptionMeasure();});
+  lastWidth=-1;
+  resizeObserver=new ResizeObserver(function(entries){var entry=entries[0],width=entry&&entry.contentRect?entry.contentRect.width:root.clientWidth;if(lastWidth>=0&&Math.abs(width-lastWidth)<RESIZE_WIDTH_TOLERANCE)return;lastWidth=width;P.scheduleDescriptionMeasure();});
   resizeObserver.observe(root);
 }
 function breakpoint(){if(initialized)refreshCards();}
