@@ -19,15 +19,24 @@ function sync(root,mode){
   if(button){button.setAttribute('aria-label',label(mode));button.setAttribute('title',mode==='system'?'Tema automático':'Tema '+(mode==='dark'?'oscuro':'claro'));}
   options(root).forEach(function(option){var on=option.getAttribute('data-sc-theme-option')===mode;option.setAttribute('aria-checked',on?'true':'false');option.classList.toggle('sc-theme-option-selected',on);});
 }
-function commit(root,mode,persist,skipSync){mode=normalize(mode)||'system';var actual=resolved(mode),changed=selected()!==mode||doc.getAttribute('data-sc-theme-resolved')!==actual;if(doc.getAttribute('data-sc-theme')!==mode)doc.setAttribute('data-sc-theme',mode);setResolved(actual);if(!skipSync)sync(root,mode);if(changed)emit(mode,actual);if(persist)scheduleSave(mode);}
+function commit(root,mode,persist,skipSync){
+  mode=normalize(mode)||'system';
+  var previousMode=selected(),previousActual=doc.getAttribute('data-sc-theme-resolved')||resolved(previousMode),actual=resolved(mode),visualChanged=previousActual!==actual,modeChanged=previousMode!==mode;
+  if(doc.getAttribute('data-sc-theme')!==mode)doc.setAttribute('data-sc-theme',mode);
+  setResolved(actual);
+  if(!skipSync)sync(root,mode);
+  if(visualChanged)emit(mode,actual);
+  if(persist&&modeChanged)scheduleSave(mode);
+}
 function apply(root,mode,persist){commit(root,mode,persist,false);}
 function clearSwitch(){
   switchToken++;switchTimers.forEach(clearTimeout);switchTimers.length=0;
   doc.classList.remove('sc-theme-transitioning');doc.removeAttribute('data-sc-theme-transition-phase');doc.style.removeProperty('--sc-theme-transition-surface');
 }
 function transitionApply(root,mode,persist){
-  mode=normalize(mode)||'system';var current=selected(),actual=resolved(mode),currentActual=resolved(current);
-  if(reducedMotion()||(current===mode&&currentActual===actual)){clearSwitch();apply(root,mode,persist);return;}
+  mode=normalize(mode)||'system';var current=selected(),actual=resolved(mode),currentActual=doc.getAttribute('data-sc-theme-resolved')||resolved(current);
+  if(currentActual===actual){clearSwitch();commit(root,mode,persist,false);return;}
+  if(reducedMotion()){clearSwitch();apply(root,mode,persist);return;}
   clearSwitch();var token=switchToken,surface='';
   try{surface=getComputedStyle(doc).getPropertyValue('--sc-color-surface').trim();}catch(_){}
   if(surface)doc.style.setProperty('--sc-theme-transition-surface',surface);
