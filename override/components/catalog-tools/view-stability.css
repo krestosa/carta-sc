@@ -3,3 +3,11 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .tit
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
   padding-top: var(--sc-card-title-padding-top) !important;
 }
+
+/* The view switch owns viewport compensation. Native scroll anchoring or smooth
+   scrolling must not apply a second correction while the grid is relaying out. */
+html.sc-catalog-view-switching,
+html.sc-catalog-view-switching body.sushiShop {
+  overflow-anchor: none !important;
+  scroll-behavior: auto !important;
+}
