@@ -12,27 +12,73 @@
             <defs>
               <mask id="sc-theme-disc-mask">
                 <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
-                <circle class="sc-theme-cut" cx="15.5" cy="8.5" r="5.15" fill="#000"></circle>
+                <circle class="sc-theme-cut" cx="16.1" cy="8.15" r="5.65" fill="#000"></circle>
               </mask>
             </defs>
-            <g class="sc-theme-rays">
-              <line x1="12" y1="1.5" x2="12" y2="4"></line>
-              <line x1="12" y1="20" x2="12" y2="22.5"></line>
-              <line x1="1.5" y1="12" x2="4" y2="12"></line>
-              <line x1="20" y1="12" x2="22.5" y2="12"></line>
-              <line x1="4.58" y1="4.58" x2="6.35" y2="6.35"></line>
-              <line x1="17.65" y1="17.65" x2="19.42" y2="19.42"></line>
-              <line x1="17.65" y1="6.35" x2="19.42" y2="4.58"></line>
-              <line x1="4.58" y1="19.42" x2="6.35" y2="17.65"></line>
+            <g class="sc-theme-solar-glyph">
+              <g class="sc-theme-rays">
+                <line x1="12" y1="1.2" x2="12" y2="3.8"></line>
+                <line x1="12" y1="20.2" x2="12" y2="22.8"></line>
+                <line x1="1.2" y1="12" x2="3.8" y2="12"></line>
+                <line x1="20.2" y1="12" x2="22.8" y2="12"></line>
+                <line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line>
+                <line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line>
+                <line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line>
+                <line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
+              </g>
+              <circle class="sc-theme-disc" cx="12" cy="12" r="5.55" mask="url(#sc-theme-disc-mask)"></circle>
             </g>
-            <circle class="sc-theme-disc" cx="12" cy="12" r="5.15" mask="url(#sc-theme-disc-mask)"></circle>
+            <g class="sc-theme-auto-glyph">
+              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="6.85"></circle>
+              <path class="sc-theme-auto-half" d="M12 5.15a6.85 6.85 0 0 1 0 13.7z"></path>
+            </g>
           </svg>
-          <span class="sc-theme-auto-mark" aria-hidden="true"></span>
         </button>
         <div class="sc-theme-menu" id="sc-theme-menu" role="menu" aria-label="Elegir tema" aria-hidden="true">
-          <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="true" data-sc-theme-option="system"><span>Automático</span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
-          <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="light"><span>Claro</span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
-          <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="dark"><span>Oscuro</span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
+          <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="true" data-sc-theme-option="system">
+            <span class="sc-theme-option-main">
+              <svg class="sc-theme-option-icon sc-theme-option-icon--system" viewBox="0 0 18 18" aria-hidden="true">
+                <circle class="sc-theme-option-auto-ring" cx="9" cy="9" r="5.5"></circle>
+                <path class="sc-theme-option-auto-half" d="M9 3.5a5.5 5.5 0 0 1 0 11z"></path>
+              </svg>
+              <span>Automático</span>
+            </span>
+            <span class="sc-theme-option-mark" aria-hidden="true"></span>
+          </button>
+          <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="light">
+            <span class="sc-theme-option-main">
+              <svg class="sc-theme-option-icon sc-theme-option-icon--light" viewBox="0 0 18 18" aria-hidden="true">
+                <g class="sc-theme-option-rays">
+                  <line x1="9" y1="1.2" x2="9" y2="3"></line>
+                  <line x1="9" y1="15" x2="9" y2="16.8"></line>
+                  <line x1="1.2" y1="9" x2="3" y2="9"></line>
+                  <line x1="15" y1="9" x2="16.8" y2="9"></line>
+                  <line x1="3.5" y1="3.5" x2="4.78" y2="4.78"></line>
+                  <line x1="13.22" y1="13.22" x2="14.5" y2="14.5"></line>
+                  <line x1="13.22" y1="4.78" x2="14.5" y2="3.5"></line>
+                  <line x1="3.5" y1="14.5" x2="4.78" y2="13.22"></line>
+                </g>
+                <circle class="sc-theme-option-sun-disc" cx="9" cy="9" r="3.2"></circle>
+              </svg>
+              <span>Claro</span>
+            </span>
+            <span class="sc-theme-option-mark" aria-hidden="true"></span>
+          </button>
+          <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="dark">
+            <span class="sc-theme-option-main">
+              <svg class="sc-theme-option-icon sc-theme-option-icon--dark" viewBox="0 0 18 18" aria-hidden="true">
+                <defs>
+                  <mask id="sc-theme-option-dark-mask">
+                    <rect x="0" y="0" width="18" height="18" fill="#fff"></rect>
+                    <circle class="sc-theme-option-dark-cut" cx="11.7" cy="6.35" r="4.45" fill="#000"></circle>
+                  </mask>
+                </defs>
+                <circle class="sc-theme-option-dark-disc" cx="8.7" cy="9" r="5.6" mask="url(#sc-theme-option-dark-mask)"></circle>
+              </svg>
+              <span>Oscuro</span>
+            </span>
+            <span class="sc-theme-option-mark" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
       <button class="sc-catalog-view-toggle" type="button" aria-label="Cambiar vista de productos" title="Cambiar vista">
