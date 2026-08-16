@@ -64,10 +64,10 @@ function installFlavorRows(){
 }
 function measureDescriptions(){
   descriptionRaf=0;descriptionMeasureRaf=0;
-  each(document.querySelectorAll(S.productCards+' '+S.productDescription),function(desc){
-    desc.classList.remove("sc-description-truncated");
-    if(desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1)desc.classList.add("sc-description-truncated");
-  });
+  var descriptions=document.querySelectorAll(S.productCards+' '+S.productDescription),truncated=[];
+  each(descriptions,function(desc){desc.classList.remove("sc-description-truncated");});
+  each(descriptions,function(desc){if(desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1)truncated.push(desc);});
+  each(truncated,function(desc){desc.classList.add("sc-description-truncated");});
 }
 function scheduleDescriptionMeasure(){
   if(descriptionRaf)return;
