@@ -48,9 +48,10 @@ function handle(node){
   if(matches(node,["a[href*=\"facebook.com/sushiclubargentina\"]","a[href*=\"instagram.com/SushiClub_ar\"]","a[href*=\"tiktok.com/@sushiclub_ar\"]","a[href*=\"pinterest.com/sushiclub\"]"].join(',')))enhanceSocialLink(node);
 }
 function scan(root){if(matches(root,TARGETS))handle(root);if(root&&root.querySelectorAll)each(root.querySelectorAll(TARGETS),handle);}
+function normalizeDocumentLanguage(){var root=document.documentElement;if(root&&!root.lang)root.lang='es-AR';}
 function disconnect(){if(observer){observer.disconnect();observer=null;}}
 function init(){
-  if(initialized)return;initialized=true;scan(document);disconnect();if(!window.MutationObserver||!document.body)return;
+  if(initialized)return;initialized=true;normalizeDocumentLanguage();scan(document);disconnect();if(!window.MutationObserver||!document.body)return;
   observer=new MutationObserver(function(mutations){mutations.forEach(function(mutation){each(mutation.addedNodes,scan);});});observer.observe(document.body,{childList:true,subtree:true});
 }
 function destroy(){initialized=false;disconnect();if(readyHandler){document.removeEventListener('DOMContentLoaded',readyHandler);readyHandler=null;}}
