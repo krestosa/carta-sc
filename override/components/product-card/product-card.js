@@ -15,7 +15,7 @@ function installResizeTracking(){
   resizeObserver=new ResizeObserver(function(entries){var width=entries[0]&&entries[0].contentRect?entries[0].contentRect.width:root.getBoundingClientRect().width;if(Math.abs(width-lastWidth)<RESIZE_WIDTH_TOLERANCE)return;lastWidth=width;P.scheduleDescriptionMeasure();});
   resizeObserver.observe(root);
 }
-function breakpoint(){if(!initialized)return;P.installFlavorRows();P.scheduleDescriptionMeasure();}
+function breakpoint(){if(initialized)refreshCards();}
 function init(){
   if(initialized)return;initialized=true;refreshCards();installResizeTracking();
   if(desktopQuery.addEventListener)desktopQuery.addEventListener('change',breakpoint);else desktopQuery.addListener(breakpoint);
