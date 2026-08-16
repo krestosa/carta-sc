@@ -6,23 +6,22 @@ var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0;
 function clearFlavorRows(){
   each(document.querySelectorAll(".sc-product-flavors"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
 }
+function installTraitReferences(){
+  each(document.querySelectorAll('.referencias_picor .refBox'),function(box){
+    var labelNode=box.querySelector('.ref_label'),image=box.querySelector('.imgRef img'),host=box.querySelector('.imgRef');
+    var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim();
+    if(D.ignoredTrait(label)){if(box.parentNode)box.parentNode.removeChild(box);return;}
+    var icon=D.createTraitIcon(label);if(icon&&host){host.textContent='';host.appendChild(icon);}
+  });
+}
 function installFlavorRows(){
-  clearFlavorRows();
+  clearFlavorRows();installTraitReferences();
   each(document.querySelectorAll(S.productCard+' > '+S.productLink),function(link){
     var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits);
     if(source)source.setAttribute('aria-hidden','true');
     var row=document.createElement('span');row.className=".sc-product-flavors".slice(1);
     var labels=D.traitLabels(source||link);
-    if(source){
-      each(source.children,function(node){
-        var clone=node.cloneNode(true);
-        if(clone.tagName==='IMG'){
-          clone.setAttribute('alt','');clone.setAttribute('aria-hidden','true');
-          clone.removeAttribute('data-toggle');clone.removeAttribute('title');
-        }
-        row.appendChild(clone);
-      });
-    }
+    each(labels,function(label){D.appendTraitVisual(row,source||link,label);});
     if(labels.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+labels.join(', '));}
     else row.setAttribute('aria-hidden','true');
     link.appendChild(row);

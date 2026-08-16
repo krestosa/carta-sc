@@ -83,7 +83,6 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     width: 100% !important;
     margin: 0 !important;
     border: 0 !important;
-    border-bottom: var(--sc-border-hairline) solid var(--sc-card-rule) !important;
     border-radius: 0 !important;
     overflow: hidden !important;
   }
@@ -143,7 +142,6 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    border-bottom: var(--sc-border-hairline) solid var(--sc-card-rule) !important;
     border-radius: 0 !important;
     background-color: transparent !important;
     overflow: hidden !important;
