@@ -59,8 +59,24 @@ function sync(root,mode,animate){
   if(button){button.setAttribute('aria-label',text);button.setAttribute('title',text);}if(!host)return;
   if(previous===key){if(!host.__scViewIconMotion)setViewIcon(host,key);return;}if(animate!==false&&previous)animateViewIcon(host,key);else{clearViewIconMotion(host);setViewIcon(host,key);}host.setAttribute('data-sc-icon-state',key);
 }
-function captureViewport(){return{x:window.scrollX||window.pageXOffset||0,y:window.scrollY||window.pageYOffset||0};}
-function restoreViewport(viewport){if(!viewport)return;var x=window.scrollX||window.pageXOffset||0,y=window.scrollY||window.pageYOffset||0;if(Math.abs(x-viewport.x)>.5||Math.abs(y-viewport.y)>.5)window.scrollTo(viewport.x,viewport.y);}
+function viewportAnchor(){
+  var nodes=document.querySelectorAll('.listadoShop .titleShopSeccion,.listadoShop .subTitleShopSeccion,.listadoShop .productoShop'),height=window.innerHeight||doc.clientHeight||0,probe=Math.min(Math.max(height*.28,110),240),best=null,bestDistance=Infinity;
+  for(var i=0;i<nodes.length;i++){
+    var node=nodes[i],rect=node.getBoundingClientRect();if(rect.bottom<=0||rect.top>=height)continue;
+    var distance=rect.top<=probe&&rect.bottom>=probe?0:Math.abs(rect.top-probe);
+    if(distance<bestDistance){best=node;bestDistance=distance;if(distance===0&&node.matches('.titleShopSeccion,.subTitleShopSeccion'))break;}
+  }
+  return best;
+}
+function captureViewport(){var anchor=viewportAnchor(),rect=anchor&&anchor.getBoundingClientRect();return{x:window.scrollX||window.pageXOffset||0,y:window.scrollY||window.pageYOffset||0,anchor:anchor,anchorTop:rect?rect.top:null};}
+function restoreViewport(viewport){
+  if(!viewport)return;var currentX=window.scrollX||window.pageXOffset||0,currentY=window.scrollY||window.pageYOffset||0,anchor=viewport.anchor;
+  if(anchor&&doc.contains(anchor)&&viewport.anchorTop!==null){
+    var delta=anchor.getBoundingClientRect().top-viewport.anchorTop;if(Math.abs(delta)>.5)window.scrollBy(0,delta);
+    currentX=window.scrollX||window.pageXOffset||0;if(Math.abs(currentX-viewport.x)>.5)window.scrollTo(viewport.x,window.scrollY||window.pageYOffset||0);return;
+  }
+  if(Math.abs(currentX-viewport.x)>.5||Math.abs(currentY-viewport.y)>.5)window.scrollTo(viewport.x,viewport.y);
+}
 function refreshMotionNow(){if(SC.motion&&SC.motion.run)SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});}
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode(),false);}
 function refreshLayout(viewport){
