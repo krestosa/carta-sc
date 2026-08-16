@@ -34,7 +34,6 @@ function layout(){
   }
   if(N.refreshMetrics)N.refreshMetrics();
   if(N.scheduleRail)N.scheduleRail();
-  U.refreshMotion();
 }
 function semantics(){
   var node=document.querySelector(N.selectors.mobileWrapper);
