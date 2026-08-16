@@ -75,12 +75,14 @@ body.sushiShop .sc-product-modal__footer {
   border-top: var(--sc-border-hairline) solid var(--sc-color-border) !important;
 }
 body.sushiShop .sc-product-modal__price-row {
-  display: flex !important;
+  display: grid !important;
   flex: 1 1 auto !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: baseline !important;
-  gap: 8px !important;
+  grid-template-columns: max-content max-content !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  justify-content: start !important;
+  column-gap: 6px !important;
+  row-gap: 1px !important;
   min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;

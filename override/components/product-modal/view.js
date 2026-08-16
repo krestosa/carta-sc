@@ -20,16 +20,20 @@ function build(link){
   title.id=titleId;dialog.setAttribute('aria-labelledby',titleId);
   if(src){image.src=src;image.alt=name;}else image.remove();
   var traits=cardApi.buildTraitGroup?cardApi.buildTraitGroup(card,"sc-product-modal__traits sabores"):null;
-  if(traits)title.appendChild(traits);
   title.appendChild(document.createTextNode(name));
   if(description)copy.textContent=description;else copy.remove();
 
   var sourcePrice=card.querySelector(".priceRow");
   if(sourcePrice){
     var price=sourcePrice.cloneNode(true);price.className="sc-product-modal__price-row";
-    each(price.querySelectorAll(".sumar,input,button"),function(node){if(node.parentNode)node.parentNode.removeChild(node);});
+    each(price.querySelectorAll(".sumar,input,button,.sc-product-price-traits"),function(node){if(node.parentNode)node.parentNode.removeChild(node);});
+    price.classList.toggle('sc-price-row-has-offer',!!price.querySelector('.ofertaPrice'));
+    if(traits)price.appendChild(traits);
     priceSlot.replaceWith(price);
-  }else priceSlot.remove();
+  }else{
+    priceSlot.remove();
+    if(traits)title.insertBefore(traits,title.firstChild);
+  }
   cta.href=CART_URL;
   return overlay;
 }

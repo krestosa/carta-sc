@@ -10,11 +10,14 @@ body.sushiShop .sc-product-modal__title {
 }
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
-  align-items: flex-end !important;
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  align-items: center !important;
+  align-self: center !important;
   gap: 5px !important;
-  margin-right: 7px !important;
+  margin: 0 !important;
   color: var(--sc-color-muted) !important;
-  vertical-align: -2px !important;
+  line-height: 0 !important;
 }
 body.sushiShop .sc-product-modal__traits img {
   width: var(--sc-modal-traits-size) !important;
@@ -25,6 +28,8 @@ body.sushiShop .sc-product-modal__traits img {
 body.sushiShop .sc-product-modal__traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
+  max-width: 16px !important;
+  max-height: var(--sc-modal-traits-size) !important;
   margin: 0 !important;
 }
 body.sushiShop .sc-product-modal__description {
@@ -37,13 +42,28 @@ body.sushiShop .sc-product-modal__description {
 }
 body.sushiShop .sc-product-modal__price-row .price,
 body.sushiShop .sc-product-modal__price-row .priceHijass {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  order: initial !important;
   margin: 0 !important;
   color: var(--sc-color-ink) !important;
   font: var(--sc-font-weight-semibold) 17px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
 }
 body.sushiShop .sc-product-modal__price-row .ofertaPrice {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  justify-self: start !important;
+  order: initial !important;
   margin: 0 !important;
   color: var(--sc-color-muted) !important;
   font: var(--sc-font-weight-regular) 12px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
   text-decoration: line-through !important;
+}
+body.sushiShop .sc-product-modal__price-row:not(.sc-price-row-has-offer) .price,
+body.sushiShop .sc-product-modal__price-row:not(.sc-price-row-has-offer) .priceHijass {
+  grid-column: 1 !important;
+}
+body.sushiShop .sc-product-modal__price-row:not(.sc-price-row-has-offer) .sc-product-modal__traits {
+  grid-row: 1 !important;
 }

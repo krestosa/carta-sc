@@ -4,7 +4,7 @@ var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.
 var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0;
 
 function clearFlavorRows(){
-  each(document.querySelectorAll(".sc-product-flavors"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
+  each(document.querySelectorAll(".sc-product-flavors,.sc-product-price-traits"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
 }
 function installTraitReferences(){
   each(document.querySelectorAll('.referencias_picor .refBox'),function(box){
@@ -14,17 +14,24 @@ function installTraitReferences(){
     var icon=D.createTraitIcon(label);if(icon&&host){host.textContent='';host.appendChild(icon);}
   });
 }
+function buildTraitRow(className,labels,source){
+  var row=document.createElement('span');row.className=className;
+  each(labels,function(label){D.appendTraitVisual(row,source,label);});
+  if(labels.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+labels.join(', '));}
+  else row.setAttribute('aria-hidden','true');
+  return row;
+}
 function installFlavorRows(){
   clearFlavorRows();installTraitReferences();
   each(document.querySelectorAll(S.productCard+' > '+S.productLink),function(link){
-    var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits);
+    var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits),priceRow=link.querySelector('.priceRow');
     if(source)source.setAttribute('aria-hidden','true');
-    var row=document.createElement('span');row.className=".sc-product-flavors".slice(1);
-    var labels=D.traitLabels(source||link);
-    each(labels,function(label){D.appendTraitVisual(row,source||link,label);});
-    if(labels.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+labels.join(', '));}
-    else row.setAttribute('aria-hidden','true');
+    var labels=D.traitLabels(source||link),row=buildTraitRow('sc-product-flavors',labels,source||link);
     link.appendChild(row);
+    if(priceRow){
+      priceRow.classList.toggle('sc-price-row-has-offer',!!priceRow.querySelector('.ofertaPrice'));
+      priceRow.appendChild(buildTraitRow('sc-product-price-traits',labels,source||link));
+    }
   });
 }
 function measureDescriptions(){

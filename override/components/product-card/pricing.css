@@ -105,3 +105,92 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
     opacity: 1 !important;
   }
 }
+
+/* Dense and list views keep the discounted price on line one and combine the
+   struck-through price with dietary/spice traits on line two. */
+body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
+  display: none !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+  display: none !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
+  display: grid !important;
+  grid-template-columns: max-content max-content !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  justify-content: start !important;
+  column-gap: 6px !important;
+  row-gap: var(--sc-card-price-gap) !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .price,
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .price,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  order: initial !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  justify-self: start !important;
+  order: initial !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  align-items: center !important;
+  align-self: center !important;
+  gap: 5px !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--sc-color-muted) !important;
+  line-height: 0 !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
+  display: block !important;
+  flex: 0 0 auto !important;
+  max-width: 16px !important;
+  max-height: 15px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .price,
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .priceHijass,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .price,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .priceHijass {
+  grid-column: 1 !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .sc-product-price-traits,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .sc-product-price-traits {
+  grid-row: 1 !important;
+}
+
+@media (min-width: 993px) {
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow {
+    justify-content: end !important;
+  }
+}
