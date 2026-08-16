@@ -11,6 +11,20 @@ html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
   --sc-image-preloader-highlight: #292929;
 }
 
+@media (prefers-color-scheme: light) {
+  html.sc-image-preloader-active[data-sc-theme='system'] {
+    --sc-image-preloader-base: #eeeeeb;
+    --sc-image-preloader-highlight: #fafaf7;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html.sc-image-preloader-active[data-sc-theme='system'] {
+    --sc-image-preloader-base: #151515;
+    --sc-image-preloader-highlight: #292929;
+  }
+}
+
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop {
   position: relative !important;
