@@ -1,6 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride=window.SCOverride||{};if(SC.__imagePreloaderBooted)return;SC.__imagePreloaderBooted=true;
+if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
 var seen=new Set(),settled=new Set(),waiters=new Map(),high=[],low=[],active=0,idleHandle=0,observer=null,started=false,MAX_ACTIVE=4,NEAR_VIEWPORT=1.5,STAGE='.imgShop,.imgLiquidNoFillShop';
 function absolute(url){if(!url)return'';try{var parsed=new URL(url,location.href);return /^(https?:)$/i.test(parsed.protocol)?parsed.href:'';}catch(_){return'';}}
 function nearViewport(node){if(!node||!node.getBoundingClientRect)return false;var rect=node.getBoundingClientRect(),h=innerHeight||document.documentElement.clientHeight||0;return rect.bottom>=-h*.25&&rect.top<=h*NEAR_VIEWPORT;}
