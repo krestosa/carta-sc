@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav,T=SC&&SC.templates;
-if(!SC||!U||!N||!T||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
+if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
 var each=U.each,ready=U.ready,mq=N.mq,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
 var submenuHost=null,submenuParent=null,submenuPinned=false,submenuCloseTimer=0,submenuPositionRaf=0,submenuScroller=null;
 
@@ -18,7 +18,8 @@ function setParentExpanded(parent,on){
 }
 function ensureSubmenu(){
   if(submenuHost&&document.documentElement.contains(submenuHost))return submenuHost;
-  submenuHost=T.clone('category-submenu');submenuHost.id='sc-category-submenu';document.body.appendChild(submenuHost);
+  submenuHost=document.createElement('div');submenuHost.id='sc-category-submenu';submenuHost.className='sc-category-submenu';submenuHost.setAttribute('role','menu');submenuHost.setAttribute('aria-hidden','true');
+  var list=document.createElement('div');list.className='sc-category-submenu-list';submenuHost.appendChild(list);document.body.appendChild(submenuHost);
   submenuHost.addEventListener('pointerenter',clearCloseTimer);
   submenuHost.addEventListener('pointerleave',function(){if(!submenuPinned)scheduleSubmenuClose();});
   return submenuHost;
