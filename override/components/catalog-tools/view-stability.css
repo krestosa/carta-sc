@@ -5,14 +5,15 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop:not(.sc-catalog-se
   row-gap: var(--sc-compact-row-gap) !important;
 }
 
-/* List geometry is deliberately uniform across breakpoints: media on the left,
-   three real text tracks on the right (two-line title / price / description).
-   The former fourth metadata track remained allocated even though list traits
-   are rendered in the price row, which left dead space below the text column. */
+/* List geometry is deliberately uniform across breakpoints. The media fixes the
+   row height; the text column uses title / price / flexible space / description.
+   Short titles therefore keep their price attached instead of leaving an empty
+   second title line between the two related pieces of information. */
 html[data-sc-catalog-view='list'] body.sushiShop {
   --sc-view-list-desktop-image-width: 210px;
   --sc-view-list-compact-image-width: 160px;
   --sc-view-list-phone-image-width: 150px;
+  --sc-view-list-title-price-gap: 6px;
 }
 
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
@@ -21,8 +22,8 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   position: static !important;
   align-self: start !important;
   min-width: 0 !important;
-  min-height: calc(2.52em + 2px) !important;
-  height: calc(2.52em + 2px) !important;
+  min-height: 0 !important;
+  height: auto !important;
   max-height: calc(2.52em + 2px) !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -31,8 +32,8 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-/* Reset any legacy positioning on the price/sold-out row. This is what keeps
-   "Agotado" in its own track instead of painting over the second title line. */
+/* Price and sold-out state are one compact decision block with the title. The
+   flexible track lives after this row, never between title and price. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   position: static !important;
@@ -44,20 +45,19 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   min-width: 0 !important;
   min-height: 18px !important;
   height: 18px !important;
-  margin: 0 !important;
+  margin: var(--sc-view-list-title-price-gap) 0 0 !important;
   padding: 0 !important;
 }
 
-/* Reuse the earlier truncation fix everywhere, but make it stronger: clamp to
-   two actual line boxes as well as clipping the box. A one-line description may
-   shrink; a two-line description can never expose pixels from line three. */
+/* Description is the lower anchor of the text column. Two physical line boxes
+   are the hard limit, so no pixels from line three can leak through. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
   box-sizing: border-box !important;
   display: -webkit-box !important;
   position: relative !important;
   grid-column: 2 !important;
-  grid-row: 3 !important;
+  grid-row: 4 !important;
   align-self: end !important;
   min-width: 0 !important;
   min-height: 0 !important;
@@ -71,7 +71,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
 @media (min-width: 993px) {
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd {
     grid-template-columns: var(--sc-view-list-desktop-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto 18px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
     column-gap: 18px !important;
     align-content: stretch !important;
     min-height: 146.85px !important;
@@ -80,7 +80,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
 
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {
     grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
+    grid-row: 1 / 5 !important;
     align-self: start !important;
     width: var(--sc-view-list-desktop-image-width) !important;
     height: auto !important;
@@ -106,7 +106,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
     grid-template-columns: var(--sc-view-list-compact-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto 18px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
     column-gap: 14px !important;
     align-content: stretch !important;
     min-height: 111.89px !important;
@@ -116,7 +116,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
     grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
+    grid-row: 1 / 5 !important;
     align-self: start !important;
     width: var(--sc-view-list-compact-image-width) !important;
     height: auto !important;
@@ -145,7 +145,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
     grid-template-columns: var(--sc-view-list-phone-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto 18px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
     column-gap: 12px !important;
     align-content: stretch !important;
     min-height: 104.90px !important;
@@ -155,7 +155,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
     grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
+    grid-row: 1 / 5 !important;
     align-self: start !important;
     width: var(--sc-view-list-phone-image-width) !important;
     height: auto !important;
