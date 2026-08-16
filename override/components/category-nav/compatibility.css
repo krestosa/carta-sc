@@ -42,6 +42,13 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
   background: linear-gradient(270deg,var(--sc-color-surface) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
 }
 
+/* The legacy runtime may keep its own .active class while the override scroll-spy
+   owns the actual section. Never let that stale class impersonate our active state. */
+body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']),
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']) {
+  color: var(--sc-color-muted) !important;
+}
+
 @media (max-width: 992px) {
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
