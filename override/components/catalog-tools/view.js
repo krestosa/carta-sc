@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;if(!SC||!CFG||SC.__catalogToolsViewBooted)return;SC.__catalogToolsViewBooted=true;
-var MODES=['compact','normal','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null;
+var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null;
 var ICONS={
   'columns-1':'M120-120v-80h720v80H120Zm0-640v-80h720v80H120Z',
   'columns-2':'M120-120v-720h80v720H120ZM760-120v-720h80v720H760Z',
@@ -10,9 +10,9 @@ var ICONS={
   list:'M120-200v-83.08h83.08V-200H120Zm193.85 0v-83.08H840V-200H313.85ZM120-438.46v-83.08h83.08v83.08H120Zm193.85 0v-83.08H840v83.08H313.85ZM120-676.92V-760h83.08v83.08H120Zm193.85 0v-83.08H840v83.08H313.85Z'
 };
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
-function normalize(mode){return MODES.indexOf(mode)>=0?mode:'';}
+function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf(mode)>=0?mode:'';}
 function selectedMode(){return normalize(doc.getAttribute('data-sc-catalog-view')||'')||'compact';}
-function legacyMode(mode,ctx){if(mode==='list')return'list';if(ctx==='phone')return mode==='two'?'compact':mode==='one'?'normal':'';if(ctx==='tablet')return mode==='three'||mode==='four'?'compact':mode==='two'?'normal':'';return mode==='four'?'compact':mode==='three'?'normal':'';}
+function legacyMode(mode,ctx){if(mode==='list')return'list';if(ctx==='phone')return mode==='two'||mode==='one'?'compact':'';if(ctx==='tablet')return mode==='three'||mode==='four'||mode==='two'?'compact':'';return mode==='four'||mode==='three'?'compact':'';}
 function columns(mode){var ctx=context();if(mode==='compact')return ctx==='phone'?2:ctx==='tablet'?3:4;return ctx==='phone'?1:ctx==='tablet'?2:3;}
 function effectiveMode(mode){var searching=document.body.classList.contains(CFG.classes.catalogSearching);return searching&&!CFG.queries.desktop.matches?'list':mode;}
 function label(mode){var effective=effectiveMode(mode);if(effective==='list')return'Vista lista. Cambiar vista';var count=columns(effective);return'Vista '+(effective==='compact'?'alta densidad':'baja densidad')+': '+count+' '+(count===1?'columna':'columnas')+'. Cambiar vista';}
