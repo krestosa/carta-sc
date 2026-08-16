@@ -8,10 +8,19 @@ body.sushiShop .sc-product-modal__title {
   font-weight: var(--sc-font-weight-semibold) !important;
   letter-spacing: -.025em !important;
 }
+body.sushiShop .sc-product-modal__price-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  column-gap: 6px !important;
+  row-gap: 0 !important;
+}
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
-  grid-column: 2 !important;
-  grid-row: 2 !important;
+  order: 3 !important;
+  flex: 0 0 auto !important;
   align-items: center !important;
   align-self: center !important;
   gap: 5px !important;
@@ -42,28 +51,19 @@ body.sushiShop .sc-product-modal__description {
 }
 body.sushiShop .sc-product-modal__price-row .price,
 body.sushiShop .sc-product-modal__price-row .priceHijass {
-  grid-column: 1 / -1 !important;
-  grid-row: 1 !important;
+  order: 1 !important;
+  flex: 0 0 auto !important;
   justify-self: start !important;
-  order: initial !important;
   margin: 0 !important;
   color: var(--sc-color-ink) !important;
   font: var(--sc-font-weight-semibold) 17px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
 }
 body.sushiShop .sc-product-modal__price-row .ofertaPrice {
-  grid-column: 1 !important;
-  grid-row: 2 !important;
+  order: 2 !important;
+  flex: 0 0 auto !important;
   justify-self: start !important;
-  order: initial !important;
   margin: 0 !important;
   color: var(--sc-color-muted) !important;
   font: var(--sc-font-weight-regular) 12px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
   text-decoration: line-through !important;
-}
-body.sushiShop .sc-product-modal__price-row:not(.sc-price-row-has-offer) .price,
-body.sushiShop .sc-product-modal__price-row:not(.sc-price-row-has-offer) .priceHijass {
-  grid-column: 1 !important;
-}
-body.sushiShop .sc-product-modal__price-row:not(.sc-price-row-has-offer) .sc-product-modal__traits {
-  grid-row: 1 !important;
 }
