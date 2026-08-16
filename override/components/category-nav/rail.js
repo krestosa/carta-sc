@@ -9,6 +9,7 @@ function railState(){railRaf=0;var desktop=document.querySelector(S.categoryTool
 function scheduleFrame(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
 function scheduleRail(){overflowDirty=true;scheduleFrame();}
 function scheduleSticky(){scheduleFrame();}
+function cancel(){if(railRaf)cancelAnimationFrame(railRaf);railRaf=0;}
 function requestCenter(previous,target){if(document.body.classList.contains(K.catalogSearching)){scheduleRail();return;}if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleRail();}
-N.scheduleRail=scheduleRail;N.scheduleSticky=scheduleSticky;N.requestCenterActive=requestCenter;N.scheduleRailState=scheduleRail;N.railState=railState;
+N.scheduleRail=scheduleRail;N.scheduleSticky=scheduleSticky;N.requestCenterActive=requestCenter;N.scheduleRailState=scheduleRail;N.railState=railState;N.cancelRailState=cancel;
 })();

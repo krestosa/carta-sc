@@ -10,6 +10,6 @@ function hold(target){heldTarget=target||null;heldUntil=heldTarget?performance.n
 function release(){heldTarget=null;heldUntil=0;}
 function spy(){spyRaf=0;if(locked())return;var target=current(),active=A.current();if(heldTarget){if(target===heldTarget||performance.now()>=heldUntil)release();else{if(active&&I.isDirty())I.move(active,false);return;}}if(target&&target!==active)A.set(target,true);else if(target&&I.isDirty())I.move(target,false);}
 function scheduleSpy(){if(locked())return;if(!spyRaf)spyRaf=requestAnimationFrame(spy);}
-window.addEventListener('wheel',release,{passive:true});window.addEventListener('touchstart',release,{passive:true});
-N.holdSpy=hold;N.releaseSpyHold=release;N.refreshMetrics=refreshMetrics;N.refreshSections=refreshMetrics;N.current=current;N.scheduleSpy=scheduleSpy;
+function stop(){if(spyRaf)cancelAnimationFrame(spyRaf);spyRaf=0;metrics=[];release();}
+N.holdSpy=hold;N.releaseSpyHold=release;N.refreshMetrics=refreshMetrics;N.refreshSections=refreshMetrics;N.current=current;N.scheduleSpy=scheduleSpy;N.stopSpy=stop;
 })();

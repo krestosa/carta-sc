@@ -63,6 +63,7 @@ Current sources:
 - `components/product-modal/product-modal.html`
 - `components/category-nav/category-nav.html`
 - `components/product-card/product-card.html`
+- `components/catalog-tools/catalog-tools.html`
 
 `templates/registry.js` is the only generic parser/registry layer. Components call `SC.templates.clone(name)`, then populate dynamic content, bind events, manage state and mount/unmount the cloned node.
 
@@ -83,6 +84,13 @@ Rules:
 - Imported CSS files must not contain further `@import` statements.
 - Source imports use `?v=unversioned`; staging turns the manifest into a single production file.
 - Put rules in the component or feature that owns them. Use a late compatibility stylesheet only when legacy cascade constraints require it.
+
+## Runtime lifecycle
+
+- `SC.categoryNav.init()` / `destroy()` own the category-navigation global listeners, structural observer, scheduled RAF/timer work and rail listeners. Re-initialization must not duplicate any of them.
+- `SC.catalogTools.init()` / `destroy()` own the injected catalogue-tools root plus search/view subscriptions. DOM repair reuses that lifecycle instead of accumulating detached-root listeners.
+- `SC.contentNormalizer.init()` / `destroy()` own incremental mutation observation. Destroying the observer stops future normalization; it does not reverse text that was already normalized.
+- `SC.productCard.init()` / `destroy()` own card repair observation, responsive measurement tracking, media-query listeners and pending geometry work. Re-initialization must preserve a single set of generated card metadata/trait rows.
 
 ## Runtime invariants
 

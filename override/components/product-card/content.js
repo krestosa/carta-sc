@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardContentBooted)return;SC.__productCardContentBooted=true;
-var each=U.each,descriptionRaf=0;
+var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0;
 
 function clearFlavorRows(){
   each(document.querySelectorAll(".sc-product-flavors"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
@@ -29,7 +29,7 @@ function installFlavorRows(){
   });
 }
 function measureDescriptions(){
-  descriptionRaf=0;
+  descriptionRaf=0;descriptionMeasureRaf=0;
   each(document.querySelectorAll(S.productCards+' '+S.productDescription),function(desc){
     desc.classList.remove("sc-description-truncated");
     if(desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1)desc.classList.add("sc-description-truncated");
@@ -37,8 +37,9 @@ function measureDescriptions(){
 }
 function scheduleDescriptionMeasure(){
   if(descriptionRaf)return;
-  descriptionRaf=requestAnimationFrame(function(){requestAnimationFrame(measureDescriptions);});
+  descriptionRaf=requestAnimationFrame(function(){descriptionMeasureRaf=requestAnimationFrame(measureDescriptions);});
 }
+function cancelDescriptionMeasure(){if(descriptionRaf)cancelAnimationFrame(descriptionRaf);if(descriptionMeasureRaf)cancelAnimationFrame(descriptionMeasureRaf);descriptionRaf=0;descriptionMeasureRaf=0;}
 
-SC.productCardContent={clearFlavorRows:clearFlavorRows,installFlavorRows:installFlavorRows,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure};
+SC.productCardContent={clearFlavorRows:clearFlavorRows,installFlavorRows:installFlavorRows,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
 })();
