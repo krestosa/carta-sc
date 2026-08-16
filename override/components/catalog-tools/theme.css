@@ -43,5 +43,7 @@ body.sushiShop .sc-morph-icon {
   fill: currentColor;
   transform-origin: 50% 50%;
 }
-body.sushiShop .sc-morph-icon path { fill: currentColor; }
+body.sushiShop .sc-morph-icon path,
+body.sushiShop .sc-morph-icon rect { fill: currentColor; }
+body.sushiShop .sc-view-layout-icon rect { shape-rendering: geometricPrecision; }
 body.sushiShop .sc-catalog-search-input::placeholder { color: var(--sc-color-muted); }
