@@ -34,6 +34,128 @@ body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
   vertical-align: bottom !important;
 }
 
+body.sushiShop .sc-trait-icon-set {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+  line-height: 0 !important;
+  vertical-align: bottom !important;
+}
+
+body.sushiShop .sc-trait-icon-set > .sc-trait-icon {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+body.sushiShop .sc-trait-reference-legacy-spacer {
+  display: none !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+  box-sizing: border-box !important;
+  display: flex !important;
+  order: 5 !important;
+  flex: 0 0 100% !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 20px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: -12px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  background: transparent !important;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip::-webkit-scrollbar {
+  display: none;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  float: none !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  width: auto !important;
+  min-width: max-content !important;
+  height: auto !important;
+  min-height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  white-space: nowrap !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .imgRef {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  width: auto !important;
+  min-width: 11px !important;
+  height: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .imgRef .sc-trait-icon {
+  display: block !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .ref_label {
+  display: block !important;
+  float: none !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--sc-color-copy) !important;
+  font-family: var(--sc-font-primary) !important;
+  font-size: 11.5px !important;
+  line-height: 16px !important;
+  font-weight: var(--sc-font-weight-regular) !important;
+  letter-spacing: -.005em !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 640px) {
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+    gap: 16px !important;
+    margin-top: -8px !important;
+    padding-right: 2px !important;
+  }
+
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox {
+    gap: 5px !important;
+  }
+
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .ref_label {
+    font-size: 11px !important;
+  }
+}
+
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {
