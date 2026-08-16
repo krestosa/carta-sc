@@ -2,3 +2,12 @@ html,
 body {
   scroll-behavior: auto !important;
 }
+
+/* A density switch rewrites grid geometry above and inside the viewport.
+   Disable browser scroll anchoring only for that short relayout so headings
+   and the viewport do not get compensated a second time by the browser. */
+html.sc-catalog-view-switching,
+html.sc-catalog-view-switching body,
+html.sc-catalog-view-switching body.sushiShop .containerShop {
+  overflow-anchor: none !important;
+}
