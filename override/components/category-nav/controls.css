@@ -18,6 +18,7 @@ body.sushiShop .sc-rail-arrow {
   color: var(--sc-color-copy) !important;
   cursor: pointer !important;
   transform: translateY(-50%) !important;
+  transition: none !important;
   z-index: var(--sc-z-category-controls) !important;
 }
 
@@ -25,8 +26,15 @@ body.sushiShop .sc-rail-arrow svg {
   display: block !important;
   width: var(--sc-category-control-width) !important;
   height: 24px !important;
-  fill: var(--sc-color-copy) !important;
+  color: inherit !important;
+  fill: currentColor !important;
+  transition: none !important;
   pointer-events: none !important;
+}
+
+body.sushiShop .sc-rail-arrow svg path {
+  fill: currentColor !important;
+  transition: none !important;
 }
 
 body.sushiShop .sc-rail-arrow--left svg {
@@ -40,7 +48,7 @@ body.sushiShop .sc-rail-arrow:focus-visible {
 
 body.sushiShop .sc-rail-arrow:hover svg,
 body.sushiShop .sc-rail-arrow:focus-visible svg {
-  fill: var(--sc-color-ink) !important;
+  fill: currentColor !important;
 }
 
 body.sushiShop .sc-rail-arrow:focus-visible {
