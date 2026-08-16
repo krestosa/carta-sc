@@ -91,6 +91,15 @@ Rules:
 - `SC.catalogTools.init()` / `destroy()` own the injected catalogue-tools root plus search/view subscriptions. DOM repair reuses that lifecycle instead of accumulating detached-root listeners.
 - `SC.contentNormalizer.init()` / `destroy()` own incremental mutation observation. Destroying the observer stops future normalization; it does not reverse text that was already normalized.
 - `SC.productCard.init()` / `destroy()` own card repair observation, responsive measurement tracking, media-query listeners and pending geometry work. Re-initialization must preserve a single set of generated card metadata/trait rows.
+- `SC.productModal.init()` / `destroy()` own the delegated document listeners, opening RAF, close timer, active/closing modal state, focus restoration and background isolation release. Destroy must remove any active or closing modal immediately and leave the controller safe to initialize again.
+- `SC.mobileHeader.init()` / `destroy()` own the desktop media-query subscription, SlickNav repair retry timer, deferred accessibility-sync timers and fallback/button listeners installed by the override adapter. Destroy does not remove the host SlickNav DOM; it removes only override-owned runtime work.
+- `SC.sectionHeading.init()` / `destroy()` own SplitText instances, ScrollTrigger/tween instances created for section headings and the staged RAF work used before initialization. Async SplitText/font continuations must not revive a destroyed generation.
+- `SC.imagePreloader.start()` / `destroy()` own the mutation/intersection observers, native image load/error listeners and the `sc-image-preloader-active` root state. Repeated `start()` must not duplicate image listeners.
+- `SC.mutations.domNormalization.init()` / `destroy()` own legacy-DOM mutation observation. Applied compatibility mutations are intentionally one-way; destroy stops future normalization rather than attempting to reconstruct legacy state.
+- `SC.mutations.legacyCategoryHover.init()` / `destroy()` own the delayed retry work used to remove legacy hover handlers. Removed host handlers cannot be restored safely, so teardown cancels pending override work only.
+- `SC.globalUiMotion.init()` / `destroy()` own the namespaced Bootstrap-dropdown motion listener.
+
+Lifecycle APIs are expected to be idempotent. Calling `init()`/`start()` twice must not duplicate listeners, observers, timers, generated nodes or animations; calling `destroy()` twice must be safe.
 
 ## Runtime invariants
 
