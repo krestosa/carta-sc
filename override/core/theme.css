@@ -1,5 +1,5 @@
-/* Global color-mode contract. Palette changes are atomic; visual smoothing is handled by
-   the browser's compositor through View Transitions instead of animating inherited colors. */
+/* Global color-mode contract. Theme changes are intentionally instantaneous:
+   one root-state flip updates the palette without full-page snapshots or per-element fades. */
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;
@@ -37,20 +37,4 @@ body.sushiShop a {
 body.sushiShop ::selection {
   background: var(--sc-color-ink);
   color: var(--sc-color-surface);
-}
-
-/* The old and new page snapshots cross-fade as a single surface. This keeps every
-   theme-dependent resource in the same visual frame and avoids per-element paints. */
-@media (prefers-reduced-motion: no-preference) {
-  html.sc-theme-transition::view-transition-group(root),
-  html.sc-theme-transition::view-transition-old(root),
-  html.sc-theme-transition::view-transition-new(root) {
-    animation-duration: var(--sc-motion-theme);
-    animation-timing-function: var(--sc-motion-ease-out);
-  }
-
-  html.sc-theme-transition::view-transition-old(root),
-  html.sc-theme-transition::view-transition-new(root) {
-    mix-blend-mode: normal;
-  }
 }
