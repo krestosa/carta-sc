@@ -9,14 +9,19 @@ var root=document.documentElement;
 root.classList.add('sc-catalog-prepaint','sc-no-loading-state');
 ['sc-catalog-skeleton','sc-catalog-content-loading','sc-catalog-skeleton-leaving','sc-skeleton-ready'].forEach(function(name){root.classList.remove(name);});
 
+function applyRememberedTheme(){
+  var mode='system',actual='light',dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  try{mode=localStorage.getItem('scTheme:v1')||'system';}catch(_){mode='system';}
+  if(['system','light','dark'].indexOf(mode)<0)mode='system';actual=mode==='system'?(dark?'dark':'light'):mode;
+  root.setAttribute('data-sc-theme',mode);root.setAttribute('data-sc-theme-resolved',actual);root.style.colorScheme=actual;
+}
 function applyRememberedView(){
   var width=window.innerWidth||root.clientWidth||0,context=width<=640?'phone':width<=992?'tablet':'desktop',mode='',legacy='';
   function migrate(value){if(value==='list')return'list';if(context==='phone')return value==='two'?'compact':value==='one'?'normal':'';if(context==='tablet')return value==='three'||value==='four'?'compact':value==='two'?'normal':'';return value==='four'?'compact':value==='three'?'normal':'';}
   try{mode=localStorage.getItem('scCatalogView:v3')||'';if(['normal','compact','list'].indexOf(mode)<0){legacy=localStorage.getItem('scCatalogView:v2:'+context)||localStorage.getItem(context==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=migrate(legacy);if(mode){try{localStorage.setItem('scCatalogView:v3',mode);}catch(_){}}}}catch(_){mode='';}
-  if(['normal','compact','list'].indexOf(mode)<0)mode='normal';
-  root.setAttribute('data-sc-catalog-view',mode);
+  if(['normal','compact','list'].indexOf(mode)<0)mode='normal';root.setAttribute('data-sc-catalog-view',mode);
 }
-applyRememberedView();
+applyRememberedTheme();applyRememberedView();
 
 function writeBootstrap(){
   document.write('<script src="_js_dev/main-legacy.js?v='+version+'"><\/script>');

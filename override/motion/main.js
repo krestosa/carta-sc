@@ -3,15 +3,17 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
-var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,REFRESH_DELAY=120,IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger',scrollTo:'sc-gsap-scrollto'};
-var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo;
+var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,REFRESH_DELAY=120;
+var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger',scrollTo:'sc-gsap-scrollto',morphSVG:'sc-gsap-morphsvg'};
+var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo,MORPH_SRC=URL.morphSVG;
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion)).matches;}
 function loadScript(src,id,done){
+  if(!src)return done(false);
   var old=document.getElementById(id);
   if(old){
-    if(old.dataset.loaded==='true'||(id===IDS.core&&window.gsap)||(id===IDS.scrollTrigger&&window.ScrollTrigger)||(id===IDS.scrollTo&&window.ScrollToPlugin))return done(true);
+    if(old.dataset.loaded==='true'||(id===IDS.core&&window.gsap)||(id===IDS.scrollTrigger&&window.ScrollTrigger)||(id===IDS.scrollTo&&window.ScrollToPlugin)||(id===IDS.morphSVG&&window.MorphSVGPlugin))return done(true);
     old.addEventListener('load',function(){done(true);},{once:true});
     old.addEventListener('error',function(){done(false);},{once:true});
     return;
@@ -22,10 +24,15 @@ function loadScript(src,id,done){
   document.head.appendChild(script);
 }
 function loadPlugins(done){
-  var pending=2,failed=false;
-  function complete(ok){if(!ok)failed=true;if(--pending===0)done(!failed);}
-  loadScript(ST_SRC,IDS.scrollTrigger,complete);
-  loadScript(SCROLL_TO_SRC,IDS.scrollTo,complete);
+  var pending=2,state={scrollTrigger:false,scrollTo:false};
+  function complete(name,ok){state[name]=ok;if(--pending===0)done(state.scrollTrigger&&state.scrollTo);}
+  loadScript(ST_SRC,IDS.scrollTrigger,function(ok){complete('scrollTrigger',ok);});
+  loadScript(SCROLL_TO_SRC,IDS.scrollTo,function(ok){complete('scrollTo',ok);});
+}
+function enableMorph(ok){
+  if(!ok||!window.gsap||!window.MorphSVGPlugin)return;
+  window.gsap.registerPlugin(window.MorphSVGPlugin);
+  if(deps)deps.MorphSVGPlugin=window.MorphSVGPlugin;
 }
 function flush(){
   if(!unlocked||!deps)return;
@@ -37,10 +44,22 @@ function run(fn){if(!deps||!unlocked||typeof fn!=='function')return false;fn(dep
 function refresh(delay){
   if(!deps||!deps.ScrollTrigger)return;
   if(refreshTimer)window.clearTimeout(refreshTimer);
-  refreshTimer=window.setTimeout(function(){
-    refreshTimer=0;
-    deps.ScrollTrigger.refresh();
-  },delay==null?0:delay);
+  refreshTimer=window.setTimeout(function(){refreshTimer=0;deps.ScrollTrigger.refresh();},delay==null?0:delay);
+}
+function morphIcon(path,shape,options){
+  if(!path||!shape)return false;
+  if(path.getAttribute('d')===shape)return true;
+  var opts=options||{},animate=opts.animate!==false;
+  if(!animate||reduced()||!unlocked||!deps||!deps.gsap||!deps.MorphSVGPlugin){path.setAttribute('d',shape);return true;}
+  deps.gsap.killTweensOf(path);
+  deps.gsap.to(path,{
+    duration:opts.duration==null?.28:opts.duration,
+    ease:opts.ease||((M.easings&&M.easings.out)||'power2.out'),
+    morphSVG:{shape:shape,map:opts.map||'size'},
+    overwrite:true,
+    onComplete:function(){path.setAttribute('d',shape);if(typeof opts.onComplete==='function')opts.onComplete();}
+  });
+  return true;
 }
 function installRefreshLifecycle(){
   if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;
@@ -51,18 +70,20 @@ function unlock(){unlocked=true;installRefreshLifecycle();flush();}
 function initialize(){
   if(!window.gsap||!window.ScrollTrigger||!window.ScrollToPlugin)return;
   window.gsap.registerPlugin(window.ScrollTrigger,window.ScrollToPlugin);
+  if(window.MorphSVGPlugin)window.gsap.registerPlugin(window.MorphSVGPlugin);
   window.ScrollTrigger.config({limitCallbacks:true});
   if(window.ScrollToPlugin.config)window.ScrollToPlugin.config({autoKill:true});
-  deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin};
+  deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin,MorphSVGPlugin:window.MorphSVGPlugin||null};
   installRefreshLifecycle();flush();
 }
 
-SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,unlock:unlock,isReady:function(){return!!(deps&&unlocked);}};
+SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,unlock:unlock,isReady:function(){return!!(deps&&unlocked);}};
 
 ready(function(){
   loadScript(GSAP_SRC,IDS.core,function(ok){
     if(!ok)return;
     loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});
+    loadScript(MORPH_SRC,IDS.morphSVG,enableMorph);
   });
 });
 })();

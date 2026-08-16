@@ -1,0 +1,44 @@
+/* Global color-mode contract. The chosen preference and resolved palette are separate. */
+:root,
+html[data-sc-theme-resolved='light'] {
+  color-scheme: light;
+}
+
+html[data-sc-theme-resolved] {
+  background: var(--sc-color-surface);
+}
+
+html[data-sc-theme-resolved='dark'] {
+  color-scheme: dark;
+  --sc-color-ink: #f3f3f0;
+  --sc-color-heading: #fff;
+  --sc-color-copy: #c8c8c2;
+  --sc-color-muted: #9c9c95;
+  --sc-color-surface: #11110f;
+  --sc-color-surface-transparent: rgba(17,17,15,0);
+  --sc-color-border: #2d2d29;
+  --sc-color-border-strong: #44443e;
+}
+
+body.sushiShop,
+body.sushiShop .sepFooter {
+  background-color: var(--sc-color-surface) !important;
+  color: var(--sc-color-ink);
+  transition: background-color 220ms var(--sc-motion-ease-out), color var(--sc-motion-fast) var(--sc-motion-ease-out);
+}
+
+body.sushiShop input,
+body.sushiShop button,
+body.sushiShop a {
+  caret-color: var(--sc-color-ink);
+}
+
+body.sushiShop ::selection {
+  background: var(--sc-color-ink);
+  color: var(--sc-color-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop,
+  body.sushiShop .sepFooter { transition: none !important; }
+}

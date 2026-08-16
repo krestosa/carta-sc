@@ -1,0 +1,19 @@
+/* Theme-specific modal details and Google close icon rendering. */
+body.sushiShop .sc-product-modal__close svg,
+body.sushiShop .sc-product-modal__close svg path {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+html[data-sc-theme-resolved='dark'] body.sushiShop {
+  --sc-modal-action-background: #d8d8d3;
+}
+html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close::before {
+  border-color: rgba(255,255,255,.12) !important;
+  background: rgba(17,17,15,.88) !important;
+}
+html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close:hover::before,
+html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close:focus-visible::before {
+  border-color: rgba(255,255,255,.22) !important;
+  background: rgba(24,24,21,.98) !important;
+}

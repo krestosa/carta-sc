@@ -21,7 +21,8 @@ config.urls=merged({
   gsap:GSAP_DIST+'gsap.min.js',
   scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
   scrollTo:GSAP_DIST+'ScrollToPlugin.min.js',
-  splitText:GSAP_DIST+'SplitText.min.js'
+  splitText:GSAP_DIST+'SplitText.min.js',
+  morphSVG:GSAP_DIST+'MorphSVGPlugin.min.js'
 },config.urls);
 
 /* Selectors shared across distinct runtime features. */

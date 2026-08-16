@@ -1,0 +1,26 @@
+/* Stateful Google menu icon, morphed by the shared GSAP helper. */
+@media (max-width: 992px) {
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar,
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar + .slicknav_icon-bar { display: none !important; }
+
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .sc-mobile-menu-state-icon {
+    display: block !important;
+    width: var(--sc-mobile-menu-icon-size) !important;
+    height: var(--sc-mobile-menu-icon-size) !important;
+    color: var(--sc-color-surface) !important;
+    fill: currentColor !important;
+  }
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .sc-mobile-menu-state-icon path { fill: currentColor !important; }
+
+  html[data-sc-theme-resolved='dark'] body.sushiShop .brandOnlyMobile img {
+    filter: invert(1) brightness(1.08);
+  }
+  html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
+    background: var(--sc-color-surface) !important;
+    color: var(--sc-color-ink) !important;
+  }
+  html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
+  html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
+    color: var(--sc-color-ink) !important;
+  }
+}
