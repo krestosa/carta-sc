@@ -26,19 +26,25 @@ function syncIcon(root,mode){
   path.setAttribute('data-sc-icon-state',mode);
 }
 function emit(mode,actual){try{window.dispatchEvent(new CustomEvent('sc:themechange',{detail:{mode:mode,resolved:actual}}));}catch(_){} }
+function setResolved(actual){if(doc.getAttribute('data-sc-theme-resolved')!==actual)doc.setAttribute('data-sc-theme-resolved',actual);}
 function apply(root,mode,persist){
   mode=normalize(mode)||'system';var actual=resolved(mode);
-  doc.setAttribute('data-sc-theme',mode);
-  doc.setAttribute('data-sc-theme-resolved',actual);
+  if(doc.getAttribute('data-sc-theme')!==mode)doc.setAttribute('data-sc-theme',mode);
+  setResolved(actual);
   syncIcon(root,mode);
   emit(mode,actual);
   if(persist)scheduleSave(mode);
 }
+function applySystemPalette(root){
+  if(selected()!=='system')return;
+  setResolved(systemDark.matches?'dark':'light');
+  syncIcon(root,'system');
+}
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)syncIcon(root,selected());}
 function install(root){
   var button=root&&root.querySelector('.sc-theme-toggle');if(!button)return function(){};apply(root,load(),false);
-  function click(){var mode=selected(),index=MODES.indexOf(mode);apply(root,MODES[(index+1)%MODES.length],true);}
-  function systemChanged(){if(selected()==='system')apply(root,'system',false);}
+  function click(event){if(event){event.preventDefault();event.stopPropagation();}var mode=selected(),index=MODES.indexOf(mode);apply(root,MODES[(index+1)%MODES.length],true);}
+  function systemChanged(){applySystemPalette(root);}
   button.addEventListener('click',click);
   if(systemDark.addEventListener)systemDark.addEventListener('change',systemChanged);else systemDark.addListener(systemChanged);
   return function(){button.removeEventListener('click',click);if(systemDark.removeEventListener)systemDark.removeEventListener('change',systemChanged);else systemDark.removeListener(systemChanged);};
