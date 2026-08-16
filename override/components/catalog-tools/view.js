@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;if(!SC||!CFG||SC.__catalogToolsViewBooted)return;SC.__catalogToolsViewBooted=true;
-var MODES=['compact','normal','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,cleanup=null;
+var MODES=['compact','normal','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null;
 var ICONS={
   'columns-1':'M120-120v-80h720v80H120Zm0-640v-80h720v80H120Z',
   'columns-2':'M120-120v-720h80v720H120ZM760-120v-720h80v720H760Z',
@@ -31,36 +31,33 @@ function sync(root,mode){
   if(previous&&previous!==key&&SC.motion&&SC.motion.morphIcon)SC.motion.morphIcon(path,ICONS[key],{duration:.2});else path.setAttribute('d',ICONS[key]);
   path.setAttribute('data-sc-icon-state',key);
 }
-function captureTitleAnchor(){
-  var titles=document.querySelectorAll('.listadoShop .productoShop .title-shop1'),targetY=Math.min(window.innerHeight*.34,260),best=null,bestScore=Infinity;
-  for(var i=0;i<titles.length;i++){
-    var node=titles[i];if(!node.offsetParent)continue;var rect=node.getBoundingClientRect();if(rect.bottom<=0||rect.top>=window.innerHeight)continue;
-    var score=Math.abs(rect.top-targetY);if(score<bestScore){bestScore=score;best={node:node,top:rect.top};}
-  }
-  return best;
-}
-function restoreTitleAnchor(anchor){
-  if(!anchor||!anchor.node||!document.documentElement.contains(anchor.node))return;
-  var top=anchor.node.getBoundingClientRect().top,delta=top-anchor.top;if(Math.abs(delta)>.5)window.scrollTo(window.scrollX,window.scrollY+delta);
+function captureViewport(){return{x:window.scrollX||window.pageXOffset||0,y:window.scrollY||window.pageYOffset||0};}
+function restoreViewport(viewport){
+  if(!viewport)return;var x=window.scrollX||window.pageXOffset||0,y=window.scrollY||window.pageYOffset||0;
+  if(Math.abs(x-viewport.x)>.5||Math.abs(y-viewport.y)>.5)window.scrollTo(viewport.x,viewport.y);
 }
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode());}
-function refreshLayout(anchor){
-  syncMounted();if(raf)cancelAnimationFrame(raf);
+function refreshLayout(viewport){
+  syncMounted();if(raf)cancelAnimationFrame(raf);if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}
+  restoreViewport(viewport);
   raf=requestAnimationFrame(function(){
-    restoreTitleAnchor(anchor);
+    restoreViewport(viewport);
     raf=requestAnimationFrame(function(){
       raf=0;
       if(SC.productCardContent&&SC.productCardContent.scheduleDescriptionMeasure)SC.productCardContent.scheduleDescriptionMeasure();
       if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);
+      restoreViewport(viewport);
+      if(viewport)settleTimer=window.setTimeout(function(){settleTimer=0;restoreViewport(viewport);doc.classList.remove('sc-catalog-view-switching');},80);
     });
   });
 }
 function apply(root,mode,persist){
-  mode=normalize(mode)||'compact';var anchor=persist?captureTitleAnchor():null;
+  mode=normalize(mode)||'compact';var viewport=persist?captureViewport():null;
+  if(viewport)doc.classList.add('sc-catalog-view-switching');
   doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode);
-  if(persist)save(mode);refreshLayout(anchor);
+  if(persist)save(mode);refreshLayout(viewport);
 }
-function destroy(){if(raf){cancelAnimationFrame(raf);raf=0;}if(cleanup){var fn=cleanup;cleanup=null;fn();}}
+function destroy(){if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
 function install(root){
   destroy();var button=root&&root.querySelector('.sc-catalog-view-toggle');if(!button)return function(){};apply(root,load(),false);
   function click(){var current=selectedMode(),index=MODES.indexOf(current);apply(root,MODES[(index+1)%MODES.length],true);}
