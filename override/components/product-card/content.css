@@ -7,16 +7,23 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img,
 body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
-  align-self: flex-end !important;
+  align-self: center !important;
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
 }
 
-/* The vegetarian leaf path ends ~0.7px above its 11px SVG viewport.
-   Offset only that icon so the visible leaf, not just its SVG box, sits on the base. */
+/* Treat every trait SVG as a typographic glyph. Its geometric box sits slightly
+   lower than adjacent text, so apply one optical correction everywhere. */
+body.sushiShop .sc-trait-icon {
+  transform: translateY(-.8px) !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* The vegetarian leaf path ends ~0.7px above its 11px viewport. Keep that
+   internal baseline compensation while inheriting the same global lift. */
 body.sushiShop .sc-trait-icon[width='11'][height='11'] {
-  transform: translateY(.7px) !important;
+  transform: translateY(-.1px) !important;
   transform-origin: 50% 100% !important;
 }
 
@@ -38,7 +45,7 @@ body.sushiShop .sc-trait-icon-set {
   box-sizing: border-box !important;
   display: inline-flex !important;
   flex: 0 0 auto !important;
-  align-items: flex-end !important;
+  align-items: center !important;
   justify-content: flex-start !important;
   gap: 2px !important;
   margin: 0 !important;
