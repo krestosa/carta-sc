@@ -1,15 +1,15 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={initialViewportRatio:.96,behindViewportOffset:-20,initialDuration:.34,initialStagger:.032,revealDuration:.34,revealStagger:.03,triggerStart:'clamp(top 92%)',batchInterval:.06,batchMax:8,reflowDuration:.22,rescueViewportRatio:1.03,rescueBottomOffset:-30,rescueOpacityThreshold:.05,rescueDuration:.20,rescueDelay:900};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={initialViewportRatio:.96,behindViewportOffset:-20,initialDuration:.34,initialStagger:.032,revealDuration:.34,revealStagger:.03,batchInterval:.06,reflowDuration:.22,rescueViewportRatio:1.03,rescueBottomOffset:-30,rescueOpacityThreshold:.05,rescueDuration:.20,rescueDelay:900};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
-parts.setupReveal=function(gsap,ST,reduce){
+parts.setupReveal=function(gsap,ST,profile,reduce){
   var cards=gsap.utils.toArray(S.productCards),triggers=[],timer=0,rafA=0,rafB=0;
   function noop(){}
   function suppressReveal(){var state=SC.scrollState;return!!(state&&(state.programmatic||performance.now()<(state.suppressRevealUntil||0)));}
   function showNow(batch){gsap.killTweensOf(batch);gsap.set(batch,{autoAlpha:1,clearProps:'opacity,visibility'});}
   function reveal(batch){
-    if(suppressReveal()){showNow(batch);return;}
+    gsap.killTweensOf(batch);
     gsap.to(batch,{autoAlpha:1,duration:CFG.revealDuration,stagger:CFG.revealStagger,ease:M.easings.out,overwrite:'auto',onComplete:function(){gsap.set(batch,{clearProps:'opacity,visibility'});}});
   }
   function revealViewport(){
@@ -51,7 +51,7 @@ parts.setupReveal=function(gsap,ST,reduce){
   }
   if(deferred.length){
     gsap.set(deferred,{autoAlpha:0});
-    triggers=ST.batch(deferred,{start:CFG.triggerStart,once:true,interval:CFG.batchInterval,batchMax:CFG.batchMax,onEnter:reveal,onEnterBack:reveal})||[];
+    triggers=ST.batch(deferred,{start:profile.start,once:true,interval:CFG.batchInterval,batchMax:profile.batchMax,onEnter:reveal,onEnterBack:reveal})||[];
     timer=window.setTimeout(function(){
       deferred.forEach(function(card){
         var rect=card.getBoundingClientRect(),style=getComputedStyle(card);
