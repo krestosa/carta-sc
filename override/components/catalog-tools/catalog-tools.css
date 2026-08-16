@@ -363,132 +363,39 @@ html body.sushiShop .sc-catalog-tools>.sc-catalog-search-results{
   html body.sushiShop .sc-catalog-tools>.referencias_picor.sc-trait-reference-strip .ref_label{font-size:10.75px!important}
 }
 
-/* List view: Gestalt hierarchy. Media is the visual anchor; title, price and
-   traits form one decision cluster; description is secondary. Intracluster
-   spacing stays tighter than the separation between products. */
-body.sushiShop{
-  --sc-list-image-width:196px;
-  --sc-list-image-height:116px;
-  --sc-list-content-gap:18px;
-  --sc-list-title-price-gap:5px;
-  --sc-list-description-gap:7px;
+/* List refinement: keep the established information architecture, only make
+   media fill the row and tighten spacing. */
+html[data-sc-catalog-view='list'] body.sushiShop{
+  --sc-view-list-desktop-image-width:190px;
+  --sc-view-list-compact-image-width:128px;
+  --sc-view-list-phone-image-width:110px;
+  --sc-view-list-compact-row-gap:17px;
+  --sc-view-list-compact-description-margin-top:2px;
+  --sc-view-list-compact-description-padding-top:4px;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop>a.fancyboxModalAddProd{
-  grid-template-columns:var(--sc-list-image-width) minmax(0,1fr)!important;
-  grid-template-rows:auto auto minmax(0,auto)!important;
-  column-gap:var(--sc-list-content-gap)!important;
-  row-gap:0!important;
-  align-content:start!important;
-  min-height:var(--sc-list-image-height)!important;
-  border-bottom:var(--sc-border-hairline) solid var(--sc-color-border)!important;
-}
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop{
-  grid-column:1!important;
-  grid-row:1/4!important;
-  width:var(--sc-list-image-width)!important;
-  height:var(--sc-list-image-height)!important;
-  min-height:var(--sc-list-image-height)!important;
-  aspect-ratio:auto!important;
-  align-self:start!important;
-  border:0!important;
-}
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop>img{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  object-position:center!important;
-}
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1{
-  grid-column:2!important;
-  grid-row:1!important;
-  min-height:0!important;
-  height:auto!important;
-  max-height:calc(2 * var(--sc-card-title-size) * var(--sc-card-title-line-height))!important;
-  margin:0!important;
-  padding:0!important;
-  align-self:start!important;
-  -webkit-line-clamp:2!important;
-}
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow{
-  grid-column:2!important;
-  grid-row:2!important;
-  align-self:start!important;
-  justify-content:flex-start!important;
-  min-height:var(--sc-card-price-line-height)!important;
-  height:auto!important;
-  margin:var(--sc-list-title-price-gap) 0 0!important;
-  padding:0!important;
-}
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip{
-  grid-column:2!important;
-  grid-row:3!important;
-  min-height:0!important;
-  height:auto!important;
-  max-height:calc(2 * var(--sc-card-description-line-height) + var(--sc-list-description-gap))!important;
-  margin:var(--sc-list-description-gap) 0 0!important;
-  padding:var(--sc-list-description-gap) 0 0!important;
-  border-top:var(--sc-border-hairline) solid var(--sc-card-subrule)!important;
-  overflow:hidden!important;
-  -webkit-line-clamp:2!important;
+@media(min-width:993px){
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop{row-gap:20px!important}
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop>a.fancyboxModalAddProd{column-gap:18px!important}
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop{align-self:stretch!important;height:100%!important;aspect-ratio:auto!important}
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop>img{object-fit:cover!important}
+  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip{margin-top:4px!important;padding-top:6px!important}
 }
 
 @media(min-width:641px) and (max-width:992px){
-  body.sushiShop{
-    --sc-list-image-width:148px;
-    --sc-list-image-height:96px;
-    --sc-list-content-gap:16px;
-    --sc-list-title-price-gap:4px;
-    --sc-list-description-gap:6px;
-  }
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop>a.fancyboxModalAddProd,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop>a.fancyboxModalAddProd{
-    grid-template-columns:var(--sc-list-image-width) minmax(0,1fr)!important;
-    grid-template-rows:auto auto minmax(0,auto)!important;
-    column-gap:var(--sc-list-content-gap)!important;
-    row-gap:0!important;
-    min-height:var(--sc-list-image-height)!important;
-    border-bottom:var(--sc-border-hairline) solid var(--sc-color-border)!important;
-  }
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop>a.fancyboxModalAddProd{column-gap:14px!important}
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop{
-    grid-column:1!important;grid-row:1/4!important;width:var(--sc-list-image-width)!important;height:var(--sc-list-image-height)!important;min-height:var(--sc-list-image-height)!important;aspect-ratio:auto!important
-  }
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop{align-self:stretch!important;height:100%!important;aspect-ratio:auto!important}
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop>img,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop>img{object-fit:cover!important}
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1{grid-column:2!important;grid-row:1!important;min-height:0!important;height:auto!important;max-height:calc(2 * var(--sc-card-title-size) * var(--sc-card-title-line-height))!important;padding:0!important}
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow{grid-column:2!important;grid-row:2!important;min-height:var(--sc-card-price-line-height)!important;height:auto!important;margin:var(--sc-list-title-price-gap) 0 0!important;padding:0!important}
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip{grid-column:2!important;grid-row:3!important;min-height:0!important;height:auto!important;max-height:calc(2 * var(--sc-view-list-compact-description-line-height) + var(--sc-list-description-gap))!important;margin:var(--sc-list-description-gap) 0 0!important;padding:var(--sc-list-description-gap) 0 0!important}
 }
 
 @media(max-width:640px){
-  body.sushiShop{
-    --sc-list-image-width:112px;
-    --sc-list-image-height:84px;
-    --sc-list-content-gap:13px;
-    --sc-list-title-price-gap:4px;
-    --sc-list-description-gap:5px;
-  }
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop>a.fancyboxModalAddProd,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop>a.fancyboxModalAddProd{
-    grid-template-columns:var(--sc-list-image-width) minmax(0,1fr)!important;
-    grid-template-rows:auto auto minmax(0,auto)!important;
-    column-gap:var(--sc-list-content-gap)!important;
-    row-gap:0!important;
-    min-height:var(--sc-list-image-height)!important;
-    border-bottom:var(--sc-border-hairline) solid var(--sc-color-border)!important;
-  }
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop>a.fancyboxModalAddProd{column-gap:12px!important}
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop{grid-column:1!important;grid-row:1/4!important;width:var(--sc-list-image-width)!important;height:var(--sc-list-image-height)!important;min-height:var(--sc-list-image-height)!important;aspect-ratio:auto!important}
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop{align-self:stretch!important;height:100%!important;aspect-ratio:auto!important}
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop>img,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop>img{object-fit:cover!important}
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1{grid-column:2!important;grid-row:1!important;min-height:0!important;height:auto!important;max-height:calc(2 * var(--sc-card-title-size) * var(--sc-card-title-line-height))!important;padding:0!important}
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow{grid-column:2!important;grid-row:2!important;min-height:var(--sc-card-price-line-height)!important;height:auto!important;margin:var(--sc-list-title-price-gap) 0 0!important;padding:0!important}
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip{grid-column:2!important;grid-row:3!important;min-height:0!important;height:auto!important;max-height:calc(2 * var(--sc-view-list-compact-description-line-height) + var(--sc-list-description-gap))!important;margin:var(--sc-list-description-gap) 0 0!important;padding:var(--sc-list-description-gap) 0 0!important}
 }
