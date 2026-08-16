@@ -118,6 +118,18 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
 @media(max-width:992px){
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1{font-size:var(--sc-card-title-size)!important;line-height:var(--sc-card-title-line-height)!important}
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .price,html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceHijass{font-size:var(--sc-card-price-size)!important;line-height:var(--sc-card-price-line-height)!important}
+
+/* List titles reserve two real line boxes plus a 2px safety margin. The grid row
+   therefore grows before the price row is laid out, so long titles can never
+   be painted underneath the price on phone/tablet font metrics. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1{
+  min-height:calc(2.52em + 2px)!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:hidden!important;
+  -webkit-line-clamp:2!important;
+}
 }
 
 @keyframes scCatalogSearchResultsReveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
