@@ -7,6 +7,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img,
 body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
+  align-self: flex-end !important;
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
@@ -18,7 +19,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
 }
 
 body.sushiShop .referencias_picor .imgRef {
-  color: var(--sc-color-muted) !important;
+  color: var(--sc-color-trait) !important;
 }
 
 body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
@@ -33,6 +34,7 @@ body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
     position: static !important;
     grid-column: 1;
     grid-row: 2;
+    align-self: start !important;
     min-width: 0 !important;
     min-height: var(--sc-card-title-height) !important;
     max-height: var(--sc-card-title-height) !important;
@@ -113,6 +115,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
     position: static !important;
     grid-column: 1;
     grid-row: 2;
+    align-self: start !important;
     min-width: 0 !important;
     min-height: var(--sc-card-title-height) !important;
     max-height: var(--sc-card-title-height) !important;

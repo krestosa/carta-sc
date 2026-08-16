@@ -36,7 +36,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   height: 20px !important;
   margin: 4px 0 0 !important;
   padding: 0 !important;
-  color: var(--sc-color-muted) !important;
+  color: var(--sc-color-trait) !important;
   line-height: 0 !important;
 }
 

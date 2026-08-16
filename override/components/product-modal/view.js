@@ -5,7 +5,7 @@ var each=U.each,text=U.text,S=C.selectors,MS=SC.productModalSelectors=SC.product
 
 function build(link){
   var card=link.closest(S.productCard);if(!card)return null;
-  var cardApi=SC.productCard||{};
+  var cardApi=SC.productCard||{},contentApi=SC.productCardContent||{};
   var name=text(card.querySelector(S.productTitle)),description=text(card.querySelector(S.productDescription));
   var src=cardApi.imageSource?cardApi.imageSource(card):'';
   var titleId="sc-product-modal-title-"+Date.now();
@@ -19,7 +19,8 @@ function build(link){
 
   title.id=titleId;dialog.setAttribute('aria-labelledby',titleId);
   if(src){image.src=src;image.alt=name;}else image.remove();
-  var traits=cardApi.buildTraitGroup?cardApi.buildTraitGroup(card,"sc-product-modal__traits sabores"):null;
+  var labels=cardApi.traitLabels?cardApi.traitLabels(card):[],source=card.querySelector(S.productTitle+' '+S.productTraits)||card;
+  var traits=contentApi.buildTraitRow?contentApi.buildTraitRow('sc-product-modal__traits sabores',labels,source):null;
   title.appendChild(document.createTextNode(name));
   if(description)copy.textContent=description;else copy.remove();
 

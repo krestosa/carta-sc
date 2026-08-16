@@ -3,20 +3,34 @@
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,D=SC&&SC.productCardData;if(!SC||!U||!D||SC.__productCardContentBooted)return;SC.__productCardContentBooted=true;
 var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0;
 
+function traitKey(label){return(label||'').trim().toLocaleLowerCase('es-AR');}
+function markTrait(node,key){if(node&&node.setAttribute)node.setAttribute('data-sc-trait',key);return node;}
+function appendTraitVisual(target,source,label){
+  var key=traitKey(label),count=key==='algo picante'?2:key==='poco picante'?1:0,added=false,i,icon,node;
+  if(count){
+    for(i=0;i<count;i++){icon=D.createTraitIcon('algo picante');if(icon){markTrait(icon,key);target.appendChild(icon);added=true;}}
+    if(added)return;
+  }
+  node=D.appendTraitVisual(target,source,label);markTrait(node,key);
+}
 function clearFlavorRows(){
   each(document.querySelectorAll(".sc-product-flavors,.sc-product-price-traits"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
 }
 function installTraitReferences(){
   each(document.querySelectorAll('.referencias_picor .refBox'),function(box){
     var labelNode=box.querySelector('.ref_label'),image=box.querySelector('.imgRef img'),host=box.querySelector('.imgRef');
-    var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim();
+    var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim(),key=traitKey(label),icon;
     if(D.ignoredTrait(label)){if(box.parentNode)box.parentNode.removeChild(box);return;}
-    var icon=D.createTraitIcon(label);if(icon&&host){host.textContent='';host.appendChild(icon);}
+    if(!host)return;
+    if(key==='poco picante'||key==='algo picante'){
+      host.textContent='';appendTraitVisual(host,box,label);return;
+    }
+    icon=D.createTraitIcon(label);if(icon){host.textContent='';markTrait(icon,key);host.appendChild(icon);}
   });
 }
 function buildTraitRow(className,labels,source){
   var row=document.createElement('span');row.className=className;
-  each(labels,function(label){D.appendTraitVisual(row,source,label);});
+  each(labels,function(label){appendTraitVisual(row,source,label);});
   if(labels.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+labels.join(', '));}
   else row.setAttribute('aria-hidden','true');
   return row;
@@ -47,5 +61,5 @@ function scheduleDescriptionMeasure(){
 }
 function cancelDescriptionMeasure(){if(descriptionRaf)cancelAnimationFrame(descriptionRaf);if(descriptionMeasureRaf)cancelAnimationFrame(descriptionMeasureRaf);descriptionRaf=0;descriptionMeasureRaf=0;}
 
-SC.productCardContent={clearFlavorRows:clearFlavorRows,installFlavorRows:installFlavorRows,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
+SC.productCardContent={clearFlavorRows:clearFlavorRows,installFlavorRows:installFlavorRows,buildTraitRow:buildTraitRow,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
 })();

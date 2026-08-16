@@ -16,13 +16,12 @@ config.queries=config.queries||{};
 ['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion'].forEach(function(name){
   if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
 });
-/* Application-level external dependencies. */
+/* Application-level external dependencies. Icon transitions are native and do not require MorphSVG. */
 config.urls=merged({
   gsap:GSAP_DIST+'gsap.min.js',
   scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
   scrollTo:GSAP_DIST+'ScrollToPlugin.min.js',
-  splitText:GSAP_DIST+'SplitText.min.js',
-  morphSVG:GSAP_DIST+'MorphSVGPlugin.min.js'
+  splitText:GSAP_DIST+'SplitText.min.js'
 },config.urls);
 
 /* Selectors shared across distinct runtime features. */

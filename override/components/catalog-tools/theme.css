@@ -41,6 +41,7 @@ body.sushiShop .sc-morph-icon {
   height: var(--sc-view-icon-size);
   overflow: visible;
   fill: currentColor;
+  transform-origin: 50% 50%;
 }
 body.sushiShop .sc-morph-icon path { fill: currentColor; }
 body.sushiShop .sc-catalog-search-input::placeholder { color: var(--sc-color-muted); }

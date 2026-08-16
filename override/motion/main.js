@@ -4,9 +4,8 @@ if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
 var queue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,REFRESH_DELAY=120;
-var morphState='loading',morphQueue=[];
-var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger',scrollTo:'sc-gsap-scrollto',morphSVG:'sc-gsap-morphsvg'};
-var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo,MORPH_SRC=URL.morphSVG;
+var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger',scrollTo:'sc-gsap-scrollto'};
+var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger,SCROLL_TO_SRC=URL.scrollTo;
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion)).matches;}
@@ -14,7 +13,7 @@ function loadScript(src,id,done){
   if(!src)return done(false);
   var old=document.getElementById(id);
   if(old){
-    if(old.dataset.loaded==='true'||(id===IDS.core&&window.gsap)||(id===IDS.scrollTrigger&&window.ScrollTrigger)||(id===IDS.scrollTo&&window.ScrollToPlugin)||(id===IDS.morphSVG&&window.MorphSVGPlugin))return done(true);
+    if(old.dataset.loaded==='true'||(id===IDS.core&&window.gsap)||(id===IDS.scrollTrigger&&window.ScrollTrigger)||(id===IDS.scrollTo&&window.ScrollToPlugin))return done(true);
     old.addEventListener('load',function(){done(true);},{once:true});
     old.addEventListener('error',function(){done(false);},{once:true});
     return;
@@ -30,40 +29,6 @@ function loadPlugins(done){
   loadScript(ST_SRC,IDS.scrollTrigger,function(ok){complete('scrollTrigger',ok);});
   loadScript(SCROLL_TO_SRC,IDS.scrollTo,function(ok){complete('scrollTo',ok);});
 }
-function runMorph(request){
-  var gsap=(deps&&deps.gsap)||window.gsap,plugin=(deps&&deps.MorphSVGPlugin)||window.MorphSVGPlugin;
-  if(!gsap||!plugin)return false;
-  var path=request.path,shape=request.shape,opts=request.options||{};
-  if(!path||!shape||path.getAttribute('d')===shape)return true;
-  gsap.killTweensOf(path);
-  gsap.to(path,{
-    duration:opts.duration==null?.28:opts.duration,
-    ease:opts.ease||((M.easings&&M.easings.out)||'power2.out'),
-    morphSVG:{shape:shape,map:opts.map||'size'},
-    overwrite:true,
-    onComplete:function(){path.setAttribute('d',shape);if(typeof opts.onComplete==='function')opts.onComplete();}
-  });
-  return true;
-}
-function queueMorph(path,shape,options){
-  for(var i=morphQueue.length-1;i>=0;i--){if(morphQueue[i].path===path){morphQueue[i]={path:path,shape:shape,options:options};return;}}
-  morphQueue.push({path:path,shape:shape,options:options});
-}
-function flushMorph(){
-  if(morphState==='loading')return;
-  var pending=morphQueue.splice(0);
-  pending.forEach(function(request){
-    if(morphState==='ready'&&runMorph(request))return;
-    if(request.path)request.path.setAttribute('d',request.shape);
-  });
-}
-function enableMorph(ok){
-  if(!ok||!window.gsap||!window.MorphSVGPlugin){morphState='failed';flushMorph();return;}
-  window.gsap.registerPlugin(window.MorphSVGPlugin);
-  morphState='ready';
-  if(deps)deps.MorphSVGPlugin=window.MorphSVGPlugin;
-  flushMorph();
-}
 function flush(){
   if(!unlocked||!deps)return;
   var callbacks=queue.splice(0);
@@ -76,38 +41,52 @@ function refresh(delay){
   if(refreshTimer)window.clearTimeout(refreshTimer);
   refreshTimer=window.setTimeout(function(){refreshTimer=0;deps.ScrollTrigger.refresh();},delay==null?0:delay);
 }
+function clearIconMotion(host){
+  var state=host&&host.__scIconMotion;if(!state)return;
+  if(state.timer)window.clearTimeout(state.timer);
+  if(state.animation)try{state.animation.cancel();}catch(_){}
+  host.__scIconMotion=null;
+}
 function morphIcon(path,shape,options){
   if(!path||!shape)return false;
   if(path.getAttribute('d')===shape)return true;
-  var opts=options||{},animate=opts.animate!==false;
-  if(!animate||reduced()){path.setAttribute('d',shape);return true;}
-  if(morphState==='ready'&&runMorph({path:path,shape:shape,options:opts}))return true;
-  if(morphState==='failed'){path.setAttribute('d',shape);return true;}
-  queueMorph(path,shape,opts);return true;
+  var opts=options||{},animate=opts.animate!==false,host=path.ownerSVGElement||path;
+  clearIconMotion(host);
+  if(!animate||reduced()||!host.animate){path.setAttribute('d',shape);return true;}
+  var requested=(opts.duration==null?.18:opts.duration)*1000,duration=Math.max(110,Math.min(220,requested)),state={animation:null,timer:0,target:shape};
+  host.__scIconMotion=state;
+  state.timer=window.setTimeout(function(){if(host.__scIconMotion===state)path.setAttribute('d',shape);},duration*.46);
+  state.animation=host.animate([
+    {opacity:1,transform:'scale(1)',offset:0},
+    {opacity:.18,transform:'scale(.78)',offset:.46},
+    {opacity:.18,transform:'scale(.78)',offset:.54},
+    {opacity:1,transform:'scale(1)',offset:1}
+  ],{duration:duration,easing:'cubic-bezier(.23,1,.32,1)'});
+  state.animation.onfinish=function(){
+    if(host.__scIconMotion!==state)return;
+    if(state.timer)window.clearTimeout(state.timer);path.setAttribute('d',shape);host.__scIconMotion=null;
+  };
+  state.animation.oncancel=function(){if(host.__scIconMotion===state)host.__scIconMotion=null;};
+  return true;
 }
 function installRefreshLifecycle(){
   if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;
   if(document.readyState==='complete')refresh(REFRESH_DELAY);else window.addEventListener('load',function(){refresh(REFRESH_DELAY);},{once:true});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});
 }
-function unlock(){unlocked=true;installRefreshLifecycle();flush();flushMorph();}
+function unlock(){unlocked=true;installRefreshLifecycle();flush();}
 function initialize(){
   if(!window.gsap||!window.ScrollTrigger||!window.ScrollToPlugin)return;
   window.gsap.registerPlugin(window.ScrollTrigger,window.ScrollToPlugin);
-  if(window.MorphSVGPlugin){window.gsap.registerPlugin(window.MorphSVGPlugin);morphState='ready';}
   window.ScrollTrigger.config({limitCallbacks:true});
   if(window.ScrollToPlugin.config)window.ScrollToPlugin.config({autoKill:true});
-  deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin,MorphSVGPlugin:window.MorphSVGPlugin||null};
-  installRefreshLifecycle();flush();flushMorph();
+  deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger,ScrollToPlugin:window.ScrollToPlugin};
+  installRefreshLifecycle();flush();
 }
 
-SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,unlock:unlock,isReady:function(){return!!(deps&&unlocked);},isMorphReady:function(){return morphState==='ready';}};
+SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,unlock:unlock,isReady:function(){return!!(deps&&unlocked);},isMorphReady:function(){return true;}};
 
 ready(function(){
-  loadScript(GSAP_SRC,IDS.core,function(ok){
-    if(!ok){morphState='failed';flushMorph();return;}
-    loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});
-    loadScript(MORPH_SRC,IDS.morphSVG,enableMorph);
-  });
+  loadScript(GSAP_SRC,IDS.core,function(ok){if(!ok)return;loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});});
 });
 })();
