@@ -24,11 +24,39 @@ function load(){
   return mode||'compact';
 }
 function save(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
-function sync(root,mode){
-  var button=root&&root.querySelector('.sc-catalog-view-toggle'),path=button&&button.querySelector('[data-sc-view-icon-path]'),key=iconKey(mode),text=label(mode),previous=path&&path.getAttribute('data-sc-icon-state');
+function reducedMotion(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
+function clearViewIconMotion(host){
+  var state=host&&host.__scViewIconMotion;if(!state)return;
+  if(state.timer)clearTimeout(state.timer);
+  if(state.animation)try{state.animation.cancel();}catch(_){}
+  host.__scViewIconMotion=null;
+}
+function animateViewIcon(path,shape){
+  var host=path&&path.ownerSVGElement;if(!host){if(path)path.setAttribute('d',shape);return;}
+  clearViewIconMotion(host);
+  if(reducedMotion()||!host.animate){path.setAttribute('d',shape);return;}
+  var duration=220,state={animation:null,timer:0,swapped:false};host.__scViewIconMotion=state;
+  function swap(){if(host.__scViewIconMotion!==state||state.swapped)return;state.swapped=true;path.setAttribute('d',shape);}
+  state.timer=setTimeout(swap,duration*.45);
+  state.animation=host.animate([
+    {opacity:1,transform:'scale(1)',offset:0},
+    {opacity:.28,transform:'scale(.7)',offset:.42},
+    {opacity:.28,transform:'scale(.7)',offset:.52},
+    {opacity:1,transform:'scale(1)',offset:1}
+  ],{duration:duration,easing:'cubic-bezier(.22,1,.36,1)'});
+  state.animation.onfinish=function(){if(host.__scViewIconMotion!==state)return;if(state.timer)clearTimeout(state.timer);swap();host.__scViewIconMotion=null;};
+  state.animation.oncancel=function(){if(host.__scViewIconMotion===state)host.__scViewIconMotion=null;};
+}
+function sync(root,mode,animate){
+  var button=root&&root.querySelector('.sc-catalog-view-toggle'),path=button&&button.querySelector('[data-sc-view-icon-path]'),key=iconKey(mode),text=label(mode),previous=path&&path.getAttribute('data-sc-icon-state'),shape=ICONS[key];
   if(button){button.setAttribute('aria-label',text);button.setAttribute('title',text);}
   if(!path)return;
-  if(previous&&previous!==key&&SC.motion&&SC.motion.morphIcon)SC.motion.morphIcon(path,ICONS[key],{duration:.2});else path.setAttribute('d',ICONS[key]);
+  if(previous===key){
+    var host=path.ownerSVGElement;
+    if((!host||!host.__scViewIconMotion)&&path.getAttribute('d')!==shape)path.setAttribute('d',shape);
+    return;
+  }
+  if(animate!==false&&previous)animateViewIcon(path,shape);else{var owner=path.ownerSVGElement;if(owner)clearViewIconMotion(owner);path.setAttribute('d',shape);}
   path.setAttribute('data-sc-icon-state',key);
 }
 function captureViewport(){return{x:window.scrollX||window.pageXOffset||0,y:window.scrollY||window.pageYOffset||0};}
@@ -39,7 +67,7 @@ function restoreViewport(viewport){
 function refreshMotionNow(){
   if(SC.motion&&SC.motion.run)SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});
 }
-function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode());}
+function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode(),false);}
 function refreshLayout(viewport){
   syncMounted();if(raf)cancelAnimationFrame(raf);if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}
   restoreViewport(viewport);
@@ -57,7 +85,7 @@ function refreshLayout(viewport){
 function apply(root,mode,persist){
   mode=normalize(mode)||'compact';var viewport=persist?captureViewport():null;
   if(viewport)doc.classList.add('sc-catalog-view-switching');
-  doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode);
+  doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode,persist);
   if(persist)save(mode);refreshLayout(viewport);
 }
 function destroy(){if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
