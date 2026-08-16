@@ -2,22 +2,22 @@
 'use strict';
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config,S=C&&C.selectors,K=C&&C.classes;
 if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
-var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MEDIA_TIMEOUT=1200,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[];
+var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MEDIA_TIMEOUT=1200,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[],initialViewportObserver=null,initialViewportStarted=false,initialViewportFrozen=false;
+function markStaticInitial(node){
+  if(!node||node.nodeType!==1)return;
+  if(node.matches(S.productCards)){node.classList.add(K.staticInitialCard);return;}
+  node.classList.add(K.staticInitialSection);var host=node.matches(S.sectionTitle)?node.querySelector(':scope > div'):node;if(host)host.classList.add(K.staticInitialSection);
+}
+function applyInitialViewportEntries(entries){for(var i=0;i<(entries||[]).length;i++){var entry=entries[i];if(!entry.isIntersecting)continue;markStaticInitial(entry.target);if(initialViewportObserver)initialViewportObserver.unobserve(entry.target);}}
 function markInitialViewport(){
-  var vh=window.innerHeight||document.documentElement.clientHeight,cards=[],sections=[],cardNodes=document.querySelectorAll(S.productCards),sectionNodes=document.querySelectorAll(S.productList+' '+S.sectionTitle+', '+S.productList+' '+S.sectionSubtitle),i,rect,section;
-  for(i=0;i<cardNodes.length;i++){
-    rect=cardNodes[i].getBoundingClientRect();
-    if(rect.height>0&&rect.top>=vh)break;
-    if(rect.top<vh&&rect.bottom>0)cards.push(cardNodes[i]);
-  }
-  for(i=0;i<sectionNodes.length;i++){
-    section=sectionNodes[i];rect=section.getBoundingClientRect();
-    if(rect.height>0&&rect.top>=vh)break;
-    if(rect.bottom<=0)continue;
-    sections.push({section:section,host:section.matches(S.sectionTitle)?section.querySelector(":scope > div"):section});
-  }
-  cards.forEach(function(card){card.classList.add(K.staticInitialCard);});
-  sections.forEach(function(item){item.section.classList.add(K.staticInitialSection);if(item.host)item.host.classList.add(K.staticInitialSection);});
+  if(initialViewportFrozen||initialViewportStarted||!window.IntersectionObserver)return;
+  var nodes=document.querySelectorAll(S.productCards+','+S.productList+' '+S.sectionTitle+','+S.productList+' '+S.sectionSubtitle);if(!nodes.length)return;
+  initialViewportStarted=true;initialViewportObserver=new IntersectionObserver(applyInitialViewportEntries,{root:null,threshold:0});
+  for(var i=0;i<nodes.length;i++)initialViewportObserver.observe(nodes[i]);
+}
+function freezeInitialViewport(){
+  if(initialViewportFrozen)return;initialViewportFrozen=true;
+  if(initialViewportObserver){applyInitialViewportEntries(initialViewportObserver.takeRecords());initialViewportObserver.disconnect();initialViewportObserver=null;}
 }
 function afterLayoutFrame(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});}
 function whenDomReady(){return document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();}
@@ -43,5 +43,6 @@ function waitForStableLayout(){
     return Promise.all(waits);
   }).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);
 }
-SC.renderLifecycle={markInitialViewport:markInitialViewport,waitForStableLayout:waitForStableLayout};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',markInitialViewport,{once:true});else markInitialViewport();
+SC.renderLifecycle={markInitialViewport:markInitialViewport,freezeInitialViewport:freezeInitialViewport,waitForStableLayout:waitForStableLayout};
 })();

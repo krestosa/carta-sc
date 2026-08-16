@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,D=SC&&SC.productCardData,A=SC&&SC.productCardA11y,P=SC&&SC.productCardContent;
 if(!SC||!U||!C||!D||!A||!P||SC.__productCardBooted)return;SC.__productCardBooted=true;
-var ready=U.ready,S=C.selectors,desktopQuery=C.queries.desktop,resizeObserver=null,cardObserver=null,cardRaf=0,lastWidth=-1,resizeFallback=false,initialized=false,initialQueue=[],initialIdle=0,initialTimer=0,initialDone=false,RESIZE_WIDTH_TOLERANCE=.5,INITIAL_BATCH=6,INITIAL_BUDGET_MS=8;
+var ready=U.ready,S=C.selectors,desktopQuery=C.queries.desktop,resizeObserver=null,cardObserver=null,cardRaf=0,lastWidth=-1,resizeFallback=false,initialized=false,initialQueue=[],initialIdle=0,initialTimer=0,initialDone=false,RESIZE_WIDTH_TOLERANCE=.5,INITIAL_BATCH=1,INITIAL_BUDGET_MS=4,INITIAL_IDLE_TIMEOUT=1500;
 
 function needsEnhancement(card){return!!(card&&(!card.querySelector('.sc-product-flavors')||!card.querySelector('.sc-product-price-traits')||!card.querySelector('.sc-card-a11y-meta')));}
 function addedNeedsEnhancement(node){if(!node||node.nodeType!==1)return false;if(node.matches&&node.matches(S.productCard))return needsEnhancement(node);if(!node.querySelectorAll)return false;var cards=node.querySelectorAll(S.productCard);for(var i=0;i<cards.length;i++)if(needsEnhancement(cards[i]))return true;return false;}
@@ -10,7 +10,7 @@ function observeCards(){var root=document.querySelector(S.container)||document.b
 function refreshCards(){if(cardObserver)cardObserver.disconnect();cancelInitialWork();A.enhanceAll();P.installFlavorRows();P.scheduleDescriptionMeasure();initialDone=true;observeCards();installResizeTracking();}
 function runCardRefresh(){cardRaf=0;if(initialized)refreshCards();}
 function scheduleCardRefresh(){if(initialized&&!cardRaf)cardRaf=requestAnimationFrame(runCardRefresh);}
-function installResizeTracking(){var root=document.querySelector(S.container)||document.body;if(!root||resizeObserver||resizeFallback)return;if(!window.ResizeObserver){window.addEventListener('resize',P.scheduleDescriptionMeasure,{passive:true});resizeFallback=true;return;}lastWidth=-1;resizeObserver=new ResizeObserver(function(entries){var entry=entries[0],width=entry&&entry.contentRect?entry.contentRect.width:root.clientWidth;if(lastWidth>=0&&Math.abs(width-lastWidth)<RESIZE_WIDTH_TOLERANCE)return;lastWidth=width;P.scheduleDescriptionMeasure();});resizeObserver.observe(root);}
+function installResizeTracking(){var root=document.querySelector(S.container)||document.body;if(!root||resizeObserver||resizeFallback)return;if(!window.ResizeObserver){window.addEventListener('resize',P.scheduleDescriptionMeasure,{passive:true});resizeFallback=true;return;}lastWidth=-1;resizeObserver=new ResizeObserver(function(entries){var entry=entries[0],width=entry&&entry.contentRect?entry.contentRect.width:root.clientWidth;if(lastWidth<0){lastWidth=width;return;}if(Math.abs(width-lastWidth)<RESIZE_WIDTH_TOLERANCE)return;lastWidth=width;P.scheduleDescriptionMeasure();});resizeObserver.observe(root);}
 function enhanceCard(card){var link=card&&card.querySelector?card.querySelector(S.productLink):null;if(!link)return;A.enhanceLink(link);P.installFlavorRow(link);}
 function cancelInitialWork(){if(initialIdle&&window.cancelIdleCallback)window.cancelIdleCallback(initialIdle);if(initialTimer)clearTimeout(initialTimer);initialIdle=0;initialTimer=0;initialQueue=[];}
 function finishInitialWork(){initialIdle=0;initialTimer=0;initialQueue=[];initialDone=true;if(!initialized)return;P.scheduleDescriptionMeasure();installResizeTracking();observeCards();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){if(initialized)P.scheduleDescriptionMeasure();}).catch(function(){});}
@@ -19,7 +19,7 @@ function runInitialBatch(deadline){
   while(initialQueue.length&&count<INITIAL_BATCH&&performance.now()-start<INITIAL_BUDGET_MS&&(!deadline||deadline.didTimeout||deadline.timeRemaining()>2)){enhanceCard(initialQueue.shift());count++;}
   if(!initialQueue.length){finishInitialWork();return;}scheduleInitialBatch();
 }
-function scheduleInitialBatch(){if(!initialized||initialIdle||initialTimer)return;if(typeof window.requestIdleCallback==='function'){initialIdle=window.requestIdleCallback(runInitialBatch,{timeout:500});return;}initialTimer=window.setTimeout(function(){runInitialBatch(null);},16);}
+function scheduleInitialBatch(){if(!initialized||initialIdle||initialTimer)return;if(typeof window.requestIdleCallback==='function'){initialIdle=window.requestIdleCallback(runInitialBatch,{timeout:INITIAL_IDLE_TIMEOUT});return;}initialTimer=window.setTimeout(function(){runInitialBatch(null);},32);}
 function startIncrementalEnhancement(){
   initialDone=false;A.enhanceHeadings();P.installTraitReferences();initialQueue=Array.prototype.slice.call(document.querySelectorAll(S.productCard));
   var critical=desktopQuery.matches?8:4;while(initialQueue.length&&critical-->0)enhanceCard(initialQueue.shift());

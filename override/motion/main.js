@@ -52,7 +52,7 @@ function disarmDependencyTriggers(){
 function triggerDependencies(event){
   if(event&&event.type==='keydown'&&/^(Shift|Control|Alt|Meta|CapsLock|Tab)$/.test(event.key||''))return;
   disarmDependencyTriggers();if(!unlocked||dependenciesRequested||deps)return;
-  if(SC.renderLifecycle&&SC.renderLifecycle.markInitialViewport)SC.renderLifecycle.markInitialViewport();
+  if(SC.renderLifecycle&&SC.renderLifecycle.freezeInitialViewport)SC.renderLifecycle.freezeInitialViewport();
   function request(){dependencyIdle=0;dependencyTimer=0;if(unlocked)requestDependencies();}
   if(typeof window.requestIdleCallback==='function'){dependencyIdle=window.requestIdleCallback(request,{timeout:300});return;}
   dependencyTimer=window.setTimeout(request,0);
