@@ -28,17 +28,16 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   if(!cards.length){parts.revealViewport=null;return noop;}
   parts.revealViewport=revealViewport;
   if(reduce){gsap.set(cards,{clearProps:'opacity,visibility'});return function(){if(parts.revealViewport===revealViewport)parts.revealViewport=null;};}
-  var initial=[],deferred=[];
+  var staticCards=[],behind=[],initial=[],deferred=[],threshold=window.innerHeight*CFG.initialViewportRatio;
   cards.forEach(function(card){
-    if(card.classList.contains(K.staticInitialCard)){
-      gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
-      return;
-    }
+    if(card.classList.contains(K.staticInitialCard)){staticCards.push(card);return;}
     var rect=card.getBoundingClientRect();
-    if(rect.bottom<CFG.behindViewportOffset)gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
-    else if(rect.top<=window.innerHeight*CFG.initialViewportRatio)initial.push(card);
+    if(rect.bottom<CFG.behindViewportOffset)behind.push(card);
+    else if(rect.top<=threshold)initial.push(card);
     else deferred.push(card);
   });
+  if(staticCards.length)gsap.set(staticCards,{autoAlpha:1,clearProps:'opacity,visibility'});
+  if(behind.length)gsap.set(behind,{autoAlpha:1,clearProps:'opacity,visibility'});
   if(initial.length){
     gsap.set(initial,{autoAlpha:0});
     rafA=requestAnimationFrame(function(){
@@ -53,14 +52,16 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     gsap.set(deferred,{autoAlpha:0});
     triggers=ST.batch(deferred,{start:profile.start,once:true,interval:CFG.batchInterval,batchMax:profile.batchMax,onEnter:reveal,onEnterBack:reveal})||[];
     timer=window.setTimeout(function(){
+      var rescue=[];
       deferred.forEach(function(card){
         var rect=card.getBoundingClientRect(),style=getComputedStyle(card);
-        if(rect.top<=innerHeight*CFG.rescueViewportRatio&&rect.bottom>=CFG.rescueBottomOffset&&(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold)){
-          gsap.killTweensOf(card);
-          if(suppressReveal())gsap.set(card,{autoAlpha:1,clearProps:'opacity,visibility'});
-          else gsap.to(card,{autoAlpha:1,duration:CFG.rescueDuration,ease:M.easings.out,overwrite:true,clearProps:'opacity,visibility'});
-        }
+        if(rect.top<=innerHeight*CFG.rescueViewportRatio&&rect.bottom>=CFG.rescueBottomOffset&&(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold))rescue.push(card);
       });
+      if(rescue.length){
+        gsap.killTweensOf(rescue);
+        if(suppressReveal())gsap.set(rescue,{autoAlpha:1,clearProps:'opacity,visibility'});
+        else gsap.to(rescue,{autoAlpha:1,duration:CFG.rescueDuration,ease:M.easings.out,overwrite:true,clearProps:'opacity,visibility'});
+      }
       if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);
     },CFG.rescueDelay);
   }
