@@ -49,9 +49,10 @@ function handle(node){
 }
 function scan(root){if(matches(root,TARGETS))handle(root);if(root&&root.querySelectorAll)each(root.querySelectorAll(TARGETS),handle);}
 function normalizeDocumentLanguage(){var root=document.documentElement;if(root&&!root.lang)root.lang='es-AR';}
+function normalizeMainLandmark(){if(document.querySelector('main,[role="main"]'))return;var main=document.querySelector(S.container);if(main)main.setAttribute('role','main');}
 function disconnect(){if(observer){observer.disconnect();observer=null;}}
 function init(){
-  if(initialized)return;initialized=true;normalizeDocumentLanguage();scan(document);disconnect();if(!window.MutationObserver||!document.body)return;
+  if(initialized)return;initialized=true;normalizeDocumentLanguage();normalizeMainLandmark();scan(document);disconnect();if(!window.MutationObserver||!document.body)return;
   observer=new MutationObserver(function(mutations){mutations.forEach(function(mutation){each(mutation.addedNodes,scan);});});observer.observe(document.body,{childList:true,subtree:true});
 }
 function destroy(){initialized=false;disconnect();if(readyHandler){document.removeEventListener('DOMContentLoaded',readyHandler);readyHandler=null;}}
