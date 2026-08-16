@@ -106,8 +106,8 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
   }
 }
 
-/* Dense and list views keep the discounted price on line one and combine the
-   struck-through price with dietary/spice traits on line two. */
+/* Dense and list views use one compact pricing line:
+   discounted price -> struck-through price -> dietary/spice traits. */
 body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   display: none !important;
 }
@@ -119,39 +119,43 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
-  display: grid !important;
-  grid-template-columns: max-content max-content !important;
-  grid-template-rows: auto auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  justify-content: start !important;
+  justify-content: flex-start !important;
   column-gap: 6px !important;
-  row-gap: var(--sc-card-price-gap) !important;
+  row-gap: 0 !important;
+}
+
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow {
+  min-height: var(--sc-compact-price-line-height) !important;
+}
+
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
+  min-height: var(--sc-view-list-compact-price-height, 18px) !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .price,
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .price,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
-  grid-column: 1 / -1 !important;
-  grid-row: 1 !important;
-  justify-self: start !important;
-  order: initial !important;
+  order: 1 !important;
+  flex: 0 0 auto !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
-  grid-column: 1 !important;
-  grid-row: 2 !important;
-  justify-self: start !important;
-  order: initial !important;
+  order: 2 !important;
+  flex: 0 0 auto !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
   display: inline-flex !important;
-  grid-column: 2 !important;
-  grid-row: 2 !important;
+  order: 3 !important;
+  flex: 0 0 auto !important;
   align-items: center !important;
   align-self: center !important;
   gap: 5px !important;
@@ -177,20 +181,8 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   object-fit: contain !important;
 }
 
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .price,
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .priceHijass,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .price,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .priceHijass {
-  grid-column: 1 !important;
-}
-
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .sc-product-price-traits,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow:not(.sc-price-row-has-offer) .sc-product-price-traits {
-  grid-row: 1 !important;
-}
-
 @media (min-width: 993px) {
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow {
-    justify-content: end !important;
+    justify-content: flex-end !important;
   }
 }
