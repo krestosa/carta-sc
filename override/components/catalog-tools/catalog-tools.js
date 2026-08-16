@@ -7,7 +7,7 @@ function cleanupRoot(remove){
   if(remove&&currentRoot&&currentRoot.parentNode)currentRoot.parentNode.removeChild(currentRoot);
   currentRoot=null;
 }
-function install(root){currentRoot=root;cleanSearch=C.search&&C.search.install?C.search.install(root):null;cleanTheme=C.theme&&C.theme.install?C.theme.install(root):null;cleanView=C.view&&C.view.install?C.view.install(root):null;document.body.classList.add('sc-catalog-tools-ready');return root;}
+function install(root){currentRoot=root;cleanSearch=C.search&&C.search.install?C.search.install(root):null;cleanTheme=C.theme&&C.theme.install?C.theme.install(root):null;cleanView=C.view&&C.view.install?C.view.install(root):null;if(SC.productCardContent&&SC.productCardContent.positionTraitReferences)SC.productCardContent.positionTraitReferences();document.body.classList.add('sc-catalog-tools-ready');return root;}
 function mount(){
   var container=document.querySelector(S.container);if(!container)return null;
   var existing=container.querySelector('.sc-catalog-tools');
