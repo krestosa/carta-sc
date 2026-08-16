@@ -1,0 +1,5 @@
+/* Keep product-title geometry visually stable while changing catalogue density. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
+  padding-top: var(--sc-card-title-padding-top) !important;
+}
