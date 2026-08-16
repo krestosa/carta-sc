@@ -4,19 +4,20 @@ var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.
 var each=U.each,descriptionRaf=0,descriptionMeasureRaf=0,referenceStrip=null;
 
 function traitKey(label){return(label||'').trim().toLocaleLowerCase('es-AR');}
+function traitSpec(label){
+  var key=traitKey(label);
+  if(key==='poco picante')return{key:'algo picante',label:'Algo Picante',icon:'algo picante'};
+  if(key==='algo picante')return{key:'picante',label:'Picante',icon:'poco picante'};
+  if(key==='picante')return{key:'picante',label:'Picante',icon:'poco picante'};
+  if(key==='muy picante')return{key:'muy picante',label:'Muy Picante',icon:'muy picante'};
+  if(key==='vegetariano')return{key:'vegetariano',label:'Vegetariano',icon:'vegetariano'};
+  return{key:key,label:(label||'').trim(),icon:key};
+}
 function markTrait(node,key){if(node&&node.setAttribute)node.setAttribute('data-sc-trait',key);return node;}
 function appendTraitVisual(target,source,label){
-  var key=traitKey(label),icon,node,set,i;
-  if(key==='algo picante'){
-    set=markTrait(document.createElement('span'),key);set.className='sc-trait-icon-set';set.setAttribute('aria-hidden','true');
-    for(i=0;i<2;i++){icon=D.createTraitIcon('algo picante');if(icon){markTrait(icon,key);set.appendChild(icon);}}
-    if(set.childNodes.length){target.appendChild(set);return set;}
-  }
-  if(key==='poco picante'){
-    icon=D.createTraitIcon('algo picante');
-    if(icon){markTrait(icon,key);target.appendChild(icon);return icon;}
-  }
-  node=D.appendTraitVisual(target,source,label);markTrait(node,key);return node;
+  var spec=traitSpec(label),icon=D.createTraitIcon(spec.icon),node;
+  if(icon){markTrait(icon,spec.key);target.appendChild(icon);return icon;}
+  node=D.appendTraitVisual(target,source,label);markTrait(node,spec.key);return node;
 }
 function clearFlavorRows(){
   each(document.querySelectorAll(".sc-product-flavors,.sc-product-price-traits"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
@@ -32,20 +33,19 @@ function positionTraitReferences(){
 function installTraitReferences(){
   each(document.querySelectorAll('.referencias_picor .refBox'),function(box){
     var labelNode=box.querySelector('.ref_label'),image=box.querySelector('.imgRef img'),host=box.querySelector('.imgRef');
-    var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim(),key=traitKey(label),icon;
+    var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim(),spec=traitSpec(label),icon;
     if(D.ignoredTrait(label)){if(box.parentNode)box.parentNode.removeChild(box);return;}
+    if(labelNode)labelNode.textContent=spec.label;
     if(!host)return;
-    if(key==='poco picante'||key==='algo picante'){
-      host.textContent='';appendTraitVisual(host,box,label);return;
-    }
-    icon=D.createTraitIcon(label);if(icon){host.textContent='';markTrait(icon,key);host.appendChild(icon);}
+    icon=D.createTraitIcon(spec.icon);
+    if(icon){host.textContent='';markTrait(icon,spec.key);host.appendChild(icon);}
   });
   positionTraitReferences();
 }
 function buildTraitRow(className,labels,source){
-  var row=document.createElement('span');row.className=className;
-  each(labels,function(label){appendTraitVisual(row,source,label);});
-  if(labels.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+labels.join(', '));}
+  var row=document.createElement('span');row.className=className;var accessible=[];
+  each(labels,function(label){var spec=traitSpec(label);appendTraitVisual(row,source,label);if(accessible.indexOf(spec.label)<0)accessible.push(spec.label);});
+  if(accessible.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+accessible.join(', '));}
   else row.setAttribute('aria-hidden','true');
   return row;
 }
