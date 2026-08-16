@@ -3,6 +3,7 @@
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var version=window.__scCatalogAssetVersion||'unversioned';
 var base='override/';
+if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
 function bootstrapStaticNetwork(){
   if(window.__scStaticNetworkBooted)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticNetworkBooted=true;
   var ajax=$.ajax;
