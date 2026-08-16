@@ -1,6 +1,70 @@
 /* SushiClub catalogue pre-paint guard.
-   Preserve final desktop geometry before catalog.js mounts the sticky rail.
-   No skeleton, hidden text or placeholder bars. */
+   The real DOM is the skeleton geometry: text keeps its final wrapping/width,
+   dynamic component slots reserve their mounted footprint, and only paint is
+   substituted until the catalogue, tools and critical fonts are stable. */
+
+html.sc-catalog-prepaint {
+  --sc-shell-text: rgba(72,72,68,.24);
+  --sc-shell-control: rgba(72,72,68,.12);
+  --sc-shell-text-extra: 2px;
+}
+
+html.sc-catalog-prepaint[data-sc-theme-resolved='dark'] {
+  --sc-shell-text: rgba(218,218,212,.20);
+  --sc-shell-control: rgba(218,218,212,.10);
+}
+
+/* Real text is used as its own zero-layout-shift skeleton. The 2px blur gives
+   the requested small visual overscan without changing line boxes or wrapping. */
+html.sc-catalog-prepaint body.sushiShop .fixedTopShop.wtopShopMenuMobile .nav-top-li > a.anchorLink,
+html.sc-catalog-prepaint body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
+html.sc-catalog-prepaint body.sushiShop .sc-catalog-tools .sc-catalog-search-input,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .title-shop1,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .descrip,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .priceRow,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .priceRow * {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: 0 0 var(--sc-shell-text-extra) var(--sc-shell-text) !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop .sc-catalog-tools .sc-catalog-search-input {
+  caret-color: transparent !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop .sc-catalog-tools .sc-catalog-search-input::placeholder {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: 0 0 var(--sc-shell-text-extra) var(--sc-shell-text) !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div {
+  background-color: transparent !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop .sc-catalog-search-icon,
+html.sc-catalog-prepaint body.sushiShop .sc-catalog-view-toggle svg,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .sc-product-flavors img,
+html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .sc-trait-icon {
+  opacity: .14 !important;
+}
+
+/* Catalog tools are mounted after the category rail. Reserve the exact vertical
+   footprint before that happens, then swap the reservation for the real node in
+   the same synchronous mount task. This prevents the catalogue row from jumping. */
+html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
+  padding-top: calc(var(--sc-view-toggle-size, 42px) + 60px) !important;
+}
+
+@media (max-width: 992px) {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
+    padding-top: calc(var(--sc-view-toggle-size, 42px) + 52px) !important;
+  }
+}
+
 @media (min-width: 993px) {
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile {
     position: static !important;
@@ -42,7 +106,7 @@
   }
 
   /* Same outer geometry as the mounted desktop rail: 47px internal box with
-     the current 16px/14px vertical spacing. No placeholder artwork. */
+     the current 16px/14px vertical spacing. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop::before {
     content: '';
     display: block;
@@ -119,7 +183,9 @@
     height: 100%;
   }
 
-  /* Ensure first-paint media geometry equals product-image-ratio.css. */
+  /* Ensure first-paint media geometry equals product-image-ratio.css. The visual
+     image skeleton itself is owned by image-preloader.css and remains active
+     independently until each raster has loaded and decoded. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
     width: 100% !important;
