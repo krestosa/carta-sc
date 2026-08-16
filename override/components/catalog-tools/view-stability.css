@@ -1,15 +1,14 @@
-/* Keep the outer catalogue grid on one vertical rhythm across view modes. The
-   zero-height category anchors and section headings live in this same grid, so
-   changing row-gap would move a heading even when scroll position is unchanged. */
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop:not(.sc-catalog-search-grid) {
+/* Keep every list surface on one vertical rhythm. Search results reuse the
+   exact catalogue-list geometry instead of maintaining a parallel list layout. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop:not(.sc-catalog-search-grid),
+body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
   row-gap: var(--sc-compact-row-gap) !important;
 }
 
-/* List geometry is deliberately uniform across breakpoints. The media fixes the
-   row height; the text column uses title / price / flexible space / description.
-   Short titles therefore keep their price attached instead of leaving an empty
-   second title line between the two related pieces of information. */
-html[data-sc-catalog-view='list'] body.sushiShop {
+/* List geometry tokens are canonical for both the normal list and search list.
+   They must not depend on the persisted view attribute because compact-view
+   searches intentionally render their result surface as a list. */
+body.sushiShop {
   --sc-view-list-desktop-image-width: 210px;
   --sc-view-list-compact-image-width: 160px;
   --sc-view-list-phone-image-width: 150px;
