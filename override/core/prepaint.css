@@ -7,6 +7,9 @@ html.sc-catalog-prepaint {
   --sc-shell-base: rgba(72,72,68,.075);
   --sc-shell-highlight: rgba(255,255,255,.34);
   --sc-shell-text-extra: 2px;
+  --sc-banner-desktop-width: 1170px;
+  --sc-banner-desktop-height: 119.317px;
+  --sc-banner-ratio: 1170 / 119.317;
 }
 
 html.sc-catalog-prepaint[data-sc-theme-resolved='dark'] {
@@ -112,9 +115,9 @@ html.sc-catalog-prepaint body.sushiShop :where(
   }
 }
 
-/* Banner is part of first-paint geometry. The fallback aspect ratio reserves a
-   stable box before intrinsic image metadata is available; `auto` hands control
-   to the real asset ratio as soon as the browser knows it. */
+/* Banner geometry is deterministic from first paint. Bootstrap's desktop
+   container is 1170px wide, where the banner is exactly 119.317px high. Below
+   desktop the same ratio scales with the real container width. */
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
@@ -124,9 +127,35 @@ html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
 html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
   display: block !important;
   width: 100% !important;
-  height: auto !important;
-  aspect-ratio: auto 3.45 / 1;
   opacity: 0 !important;
+}
+
+@media (min-width: 993px) {
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop,
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
+    height: var(--sc-banner-desktop-height) !important;
+    min-height: var(--sc-banner-desktop-height) !important;
+    max-height: var(--sc-banner-desktop-height) !important;
+  }
+
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
+    object-fit: cover !important;
+  }
+}
+
+@media (max-width: 992px) {
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop,
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: var(--sc-banner-ratio) !important;
+  }
+
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
+    object-fit: contain !important;
+  }
 }
 
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop::after {
