@@ -1,67 +1,165 @@
-/* SushiClub catalogue pre-paint guard.
-   The real DOM is the skeleton geometry: text keeps its final wrapping/width,
-   dynamic component slots reserve their mounted footprint, and only paint is
-   substituted until the catalogue, tools and critical fonts are stable. */
+/* SushiClub full-site pre-paint shell.
+   The real DOM remains the geometry source at every breakpoint. Paint is
+   substituted until structure, critical media and fonts have settled. */
 
 html.sc-catalog-prepaint {
-  --sc-shell-text: rgba(72,72,68,.24);
-  --sc-shell-control: rgba(72,72,68,.12);
+  --sc-shell-text: rgba(72,72,68,.20);
+  --sc-shell-base: rgba(72,72,68,.075);
+  --sc-shell-highlight: rgba(255,255,255,.34);
   --sc-shell-text-extra: 2px;
 }
 
 html.sc-catalog-prepaint[data-sc-theme-resolved='dark'] {
-  --sc-shell-text: rgba(218,218,212,.20);
-  --sc-shell-control: rgba(218,218,212,.10);
+  --sc-shell-text: rgba(218,218,212,.18);
+  --sc-shell-base: rgba(218,218,212,.065);
+  --sc-shell-highlight: rgba(255,255,255,.10);
 }
 
-/* Real text is used as its own zero-layout-shift skeleton. The 2px blur gives
-   the requested small visual overscan without changing line boxes or wrapping. */
-html.sc-catalog-prepaint body.sushiShop .fixedTopShop.wtopShopMenuMobile .nav-top-li > a.anchorLink,
-html.sc-catalog-prepaint body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
-html.sc-catalog-prepaint body.sushiShop .sc-catalog-tools .sc-catalog-search-input,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .title-shop1,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .descrip,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .priceRow,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .priceRow * {
+@keyframes sc-site-shell-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+html.sc-catalog-prepaint body.sushiShop {
+  overflow-anchor: none;
+}
+
+/* Use the final text boxes themselves as the placeholder. This keeps wrapping,
+   gaps and responsive geometry identical; the 2px shadow is visual overscan
+   only and never changes line boxes. */
+html.sc-catalog-prepaint body.sushiShop :where(
+  .topBar.newVer17topBar,
+  .main-nav,
+  #menuMobile,
+  .slicknav_menu,
+  .fixedTopShop.wtopShopMenuMobile,
+  .sc-catalog-toolbar,
+  .sc-catalog-tools,
+  .containerShop,
+  footer
+) :where(a,span,p,h1,h2,h3,h4,h5,h6,li,label,button,input,small,strong,em,b),
+html.sc-catalog-prepaint body.sushiShop .listadoShop .priceRow * {
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
   text-shadow: 0 0 var(--sc-shell-text-extra) var(--sc-shell-text) !important;
 }
 
-html.sc-catalog-prepaint body.sushiShop .sc-catalog-tools .sc-catalog-search-input {
+html.sc-catalog-prepaint body.sushiShop :where(input,textarea) {
   caret-color: transparent !important;
 }
 
-html.sc-catalog-prepaint body.sushiShop .sc-catalog-tools .sc-catalog-search-input::placeholder {
+html.sc-catalog-prepaint body.sushiShop :where(input,textarea)::placeholder {
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
   text-shadow: 0 0 var(--sc-shell-text-extra) var(--sc-shell-text) !important;
+}
+
+/* Light structural sweep for the major surfaces. It paints inside the real
+   boxes and therefore cannot add width/height or alter document flow. */
+html.sc-catalog-prepaint body.sushiShop :where(
+  .topBar.newVer17topBar .bord-line,
+  .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
+  .sc-catalog-toolbar,
+  .sc-catalog-tools,
+  footer .bord
+) {
+  background-image: linear-gradient(100deg,transparent 20%,var(--sc-shell-highlight) 50%,transparent 80%) !important;
+  background-size: 220% 100% !important;
+  animation: sc-site-shell-shimmer 1.35s linear infinite !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop :where(
+  .topBar svg,
+  .main-nav svg,
+  #menuMobile svg,
+  .slicknav_menu svg,
+  .fixedTopShop svg,
+  .sc-catalog-tools svg,
+  footer svg,
+  .listadoShop .productoShop .sc-product-flavors img,
+  .listadoShop .productoShop .sc-trait-icon
+) {
+  opacity: .12 !important;
+}
+
+/* Mobile logo: the parent already owns the final 100px header geometry. */
+@media (max-width: 992px) {
+  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
+    background-color: var(--sc-shell-base) !important;
+    background-image: linear-gradient(100deg,transparent 20%,var(--sc-shell-highlight) 50%,transparent 80%) !important;
+    background-size: 220% 100% !important;
+    animation: sc-site-shell-shimmer 1.35s linear infinite !important;
+  }
+
+  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile img {
+    opacity: 0 !important;
+  }
+
+  /* SlickNav is created by legacy code before our repair marks the canonical
+     instance. Keep provisional copies completely out of flow so they cannot
+     expand/collapse the document while the header initializes. */
+  html.sc-catalog-prepaint body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: var(--sc-mobile-header-height,100px) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Banner is part of first-paint geometry. The fallback aspect ratio reserves a
+   stable box before intrinsic image metadata is available; `auto` hands control
+   to the real asset ratio as soon as the browser knows it. */
+html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
+  position: relative !important;
+  overflow: hidden !important;
+  background: var(--sc-shell-base) !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: auto 3.45 / 1;
+  opacity: 0 !important;
+}
+
+html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-color: var(--sc-shell-base);
+  background-image: linear-gradient(100deg,transparent 18%,var(--sc-shell-highlight) 50%,transparent 82%);
+  background-size: 220% 100%;
+  animation: sc-site-shell-shimmer 1.25s linear infinite;
 }
 
 html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div {
   background-color: transparent !important;
 }
 
-html.sc-catalog-prepaint body.sushiShop .sc-catalog-search-icon,
-html.sc-catalog-prepaint body.sushiShop .sc-catalog-view-toggle svg,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .sc-product-flavors img,
-html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop .sc-trait-icon {
-  opacity: .14 !important;
-}
-
-/* Catalog tools are mounted after the category rail. Reserve the exact vertical
-   footprint before that happens, then swap the reservation for the real node in
-   the same synchronous mount task. This prevents the catalogue row from jumping. */
+/* Catalog tools mount after parse. Reserve exactly their outer footprint for
+   each breakpoint, then exchange it synchronously for the real component. */
 html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
-  padding-top: calc(var(--sc-view-toggle-size, 42px) + 60px) !important;
+  padding-top: calc(var(--sc-view-toggle-size,42px) + 60px) !important;
 }
 
-@media (max-width: 992px) {
+@media (min-width: 641px) and (max-width: 992px) {
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
-    padding-top: calc(var(--sc-view-toggle-size, 42px) + 52px) !important;
+    padding-top: calc(var(--sc-view-toggle-size,42px) + 52px) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
+    padding-top: calc(var(--sc-view-toggle-size,42px) + 44px) !important;
   }
 }
 
@@ -105,8 +203,7 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     padding-left: 0 !important;
   }
 
-  /* Same outer geometry as the mounted desktop rail: 47px internal box with
-     the current 16px/14px vertical spacing. */
+  /* Same outer geometry as the mounted desktop rail. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop::before {
     content: '';
     display: block;
@@ -116,14 +213,17 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     margin: var(--sc-category-toolbar-margin-top) 0 var(--sc-category-toolbar-margin-bottom);
     border: 0;
     border-bottom: var(--sc-border-hairline) solid var(--sc-color-border);
-    background: transparent;
+    background-color: var(--sc-shell-base);
+    background-image: linear-gradient(100deg,transparent 20%,var(--sc-shell-highlight) 50%,transparent 80%);
+    background-size: 220% 100%;
+    animation: sc-site-shell-shimmer 1.35s linear infinite;
   }
 
   /* High density is the default first render. Explicit stored preferences
      override it before the catalogue modules finish mounting. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4,minmax(0,1fr));
     column-gap: var(--sc-catalog-gutter);
     row-gap: var(--sc-catalog-grid-row-gap) !important;
     width: 100% !important;
@@ -134,11 +234,11 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
   }
 
   html[data-sc-catalog-view='normal'].sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3,minmax(0,1fr));
   }
 
   html[data-sc-catalog-view='list'].sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0,1fr);
   }
 
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > :not(.productoShop) {
@@ -175,7 +275,7 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     display: grid !important;
     position: relative !important;
     flex: 1 1 auto;
-    grid-template-columns: minmax(0, 1fr) max-content;
+    grid-template-columns: minmax(0,1fr) max-content;
     grid-template-rows: auto auto auto var(--sc-card-meta-row-height) !important;
     column-gap: var(--sc-card-content-gap);
     align-content: start;
@@ -183,9 +283,7 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     height: 100%;
   }
 
-  /* Ensure first-paint media geometry equals product-image-ratio.css. The visual
-     image skeleton itself is owned by image-preloader.css and remains active
-     independently until each raster has loaded and decoded. */
+  /* Product raster placeholder remains owned by image-preloader.css. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
     width: 100% !important;
@@ -195,5 +293,20 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     aspect-ratio: var(--sc-product-image-ratio);
     margin: 0 !important;
     overflow: hidden !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.sc-catalog-prepaint body.sushiShop :where(
+    .topBar.newVer17topBar .bord-line,
+    .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
+    .sc-catalog-toolbar,
+    .sc-catalog-tools,
+    footer .bord,
+    .brandOnlyMobile > a,
+    .bannerShop .BanContShop::after,
+    .containerShop::before
+  ) {
+    animation: none !important;
   }
 }
