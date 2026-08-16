@@ -12,6 +12,8 @@ body.sushiShop {
   --sc-view-list-compact-image-width: 160px;
   --sc-view-list-phone-image-width: 150px;
   --sc-view-list-title-price-gap: 6px;
+  --sc-view-list-price-height: 18px;
+  --sc-view-list-price-track: calc(var(--sc-view-list-title-price-gap) + var(--sc-view-list-price-height));
 }
 
 /* In list mode traits already live inside priceRow. The standalone flavor row is
@@ -37,20 +39,21 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-/* Price and sold-out state stay attached to the title. Any remaining vertical
-   room belongs between that decision block and the bottom-anchored description. */
+/* Price and sold-out state stay attached to the title. The second grid track owns
+   both the visual gap and the price line, so no margin can overflow into the
+   description divider when a title consumes both of its lines. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   position: static !important;
   inset: auto !important;
   grid-column: 2 !important;
   grid-row: 2 !important;
-  align-self: start !important;
+  align-self: end !important;
   justify-content: flex-start !important;
   min-width: 0 !important;
-  min-height: 18px !important;
-  height: 18px !important;
-  margin: var(--sc-view-list-title-price-gap) 0 0 !important;
+  min-height: var(--sc-view-list-price-height) !important;
+  height: var(--sc-view-list-price-height) !important;
+  margin: 0 !important;
   padding: 0 !important;
 }
 
@@ -89,7 +92,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,
   html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
     grid-template-columns: var(--sc-view-list-desktop-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto 18px minmax(0, 1fr) auto !important;
+    grid-template-rows: auto var(--sc-view-list-price-track) minmax(0, 1fr) auto !important;
     column-gap: 18px !important;
     align-content: stretch !important;
     height: auto !important;
@@ -145,7 +148,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
     grid-template-columns: var(--sc-view-list-compact-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto 18px minmax(0, 1fr) auto !important;
+    grid-template-rows: auto var(--sc-view-list-price-track) minmax(0, 1fr) auto !important;
     column-gap: 14px !important;
     align-content: stretch !important;
     height: auto !important;
@@ -201,7 +204,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
   html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
     grid-template-columns: var(--sc-view-list-phone-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto 18px minmax(0, 1fr) auto !important;
+    grid-template-rows: auto var(--sc-view-list-price-track) minmax(0, 1fr) auto !important;
     column-gap: 12px !important;
     align-content: stretch !important;
     height: auto !important;
