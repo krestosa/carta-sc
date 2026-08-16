@@ -13,6 +13,13 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
   object-fit: contain !important;
 }
 
+/* The vegetarian leaf path ends ~0.7px above its 11px SVG viewport.
+   Offset only that icon so the visible leaf, not just its SVG box, sits on the base. */
+body.sushiShop .sc-trait-icon[width='11'][height='11'] {
+  transform: translateY(.7px) !important;
+  transform-origin: 50% 100% !important;
+}
+
 body.sushiShop .listadoShop .productoShop .sc-product-flavors img {
   width: var(--sc-card-flavors-size) !important;
   height: var(--sc-card-flavors-size) !important;
