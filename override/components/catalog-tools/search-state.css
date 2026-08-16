@@ -9,9 +9,52 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTit
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop[hidden] {
   display: none !important;
 }
+
+/* Search results must never wait for the normal ScrollTrigger reveal pipeline.
+   SplitText can leave category lines translated/transparent while the virtual
+   keyboard is resizing the viewport, so search owns an explicit final state. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
   opacity: 1 !important;
   visibility: visible !important;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion:not([hidden]),
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div,
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source .sc-section-text-line {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source .sc-section-text-line {
+  transform: none !important;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div {
+  --sc-section-rule-scale: 1 !important;
+}
+
+/* Search reveal is compositor-only: opacity/transform on wrappers, with no
+   geometry reads, ScrollTrigger refreshes or layout-dependent animation. */
+@keyframes sc-search-card-reveal {
+  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes sc-search-heading-reveal {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes sc-search-rule-reveal {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) > a.fancyboxModalAddProd {
+  animation: sc-search-card-reveal 240ms cubic-bezier(.22,1,.36,1) both;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion:not([hidden]) {
+  animation: sc-search-heading-reveal 260ms cubic-bezier(.22,1,.36,1) both;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div::after {
+  animation: sc-search-rule-reveal 320ms cubic-bezier(.22,1,.36,1) both;
+  transform-origin: 0 50% !important;
 }
 
 /* The existing spice/vegetarian legend is the quick-filter row. */
@@ -77,6 +120,16 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) > a.fancyboxModalAddProd,
+  html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
+  html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion:not([hidden]),
+  html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div::after {
+    animation: none !important;
+  }
+  html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div::after {
+    opacity: 1 !important;
+    transform: scaleX(1) !important;
+  }
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip,
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::after {
     transition: none !important;
