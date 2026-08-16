@@ -4,6 +4,13 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   padding-top: var(--sc-card-title-padding-top) !important;
 }
 
+/* Keep the outer catalogue grid on one vertical rhythm across view modes. The
+   zero-height category anchors and section headings live in this same grid, so
+   changing row-gap would move a heading even when scroll position is unchanged. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop:not(.sc-catalog-search-grid) {
+  row-gap: var(--sc-compact-row-gap) !important;
+}
+
 /* The view switch owns viewport compensation. Native scroll anchoring or smooth
    scrolling must not apply a second correction while the grid is relaying out. */
 html.sc-catalog-view-switching,
