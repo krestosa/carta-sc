@@ -29,6 +29,7 @@ function loadAll(items){return Promise.all(items.map(function(item){return loadS
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
 var beforeTemplates=[
   [
+    ['mutations/static-network.js','sc-static-network-js'],
     ['core/variables.js','sc-override-variables-js'],
     ['core/utils.js','sc-override-utils-js'],
     ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
