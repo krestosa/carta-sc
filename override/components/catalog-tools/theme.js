@@ -36,7 +36,7 @@ function clearMainPreview(root){
   selectors.forEach(function(selector){var node=root.querySelector('.sc-theme-toggle '+selector);if(node)node.style.removeProperty('transform');});
 }
 function previewMain(root,on){
-  if(!root)return;clearMainPreview(root);if(!on)return;var mode=selected(),button=root.querySelector('.sc-theme-toggle');if(!button)return,node;
+  if(!root)return;clearMainPreview(root);if(!on)return;var mode=selected(),button=root.querySelector('.sc-theme-toggle'),node;if(!button)return;
   if(mode==='system'){
     node=button.querySelector('.sc-theme-auto-glyph');if(node)node.style.transform='rotate(150deg) scale(1.04)';
     node=button.querySelector('.sc-theme-auto-half');if(node)node.style.transform='translateX(.4px)';
