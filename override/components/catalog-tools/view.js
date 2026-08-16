@@ -36,6 +36,9 @@ function restoreViewport(viewport){
   if(!viewport)return;var x=window.scrollX||window.pageXOffset||0,y=window.scrollY||window.pageYOffset||0;
   if(Math.abs(x-viewport.x)>.5||Math.abs(y-viewport.y)>.5)window.scrollTo(viewport.x,viewport.y);
 }
+function refreshMotionNow(){
+  if(SC.motion&&SC.motion.run)SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});
+}
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode());}
 function refreshLayout(viewport){
   syncMounted();if(raf)cancelAnimationFrame(raf);if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}
@@ -45,7 +48,7 @@ function refreshLayout(viewport){
     raf=requestAnimationFrame(function(){
       raf=0;
       if(SC.productCardContent&&SC.productCardContent.scheduleDescriptionMeasure)SC.productCardContent.scheduleDescriptionMeasure();
-      if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);
+      refreshMotionNow();
       restoreViewport(viewport);
       if(viewport)settleTimer=window.setTimeout(function(){settleTimer=0;restoreViewport(viewport);doc.classList.remove('sc-catalog-view-switching');},80);
     });
