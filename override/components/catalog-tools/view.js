@@ -3,11 +3,11 @@
 var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;if(!SC||!CFG||SC.__catalogToolsViewBooted)return;SC.__catalogToolsViewBooted=true;
 var MODES=['normal','compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,cleanup=null;
 var ICONS={
-  'columns-1':'M19,13H5c-1.1,0-2,0.9-2,2v4c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2v-4C21,13.9,20.1,13,19,13z M19,3H5C3.9,3,3,3.9,3,5v4c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z',
-  'columns-2':'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
-  'columns-3':'M14.67,5v6.5H9.33V5H14.67z M15.67,11.5H21V5h-5.33V11.5z M14.67,19v-6.5H9.33V19H14.67z M15.67,12.5V19H21v-6.5H15.67z M8.33,12.5H3V19h5.33V12.5z M8.33,11.5V5H3v6.5H8.33z',
-  'columns-4':'M4,18h2.5v-2.5H4V18z M4,13.25h2.5v-2.5H4V13.25z M4,8.5h2.5V6H4V8.5z M17.5,6v2.5H20V6H17.5z M13,8.5h2.5V6H13V8.5z M17.5,18H20v-2.5h-2.5V18z M17.5,13.25H20v-2.5h-2.5V13.25z M8.5,18H11v-2.5H8.5V18z M13,18h2.5v-2.5H13V18z M8.5,8.5H11V6H8.5V8.5z M13,13.25h2.5v-2.5H13V13.25z M8.5,13.25H11v-2.5H8.5V13.25z',
-  list:'M3,14h4v-4H3V14z M3,19h4v-4H3V19z M3,9h4V5H3V9z M8,14h13v-4H8V14z M8,19h13v-4H8V19z M8,5v4h13V5H8z'
+  'columns-1':'M120-120v-80h720v80H120Zm0-640v-80h720v80H120Z',
+  'columns-2':'M120-120v-720h80v720H120ZM760-120v-720h80v720H760Z',
+  'columns-3':'M120-120v-720h80v720H120ZM440-120v-720h80v720H440ZM760-120v-720h80v720H760Z',
+  'columns-4':'M80-120v-720h80v720H80ZM320-120v-720h80v720H320ZM560-120v-720h80v720H560ZM800-120v-720h80v720H800Z',
+  list:'M120-200v-83.08h83.08V-200H120Zm193.85 0v-83.08H840V-200H313.85ZM120-438.46v-83.08h83.08v83.08H120Zm193.85 0v-83.08H840v83.08H313.85ZM120-676.92V-760h83.08v83.08H120Zm193.85 0V-760H840v83.08H313.85Z'
 };
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
 function normalize(mode){return MODES.indexOf(mode)>=0?mode:'';}
