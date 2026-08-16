@@ -353,3 +353,14 @@ body.sushiShop .sc-catalog-search-input::placeholder { color: var(--sc-color-mut
     transition: none !important;
   }
 }
+
+/* Normalize the actual painted footprint rather than only the outer SVG box.
+   The crescent used much less visual area than sun/automatic despite sharing 24px. */
+body.sushiShop .sc-catalog-tools[data-sc-theme-mode='dark'] .sc-theme-disc {
+  transform: scale(1.45);
+}
+body.sushiShop .sc-theme-option-dark-disc {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.3);
+}
