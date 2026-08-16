@@ -26,41 +26,22 @@ function disconnectWaitObserver(){if(waitObserver){waitObserver.disconnect();wai
 function removeWaiter(waiter){var index=waiters.indexOf(waiter);if(index>=0)waiters.splice(index,1);if(!waiters.length)disconnectWaitObserver();}
 function finishWaiter(waiter){if(waiter.settled)return;waiter.settled=true;if(waiter.timer)clearTimeout(waiter.timer);removeWaiter(waiter);waiter.resolve();}
 function evaluateWaiters(){waiters.slice().forEach(function(waiter){if(!waiter.settled&&waiter.predicate())finishWaiter(waiter);});}
-function ensureWaitObserver(){
-  if(waitObserver||!window.MutationObserver||!document.documentElement)return;
-  waitObserver=new MutationObserver(evaluateWaiters);
-  waitObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','src','srcset']});
-}
-function waitFor(predicate,timeout){
-  return new Promise(function(resolve){
-    function start(){
-      if(predicate()){resolve();return;}
-      var waiter={predicate:predicate,resolve:resolve,timer:0,settled:false};
-      waiters.push(waiter);ensureWaitObserver();waiter.timer=window.setTimeout(function(){finishWaiter(waiter);},timeout);
-    }
-    if(document.documentElement)start();else document.addEventListener('DOMContentLoaded',start,{once:true});
-  });
-}
+function ensureWaitObserver(){if(waitObserver||!window.MutationObserver||!document.documentElement)return;waitObserver=new MutationObserver(evaluateWaiters);waitObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','src','srcset']});}
+function waitFor(predicate,timeout){return new Promise(function(resolve){function start(){if(predicate()){resolve();return;}var waiter={predicate:predicate,resolve:resolve,timer:0,settled:false};waiters.push(waiter);ensureWaitObserver();waiter.timer=window.setTimeout(function(){finishWaiter(waiter);},timeout);}if(document.documentElement)start();else document.addEventListener('DOMContentLoaded',start,{once:true});});}
 function waitForCatalogLayout(){if(!desktopQuery.matches)return Promise.resolve();return waitFor(function(){return!!(document.body&&document.body.classList.contains(K.catalogLayoutReady));},STABLE_LAYOUT_TIMEOUT);}
 function waitForCatalogTools(){return waitFor(function(){return!!(document.body&&document.body.classList.contains('sc-catalog-tools-ready'));},STABLE_LAYOUT_TIMEOUT);}
 function waitForMobileHeader(){if(desktopQuery.matches)return Promise.resolve();return waitFor(function(){return!!document.querySelector('body > .slicknav_menu.sc-mobile-main-menu');},MOBILE_HEADER_TIMEOUT);}
 function waitForFonts(){if(!document.fonts||!document.fonts.ready)return Promise.resolve();return withTimeout(document.fonts.ready,FONT_TIMEOUT);}
-function waitForImage(img){
-  if(!img)return Promise.resolve();
-  if(img.complete){if(img.naturalWidth&&typeof img.decode==='function')return withTimeout(img.decode(),MEDIA_TIMEOUT);return Promise.resolve();}
-  return withTimeout(new Promise(function(resolve){function done(){img.removeEventListener('load',done);img.removeEventListener('error',done);resolve();}img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});}),MEDIA_TIMEOUT);
-}
+function waitForImage(img){if(!img)return Promise.resolve();if(img.complete){if(img.naturalWidth&&typeof img.decode==='function')return withTimeout(img.decode(),MEDIA_TIMEOUT);return Promise.resolve();}return withTimeout(new Promise(function(resolve){function done(){img.removeEventListener('load',done);img.removeEventListener('error',done);resolve();}img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});}),MEDIA_TIMEOUT);}
 function waitForVisibleMedia(img,className){return waitForImage(img).then(function(){if(root&&img&&img.complete&&img.naturalWidth)root.classList.add(className);});}
-function waitForCriticalMedia(){
-  return waitFor(function(){return!!document.querySelector('.bannerShop .imgBannerShop');},STABLE_LAYOUT_TIMEOUT).then(function(){
-    var waits=[],banner=document.querySelector('.bannerShop .imgBannerShop');waits.push(waitForVisibleMedia(banner,'sc-banner-media-ready'));
-    if(!desktopQuery.matches)waits.push(waitForVisibleMedia(document.querySelector('.brandOnlyMobile img'),'sc-mobile-logo-ready'));
-    return withTimeout(Promise.all(waits),MEDIA_TIMEOUT);
-  });
-}
+function waitForCriticalMedia(){return waitFor(function(){return!!document.querySelector('.bannerShop .imgBannerShop');},STABLE_LAYOUT_TIMEOUT).then(function(){return withTimeout(waitForVisibleMedia(document.querySelector('.bannerShop .imgBannerShop'),'sc-banner-media-ready'),MEDIA_TIMEOUT);});}
 function clearPrepaint(){if(!root)return;root.classList.remove('sc-catalog-prepaint');root.classList.remove('sc-banner-media-ready');root.classList.remove('sc-mobile-logo-ready');}
 function waitForStableLayout(){
-  return whenDomReady().then(function(){return Promise.all([waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader(),waitForFonts(),waitForCriticalMedia()]);}).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);
+  return whenDomReady().then(function(){
+    var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];
+    if(desktopQuery.matches)waits.push(waitForFonts(),waitForCriticalMedia());
+    return Promise.all(waits);
+  }).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);
 }
 SC.renderLifecycle={markInitialViewport:markInitialViewport,waitForStableLayout:waitForStableLayout};
 })();
