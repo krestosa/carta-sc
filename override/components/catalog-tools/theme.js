@@ -26,23 +26,27 @@ function setOpen(root,on,focusSelected){
   if(on&&focusSelected){var current=menu.querySelector('[aria-checked="true"]')||menu.querySelector('.sc-theme-option');if(current)current.focus();}
 }
 function install(root){
-  var button=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu');if(!button||!menu)return function(){};apply(root,load(),false);
-  function toggle(event){if(event){event.preventDefault();event.stopPropagation();}setOpen(root,button.getAttribute('aria-expanded')!=='true',false);}
+  var button=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu'),control=button&&button.closest('.sc-theme-control');if(!button||!menu||!control)return function(){};apply(root,load(),false);
+  var closeTimer=0,hovering=false;
+  function clearClose(){if(closeTimer){clearTimeout(closeTimer);closeTimer=0;}}
+  function hoverEnter(event){if(event.pointerType==='touch')return;hovering=true;clearClose();setOpen(root,true,false);}
+  function hoverLeave(event){if(event.pointerType==='touch')return;hovering=false;clearClose();closeTimer=setTimeout(function(){closeTimer=0;if(!hovering&&!control.contains(document.activeElement))setOpen(root,false,false);},120);}
+  function toggle(event){if(event){event.preventDefault();event.stopPropagation();}if(hovering){setOpen(root,true,false);return;}setOpen(root,button.getAttribute('aria-expanded')!=='true',false);}
   function choose(event){var option=event.target&&event.target.closest?event.target.closest('[data-sc-theme-option]'):null;if(!option||!menu.contains(option))return;event.preventDefault();event.stopPropagation();apply(root,option.getAttribute('data-sc-theme-option'),true);setOpen(root,false,false);button.focus();}
-  function outside(event){if(button.getAttribute('aria-expanded')!=='true'||root.contains(event.target))return;setOpen(root,false,false);}
+  function outside(event){if(button.getAttribute('aria-expanded')!=='true'||control.contains(event.target))return;clearClose();setOpen(root,false,false);}
   function keydown(event){
     var open=button.getAttribute('aria-expanded')==='true',target=event.target,items=options(root),index=items.indexOf(target);
     if(target===button&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();setOpen(root,true,true);return;}
     if(!open)return;
-    if(event.key==='Escape'){event.preventDefault();setOpen(root,false,false);button.focus();return;}
+    if(event.key==='Escape'){event.preventDefault();clearClose();setOpen(root,false,false);button.focus();return;}
     if(index<0)return;
     if(event.key==='ArrowDown'||event.key==='ArrowRight'){event.preventDefault();items[(index+1)%items.length].focus();}
     else if(event.key==='ArrowUp'||event.key==='ArrowLeft'){event.preventDefault();items[(index-1+items.length)%items.length].focus();}
     else if(event.key==='Home'){event.preventDefault();items[0].focus();}
     else if(event.key==='End'){event.preventDefault();items[items.length-1].focus();}
   }
-  button.addEventListener('click',toggle);menu.addEventListener('click',choose);root.addEventListener('keydown',keydown);document.addEventListener('pointerdown',outside,true);
-  return function(){button.removeEventListener('click',toggle);menu.removeEventListener('click',choose);root.removeEventListener('keydown',keydown);document.removeEventListener('pointerdown',outside,true);};
+  control.addEventListener('pointerenter',hoverEnter);control.addEventListener('pointerleave',hoverLeave);button.addEventListener('click',toggle);menu.addEventListener('click',choose);root.addEventListener('keydown',keydown);document.addEventListener('pointerdown',outside,true);
+  return function(){clearClose();control.removeEventListener('pointerenter',hoverEnter);control.removeEventListener('pointerleave',hoverLeave);button.removeEventListener('click',toggle);menu.removeEventListener('click',choose);root.removeEventListener('keydown',keydown);document.removeEventListener('pointerdown',outside,true);};
 }
 var api={install:install,apply:apply,sync:syncMounted,getMode:selected,getResolved:function(){return resolved(selected());}};
 C.theme=api;SC.theme=api;
