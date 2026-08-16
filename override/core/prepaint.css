@@ -55,10 +55,11 @@
     background: transparent;
   }
 
-  /* Match the final three-column catalogue before JS touches the DOM. */
+  /* High density is the default first render. Explicit stored preferences
+     override it before the catalogue modules finish mounting. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     column-gap: var(--sc-catalog-gutter);
     row-gap: var(--sc-catalog-grid-row-gap) !important;
     width: 100% !important;
@@ -66,6 +67,14 @@
     padding: 0 !important;
     font-size: initial !important;
     align-items: stretch;
+  }
+
+  html[data-sc-catalog-view='normal'].sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  html[data-sc-catalog-view='list'].sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop > :not(.productoShop) {
