@@ -35,9 +35,12 @@ def measure():
     desktop_size, desktop_bbox = visible_bbox(DESKTOP_RASTER)
 
     mobile_visible = mobile_bbox[2] - mobile_bbox[0]
-    # The old mobile image was rendered 1:1 at 333px wide. Preserve the visible
-    # wordmark width, not its transparent canvas. Clamp only as a corruption guard.
-    mobile_width = max(88, min(156, round(333 * mobile_visible / mobile_size[0])))
+    mobile_width = round(333 * mobile_visible / mobile_size[0])
+    if not 72 <= mobile_width <= 240:
+        raise SystemExit(
+            f'unexpected mobile logo optical width {mobile_width}px from '
+            f'source={mobile_size} bbox={mobile_bbox}'
+        )
     desktop_width = 75  # original .newVer17topBar .brand max-width contract
 
     state = {
@@ -74,8 +77,8 @@ def apply():
     css = f'''<style id="sc-system-brand-css">
 body.sushiShop .sc-system-brand-logo{{display:block!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;opacity:1!important;visibility:visible!important;object-fit:contain!important;object-position:center center!important;filter:invert(1)!important;transform:none!important;transition:filter var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1)!important}}
 html[data-sc-theme-resolved='dark'] body.sushiShop .sc-system-brand-logo{{filter:none!important}}
-@media(min-width:993px){{body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo){{box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:{dw}px!important;max-width:{dw}px!important;height:55px!important;max-height:55px!important;margin:0 auto!important;padding:0!important;line-height:0!important;vertical-align:top!important}}body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo)>a{{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important}}body.sushiShop .newVer17topBar .sc-system-brand-logo{{width:{dw}px!important;max-width:{dw}px!important;height:auto!important;max-height:45px!important}}}}
-@media(max-width:992px){{body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo){{display:flex!important;align-items:center!important;justify-content:center!important;height:var(--sc-mobile-header-height,100px)!important;margin:0!important;padding:0!important}}body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo)>a{{display:flex!important;align-items:center!important;justify-content:center!important;width:{mw}px!important;max-width:calc(100vw - 96px)!important;height:var(--sc-mobile-header-height,100px)!important;margin:0!important;padding:0!important;line-height:0!important;transform:none!important}}body.sushiShop .brandOnlyMobile .sc-system-brand-logo{{width:{mw}px!important;max-width:100%!important;height:auto!important;max-height:45px!important;aspect-ratio:312/45!important}}}}
+@media(min-width:993px){{body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo){{box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:{dw}px!important;max-width:{dw}px!important;height:55px!important;max-height:55px!important;margin:0 auto!important;padding:0!important;line-height:0!important;vertical-align:top!important}}body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo)>a{{display:flex!important;position:static!important;top:auto!important;left:auto!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important;transform:none!important}}body.sushiShop .newVer17topBar .sc-system-brand-logo{{width:{dw}px!important;max-width:{dw}px!important;height:auto!important;max-height:45px!important}}}}
+@media(max-width:992px){{body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo){{display:flex!important;position:relative!important;align-items:center!important;justify-content:center!important;height:var(--sc-mobile-header-height,100px)!important;margin:0!important;padding:0!important}}body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo)>a{{display:flex!important;position:static!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;align-items:center!important;justify-content:center!important;width:{mw}px!important;max-width:calc(100vw - 96px)!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important;transform:none!important}}body.sushiShop .brandOnlyMobile .sc-system-brand-logo{{width:{mw}px!important;max-width:100%!important;height:auto!important;max-height:45px!important;aspect-ratio:312/45!important}}}}
 </style>'''
     html = html[:start] + css + html[end:]
     INDEX.write_text(html, encoding='utf-8')
