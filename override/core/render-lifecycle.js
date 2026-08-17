@@ -5,15 +5,12 @@ if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
 var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,waitObserver=null,waiters=[],initialViewportObserver=null,initialViewportStarted=false,initialViewportFrozen=false;
 function markStaticInitial(node){
   if(!node||node.nodeType!==1)return;
-  /* Product cards intentionally remain motion-eligible. Only section labels are
-     frozen in the initial viewport so card entrance motion can run again. */
-  if(node.matches(S.productCards))return;
   node.classList.add(K.staticInitialSection);var host=node.matches(S.sectionTitle)?node.querySelector(':scope > div'):node;if(host)host.classList.add(K.staticInitialSection);
 }
 function applyInitialViewportEntries(entries){for(var i=0;i<(entries||[]).length;i++){var entry=entries[i];if(!entry.isIntersecting)continue;markStaticInitial(entry.target);if(initialViewportObserver)initialViewportObserver.unobserve(entry.target);}}
 function markInitialViewport(){
   if(initialViewportFrozen||initialViewportStarted||!window.IntersectionObserver)return;
-  var nodes=document.querySelectorAll(S.productCards+','+S.productList+' '+S.sectionTitle+','+S.productList+' '+S.sectionSubtitle);if(!nodes.length)return;
+  var nodes=document.querySelectorAll(S.productList+' '+S.sectionTitle+','+S.productList+' '+S.sectionSubtitle);if(!nodes.length)return;
   initialViewportStarted=true;initialViewportObserver=new IntersectionObserver(applyInitialViewportEntries,{root:null,threshold:0});
   for(var i=0;i<nodes.length;i++)initialViewportObserver.observe(nodes[i]);
 }
