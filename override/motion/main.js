@@ -49,9 +49,6 @@ function morphIcon(path,shape,options){
 
   var gsap=deps&&unlocked&&deps.gsap;
   if(!gsap){
-    /* Dependencies are intentionally lazy. Before GSAP is ready, prefer an
-       immediate correct glyph over a second animation engine with different
-       SVG timing characteristics across browsers. */
     path.setAttribute('d',shape);
     return true;
   }
@@ -86,11 +83,16 @@ function disarmDependencyTriggers(){
   window.removeEventListener('pointerdown',triggerDependencies);window.removeEventListener('touchstart',triggerDependencies);window.removeEventListener('wheel',triggerDependencies);window.removeEventListener('keydown',triggerDependencies);
   if(dependencyFallback){window.clearTimeout(dependencyFallback);dependencyFallback=0;}
 }
+function prepare(){
+  if(deps||dependenciesRequested)return;
+  disarmDependencyTriggers();
+  requestDependencies();
+}
 function triggerDependencies(event){
   if(event&&event.type==='keydown'&&/^(Shift|Control|Alt|Meta|CapsLock|Tab)$/.test(event.key||''))return;
-  disarmDependencyTriggers();if(!unlocked||dependenciesRequested||deps)return;
+  disarmDependencyTriggers();if(dependenciesRequested||deps)return;
   if(SC.renderLifecycle&&SC.renderLifecycle.freezeInitialViewport)SC.renderLifecycle.freezeInitialViewport();
-  function request(){dependencyIdle=0;dependencyTimer=0;if(unlocked)requestDependencies();}
+  function request(){dependencyIdle=0;dependencyTimer=0;requestDependencies();}
   if(typeof window.requestIdleCallback==='function'){dependencyIdle=window.requestIdleCallback(request,{timeout:300});return;}
   dependencyTimer=window.setTimeout(request,0);
 }
@@ -102,6 +104,6 @@ function armDependencyTriggers(){
 function unlock(){if(unlocked)return;unlocked=true;armDependencyTriggers();installRefreshLifecycle();flush();}
 function initialize(){if(!window.gsap||!window.ScrollTrigger)return;window.gsap.registerPlugin(window.ScrollTrigger);window.ScrollTrigger.config({limitCallbacks:true});deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger};installRefreshLifecycle();flush();}
 
-SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,unlock:unlock,isReady:function(){return!!(deps&&unlocked);},isMorphReady:function(){return true;}};
+SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,prepare:prepare,unlock:unlock,isReady:function(){return!!(deps&&unlocked);},isMorphReady:function(){return true;}};
 
 })();
