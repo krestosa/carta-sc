@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+trap 'status=$?; echo "::error file=lab/pages/build.sh,line=${LINENO}::Pages build failed: ${BASH_COMMAND}"; exit "$status"' ERR
 
 LAB="lab/pages"
 SCRIPTS="$LAB/scripts"
