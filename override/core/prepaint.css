@@ -8,8 +8,8 @@ html.sc-catalog-prepaint {
   --sc-shell-highlight: rgba(255,255,255,.34);
   --sc-shell-text-extra: 2px;
   --sc-banner-desktop-width: 1170px;
-  --sc-banner-desktop-height: 119.317px;
-  --sc-banner-ratio: 1170 / 119.317;
+  --sc-banner-desktop-height: 122.46px;
+  --sc-banner-ratio: 1500 / 157;
 }
 
 html.sc-catalog-prepaint[data-sc-theme-resolved='dark'] {
@@ -126,7 +126,7 @@ html.sc-catalog-prepaint body.sushiShop :where(
 }
 
 /* Banner geometry is deterministic from first paint. Bootstrap's desktop
-   container is 1170px wide, where the banner is exactly 119.317px high. Below
+   container is 1170px wide, where the 1500x157 banner is 122.46px high. Below
    desktop the same ratio scales with the real container width. */
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
@@ -137,7 +137,7 @@ html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
 html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
   display: block !important;
   width: 100% !important;
-  opacity: 0 !important;
+  opacity: 1 !important;
 }
 
 html.sc-catalog-prepaint.sc-banner-media-ready body.sushiShop .bannerShop .BanContShop {
@@ -185,7 +185,8 @@ html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop::after {
   background-color: var(--sc-shell-base);
   background-image: linear-gradient(100deg,transparent 18%,var(--sc-shell-highlight) 50%,transparent 82%);
   background-size: 220% 100%;
-  animation: sc-site-shell-shimmer 1.25s linear infinite;
+  animation: none;
+  opacity: 0;
 }
 
 html.sc-catalog-prepaint.sc-banner-media-ready body.sushiShop .bannerShop .BanContShop::after {

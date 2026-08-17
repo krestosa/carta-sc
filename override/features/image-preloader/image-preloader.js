@@ -22,7 +22,7 @@ function installStaticKeepaliveGuard(){
 function decorateCriticalMedia(){
   var logo=document.querySelector('.brandOnlyMobile img[src*="web-sushiclub2_black_m2.png"]')||document.querySelector('img[src="'+MOBILE_LOGO+'"]');
   if(logo){logo.loading='eager';logo.decoding='async';try{logo.fetchPriority='high';}catch(_){}if(!logo.hasAttribute('width'))logo.setAttribute('width','333');if(!logo.hasAttribute('height'))logo.setAttribute('height','100');}
-  var banner=document.querySelector('img.imgBannerShop');if(banner){banner.decoding='async';if(!banner.hasAttribute('width'))banner.setAttribute('width','1500');if(!banner.hasAttribute('height'))banner.setAttribute('height','157');}
+  var banner=document.querySelector('img.imgBannerShop');if(banner)banner.decoding='async';
 }
 preloadCriticalMedia();installStaticKeepaliveGuard();
 function markLoading(stage,active){if(!stage)return;stage.classList.remove('sc-image-ready');stage.classList.add('sc-image-loading');stage.classList.toggle('sc-image-active',!!active);}
