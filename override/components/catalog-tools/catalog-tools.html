@@ -10,26 +10,27 @@
         <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu">
           <svg class="sc-theme-icon" viewBox="0 0 24 24" aria-hidden="true">
             <defs>
-              <mask id="sc-theme-core-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+              <mask id="sc-theme-disc-mask">
                 <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
-                <circle class="sc-theme-moon-cut" cx="16.15" cy="8.15" r="5.65" fill="#000"></circle>
-                <rect class="sc-theme-auto-cut" x="11.15" y="6.25" width="1.7" height="11.5" rx=".85" fill="#000"></rect>
+                <circle class="sc-theme-cut" cx="16.1" cy="8.15" r="5.65" fill="#000"></circle>
               </mask>
             </defs>
-            <g class="sc-theme-orbit">
-              <g class="sc-theme-shape">
-                <g class="sc-theme-rays">
-                  <line x1="12" y1="1.2" x2="12" y2="3.8"></line>
-                  <line x1="12" y1="20.2" x2="12" y2="22.8"></line>
-                  <line x1="1.2" y1="12" x2="3.8" y2="12"></line>
-                  <line x1="20.2" y1="12" x2="22.8" y2="12"></line>
-                  <line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line>
-                  <line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line>
-                  <line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line>
-                  <line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
-                </g>
-                <circle class="sc-theme-core" cx="12" cy="12" r="5.55" mask="url(#sc-theme-core-mask)"></circle>
+            <g class="sc-theme-solar-glyph">
+              <g class="sc-theme-rays">
+                <line x1="12" y1="1.2" x2="12" y2="3.8"></line>
+                <line x1="12" y1="20.2" x2="12" y2="22.8"></line>
+                <line x1="1.2" y1="12" x2="3.8" y2="12"></line>
+                <line x1="20.2" y1="12" x2="22.8" y2="12"></line>
+                <line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line>
+                <line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line>
+                <line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line>
+                <line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
               </g>
+              <circle class="sc-theme-disc" cx="12" cy="12" r="5.55" mask="url(#sc-theme-disc-mask)"></circle>
+            </g>
+            <g class="sc-theme-auto-glyph">
+              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4"></circle>
+              <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z"></path>
             </g>
           </svg>
         </button>
@@ -37,13 +38,8 @@
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="true" data-sc-theme-option="system">
             <span class="sc-theme-option-main">
               <svg class="sc-theme-option-icon sc-theme-option-icon--system" viewBox="0 0 18 18" aria-hidden="true">
-                <defs>
-                  <mask id="sc-theme-option-system-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                    <rect x="0" y="0" width="18" height="18" fill="#fff"></rect>
-                    <rect x="8.35" y="4.7" width="1.3" height="8.6" rx=".65" fill="#000"></rect>
-                  </mask>
-                </defs>
-                <circle class="sc-theme-option-auto-disc" cx="9" cy="9" r="4.25" mask="url(#sc-theme-option-system-mask)"></circle>
+                <circle class="sc-theme-option-auto-ring" cx="9" cy="9" r="6.55"></circle>
+                <path class="sc-theme-option-auto-half" d="M9 2.45a6.55 6.55 0 0 1 0 13.1z"></path>
               </svg>
               <span>Automático</span>
             </span>
