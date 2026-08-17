@@ -1,33 +1,98 @@
-/* Keep every list surface on one vertical rhythm. Search results reuse the
-   exact catalogue-list geometry instead of maintaining a parallel list layout. */
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop:not(.sc-catalog-search-grid),
-body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
-  row-gap: var(--sc-compact-row-gap) !important;
-}
-
-/* List geometry tokens are canonical for both the normal list and search list.
-   Fixed media widths plus the shared product ratio make every image box identical. */
+/* Canonical catalogue view geometry.
+   Desktop defines the base contract; narrower breakpoints override tokens only. */
 body.sushiShop {
-  --sc-view-list-desktop-image-width: 210px;
-  --sc-view-list-compact-image-width: 160px;
-  --sc-view-list-phone-image-width: 150px;
+  --sc-view-list-image-width: 210px;
+  --sc-view-list-column-gap: 18px;
   --sc-view-list-title-price-gap: 6px;
   --sc-view-list-price-height: 18px;
   --sc-view-list-price-track: calc(var(--sc-view-list-title-price-gap) + var(--sc-view-list-price-height));
   --sc-view-list-description-gap: 6px;
+  --sc-view-list-description-max-height: 38px;
+  --sc-view-list-description-padding-top: 5px;
 }
 
-/* In list mode traits already live inside priceRow. The standalone flavor row is
-   redundant here and must not participate in the card height calculation. */
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
-  display: none !important;
+@media (min-width: 641px) and (max-width: 992px) {
+  body.sushiShop {
+    --sc-view-list-image-width: 160px;
+    --sc-view-list-column-gap: 14px;
+    --sc-view-list-description-max-height: 31px;
+    --sc-view-list-description-padding-top: 4px;
+  }
+}
+
+@media (max-width: 640px) {
+  body.sushiShop {
+    --sc-view-list-image-width: 150px;
+    --sc-view-list-column-gap: 12px;
+    --sc-view-list-description-max-height: 31px;
+    --sc-view-list-description-padding-top: 4px;
+  }
+}
+
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop,
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
+  grid-template-columns: minmax(0, 1fr) !important;
+  row-gap: var(--sc-compact-row-gap) !important;
+}
+
+/* A list card always uses the same two-column anatomy:
+   media | title / price+traits / flexible gap / description.
+   Desktop only changes the size tokens above. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+  align-self: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop > a.fancyboxModalAddProd,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
+  grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important;
+  grid-template-rows: auto var(--sc-view-list-price-track) minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
+  column-gap: var(--sc-view-list-column-gap) !important;
+  align-content: stretch !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .imgShop,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
+  box-sizing: border-box !important;
+  grid-column: 1 !important;
+  grid-row: 1 / 5 !important;
+  align-self: start !important;
+  width: var(--sc-view-list-image-width) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: var(--sc-product-image-ratio) !important;
+  border-bottom: 0 !important;
+}
+
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .imgShop > img,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
 }
 
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .title-shop1,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
   display: -webkit-box !important;
   position: static !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
   align-self: start !important;
   min-width: 0 !important;
   min-height: 0 !important;
@@ -40,16 +105,15 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-/* Price and sold-out state stay attached to the title. The second grid track owns
-   both the visual gap and the price line, so no margin can overflow into the
-   description divider when a title consumes both of its lines. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   position: static !important;
   inset: auto !important;
   grid-column: 2 !important;
   grid-row: 2 !important;
   align-self: end !important;
+  align-items: baseline !important;
   justify-content: flex-start !important;
   min-width: 0 !important;
   min-height: var(--sc-view-list-price-height) !important;
@@ -58,9 +122,14 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   padding: 0 !important;
 }
 
-/* Description is the lower anchor of the text column. Two physical line boxes
-   are the hard limit, so no pixels from line three can leak through. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-flavors,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
+  display: none !important;
+}
+
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
   box-sizing: border-box !important;
   display: -webkit-box !important;
@@ -71,185 +140,31 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   min-width: 0 !important;
   min-height: 0 !important;
   height: auto !important;
+  max-height: var(--sc-view-list-description-max-height) !important;
   margin: 0 !important;
+  padding: var(--sc-view-list-description-padding-top) 0 0 !important;
   overflow: hidden !important;
   -webkit-box-orient: vertical !important;
   -webkit-line-clamp: 2 !important;
 }
 
-/* The media box is the height authority. The card/link are deliberately left on
-   auto height: the fixed-width image contributes its full aspect-ratio height to
-   the four spanned grid tracks, so text can never shorten or distort the media. */
-@media (min-width: 993px) {
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop,
-  html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop {
-    align-self: start !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,
-  html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
-    grid-template-columns: var(--sc-view-list-desktop-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto var(--sc-view-list-price-track) minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
-    column-gap: 18px !important;
-    align-content: stretch !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
-  html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop .imgShop {
-    box-sizing: border-box !important;
-    grid-column: 1 !important;
-    grid-row: 1 / 5 !important;
-    align-self: start !important;
-    width: var(--sc-view-list-desktop-image-width) !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    aspect-ratio: var(--sc-product-image-ratio) !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop > img,
-  html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop .imgShop > img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
-    object-position: center !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
-  html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop .title-shop1 {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
-  html body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-search-grid .productoShop .descrip {
-    max-height: 38px !important;
-    padding: 5px 0 0 !important;
-  }
+/* Old low-density values may exist for a frame in legacy storage/bootstrap.
+   Treat them exactly like density until JS migrates them to compact. */
+html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop {
+  grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
+  column-gap: var(--sc-compact-column-gap) !important;
+  row-gap: var(--sc-compact-row-gap) !important;
+  margin-bottom: var(--sc-compact-section-bottom) !important;
 }
 
-@media (min-width: 641px) and (max-width: 992px) {
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
-    align-self: start !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
-    grid-template-columns: var(--sc-view-list-compact-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto var(--sc-view-list-price-track) minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
-    column-gap: 14px !important;
-    align-content: stretch !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
-    box-sizing: border-box !important;
-    grid-column: 1 !important;
-    grid-row: 1 / 5 !important;
-    align-self: start !important;
-    width: var(--sc-view-list-compact-image-width) !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    aspect-ratio: var(--sc-product-image-ratio) !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
-    object-position: center !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
-    max-height: 31px !important;
-    padding: 4px 0 0 !important;
-  }
+html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto auto var(--sc-compact-meta-height) !important;
+  column-gap: 0 !important;
 }
 
-@media (max-width: 640px) {
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
-    align-self: start !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
-    grid-template-columns: var(--sc-view-list-phone-image-width) minmax(0, 1fr) !important;
-    grid-template-rows: auto var(--sc-view-list-price-track) minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
-    column-gap: 12px !important;
-    align-content: stretch !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
-    box-sizing: border-box !important;
-    grid-column: 1 !important;
-    grid-row: 1 / 5 !important;
-    align-self: start !important;
-    width: var(--sc-view-list-phone-image-width) !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    aspect-ratio: var(--sc-product-image-ratio) !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
-    object-position: center !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-  }
-
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
-    max-height: 31px !important;
-    padding: 4px 0 0 !important;
-  }
-}
-
-/* The view switch owns viewport compensation. Native scroll anchoring or smooth
-   scrolling must not apply a second correction while the grid is relaying out. */
+/* View switching owns viewport compensation; native anchoring must not add a
+   second correction while the catalogue is relaying out. */
 html.sc-catalog-view-switching,
 html.sc-catalog-view-switching body.sushiShop {
   overflow-anchor: none !important;
