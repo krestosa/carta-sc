@@ -3,29 +3,44 @@
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
-var queue=[],deps=null,unlocked=false,dependenciesRequested=false,dependencyArmed=false,dependencyIdle=0,dependencyTimer=0,dependencyFallback=0,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
-var IDS={core:'sc-gsap-core',scrollTrigger:'sc-gsap-scrolltrigger'};
-var GSAP_SRC=URL.gsap,ST_SRC=URL.scrollTrigger;
+var readyQueue=[],loadedQueue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
+var IDS={core:'sc-gsap-core',morphSVG:'sc-gsap-morphsvg',scrollTrigger:'sc-gsap-scrolltrigger',splitText:'sc-gsap-splittext'};
+var SOURCES={core:URL.gsap,morphSVG:URL.morphSVG,scrollTrigger:URL.scrollTrigger,splitText:URL.splitText};
+var ROOT=document.documentElement;
+if(ROOT)ROOT.classList.add('sc-motion-dependencies-loading');
 
 function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion)).matches;}
-function loadScript(src,id,done){
-  if(!src)return done(false);
-  var old=document.getElementById(id);
-  if(old){
-    if(old.dataset.loaded==='true'||(id===IDS.core&&window.gsap)||(id===IDS.scrollTrigger&&window.ScrollTrigger))return done(true);
-    old.addEventListener('load',function(){done(true);},{once:true});
-    old.addEventListener('error',function(){done(false);},{once:true});
-    return;
-  }
-  var script=document.createElement('script');script.id=id;script.src=src;script.async=true;
-  script.onload=function(){script.dataset.loaded='true';done(true);};
-  script.onerror=function(){if(window.console&&console.warn)console.warn('[SushiClub motion] No se pudo cargar:',src);done(false);};
-  document.head.appendChild(script);
+function globalReady(name){return!!(name&&window[name]);}
+function loadScript(src,id,globalName){
+  return new Promise(function(resolve,reject){
+    if(globalReady(globalName))return resolve(window[globalName]);
+    if(!src)return reject(new Error('[SushiClub motion] Falta URL para '+id));
+    var old=document.getElementById(id);
+    if(old){
+      if(old.dataset.loaded==='true'||globalReady(globalName))return resolve(window[globalName]||true);
+      old.addEventListener('load',function(){
+        if(globalName&&!globalReady(globalName))return reject(new Error('[SushiClub motion] '+globalName+' no quedó disponible'));
+        resolve(window[globalName]||true);
+      },{once:true});
+      old.addEventListener('error',function(){reject(new Error('[SushiClub motion] No se pudo cargar '+src));},{once:true});
+      return;
+    }
+    var script=document.createElement('script');
+    script.id=id;script.src=src;script.async=true;
+    script.onload=function(){
+      script.dataset.loaded='true';
+      if(globalName&&!globalReady(globalName))return reject(new Error('[SushiClub motion] '+globalName+' no quedó disponible'));
+      resolve(window[globalName]||true);
+    };
+    script.onerror=function(){reject(new Error('[SushiClub motion] No se pudo cargar '+src));};
+    document.head.appendChild(script);
+  });
 }
-function loadPlugins(done){loadScript(ST_SRC,IDS.scrollTrigger,done);}
-function flush(){if(!unlocked||!deps)return;var callbacks=queue.splice(0);callbacks.forEach(function(fn){try{fn(deps);}catch(error){if(window.console&&console.error)console.error('[SushiClub motion]',error);}});}
-function whenReady(fn){if(typeof fn!=='function')return;if(unlocked&&deps)fn(deps);else queue.push(fn);}
+function flushQueue(queue){var callbacks=queue.splice(0);callbacks.forEach(function(fn){try{fn(deps);}catch(error){if(window.console&&console.error)console.error('[SushiClub motion]',error);}});}
+function whenLoaded(fn){if(typeof fn!=='function')return;if(deps)fn(deps);else loadedQueue.push(fn);}
+function whenReady(fn){if(typeof fn!=='function')return;if(deps&&unlocked)fn(deps);else readyQueue.push(fn);}
 function run(fn){if(!deps||!unlocked||typeof fn!=='function')return false;fn(deps);return true;}
+function runLoaded(fn){if(!deps||typeof fn!=='function')return false;fn(deps);return true;}
 function runRefresh(){refreshTimer=0;if(!deps||!deps.ScrollTrigger||refreshing)return;refreshing=true;lastRefreshAt=performance.now();try{deps.ScrollTrigger.refresh();}catch(error){if(!(error&&error.name==='SecurityError')&&window.console&&console.error)console.error('[SushiClub motion]',error);}finally{refreshing=false;}}
 function refresh(delay){if(!deps||!deps.ScrollTrigger)return;if(refreshTimer)window.clearTimeout(refreshTimer);var requested=Math.max(0,delay==null?0:delay),elapsed=performance.now()-lastRefreshAt,wait=Math.max(requested,Math.max(0,MIN_REFRESH_GAP-elapsed));refreshTimer=window.setTimeout(runRefresh,wait);}
 
@@ -37,73 +52,62 @@ function clearIconMotion(host){
 }
 function morphIcon(path,shape,options){
   if(!path||!shape)return false;
-  if(path.getAttribute('d')===shape)return true;
-
-  var opts=options||{},animate=opts.animate!==false,host=path.ownerSVGElement||path;
+  var opts=options||{},animate=opts.animate!==false,host=path.ownerSVGElement||path,gsap=deps&&deps.gsap,MorphSVGPlugin=deps&&deps.MorphSVGPlugin;
   clearIconMotion(host);
-
-  if(!animate||reduced()){
-    path.setAttribute('d',shape);
+  if(!animate||reduced()||!gsap||!MorphSVGPlugin){
+    var raw=typeof shape==='string'?shape:(shape.getAttribute&&shape.getAttribute('d'));
+    if(raw)path.setAttribute('d',raw);
     return true;
   }
-
-  var gsap=deps&&unlocked&&deps.gsap;
-  if(!gsap){
-    path.setAttribute('d',shape);
-    return true;
-  }
-
-  var duration=Math.max(.14,Math.min(.28,opts.duration==null?.22:opts.duration)),
-      out=Math.max(.06,duration*.38),
-      back=Math.max(.08,duration-out),
-      state={timeline:null,target:shape};
-
+  var duration=Math.max(.16,Math.min(.5,opts.duration==null?.32:opts.duration)),state={timeline:null};
   host.__scIconMotion=state;
-  state.timeline=gsap.timeline({
-    onComplete:function(){
-      if(host.__scIconMotion!==state)return;
-      gsap.set(host,{clearProps:'transform,opacity,visibility'});
-      host.__scIconMotion=null;
-    }
-  });
-  state.timeline
-    .to(host,{scale:.8,autoAlpha:.18,duration:out,ease:'power2.in',transformOrigin:'50% 50%',force3D:false,onComplete:function(){path.setAttribute('d',shape);}},0)
-    .to(host,{scale:1,autoAlpha:1,duration:back,ease:'power3.out',transformOrigin:'50% 50%',force3D:false},out);
-
+  state.timeline=gsap.timeline({onComplete:function(){if(host.__scIconMotion===state)host.__scIconMotion=null;}})
+    .to(path,{duration:duration,ease:opts.ease||'power2.inOut',morphSVG:{shape:shape,map:opts.map||'complexity'},overwrite:'auto'},0);
   return true;
 }
 
 function installRefreshLifecycle(){if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;if(document.readyState==='complete')refresh(REFRESH_DELAY);else window.addEventListener('load',function(){refresh(REFRESH_DELAY);},{once:true});if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});}
-function requestDependencies(){
-  if(dependenciesRequested||deps)return;dependenciesRequested=true;dependencyIdle=0;dependencyTimer=0;
-  loadScript(GSAP_SRC,IDS.core,function(ok){if(!ok)return;loadPlugins(function(pluginsOk){if(pluginsOk)initialize();});});
+function initialize(){
+  if(!window.gsap||!window.MorphSVGPlugin||!window.ScrollTrigger||!window.SplitText)throw new Error('[SushiClub motion] Dependencias GSAP incompletas');
+  window.gsap.registerPlugin(window.MorphSVGPlugin,window.ScrollTrigger,window.SplitText);
+  window.ScrollTrigger.config({limitCallbacks:true});
+  deps={gsap:window.gsap,MorphSVGPlugin:window.MorphSVGPlugin,ScrollTrigger:window.ScrollTrigger,SplitText:window.SplitText};
+  if(ROOT){ROOT.classList.remove('sc-motion-dependencies-loading');ROOT.classList.add('sc-motion-dependencies-ready');}
+  flushQueue(loadedQueue);
+  if(unlocked){installRefreshLifecycle();flushQueue(readyQueue);}
+  return deps;
 }
-function disarmDependencyTriggers(){
-  if(!dependencyArmed)return;dependencyArmed=false;
-  window.removeEventListener('pointerover',triggerDependencies);window.removeEventListener('pointerdown',triggerDependencies);window.removeEventListener('touchstart',triggerDependencies);window.removeEventListener('wheel',triggerDependencies);window.removeEventListener('keydown',triggerDependencies);
-  if(dependencyFallback){window.clearTimeout(dependencyFallback);dependencyFallback=0;}
+function loadDependencies(){
+  return loadScript(SOURCES.core,IDS.core,'gsap').then(function(){
+    return Promise.all([
+      loadScript(SOURCES.morphSVG,IDS.morphSVG,'MorphSVGPlugin'),
+      loadScript(SOURCES.scrollTrigger,IDS.scrollTrigger,'ScrollTrigger'),
+      loadScript(SOURCES.splitText,IDS.splitText,'SplitText')
+    ]);
+  }).then(initialize).catch(function(error){
+    if(ROOT){ROOT.classList.remove('sc-motion-dependencies-loading');ROOT.classList.add('sc-motion-dependencies-failed');}
+    if(window.console&&console.error)console.error('[SushiClub motion]',error);
+    throw error;
+  });
 }
-function prepare(){
-  if(deps||dependenciesRequested)return;
-  disarmDependencyTriggers();
-  requestDependencies();
-}
-function triggerDependencies(event){
-  if(event&&event.type==='keydown'&&/^(Shift|Control|Alt|Meta|CapsLock|Tab)$/.test(event.key||''))return;
-  disarmDependencyTriggers();if(dependenciesRequested||deps)return;
-  if(SC.renderLifecycle&&SC.renderLifecycle.freezeInitialViewport)SC.renderLifecycle.freezeInitialViewport();
-  function request(){dependencyIdle=0;dependencyTimer=0;requestDependencies();}
-  if(typeof window.requestIdleCallback==='function'){dependencyIdle=window.requestIdleCallback(request,{timeout:300});return;}
-  dependencyTimer=window.setTimeout(request,0);
-}
-function armDependencyTriggers(){
-  if(dependencyArmed||dependenciesRequested||deps)return;dependencyArmed=true;
-  window.addEventListener('pointerover',triggerDependencies,{passive:true});window.addEventListener('pointerdown',triggerDependencies,{passive:true});window.addEventListener('touchstart',triggerDependencies,{passive:true});window.addEventListener('wheel',triggerDependencies,{passive:true});window.addEventListener('keydown',triggerDependencies);
-  dependencyFallback=window.setTimeout(function(){triggerDependencies();},30000);
-}
-function unlock(){if(unlocked)return;unlocked=true;armDependencyTriggers();installRefreshLifecycle();flush();}
-function initialize(){if(!window.gsap||!window.ScrollTrigger)return;window.gsap.registerPlugin(window.ScrollTrigger);window.ScrollTrigger.config({limitCallbacks:true});deps={gsap:window.gsap,ScrollTrigger:window.ScrollTrigger};installRefreshLifecycle();flush();}
+var dependencyPromise=loadDependencies();
+function ready(){return dependencyPromise;}
+function prepare(){return dependencyPromise;}
+function unlock(){if(unlocked)return;unlocked=true;if(deps){installRefreshLifecycle();flushQueue(readyQueue);}}
 
-SC.motion={whenReady:whenReady,run:run,refresh:refresh,reduced:reduced,morphIcon:morphIcon,prepare:prepare,unlock:unlock,isReady:function(){return!!(deps&&unlocked);},isMorphReady:function(){return true;}};
-
+SC.motion={
+  ready:ready,
+  prepare:prepare,
+  whenLoaded:whenLoaded,
+  whenReady:whenReady,
+  run:run,
+  runLoaded:runLoaded,
+  refresh:refresh,
+  reduced:reduced,
+  morphIcon:morphIcon,
+  unlock:unlock,
+  isReady:function(){return!!(deps&&unlocked);},
+  isLoaded:function(){return!!deps;},
+  isMorphReady:function(){return!!(deps&&deps.MorphSVGPlugin);}
+};
 })();
