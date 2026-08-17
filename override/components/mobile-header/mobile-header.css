@@ -42,6 +42,8 @@ body.sushiShop {
     height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: transparent !important;
+    animation: none !important;
     transform: translate(-50%, -50%) !important;
   }
 
@@ -53,6 +55,8 @@ body.sushiShop {
     max-height: var(--sc-mobile-header-height) !important;
     margin: 0 auto !important;
     padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
     object-fit: contain !important;
     object-position: center center !important;
     transform: none !important;
