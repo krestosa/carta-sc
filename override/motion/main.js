@@ -28,17 +28,54 @@ function whenReady(fn){if(typeof fn!=='function')return;if(unlocked&&deps)fn(dep
 function run(fn){if(!deps||!unlocked||typeof fn!=='function')return false;fn(deps);return true;}
 function runRefresh(){refreshTimer=0;if(!deps||!deps.ScrollTrigger||refreshing)return;refreshing=true;lastRefreshAt=performance.now();try{deps.ScrollTrigger.refresh();}catch(error){if(!(error&&error.name==='SecurityError')&&window.console&&console.error)console.error('[SushiClub motion]',error);}finally{refreshing=false;}}
 function refresh(delay){if(!deps||!deps.ScrollTrigger)return;if(refreshTimer)window.clearTimeout(refreshTimer);var requested=Math.max(0,delay==null?0:delay),elapsed=performance.now()-lastRefreshAt,wait=Math.max(requested,Math.max(0,MIN_REFRESH_GAP-elapsed));refreshTimer=window.setTimeout(runRefresh,wait);}
-function clearIconMotion(host){var state=host&&host.__scIconMotion;if(!state)return;if(state.timer)window.clearTimeout(state.timer);if(state.animation)try{state.animation.cancel();}catch(_){}host.__scIconMotion=null;}
-function morphIcon(path,shape,options){
-  if(!path||!shape)return false;if(path.getAttribute('d')===shape)return true;
-  var opts=options||{},animate=opts.animate!==false,host=path.ownerSVGElement||path;clearIconMotion(host);
-  if(!animate||reduced()||!host.animate){path.setAttribute('d',shape);return true;}
-  var requested=(opts.duration==null?.18:opts.duration)*1000,duration=Math.max(110,Math.min(220,requested)),state={animation:null,timer:0,target:shape};host.__scIconMotion=state;
-  state.timer=window.setTimeout(function(){if(host.__scIconMotion===state)path.setAttribute('d',shape);},duration*.46);
-  state.animation=host.animate([{opacity:1,transform:'scale(1)',offset:0},{opacity:.18,transform:'scale(.78)',offset:.46},{opacity:.18,transform:'scale(.78)',offset:.54},{opacity:1,transform:'scale(1)',offset:1}],{duration:duration,easing:'cubic-bezier(.23,1,.32,1)'});
-  state.animation.onfinish=function(){if(host.__scIconMotion!==state)return;if(state.timer)window.clearTimeout(state.timer);path.setAttribute('d',shape);host.__scIconMotion=null;};
-  state.animation.oncancel=function(){if(host.__scIconMotion===state)host.__scIconMotion=null;};return true;
+
+function clearIconMotion(host){
+  var state=host&&host.__scIconMotion;
+  if(!state)return;
+  if(state.timeline)try{state.timeline.kill();}catch(_){}
+  host.__scIconMotion=null;
 }
+function morphIcon(path,shape,options){
+  if(!path||!shape)return false;
+  if(path.getAttribute('d')===shape)return true;
+
+  var opts=options||{},animate=opts.animate!==false,host=path.ownerSVGElement||path;
+  clearIconMotion(host);
+
+  if(!animate||reduced()){
+    path.setAttribute('d',shape);
+    return true;
+  }
+
+  var gsap=deps&&unlocked&&deps.gsap;
+  if(!gsap){
+    /* Dependencies are intentionally lazy. Before GSAP is ready, prefer an
+       immediate correct glyph over a second animation engine with different
+       SVG timing characteristics across browsers. */
+    path.setAttribute('d',shape);
+    return true;
+  }
+
+  var duration=Math.max(.14,Math.min(.28,opts.duration==null?.22:opts.duration)),
+      out=Math.max(.06,duration*.38),
+      back=Math.max(.08,duration-out),
+      state={timeline:null,target:shape};
+
+  host.__scIconMotion=state;
+  state.timeline=gsap.timeline({
+    onComplete:function(){
+      if(host.__scIconMotion!==state)return;
+      gsap.set(host,{clearProps:'transform,opacity,visibility'});
+      host.__scIconMotion=null;
+    }
+  });
+  state.timeline
+    .to(host,{scale:.8,autoAlpha:.18,duration:out,ease:'power2.in',transformOrigin:'50% 50%',force3D:false,onComplete:function(){path.setAttribute('d',shape);}},0)
+    .to(host,{scale:1,autoAlpha:1,duration:back,ease:'power3.out',transformOrigin:'50% 50%',force3D:false},out);
+
+  return true;
+}
+
 function installRefreshLifecycle(){if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;if(document.readyState==='complete')refresh(REFRESH_DELAY);else window.addEventListener('load',function(){refresh(REFRESH_DELAY);},{once:true});if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});}
 function requestDependencies(){
   if(dependenciesRequested||deps)return;dependenciesRequested=true;dependencyIdle=0;dependencyTimer=0;
