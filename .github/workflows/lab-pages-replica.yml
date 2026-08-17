@@ -268,7 +268,7 @@ jobs:
               -H 'Pragma: no-cache' \
               "$verify_url" || true)
 
-            if grep -Fq "_js_dev/main.js?v=${GITHUB_SHA}" <<<"$html"; then
+            if grep -Fq "window.__scCatalogAssetVersion='${GITHUB_SHA}'" <<<"$html"; then
               echo "Verified public Pages is serving exact ux HEAD $GITHUB_SHA"
               exit 0
             fi
