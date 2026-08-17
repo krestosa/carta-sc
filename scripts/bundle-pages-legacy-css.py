@@ -41,7 +41,7 @@ def normalize_legacy_fonts(href, content):
         replacement = (
             "@font-face{font-family:'FontAwesome';"
             "src:url('../fonts/fontawesome-webfont__q_fb3a7b16.woff2') format('woff2');"
-            "font-weight:normal;font-style:normal}"
+            "font-weight:normal;font-style:normal;font-display:swap}"
         )
         content, count = pattern.subn(replacement, content, count=1)
         if count != 1:
@@ -159,5 +159,7 @@ if 'fontawesome-webfont.eot' in bundle_text or 'fontawesome-webfont.woff?' in bu
     raise SystemExit('Obsolete missing Font Awesome fallbacks remain in the Pages CSS bundle')
 if re.search(r"url\([^)]*fonts/slick\.(?:eot|woff|ttf|svg)", bundle_text, re.IGNORECASE):
     raise SystemExit('Missing Slick font URLs remain in the Pages CSS bundle')
+if "font-family:'FontAwesome'" not in bundle_text or 'font-display:swap' not in bundle_text:
+    raise SystemExit('Font Awesome must use font-display:swap in the Pages CSS bundle')
 
 print(f'Bundled {len(LEGACY_STYLES)} legacy stylesheets into {BUNDLE}')
