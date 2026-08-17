@@ -1,116 +1,31 @@
-/* SushiClub full-site pre-paint shell.
-   The real DOM remains the geometry source at every breakpoint. Paint is
-   substituted until structure, critical media and fonts have settled. */
+/* SushiClub geometry-only pre-paint guard.
+   Real content paints immediately; only layout reservations remain until the
+   runtime finishes mounting. This protects CLS without gating FCP/LCP. */
 
 html.sc-catalog-prepaint {
-  --sc-shell-text: rgba(72,72,68,.20);
   --sc-shell-base: rgba(72,72,68,.075);
-  --sc-shell-highlight: rgba(255,255,255,.34);
-  --sc-shell-text-extra: 2px;
   --sc-banner-desktop-width: 1170px;
   --sc-banner-desktop-height: 122.46px;
   --sc-banner-ratio: 1500 / 157;
 }
 
 html.sc-catalog-prepaint[data-sc-theme-resolved='dark'] {
-  --sc-shell-text: rgba(218,218,212,.18);
   --sc-shell-base: rgba(218,218,212,.065);
-  --sc-shell-highlight: rgba(255,255,255,.10);
 }
 
-@keyframes sc-site-shell-shimmer {
-  from { background-position: 120% 0; }
-  to { background-position: -120% 0; }
-}
 
 html.sc-catalog-prepaint body.sushiShop {
   overflow-anchor: none;
 }
 
-/* Use the final text boxes themselves as the placeholder. This keeps wrapping,
-   gaps and responsive geometry identical; the 2px shadow is visual overscan
-   only and never changes line boxes. */
-html.sc-catalog-prepaint body.sushiShop :where(
-  .topBar.newVer17topBar,
-  .main-nav,
-  #menuMobile,
-  .slicknav_menu,
-  .fixedTopShop.wtopShopMenuMobile,
-  .sc-catalog-toolbar,
-  .sc-catalog-tools,
-  .containerShop,
-  footer
-) :where(a,span,p,h1,h2,h3,h4,h5,h6,li,label,button,input,small,strong,em,b),
-html.sc-catalog-prepaint body.sushiShop .listadoShop .priceRow * {
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 var(--sc-shell-text-extra) var(--sc-shell-text) !important;
-}
-
-html.sc-catalog-prepaint body.sushiShop :where(input,textarea) {
-  caret-color: transparent !important;
-}
-
-html.sc-catalog-prepaint body.sushiShop :where(input,textarea)::placeholder {
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: 0 0 var(--sc-shell-text-extra) var(--sc-shell-text) !important;
-}
-
-/* Light structural sweep for the major surfaces. It paints inside the real
-   boxes and therefore cannot add width/height or alter document flow. */
-html.sc-catalog-prepaint body.sushiShop :where(
-  .topBar.newVer17topBar .bord-line,
-  .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
-  .sc-catalog-toolbar,
-  .sc-catalog-tools,
-  footer .bord
-) {
-  background-image: linear-gradient(100deg,transparent 20%,var(--sc-shell-highlight) 50%,transparent 80%) !important;
-  background-size: 220% 100% !important;
-  animation: sc-site-shell-shimmer 1.35s linear infinite !important;
-}
-
-html.sc-catalog-prepaint body.sushiShop :where(
-  .topBar svg,
-  .main-nav svg,
-  #menuMobile svg,
-  .slicknav_menu svg,
-  .fixedTopShop svg,
-  .sc-catalog-tools svg,
-  footer svg,
-  .listadoShop .productoShop .sc-product-flavors img,
-  .listadoShop .productoShop .sc-trait-icon
-) {
-  opacity: .12 !important;
-}
-
-/* Mobile logo: the parent already owns the final 100px header geometry. */
+/* Mobile header: never hide the real logo. Provisional SlickNav copies stay
+   out of flow until the canonical mobile header is mounted. */
 @media (max-width: 992px) {
-  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
-    background-color: var(--sc-shell-base) !important;
-    background-image: linear-gradient(100deg,transparent 20%,var(--sc-shell-highlight) 50%,transparent 80%) !important;
-    background-size: 220% 100% !important;
-    animation: sc-site-shell-shimmer 1.35s linear infinite !important;
-  }
-
   html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile img {
-    opacity: 0 !important;
-  }
-
-  html.sc-catalog-prepaint.sc-mobile-logo-ready body.sushiShop .brandOnlyMobile > a {
-    background-color: transparent !important;
-    background-image: none !important;
-    animation: none !important;
-  }
-
-  html.sc-catalog-prepaint.sc-mobile-logo-ready body.sushiShop .brandOnlyMobile img {
     opacity: 1 !important;
+    visibility: visible !important;
   }
 
-  /* SlickNav is created by legacy code before our repair marks the canonical
-     instance. Keep provisional copies completely out of flow so they cannot
-     expand/collapse the document while the header initializes. */
   html.sc-catalog-prepaint body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     position: absolute !important;
     top: 0 !important;
@@ -182,9 +97,7 @@ html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop::after {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background-color: var(--sc-shell-base);
-  background-image: linear-gradient(100deg,transparent 18%,var(--sc-shell-highlight) 50%,transparent 82%);
-  background-size: 220% 100%;
+  background: none;
   animation: none;
   opacity: 0;
 }
@@ -267,9 +180,8 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     border: 0;
     border-bottom: var(--sc-border-hairline) solid var(--sc-color-border);
     background-color: var(--sc-shell-base);
-    background-image: linear-gradient(100deg,transparent 20%,var(--sc-shell-highlight) 50%,transparent 80%);
-    background-size: 220% 100%;
-    animation: sc-site-shell-shimmer 1.35s linear infinite;
+    background-image: none;
+    animation: none;
   }
 
   /* High density is the default first render. Explicit stored preferences
@@ -346,20 +258,5 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     aspect-ratio: var(--sc-product-image-ratio);
     margin: 0 !important;
     overflow: hidden !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.sc-catalog-prepaint body.sushiShop :where(
-    .topBar.newVer17topBar .bord-line,
-    .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
-    .sc-catalog-toolbar,
-    .sc-catalog-tools,
-    footer .bord,
-    .brandOnlyMobile > a,
-    .bannerShop .BanContShop::after,
-    .containerShop::before
-  ) {
-    animation: none !important;
   }
 }
