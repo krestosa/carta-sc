@@ -9,75 +9,46 @@
       <div class="sc-theme-control">
         <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu">
           <span class="sc-theme-icon-stack" data-sc-theme-icon aria-hidden="true">
-            <span class="sc-theme-icon-layer" data-sc-theme-layer="system">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4"></circle>
-                <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z"></path>
-              </svg>
-            </span>
-            <span class="sc-theme-icon-layer" data-sc-theme-layer="light">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <g class="sc-theme-static-rays">
-                  <line x1="12" y1="1.2" x2="12" y2="3.8"></line>
-                  <line x1="12" y1="20.2" x2="12" y2="22.8"></line>
-                  <line x1="1.2" y1="12" x2="3.8" y2="12"></line>
-                  <line x1="20.2" y1="12" x2="22.8" y2="12"></line>
-                  <line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line>
-                  <line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line>
-                  <line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line>
-                  <line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
-                </g>
-                <circle class="sc-theme-static-sun" cx="12" cy="12" r="5.55"></circle>
-              </svg>
-            </span>
-            <span class="sc-theme-icon-layer" data-sc-theme-layer="dark">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path class="sc-theme-static-moon" d="M19.2 15.5A8 8 0 0 1 8.5 4.8A8.6 8.6 0 1 0 19.2 15.5Z"></path>
-              </svg>
-            </span>
+            <svg class="sc-theme-icon-layer" data-sc-theme-layer="system" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4"></circle>
+              <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z"></path>
+            </svg>
+            <svg class="sc-theme-icon-layer" data-sc-theme-layer="light" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+              <g class="sc-theme-static-rays">
+                <line x1="12" y1="1.2" x2="12" y2="3.8"></line>
+                <line x1="12" y1="20.2" x2="12" y2="22.8"></line>
+                <line x1="1.2" y1="12" x2="3.8" y2="12"></line>
+                <line x1="20.2" y1="12" x2="22.8" y2="12"></line>
+                <line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line>
+                <line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line>
+                <line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line>
+                <line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
+              </g>
+              <circle class="sc-theme-static-sun" cx="12" cy="12" r="5.55"></circle>
+            </svg>
+            <svg class="sc-theme-icon-layer" data-sc-theme-layer="dark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+              <path class="sc-theme-static-moon" d="M19.2 15.5A8 8 0 0 1 8.5 4.8A8.6 8.6 0 1 0 19.2 15.5Z"></path>
+            </svg>
           </span>
         </button>
         <div class="sc-theme-menu" id="sc-theme-menu" role="menu" aria-label="Elegir tema" aria-hidden="true">
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="true" data-sc-theme-option="system">
             <span class="sc-theme-option-main">
-              <svg class="sc-theme-option-icon sc-theme-option-icon--system" viewBox="0 0 18 18" aria-hidden="true">
-                <circle class="sc-theme-option-auto-ring" cx="9" cy="9" r="6.55"></circle>
-                <path class="sc-theme-option-auto-half" d="M9 2.45a6.55 6.55 0 0 1 0 13.1z"></path>
-              </svg>
+              <svg class="sc-theme-option-icon sc-theme-option-icon--system" viewBox="0 0 18 18" aria-hidden="true"><circle class="sc-theme-option-auto-ring" cx="9" cy="9" r="6.55"></circle><path class="sc-theme-option-auto-half" d="M9 2.45a6.55 6.55 0 0 1 0 13.1z"></path></svg>
               <span>Automático</span>
             </span>
             <span class="sc-theme-option-mark" aria-hidden="true"></span>
           </button>
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="light">
             <span class="sc-theme-option-main">
-              <svg class="sc-theme-option-icon sc-theme-option-icon--light" viewBox="0 0 18 18" aria-hidden="true">
-                <g class="sc-theme-option-rays">
-                  <line x1="9" y1="1.2" x2="9" y2="3"></line>
-                  <line x1="9" y1="15" x2="9" y2="16.8"></line>
-                  <line x1="1.2" y1="9" x2="3" y2="9"></line>
-                  <line x1="15" y1="9" x2="16.8" y2="9"></line>
-                  <line x1="3.5" y1="3.5" x2="4.78" y2="4.78"></line>
-                  <line x1="13.22" y1="13.22" x2="14.5" y2="14.5"></line>
-                  <line x1="13.22" y1="4.78" x2="14.5" y2="3.5"></line>
-                  <line x1="3.5" y1="14.5" x2="4.78" y2="13.22"></line>
-                </g>
-                <circle class="sc-theme-option-sun-disc" cx="9" cy="9" r="3.2"></circle>
-              </svg>
+              <svg class="sc-theme-option-icon sc-theme-option-icon--light" viewBox="0 0 18 18" aria-hidden="true"><g class="sc-theme-option-rays"><line x1="9" y1="1.2" x2="9" y2="3"></line><line x1="9" y1="15" x2="9" y2="16.8"></line><line x1="1.2" y1="9" x2="3" y2="9"></line><line x1="15" y1="9" x2="16.8" y2="9"></line><line x1="3.5" y1="3.5" x2="4.78" y2="4.78"></line><line x1="13.22" y1="13.22" x2="14.5" y2="14.5"></line><line x1="13.22" y1="4.78" x2="14.5" y2="3.5"></line><line x1="3.5" y1="14.5" x2="4.78" y2="13.22"></line></g><circle class="sc-theme-option-sun-disc" cx="9" cy="9" r="3.2"></circle></svg>
               <span>Claro</span>
             </span>
             <span class="sc-theme-option-mark" aria-hidden="true"></span>
           </button>
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="dark">
             <span class="sc-theme-option-main">
-              <svg class="sc-theme-option-icon sc-theme-option-icon--dark" viewBox="0 0 18 18" aria-hidden="true">
-                <defs>
-                  <mask id="sc-theme-option-dark-mask">
-                    <rect x="0" y="0" width="18" height="18" fill="#fff"></rect>
-                    <circle class="sc-theme-option-dark-cut" cx="11.7" cy="6.35" r="4.45" fill="#000"></circle>
-                  </mask>
-                </defs>
-                <circle class="sc-theme-option-dark-disc" cx="8.7" cy="9" r="5.6" mask="url(#sc-theme-option-dark-mask)"></circle>
-              </svg>
+              <svg class="sc-theme-option-icon sc-theme-option-icon--dark" viewBox="0 0 18 18" aria-hidden="true"><path class="sc-theme-option-dark-disc" d="M14.65 11.85A6.1 6.1 0 0 1 6.15 3.35A6.55 6.55 0 1 0 14.65 11.85Z"></path></svg>
               <span>Oscuro</span>
             </span>
             <span class="sc-theme-option-mark" aria-hidden="true"></span>
@@ -86,35 +57,18 @@
       </div>
       <button class="sc-catalog-view-toggle" type="button" aria-label="Cambiar vista de productos" title="Cambiar vista">
         <span class="sc-view-icon-stack" data-sc-view-icon aria-hidden="true">
-          <span class="sc-view-icon-layer" data-sc-view-layer="grid">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="3" width="8" height="4" rx="1.1"></rect>
-              <rect x="13" y="3" width="8" height="4" rx="1.1"></rect>
-              <rect x="3" y="10" width="8" height="4" rx="1.1"></rect>
-              <rect x="13" y="10" width="8" height="4" rx="1.1"></rect>
-              <rect x="3" y="17" width="8" height="4" rx="1.1"></rect>
-              <rect x="13" y="17" width="8" height="4" rx="1.1"></rect>
-            </svg>
-          </span>
-          <span class="sc-view-icon-layer" data-sc-view-layer="list">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="3.25" width="3.5" height="3.5" rx="1"></rect>
-              <rect x="8.5" y="3.25" width="12.5" height="3.5" rx="1"></rect>
-              <rect x="3" y="10.25" width="3.5" height="3.5" rx="1"></rect>
-              <rect x="8.5" y="10.25" width="12.5" height="3.5" rx="1"></rect>
-              <rect x="3" y="17.25" width="3.5" height="3.5" rx="1"></rect>
-              <rect x="8.5" y="17.25" width="12.5" height="3.5" rx="1"></rect>
-            </svg>
-          </span>
+          <svg class="sc-view-icon-layer" data-sc-view-layer="grid" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="4" rx="1.1"></rect><rect x="13" y="3" width="8" height="4" rx="1.1"></rect><rect x="3" y="10" width="8" height="4" rx="1.1"></rect><rect x="13" y="10" width="8" height="4" rx="1.1"></rect><rect x="3" y="17" width="8" height="4" rx="1.1"></rect><rect x="13" y="17" width="8" height="4" rx="1.1"></rect>
+          </svg>
+          <svg class="sc-view-icon-layer" data-sc-view-layer="list" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3.25" width="3.5" height="3.5" rx="1"></rect><rect x="8.5" y="3.25" width="12.5" height="3.5" rx="1"></rect><rect x="3" y="10.25" width="3.5" height="3.5" rx="1"></rect><rect x="8.5" y="10.25" width="12.5" height="3.5" rx="1"></rect><rect x="3" y="17.25" width="3.5" height="3.5" rx="1"></rect><rect x="8.5" y="17.25" width="12.5" height="3.5" rx="1"></rect>
+          </svg>
         </span>
       </button>
     </div>
     <span class="sc-catalog-search-status sc-sr-only" aria-live="polite"></span>
     <div class="sc-catalog-search-results" aria-label="Resultados de búsqueda" hidden>
-      <section class="sc-catalog-search-group" data-sc-search-group-prototype hidden>
-        <h2 class="sc-catalog-search-group-title"></h2>
-        <div class="sc-catalog-search-grid listadoShop"></div>
-      </section>
+      <section class="sc-catalog-search-group" data-sc-search-group-prototype hidden><h2 class="sc-catalog-search-group-title"></h2><div class="sc-catalog-search-grid listadoShop"></div></section>
       <p class="sc-catalog-search-empty-message" hidden>No encontramos productos para esa búsqueda.</p>
     </div>
   </section>
