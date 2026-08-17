@@ -45,7 +45,6 @@ config.selectors=merged({
 config.classes=merged({
   catalogLayoutReady:'sc-catalog-layout-ready',
   catalogSearching:'sc-catalog-searching',
-  staticInitialCard:'sc-static-initial-card',
   staticInitialSection:'sc-static-initial-section'
 },config.classes);
 
