@@ -42,6 +42,7 @@ python3 "$SCRIPTS/optimize-pages-delivery.py"
 python3 "$SCRIPTS/optimize-pages-first-paint.py"
 python3 "$SCRIPTS/optimize-pages-first-viewport-media.py"
 python3 "$SCRIPTS/optimize-pages-breakpoint-media.py"
+python3 "$SCRIPTS/replace-system-logo.py"
 
 node --check "$SITE/override/main.js"
 node --check "$SITE/_pages/legacy.js"
@@ -55,8 +56,11 @@ python3 "$SCRIPTS/validate-pages-html.py"
 grep -F 'id="sc-pages-critical-css"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-pages-delivery-loader"' "$SITE/index.html" >/dev/null
 test -s "$SITE/_pages/deferred.css"
-test -s "$SITE/_critical-media/mobile-logo.webp"
+test -s "$SITE/_critical-media/sushiclub-logo.svg"
 test -s "$SITE/_critical-media/mobile-banner.webp"
+test ! -e "$SITE/_critical-media/mobile-logo.webp"
+test ! -e "$SITE/_chrome-media/desktop-logo.webp"
+test "$(grep -o 'sc-system-brand-logo' "$SITE/index.html" | wc -l)" -eq 2
 test "$(grep -o 'data-sc-first-viewport=' "$SITE/index.html" | wc -l)" -eq 4
 for n in 1 2 3 4; do
   test -s "$SITE/_first-viewport/product-${n}.webp"
@@ -68,6 +72,14 @@ grep -F "querySelectorAll('img[data-sc-desktop-src]')" "$SITE/index.html" >/dev/
 
 if grep -F '_critical-media/mobile-logo.png?v=' "$SITE/index.html" >/dev/null; then
   echo 'Legacy mobile LCP PNG remains in lab artifact' >&2
+  exit 1
+fi
+if grep -F '_critical-media/mobile-logo.webp?v=' "$SITE/index.html" >/dev/null; then
+  echo 'Superseded mobile logo WebP remains in lab artifact' >&2
+  exit 1
+fi
+if grep -F '_chrome-media/desktop-logo.webp?v=' "$SITE/index.html" >/dev/null; then
+  echo 'Superseded desktop logo WebP remains in lab artifact' >&2
   exit 1
 fi
 if grep -F '_pages/legacy.css?v=' "$SITE/index.html" | grep -F 'rel="stylesheet"' >/dev/null; then
