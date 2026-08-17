@@ -8,15 +8,15 @@
     <div class="sc-catalog-actions" style="opacity:1;visibility:visible">
       <div class="sc-theme-control" style="opacity:1;visibility:visible">
         <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
-          <svg class="sc-theme-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <svg class="sc-theme-icon" data-sc-theme-icon viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
             <defs>
-              <mask id="sc-theme-disc-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+              <mask id="sc-theme-main-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
                 <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
-                <circle class="sc-theme-cut" cx="16.1" cy="8.15" r="5.65" fill="#000"></circle>
+                <circle class="sc-theme-bite" data-sc-theme-bite cx="16.1" cy="8.15" r="0" fill="#000"></circle>
               </mask>
             </defs>
-            <g class="sc-theme-solar-glyph">
-              <g class="sc-theme-rays">
+            <g class="sc-theme-rotor" data-sc-theme-rotor>
+              <g class="sc-theme-rays" data-sc-theme-rays style="opacity:0">
                 <line x1="12" y1="1.2" x2="12" y2="3.8"></line>
                 <line x1="12" y1="20.2" x2="12" y2="22.8"></line>
                 <line x1="1.2" y1="12" x2="3.8" y2="12"></line>
@@ -26,11 +26,8 @@
                 <line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line>
                 <line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
               </g>
-              <circle class="sc-theme-disc" cx="12" cy="12" r="5.55" mask="url(#sc-theme-disc-mask)"></circle>
-            </g>
-            <g class="sc-theme-auto-glyph">
-              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4"></circle>
-              <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z"></path>
+              <path class="sc-theme-core" data-sc-theme-core d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" mask="url(#sc-theme-main-mask)"></path>
+              <circle class="sc-theme-auto-ring" data-sc-theme-auto-ring cx="12" cy="12" r="8.4"></circle>
             </g>
           </svg>
         </button>
