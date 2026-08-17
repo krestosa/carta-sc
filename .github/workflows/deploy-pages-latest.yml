@@ -119,6 +119,7 @@ jobs:
               'scripts/bundle-pages-shop-js.py',
               'scripts/optimize-pages-delivery.py',
               'scripts/optimize-pages-first-paint.py',
+              'scripts/optimize-pages-first-viewport-media.py',
               'scripts/validate-pages-local-assets.py',
               'scripts/validate-pages-html.py',
               'scripts/validate-pages-performance-budget.py',
@@ -128,6 +129,10 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
+
+      - name: Install deterministic Pages build dependencies
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check --no-input -r requirements-pages.txt
 
       - name: Prepare optimized Pages artifact
         shell: bash
@@ -194,6 +199,12 @@ jobs:
           # move the legacy/override runtime behind the first stable paint, and remove
           # redundant imgLiquid/Knormalize work from the generated Pages bundles.
           python3 scripts/optimize-pages-first-paint.py
+
+          # Speed Index tier: keep the logo as the only parser-priority LCP image,
+          # but prepare the four first catalogue images as small same-origin WebP
+          # assets and release them immediately after the logo resource is ready.
+          python3 scripts/optimize-pages-first-viewport-media.py
+
           node --check .pages-site/override/main.js
           node --check .pages-site/_pages/legacy.js
           node --check .pages-site/_pages/shop.js
@@ -203,6 +214,12 @@ jobs:
           grep -F 'id="sc-pages-critical-css"' .pages-site/index.html >/dev/null
           grep -F 'id="sc-pages-delivery-loader"' .pages-site/index.html >/dev/null
           test -s .pages-site/_pages/deferred.css
+          test "$(grep -o 'data-sc-first-viewport=' .pages-site/index.html | wc -l)" -eq 4
+          for n in 1 2 3 4; do
+            test -s ".pages-site/_first-viewport/product-${n}.webp"
+            test "$(stat -c%s ".pages-site/_first-viewport/product-${n}.webp")" -le 36000
+          done
+          grep -F "querySelectorAll('img[data-sc-first-viewport]')" .pages-site/index.html >/dev/null
           if grep -F '_pages/legacy.css?v=' .pages-site/index.html | grep -F 'rel="stylesheet"' >/dev/null; then
             echo 'Blocking legacy stylesheet remains after delivery optimization'
             exit 1
