@@ -31,10 +31,12 @@ body.sushiShop .sc-theme-option-mark{box-sizing:border-box;flex:0 0 7px;width:7p
 body.sushiShop .sc-theme-option[aria-checked='true'] .sc-theme-option-mark{border-color:var(--sc-color-ink);background:var(--sc-color-ink);transform:scale(1);}
 body.sushiShop .sc-catalog-search-input::placeholder{color:var(--sc-color-muted);}
 
-/* Mobile theme color changes use compositor snapshots when the browser exposes View Transitions. */
+/* Mobile theme color changes use compositor snapshots. The control is separated so its GSAP morph remains live. */
 @media(max-width:992px){
+  body.sushiShop .sc-theme-control{view-transition-name:sc-theme-control;}
   ::view-transition-old(root){animation:sc-theme-vt-old .32s cubic-bezier(.22,1,.36,1) both;}
   ::view-transition-new(root){animation:sc-theme-vt-new .32s cubic-bezier(.22,1,.36,1) both;}
+  ::view-transition-old(sc-theme-control),::view-transition-new(sc-theme-control){animation:none!important;opacity:0!important;}
 }
 @keyframes sc-theme-vt-old{to{opacity:0;}}
 @keyframes sc-theme-vt-new{from{opacity:0;}}
