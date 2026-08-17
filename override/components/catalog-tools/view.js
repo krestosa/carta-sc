@@ -101,12 +101,13 @@ function install(root){
   if(!button||!host)return function(){};
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
+  var microCleanup=SC.motion&&SC.motion.bindMicroInteraction?SC.motion.bindMicroInteraction(button,host,{active:{scale:1.075,y:-.6,rotation:-2.5},press:{scale:.94,y:.3,rotation:0},enterDuration:.18,exitDuration:.24,pressDuration:.09,enterEase:'power3.out',exitEase:'power3.out'}):function(){};
   function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(null);}
   button.addEventListener('click',click);
   if(phone.addEventListener)phone.addEventListener('change',breakpoint);else phone.addListener(breakpoint);
   if(tablet.addEventListener)tablet.addEventListener('change',breakpoint);else tablet.addListener(breakpoint);
-  cleanup=function(){button.removeEventListener('click',click);if(phone.removeEventListener)phone.removeEventListener('change',breakpoint);else phone.removeListener(breakpoint);if(tablet.removeEventListener)tablet.removeEventListener('change',breakpoint);else tablet.removeListener(breakpoint);};
+  cleanup=function(){microCleanup();button.removeEventListener('click',click);if(phone.removeEventListener)phone.removeEventListener('change',breakpoint);else phone.removeListener(breakpoint);if(tablet.removeEventListener)tablet.removeEventListener('change',breakpoint);else tablet.removeListener(breakpoint);};
   var ownCleanup=cleanup;return function(){if(cleanup===ownCleanup)destroy();};
 }
 
