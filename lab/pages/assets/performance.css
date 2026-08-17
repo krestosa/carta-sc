@@ -1,0 +1,25 @@
+/* Mobile critical-path overrides: keep the real LCP logo paintable immediately
+   and avoid non-composited loading sweeps while the runtime settles. */
+@media (max-width: 992px) {
+  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
+    background-color: transparent !important;
+    background-image: none !important;
+    animation: none !important;
+  }
+
+  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile img {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  html.sc-catalog-prepaint body.sushiShop :where(
+    .topBar.newVer17topBar .bord-line,
+    .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
+    .sc-catalog-toolbar,
+    .sc-catalog-tools,
+    footer .bord
+  ),
+  html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop::after {
+    animation: none !important;
+  }
+}
