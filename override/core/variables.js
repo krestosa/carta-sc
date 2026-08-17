@@ -16,9 +16,11 @@ config.queries=config.queries||{};
 ['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion'].forEach(function(name){
   if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
 });
-/* Application-level external dependencies. Icon motion uses GSAP core; MorphSVG is not required. */
+/* Application-level GSAP dependency manifest. These files are loaded eagerly
+   by motion/main.js and registered before interactive override modules mount. */
 config.urls=merged({
   gsap:GSAP_DIST+'gsap.min.js',
+  morphSVG:GSAP_DIST+'MorphSVGPlugin.min.js',
   scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
   splitText:GSAP_DIST+'SplitText.min.js'
 },config.urls);
