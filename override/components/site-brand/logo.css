@@ -7,31 +7,35 @@ body.sushiShop .sc-system-brand-logo {
   max-height: 45px !important;
   margin: 0 !important;
   padding: 0 !important;
-  overflow: visible !important;
-  color: var(--sc-color-ink, #0a0a0a) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  filter: invert(1) !important;
+  transform: none !important;
+}
+
+html[data-sc-theme-resolved='dark'] body.sushiShop .sc-system-brand-logo {
+  filter: none !important;
 }
 
 @media (min-width: 993px) {
-  body.sushiShop .newVer17topBar .brand.sc-system-brand {
+  body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo) {
     box-sizing: border-box !important;
-    display: flex !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 50% !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     width: 312px !important;
     max-width: 312px !important;
     height: 55px !important;
     max-height: 55px !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     padding: 0 !important;
     line-height: 0 !important;
-    pointer-events: none !important;
-    transform: translateX(-50%) !important;
+    vertical-align: top !important;
   }
 
-  body.sushiShop .newVer17topBar .brand.sc-system-brand > a {
+  body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo) > a {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -40,35 +44,33 @@ body.sushiShop .sc-system-brand-logo {
     margin: 0 !important;
     padding: 0 !important;
     line-height: 0 !important;
-    pointer-events: auto !important;
   }
 }
 
 @media (max-width: 992px) {
-  body.sushiShop .brandOnlyMobile.sc-system-brand {
+  body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo) {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
 
-  body.sushiShop .brandOnlyMobile.sc-system-brand > a {
+  body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo) > a {
     display: flex !important;
-    position: static !important;
     align-items: center !important;
     justify-content: center !important;
     width: 312px !important;
     max-width: calc(100vw - 120px) !important;
-    height: 100% !important;
+    height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
     line-height: 0 !important;
-    transform: none !important;
   }
 
-  body.sushiShop .brandOnlyMobile.sc-system-brand .sc-system-brand-logo {
+  body.sushiShop .brandOnlyMobile .sc-system-brand-logo {
     width: 312px !important;
     max-width: 100% !important;
     height: auto !important;
+    max-height: 45px !important;
     aspect-ratio: 312 / 45 !important;
   }
 }
