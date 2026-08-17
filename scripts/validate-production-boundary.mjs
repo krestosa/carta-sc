@@ -16,6 +16,9 @@ const forbidden = [
   ['desktop lab source marker', /data-sc-desktop-src/],
   ['first-viewport lab marker', /data-sc-first-viewport/],
   ['static lab shell marker', /data-sc-static-shell/],
+  ['lab prepaint state', /\bsc-catalog-prepaint\b/],
+  ['lab banner-ready state', /\bsc-banner-media-ready\b/],
+  ['lab mobile-logo-ready state', /\bsc-mobile-logo-ready\b/],
   ['lab directory dependency', /(?:^|["'`(\s])lab\/pages\//],
 ];
 
@@ -31,10 +34,14 @@ if (!fs.existsSync(overrideRoot)) {
   process.exit(1);
 }
 
-const legacyPrepaint = path.join(overrideRoot, 'core', 'prepaint.css');
 const errors = [];
-if (fs.existsSync(legacyPrepaint)) {
-  errors.push('override/core/prepaint.css is lab-only and must stay under lab/pages/assets/');
+for (const labOnlyPath of [
+  path.join(overrideRoot, 'core', 'prepaint.css'),
+  path.join(overrideRoot, 'core', 'performance.css'),
+]) {
+  if (fs.existsSync(labOnlyPath)) {
+    errors.push(`${path.relative(root, labOnlyPath).replaceAll(path.sep, '/')} is lab-only and must stay under lab/pages/assets/`);
+  }
 }
 
 for (const file of walk(overrideRoot)) {
