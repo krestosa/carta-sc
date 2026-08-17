@@ -46,6 +46,7 @@ python3 "$SCRIPTS/optimize-pages-breakpoint-media.py"
 python3 "$SCRIPTS/calibrate-system-logo.py" measure
 python3 "$SCRIPTS/replace-system-logo.py"
 python3 "$SCRIPTS/calibrate-system-logo.py" apply
+python3 "$SCRIPTS/prune-pages-superseded-media.py"
 
 node --check "$SITE/override/main.js"
 node --check "$SITE/_pages/legacy.js"
