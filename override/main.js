@@ -2,20 +2,14 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var inheritedVersion=window.__scCatalogAssetVersion||'',
-    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-gsap-morph-v1':inheritedVersion,
+    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-gsap-morph-v2':inheritedVersion,
     base='override/';
 window.__scCatalogAssetVersion=version;
-/* The immutable legacy bootstrap still exposes `unversioned`. Repoint the
-   already-created override stylesheet immediately so HTML/CSS/JS cannot come
-   from different cached generations. */
 if(inheritedVersion==='unversioned'){
   var mainCss=document.getElementById('sc-override-main-css');
   if(mainCss){
-    try{
-      var cssUrl=new URL(mainCss.href,location.href);
-      cssUrl.searchParams.set('v',version);
-      mainCss.href=cssUrl.href;
-    }catch(_){mainCss.href='override/main.css?v='+version;}
+    try{var cssUrl=new URL(mainCss.href,location.href);cssUrl.searchParams.set('v',version);mainCss.href=cssUrl.href;}
+    catch(_){mainCss.href='override/main.css?v='+version;}
   }
 }
 if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
@@ -33,57 +27,49 @@ function bootstrapCatalogView(){
   var root=document.documentElement,mode='',ctx='',legacy='';if(!root)return;
   try{
     mode=normalizeView(localStorage.getItem(VIEW_STORE_KEY)||'');
-    if(!mode){
-      ctx=window.matchMedia('(max-width: 640px)').matches?'phone':window.matchMedia('(max-width: 992px)').matches?'tablet':'desktop';
-      legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';
-      mode=legacy==='list'?'list':legacy?'compact':'';
-      if(mode){try{localStorage.setItem(VIEW_STORE_KEY,mode);}catch(_){}}
-    }
+    if(!mode){ctx=window.matchMedia('(max-width: 640px)').matches?'phone':window.matchMedia('(max-width: 992px)').matches?'tablet':'desktop';legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacy==='list'?'list':legacy?'compact':'';if(mode){try{localStorage.setItem(VIEW_STORE_KEY,mode);}catch(_){}}}
   }catch(_){mode='';}
-  if(!mode)mode='compact';
-  root.setAttribute('data-sc-catalog-view',mode);
-  if(document.body)document.body.setAttribute('data-sc-catalog-view',mode);
+  if(!mode)mode='compact';root.setAttribute('data-sc-catalog-view',mode);if(document.body)document.body.setAttribute('data-sc-catalog-view',mode);
 }
 bootstrapCatalogView();
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){return new Promise(function(resolve,reject){var existing=id&&document.getElementById(id);if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}var script=document.createElement('script');if(id)script.id=id;script.src=asset(path);script.async=false;script.onload=function(){script.dataset.loaded='true';resolve();};script.onerror=reject;document.head.appendChild(script);});}
 function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
-function waitForMotionDependencies(){
-  var motion=window.SCOverride&&window.SCOverride.motion;
-  if(!motion||typeof motion.ready!=='function')throw new Error('[SushiClub override] Motion dependency gate unavailable');
-  return motion.ready();
-}
+function waitForMotionDependencies(){var motion=window.SCOverride&&window.SCOverride.motion;if(!motion||typeof motion.ready!=='function')throw new Error('[SushiClub override] Motion dependency gate unavailable');return motion.ready();}
 
-/* Foundation contains the motion loader itself. GSAP core and every configured
-   plugin must resolve and register before the remaining modules are evaluated. */
-var foundation=[
-  ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],
-  ['core/variables.js','sc-override-variables-js'],
-  ['core/utils.js','sc-override-utils-js'],
-  ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
-  ['templates/registry.js','sc-override-template-registry-js'],
-  ['motion/main.js','sc-override-motion-js']
-];
-var beforeTemplates=[
+/* Stage 1 establishes config first. Stage 2 may then evaluate motion/main.js,
+   which immediately loads GSAP core and plugins. Nothing interactive loads
+   until motion.ready() confirms every configured plugin is registered. */
+var foundationStages=[
   [
-    ['motion/global-ui.js','sc-global-ui-motion-js'],
-    ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
-    ['mutations/history.js','sc-override-history-js'],
-    ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
-    ['components/category-nav/core.js','sc-category-nav-core-js'],
-    ['features/content-normalizer/rules.js','sc-content-normalizer-rules-js'],
-    ['components/product-card/data.js','sc-product-card-data-js'],
-    ['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],
-    ['components/product-modal/view.js','sc-product-modal-view-js'],
-    ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
-    ['components/product-modal/motion.js','sc-product-modal-motion-js'],
-    ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
-    ['components/cart/list-motion.js','sc-cart-list-motion-js'],
-    ['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],
-    ['components/cart/badge-motion.js','sc-cart-badge-motion-js']
+    ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],
+    ['core/variables.js','sc-override-variables-js']
+  ],
+  [
+    ['core/utils.js','sc-override-utils-js'],
+    ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
+    ['templates/registry.js','sc-override-template-registry-js'],
+    ['motion/main.js','sc-override-motion-js']
   ]
 ];
+var beforeTemplates=[[
+  ['motion/global-ui.js','sc-global-ui-motion-js'],
+  ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
+  ['mutations/history.js','sc-override-history-js'],
+  ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
+  ['components/category-nav/core.js','sc-category-nav-core-js'],
+  ['features/content-normalizer/rules.js','sc-content-normalizer-rules-js'],
+  ['components/product-card/data.js','sc-product-card-data-js'],
+  ['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],
+  ['components/product-modal/view.js','sc-product-modal-view-js'],
+  ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
+  ['components/product-modal/motion.js','sc-product-modal-motion-js'],
+  ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
+  ['components/cart/list-motion.js','sc-cart-list-motion-js'],
+  ['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],
+  ['components/cart/badge-motion.js','sc-cart-badge-motion-js']
+]];
 var afterTemplates=[
   [
     ['features/content-normalizer/dom.js','sc-content-normalizer-dom-js'],
@@ -116,14 +102,10 @@ var afterTemplates=[
   ]
 ];
 
-loadAll(foundation)
+loadStages(foundationStages)
   .then(waitForMotionDependencies)
   .then(function(){return loadStages(beforeTemplates);})
-  .then(function(){
-    var templates=window.SCOverride&&window.SCOverride.templates;
-    if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');
-    return templates.ready();
-  })
+  .then(function(){var templates=window.SCOverride&&window.SCOverride.templates;if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');return templates.ready();})
   .then(function(){return loadStages(afterTemplates);})
   .then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();})
   .then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');})
