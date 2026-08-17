@@ -15,14 +15,6 @@ LAB_IMPORTS = (
 if not SITE.is_dir() or not MAIN_CSS.is_file() or not LIFECYCLE.is_file():
     raise SystemExit('lab Pages staging context is incomplete')
 
-
-def patch_once(path, old, new, label):
-    text = path.read_text(encoding='utf-8')
-    if text.count(old) != 1:
-        raise SystemExit(f'{label}: expected one source shape, found {text.count(old)}')
-    path.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-
 for name in ('prepaint.css', 'performance.css'):
     source = LAB_ASSETS / name
     target = SITE / 'override/core' / name
@@ -39,76 +31,22 @@ if ANCHOR not in manifest:
 manifest = manifest.replace(ANCHOR, ANCHOR + LAB_IMPORTS, 1)
 MAIN_CSS.write_text(manifest, encoding='utf-8')
 
-# Restore the pre-layout selector aliases only in the disposable Pages copy.
-patch_once(
-    SITE / 'override/components/product-card/content.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1 {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {",
-    'card title prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/product-card/content.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {",
-    'card description prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/product-card/image-ratio.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {",
-    'card image-ratio prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/product-card/layout.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop > a.fancyboxModalAddProd {",
-    'card anchor prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/product-card/layout.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {",
-    'card layout image prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/product-card/pricing.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {",
-    'pricing prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/section-heading/layout.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion {",
-    'section title prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/section-heading/layout.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion > div {",
-    'section title inner prepaint alias',
-)
-patch_once(
-    SITE / 'override/components/section-heading/layout.css',
-    '  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion {',
-    "  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,\n  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {",
-    'section subtitle prepaint alias',
-)
-
-section_css = SITE / 'override/components/section-heading/section-heading.css'
-section_text = section_css.read_text(encoding='utf-8')
-section_lab_block = """
-
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion,
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion > div,
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
-  border-top: 0 !important;
-  border-bottom: 0 !important;
-}
-"""
-if 'html.sc-catalog-prepaint' in section_text:
-    raise SystemExit('section-heading lab prepaint block already present in staged source')
-section_css.write_text(section_text.rstrip() + section_lab_block + '\n', encoding='utf-8')
+# Component geometry is now breakpoint-inherited in production source itself.
+# The lab no longer re-creates desktop/mobile selector aliases; doing so would
+# duplicate the frontend contract and make the benchmark diverge from handoff.
+for relative in (
+    'override/components/product-card/content.css',
+    'override/components/product-card/image-ratio.css',
+    'override/components/product-card/layout.css',
+    'override/components/product-card/pricing.css',
+    'override/components/section-heading/layout.css',
+    'override/components/section-heading/section-heading.css',
+):
+    staged = SITE / relative
+    if not staged.is_file():
+        raise SystemExit(f'staged frontend source missing: {relative}')
+    if 'html.sc-catalog-prepaint' in staged.read_text(encoding='utf-8'):
+        raise SystemExit(f'lab prepaint alias leaked into shared component source: {relative}')
 
 source = LIFECYCLE.read_text(encoding='utf-8')
 base_decl = (
@@ -154,4 +92,4 @@ if source.count(base_wait) != 1:
 source = source.replace(base_wait, lab_wait, 1)
 LIFECYCLE.write_text(source, encoding='utf-8')
 
-print('Applied lab-only first-paint CSS, component aliases and render lifecycle to .pages-site staging copy.')
+print('Applied lab-only first-paint CSS and render lifecycle to .pages-site; shared responsive geometry remains untouched.')
