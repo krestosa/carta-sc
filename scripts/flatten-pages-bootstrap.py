@@ -29,7 +29,7 @@ prepaint = (
     "try{v=localStorage.getItem('scCatalogView:v3')||'';if(['normal','compact','list'].indexOf(v)<0){"
     "l=localStorage.getItem('scCatalogView:v2:'+c)||localStorage.getItem(c==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';"
     "v=m(l);if(v){try{localStorage.setItem('scCatalogView:v3',v)}catch(e2){}}}}catch(e){v=''}"
-    "if(['normal','compact','list'].indexOf(v)<0)v='normal';r.setAttribute('data-sc-catalog-view',v);"
+    "if(['normal','compact','list'].indexOf(v)<0)v='compact';r.setAttribute('data-sc-catalog-view',v);"
     "r.classList.add('sc-catalog-prepaint','sc-no-loading-state')})();"
 )
 replacement = '\n'.join([
@@ -46,6 +46,8 @@ if bootstrap.search(html):
     raise SystemExit('Development bootstrap script remains in Pages index')
 if 'data-sc-catalog-view' not in html or 'scCatalogView:v3' not in html:
     raise SystemExit('Remembered unified catalogue view prepaint bootstrap is missing')
+if "v='compact';r.setAttribute('data-sc-catalog-view',v)" not in html:
+    raise SystemExit('Catalogue prepaint default must be compact')
 if 'data-sc-theme-resolved' not in html or 'scTheme:v1' not in html:
     raise SystemExit('Remembered color theme prepaint bootstrap is missing')
 if len(re.findall(rf'<script\b[^>]*\bsrc=["\']_js_dev/main-legacy\.js\?v={re.escape(SHA)}["\'][^>]*>\s*</script>', html, re.IGNORECASE)) != 1:

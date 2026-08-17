@@ -65,6 +65,59 @@ def add_aria_label(text, tag_name, lookahead, label):
     return pattern.sub(replace, text), changed
 
 
+def strip_inline_properties_from_class(text, class_name, properties):
+    tag_re = re.compile(
+        rf'<div\b(?=[^>]*\bclass=["\'][^"\']*\b{re.escape(class_name)}\b[^"\']*["\'])[^>]*>',
+        re.IGNORECASE,
+    )
+    changed = 0
+    props = {name.lower() for name in properties}
+
+    def replace(match):
+        nonlocal changed
+        tag = match.group(0)
+        style = re.search(r'\s+style=["\'](?P<value>[^"\']*)["\']', tag, re.IGNORECASE)
+        if not style:
+            return tag
+        kept = []
+        removed = False
+        for declaration in style.group('value').split(';'):
+            declaration = declaration.strip()
+            if not declaration:
+                continue
+            name = declaration.split(':', 1)[0].strip().lower() if ':' in declaration else ''
+            if name in props:
+                removed = True
+                continue
+            kept.append(declaration)
+        if not removed:
+            return tag
+        changed += 1
+        replacement = (' style="' + '; '.join(kept) + '"') if kept else ''
+        return tag[:style.start()] + replacement + tag[style.end():]
+
+    return tag_re.sub(replace, text), changed
+
+
+def ensure_image_dimensions(text, lookahead, width, height):
+    pattern = re.compile(rf'<img\b(?=[^>]*{lookahead})[^>]*>', re.IGNORECASE)
+    changed = 0
+
+    def replace(match):
+        nonlocal changed
+        tag = match.group(0)
+        out = tag
+        if not re.search(r'\bwidth\s*=', out, re.IGNORECASE):
+            out = out[:-1].rstrip() + f' width="{width}">'
+        if not re.search(r'\bheight\s*=', out, re.IGNORECASE):
+            out = out[:-1].rstrip() + f' height="{height}">'
+        if out != tag:
+            changed += 1
+        return out
+
+    return pattern.sub(replace, text), changed
+
+
 def repair_category_anchor_ids(text):
     pattern = re.compile(
         r'<a\b(?=[^>]*\bname="(?P<name>anchor[^"]*)")[^>]*>',
@@ -95,6 +148,18 @@ html = index_path.read_text(encoding='utf-8')
 # repairs captured mojibake/replacement characters in category ids by deriving
 # each id from the intact name attribute.
 html, repaired_anchor_count = repair_category_anchor_ids(html)
+html, normalized_cols_count = strip_inline_properties_from_class(html, 'normCols', {'height', 'min-height'})
+html, banner_dimension_count = ensure_image_dimensions(html, r'\bclass=["\'][^"\']*\bimgBannerShop\b', 1500, 157)
+html, tiktok_dimension_count = ensure_image_dimensions(html, r'\bsrc=["\'][^"\']*icons8-tiktok-32\.png[^"\']*["\']', 32, 32)
+norm_cols_tag = re.search(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bnormCols\b[^"\']*["\'])[^>]*>', html, re.IGNORECASE)
+if not norm_cols_tag or re.search(r'\b(?:height|min-height)\s*:', norm_cols_tag.group(0), re.IGNORECASE):
+    raise SystemExit('Captured normCols height remains after snapshot cleanup')
+banner_tag = re.search(r'<img\b(?=[^>]*\bclass=["\'][^"\']*\bimgBannerShop\b)[^>]*>', html, re.IGNORECASE)
+if not banner_tag or not re.search(r'\bwidth=["\']1500["\']', banner_tag.group(0), re.IGNORECASE) or not re.search(r'\bheight=["\']157["\']', banner_tag.group(0), re.IGNORECASE):
+    raise SystemExit('Banner intrinsic dimensions are missing after snapshot cleanup')
+tiktok_tags = re.findall(r'<img\b(?=[^>]*icons8-tiktok-32\.png)[^>]*>', html, re.IGNORECASE)
+if not tiktok_tags or any(not re.search(r'\bwidth=["\']\d+["\']', tag, re.IGNORECASE) or not re.search(r'\bheight=["\']\d+["\']', tag, re.IGNORECASE) for tag in tiktok_tags):
+    raise SystemExit('TikTok intrinsic dimensions are missing after snapshot cleanup')
 aria_repairs = 0
 for tag_name, lookahead, label in (
     ('select', r'\bname=["\']sucursalNews["\']', 'Espacio preferido'),
@@ -178,4 +243,4 @@ if '\ufffd' in html:
     raise SystemExit('Unicode replacement character remains in Pages snapshot')
 
 index_path.write_text(html, encoding='utf-8')
-print(f'Removed duplicate snapshot runtime state, repaired {repaired_anchor_count} category anchor id(s), added {aria_repairs} accessibility label(s), and repaired the reCAPTCHA API source')
+print(f'Removed duplicate snapshot runtime state, normalized {normalized_cols_count} catalog height(s), repaired {banner_dimension_count + tiktok_dimension_count} intrinsic media dimension set(s), repaired {repaired_anchor_count} category anchor id(s), added {aria_repairs} accessibility label(s), and repaired the reCAPTCHA API source')
