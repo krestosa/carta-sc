@@ -1,29 +1,18 @@
 (function(){
 'use strict';
 var SC=window.SCOverride=window.SCOverride||{};if(SC.__imagePreloaderBooted)return;SC.__imagePreloaderBooted=true;
-var STATIC_PAGES=location.hostname==='krestosa.github.io',MOBILE_LOGO='https://www.sushiclub.com.ar/gfx/web-sushiclub2_black_m2.png';
+var MOBILE_LOGO='https://www.sushiclub.com.ar/gfx/web-sushiclub2_black_m2.png';
 var observer=null,intersection=null,bindings=new Map(),readyHandler=null,started=false,generation=0,criticalCount=0,criticalLimitValue=0,initialQueue=[],initialIdle=0,initialTimer=0,STAGE='.imgShop,.imgLiquidNoFillShop';
 var INITIAL_SYNC=8,INITIAL_BATCH=8,INITIAL_BUDGET_MS=4,INITIAL_IDLE_TIMEOUT=1400;
 function preloadCriticalMedia(){
-  if(STATIC_PAGES||!document.head||!window.matchMedia('(max-width: 992px)').matches||document.querySelector('link[data-sc-mobile-logo-preload]'))return;
+  if(!document.head||!window.matchMedia('(max-width: 992px)').matches||document.querySelector('link[data-sc-mobile-logo-preload]')||document.querySelector('img[data-sc-lcp-logo="1"]'))return;
   var link=document.createElement('link');link.rel='preload';link.as='image';link.href=MOBILE_LOGO;link.setAttribute('fetchpriority','high');link.setAttribute('data-sc-mobile-logo-preload','');document.head.appendChild(link);
 }
-function installStaticKeepaliveGuard(){
-  if(!STATIC_PAGES||window.__scStaticKeepaliveGuardV2)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticKeepaliveGuardV2=true;
-  var ajax=$.ajax;
-  function optionsOf(first,second){if(first&&typeof first==='object')return first;if(second&&typeof second==='object')return second;return null;}
-  function isKeepalive(first,second){
-    var options=optionsOf(first,second),url=typeof first==='string'?first:options&&typeof options.url==='string'?options.url:'';if(!url)return false;
-    try{var target=new URL(url,location.href);if(target.origin!==location.origin||!/\/carta_delivery\.php$/i.test(target.pathname))return false;if(target.searchParams.get('keepalive')==='1')return true;}catch(_){return false;}
-    var data=options&&options.data;if(data&&typeof data==='object'&&String(data.keepalive)==='1')return true;if(typeof data==='string'&&/(?:^|&)keepalive=1(?:&|$)/.test(data))return true;return false;
-  }
-  $.ajax=function(first,second){if(!isKeepalive(first,second))return ajax.apply(this,arguments);return $.Deferred().resolve('','nocontent',null).promise();};
-}
 function decorateCriticalMedia(){
-  if(!STATIC_PAGES){var logo=document.querySelector('.brandOnlyMobile img[src*="web-sushiclub2_black_m2.png"]')||document.querySelector('img[src="'+MOBILE_LOGO+'"]');if(logo){logo.loading='eager';logo.decoding='async';try{logo.fetchPriority='high';}catch(_){}if(!logo.hasAttribute('width'))logo.setAttribute('width','333');if(!logo.hasAttribute('height'))logo.setAttribute('height','100');}}
+  var logo=document.querySelector('.brandOnlyMobile img')||document.querySelector('img[src="'+MOBILE_LOGO+'"]');if(logo){logo.loading='eager';logo.decoding='async';try{logo.fetchPriority='high';}catch(_){}if(!logo.hasAttribute('width'))logo.setAttribute('width','333');if(!logo.hasAttribute('height'))logo.setAttribute('height','100');}
   var banner=document.querySelector('img.imgBannerShop');if(banner)banner.decoding='async';
 }
-preloadCriticalMedia();installStaticKeepaliveGuard();
+preloadCriticalMedia();
 function markLoading(stage,active){if(!stage)return;stage.classList.remove('sc-image-ready');stage.classList.add('sc-image-loading');stage.classList.toggle('sc-image-active',!!active);}
 function markReady(stage){if(!stage)return;stage.classList.remove('sc-image-loading','sc-image-active');stage.classList.add('sc-image-ready');}
 function stageFor(img){return img&&img.closest?img.closest(STAGE):null;}
