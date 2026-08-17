@@ -1,17 +1,7 @@
 (function(){
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
-var inheritedVersion=window.__scCatalogAssetVersion||'',
-    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-gsap-morph-v3':inheritedVersion,
-    base='override/';
-window.__scCatalogAssetVersion=version;
-if(inheritedVersion==='unversioned'){
-  var mainCss=document.getElementById('sc-override-main-css');
-  if(mainCss){
-    try{var cssUrl=new URL(mainCss.href,location.href);cssUrl.searchParams.set('v',version);mainCss.href=cssUrl.href;}
-    catch(_){mainCss.href='override/main.css?v='+version;}
-  }
-}
+var version=window.__scCatalogAssetVersion||'unversioned',base='override/';
 if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
 function bootstrapStaticNetwork(){
   if(window.__scStaticNetworkBooted)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticNetworkBooted=true;
