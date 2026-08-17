@@ -15,13 +15,7 @@ body.sushiShop .sc-theme-rays{fill:none;stroke:currentColor;stroke-width:1.65;st
 body.sushiShop .sc-theme-rays line{stroke-dasharray:1;stroke-dashoffset:1;}
 body.sushiShop .sc-theme-bite{pointer-events:none;}
 
-/*
- * Popover stacking contract.
- * The previous z-index depended on an undefined --sc-z-category-sticky token,
- * which invalidated the declaration. Raise the complete tools stacking context
- * while the menu is open so later catalogue content can never paint or receive
- * pointer input over the selector on mobile, tablet or desktop.
- */
+/* Popover stacking contract. */
 html body.sushiShop .sc-catalog-tools:has(.sc-theme-menu-open){position:relative;z-index:var(--sc-z-theme-popover,120);isolation:isolate;overflow:visible;}
 html body.sushiShop .sc-catalog-tools:has(.sc-theme-menu-open) > .sc-catalog-actions{position:relative;z-index:2;overflow:visible;}
 html body.sushiShop .sc-catalog-tools:has(.sc-theme-menu-open) .sc-theme-control{z-index:3;overflow:visible;}
@@ -42,15 +36,13 @@ body.sushiShop .sc-theme-option-mark{box-sizing:border-box;flex:0 0 7px;width:7p
 body.sushiShop .sc-theme-option[aria-checked='true'] .sc-theme-option-mark{border-color:var(--sc-color-ink);background:var(--sc-color-ink);transform:scale(1);}
 body.sushiShop .sc-catalog-search-input::placeholder{color:var(--sc-color-muted);}
 
-/* Mobile theme color changes use compositor snapshots. The control is separated so its GSAP morph remains live. */
-@media(max-width:992px){
-  body.sushiShop .sc-theme-control{view-transition-name:sc-theme-control;}
-  ::view-transition-old(root){animation:sc-theme-vt-old .32s cubic-bezier(.22,1,.36,1) both;}
-  ::view-transition-new(root){animation:sc-theme-vt-new .32s cubic-bezier(.22,1,.36,1) both;}
-  ::view-transition-old(sc-theme-control),::view-transition-new(sc-theme-control){animation:none!important;opacity:0!important;}
-}
-@keyframes sc-theme-vt-old{to{opacity:0;}}
-@keyframes sc-theme-vt-new{from{opacity:0;}}
+/* Theme palette transition: same gradual compositor crossfade on every breakpoint. */
+body.sushiShop .sc-theme-control{view-transition-name:sc-theme-control;}
+::view-transition-old(root){animation:sc-theme-vt-old var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1) both;}
+::view-transition-new(root){animation:sc-theme-vt-new var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1) both;}
+::view-transition-old(sc-theme-control),::view-transition-new(sc-theme-control){animation:none!important;opacity:0!important;}
+@keyframes sc-theme-vt-old{from{opacity:1}to{opacity:0}}
+@keyframes sc-theme-vt-new{from{opacity:0}to{opacity:1}}
 
 @media(max-width:640px){body.sushiShop .sc-theme-menu{top:calc(100% + 5px);width:182px;}body.sushiShop .sc-theme-option{min-height:var(--sc-touch-target);padding:9px 10px;font-size:12.5px;}}
 @media(prefers-reduced-motion:reduce){body.sushiShop .sc-theme-menu,body.sushiShop .sc-theme-option,body.sushiShop .sc-theme-option-mark{transition:none!important;}::view-transition-old(root),::view-transition-new(root){animation:none!important;}}
