@@ -13,6 +13,8 @@ body.sushiShop .sc-theme-parametric-host {
   line-height:0;
   overflow:visible!important;
   transform-origin:50% 50%;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
 body.sushiShop .sc-theme-parametric-icon {
   display:block!important;
