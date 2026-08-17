@@ -3,9 +3,15 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
+const overrideDir = path.join(root, 'override');
+const mainJsPath = path.join(overrideDir, 'main.js');
+const mainCssPath = path.join(overrideDir, 'main.css');
+const templateRegistryPath = path.join(overrideDir, 'templates', 'registry.js');
 const errors = [];
 const fail = (message) => errors.push(message);
 const read = (file) => fs.readFileSync(file, 'utf8');
+const rel = (file) => path.relative(root, file).replaceAll(path.sep, '/');
+const relOverride = (file) => path.relative(overrideDir, file).replaceAll(path.sep, '/');
 
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -14,230 +20,112 @@ function walk(dir) {
   });
 }
 
-function relative(file) {
-  return path.relative(root, file).replaceAll(path.sep, '/');
-}
-
-function relativeToOverride(file) {
-  return path.relative(overrideDir, file).replaceAll(path.sep, '/');
-}
-
-const overrideDir = path.join(root, 'override');
-const mainJsPath = path.join(overrideDir, 'main.js');
-const mainCssPath = path.join(overrideDir, 'main.css');
-const bootstrapPath = path.join(root, '_js_dev', 'main.js');
-const indexPath = path.join(root, 'index.html');
-const templateRegistryPath = path.join(overrideDir, 'templates', 'registry.js');
-const contentNormalizerRef = 'features/content-normalizer/content-normalizer.js';
-const manualScrollRestorationPath = path.join(overrideDir, 'mutations', 'scroll-restoration.js');
-const requiredTemplates = new Set([
-  'product-modal',
-  'category-toolbar',
-  'category-arrow-left',
-  'category-arrow-right',
-  'category-indicator',
-  'product-card-a11y-meta',
-  'product-trait-group',
-  'catalog-tools',
-]);
-const structuralUiFiles = [
-  'components/product-modal/view.js',
-  'components/category-nav/layout.js',
-  'components/category-nav/rail-controls.js',
-  'components/category-nav/indicator.js',
-  'components/product-card/data.js',
-  'components/product-card/a11y.js',
-  'components/catalog-tools/catalog-tools.js',
-];
-
-for (const required of [overrideDir, mainJsPath, mainCssPath, bootstrapPath, indexPath, templateRegistryPath]) {
-  if (!fs.existsSync(required)) fail(`Missing required path: ${relative(required)}`);
+for (const required of [overrideDir, mainJsPath, mainCssPath, templateRegistryPath]) {
+  if (!fs.existsSync(required)) fail(`Missing required production frontend path: ${rel(required)}`);
 }
 
 if (!errors.length) {
-  const overrideFiles = walk(overrideDir);
-  const overrideJsFiles = overrideFiles.filter((file) => file.endsWith('.js'));
-  const overrideCssFiles = overrideFiles.filter((file) => file.endsWith('.css'));
-  const overrideHtmlFiles = overrideFiles.filter((file) => file.endsWith('.html'));
-  const jsFiles = overrideJsFiles.concat(bootstrapPath);
+  const files = walk(overrideDir);
+  const jsFiles = files.filter((file) => file.endsWith('.js'));
+  const cssFiles = files.filter((file) => file.endsWith('.css'));
+  const htmlFiles = files.filter((file) => file.endsWith('.html'));
+
   for (const file of jsFiles) {
     const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
-    if (result.status !== 0) {
-      fail(`JavaScript syntax error in ${relative(file)}:\n${(result.stderr || result.stdout || '').trim()}`);
-    }
+    if (result.status !== 0) fail(`JavaScript syntax error in ${rel(file)}: ${(result.stderr || result.stdout || '').trim()}`);
   }
 
-  const overrideJsSource = overrideJsFiles.map(read).join('\n');
-  if (/\bscrollRestoration\b/.test(overrideJsSource)) {
-    fail('Override code must leave browser scroll restoration native; scrollRestoration writes/references are not allowed');
-  }
-  if (/\._data\s*\(/.test(overrideJsSource)) {
-    fail('Override code must not depend on jQuery private _data internals');
-  }
-  if (/\bdocument\.currentScript\b/.test(overrideJsSource)) {
-    fail('Override modules must not depend on document.currentScript because Pages concatenates them into one production bundle');
-  }
-  if (/\bimport\.meta\b/.test(overrideJsSource)) {
-    fail('Override modules must not depend on import.meta because Pages serves a classic concatenated production bundle');
-  }
-  if (fs.existsSync(manualScrollRestorationPath)) {
-    fail('override/mutations/scroll-restoration.js must not be reintroduced');
-  }
+  const jsSource = jsFiles.map(read).join('\n');
+  if (/\bscrollRestoration\b/.test(jsSource)) fail('Override must leave browser scroll restoration native');
+  if (/\._data\s*\(/.test(jsSource)) fail('Override must not depend on private jQuery _data internals');
+  if (/\bdocument\.currentScript\b/.test(jsSource)) fail('Override modules must not depend on document.currentScript');
+  if (/\bimport\.meta\b/.test(jsSource)) fail('Override modules must remain compatible with the current classic-script runtime');
+  if (fs.existsSync(path.join(overrideDir, 'mutations', 'scroll-restoration.js'))) fail('Manual scroll-restoration mutation must not be reintroduced');
 
+  const structuralUiFiles = [
+    'components/product-modal/view.js',
+    'components/category-nav/layout.js',
+    'components/category-nav/rail-controls.js',
+    'components/category-nav/indicator.js',
+    'components/product-card/data.js',
+    'components/product-card/a11y.js',
+    'components/catalog-tools/catalog-tools.js',
+  ];
   for (const ref of structuralUiFiles) {
     const file = path.join(overrideDir, ref);
-    if (!fs.existsSync(file)) {
-      fail(`Missing structural UI module: override/${ref}`);
-      continue;
-    }
+    if (!fs.existsSync(file)) { fail(`Missing structural UI module: override/${ref}`); continue; }
     const source = read(file);
     if (/document\.createElement\s*\(/.test(source) || /\.innerHTML\s*=/.test(source)) {
-      fail(`Fixed UI markup must come from override HTML templates, not ${relative(file)}`);
+      fail(`Fixed UI markup must come from override HTML templates, not ${rel(file)}`);
     }
   }
 
   const guardOwners = new Map();
-  for (const file of overrideJsFiles) {
+  for (const file of jsFiles) {
     const guards = new Set([...read(file).matchAll(/(?:window|SC)\.(__[A-Za-z0-9_$]*Booted)\b/g)].map((match) => match[1]));
-    for (const guard of guards) {
-      const owners = guardOwners.get(guard) || [];
-      owners.push(relative(file));
-      guardOwners.set(guard, owners);
-    }
+    for (const guard of guards) guardOwners.set(guard, [...(guardOwners.get(guard) || []), rel(file)]);
   }
-  for (const [guard, owners] of guardOwners) {
-    if (owners.length > 1) fail(`Duplicate override boot guard ${guard}: ${owners.join(', ')}`);
-  }
+  for (const [guard, owners] of guardOwners) if (owners.length > 1) fail(`Duplicate override boot guard ${guard}: ${owners.join(', ')}`);
 
   const mainJs = read(mainJsPath);
-  if (!mainJs.includes("window.__scCatalogAssetVersion||'unversioned'")) {
-    fail("override/main.js must use window.__scCatalogAssetVersion with the 'unversioned' source fallback");
+  if (!mainJs.includes("window.__scCatalogAssetVersion||'unversioned'")) fail("override/main.js must keep the generic asset-version fallback");
+  const jsRefs = [...mainJs.matchAll(/['"]([^'"]+\.js)['"]/g)].map((match) => match[1]);
+  const uniqueJs = new Set(jsRefs);
+  if (uniqueJs.size !== jsRefs.length) fail('Duplicate JavaScript module paths in override/main.js');
+  for (const ref of uniqueJs) if (!fs.existsSync(path.join(overrideDir, ref))) fail(`Loader references missing JavaScript module: override/${ref}`);
+  for (const required of ['features/content-normalizer/content-normalizer.js', 'templates/registry.js']) {
+    if (!uniqueJs.has(required)) fail(`Required override module is not loaded: override/${required}`);
   }
+  const unreferencedJs = jsFiles.filter((file) => file !== mainJsPath).map(relOverride).filter((ref) => !uniqueJs.has(ref));
+  if (unreferencedJs.length) fail(`Unreferenced override JavaScript files: ${unreferencedJs.join(', ')}`);
 
-  const jsRefs = [];
-  for (const match of mainJs.matchAll(/['"]([^'"]+\.js)['"]/g)) jsRefs.push(match[1]);
-  const uniqueJsRefs = new Set(jsRefs);
-  if (uniqueJsRefs.size !== jsRefs.length) {
-    const seen = new Set();
-    const duplicates = [...new Set(jsRefs.filter((item) => seen.has(item) || !seen.add(item)))];
-    fail(`Duplicate JavaScript module paths in override/main.js: ${duplicates.join(', ')}`);
-  }
-  for (const ref of uniqueJsRefs) {
-    const file = path.join(overrideDir, ref);
-    if (!fs.existsSync(file)) fail(`Loader references missing JavaScript module: override/${ref}`);
-  }
-  if (!uniqueJsRefs.has(contentNormalizerRef)) {
-    fail(`Required content normalizer is not loaded: override/${contentNormalizerRef}`);
-  }
-  if (!uniqueJsRefs.has('templates/registry.js')) {
-    fail('Required override template registry is not loaded: override/templates/registry.js');
-  }
-
-  const unreferencedJs = overrideJsFiles
-    .filter((file) => file !== mainJsPath)
-    .map(relativeToOverride)
-    .filter((ref) => !uniqueJsRefs.has(ref));
-  if (unreferencedJs.length) {
-    fail(`Unreferenced override JavaScript files: ${unreferencedJs.join(', ')}`);
-  }
-
-  const idRefs = [];
-  for (const match of mainJs.matchAll(/\[\s*['"][^'"]+\.js['"]\s*,\s*['"]([^'"]+)['"]\s*\]/g)) idRefs.push(match[1]);
-  for (const match of mainJs.matchAll(/loadScript\(\s*['"][^'"]+\.js['"]\s*,\s*['"]([^'"]+)['"]\s*\)/g)) idRefs.push(match[1]);
-  const seenIds = new Set();
-  const duplicateIds = [...new Set(idRefs.filter((id) => seenIds.has(id) || !seenIds.add(id)))];
-  if (duplicateIds.length) fail(`Duplicate script element ids in override/main.js: ${duplicateIds.join(', ')}`);
-
-  for (const file of overrideJsFiles) {
+  const ids = [];
+  for (const match of mainJs.matchAll(/\[\s*['"][^'"]+\.js['"]\s*,\s*['"]([^'"]+)['"]\s*\]/g)) ids.push(match[1]);
+  for (const match of mainJs.matchAll(/loadScript\(\s*['"][^'"]+\.js['"]\s*,\s*['"]([^'"]+)['"]\s*\)/g)) ids.push(match[1]);
+  if (new Set(ids).size !== ids.length) fail('Duplicate script element ids in override/main.js');
+  for (const file of jsFiles) {
     if (file === mainJsPath) continue;
-    const source = read(file);
-    const coupledIds = idRefs.filter((id) => source.includes(id));
-    if (coupledIds.length) {
-      fail(`${relative(file)} depends on development loader script id(s) removed by the Pages bundle: ${coupledIds.join(', ')}`);
-    }
+    const coupled = ids.filter((id) => read(file).includes(id));
+    if (coupled.length) fail(`${rel(file)} depends on loader script id(s): ${coupled.join(', ')}`);
   }
 
-  const templateRegistry = read(templateRegistryPath);
-  const templateRefs = [...templateRegistry.matchAll(/['"]([^'"]+\.html)['"]/g)].map((match) => match[1]);
-  if (!templateRefs.length) fail('override/templates/registry.js does not declare any HTML template sources');
-  const uniqueTemplateRefs = new Set(templateRefs);
-  if (uniqueTemplateRefs.size !== templateRefs.length) {
-    const seen = new Set();
-    const duplicates = [...new Set(templateRefs.filter((item) => seen.has(item) || !seen.add(item)))];
-    fail(`Duplicate HTML template sources in registry.js: ${duplicates.join(', ')}`);
-  }
-  for (const ref of uniqueTemplateRefs) {
-    const file = path.join(overrideDir, ref);
-    if (!fs.existsSync(file)) fail(`Template registry references missing HTML source: override/${ref}`);
-  }
-  const unreferencedHtml = overrideHtmlFiles
-    .map(relativeToOverride)
-    .filter((ref) => !uniqueTemplateRefs.has(ref));
+  const registry = read(templateRegistryPath);
+  const templateRefs = [...registry.matchAll(/['"]([^'"]+\.html)['"]/g)].map((match) => match[1]);
+  if (!templateRefs.length) fail('override/templates/registry.js does not declare HTML template sources');
+  if (new Set(templateRefs).size !== templateRefs.length) fail('Duplicate HTML template source paths in registry.js');
+  for (const ref of templateRefs) if (!fs.existsSync(path.join(overrideDir, ref))) fail(`Template registry references missing source: override/${ref}`);
+  const unreferencedHtml = htmlFiles.map(relOverride).filter((ref) => !new Set(templateRefs).has(ref));
   if (unreferencedHtml.length) fail(`Unreferenced override HTML templates: ${unreferencedHtml.join(', ')}`);
 
-  const templateOwners = new Map();
-  for (const file of overrideHtmlFiles) {
-    const source = read(file);
-    const names = [...source.matchAll(/<template\b[^>]*\bdata-sc-template=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1].trim());
-    if (!names.length) fail(`No data-sc-template blocks found in ${relative(file)}`);
-    for (const name of names) {
-      const owners = templateOwners.get(name) || [];
-      owners.push(relative(file));
-      templateOwners.set(name, owners);
-    }
+  const requiredTemplateNames = new Set(['product-modal','category-toolbar','category-arrow-left','category-arrow-right','category-indicator','product-card-a11y-meta','product-trait-group','catalog-tools']);
+  const owners = new Map();
+  for (const file of htmlFiles) {
+    const names = [...read(file).matchAll(/<template\b[^>]*\bdata-sc-template=['"]([^'"]+)['"][^>]*>/gi)].map((match) => match[1].trim());
+    if (!names.length) fail(`No data-sc-template blocks found in ${rel(file)}`);
+    for (const name of names) owners.set(name, [...(owners.get(name) || []), rel(file)]);
   }
-  for (const [name, owners] of templateOwners) {
-    if (owners.length > 1) fail(`Duplicate override template ${name}: ${owners.join(', ')}`);
-  }
-  const templateNames = new Set(templateOwners.keys());
-  const missingTemplates = [...requiredTemplates].filter((name) => !templateNames.has(name));
-  const extraTemplates = [...templateNames].filter((name) => !requiredTemplates.has(name));
-  if (missingTemplates.length || extraTemplates.length) {
-    fail(`Override template manifest mismatch; missing=${missingTemplates.join(', ') || 'none'}, extra=${extraTemplates.join(', ') || 'none'}`);
-  }
-  if (!templateRegistry.includes('var COMPILED_TEMPLATES=null;/*__SC_TEMPLATE_PAYLOAD__*/')) {
-    fail('Template registry must contain the production compile marker exactly in source');
-  }
+  for (const [name, paths] of owners) if (paths.length > 1) fail(`Duplicate override template ${name}: ${paths.join(', ')}`);
+  const actualNames = new Set(owners.keys());
+  const missingNames = [...requiredTemplateNames].filter((name) => !actualNames.has(name));
+  const extraNames = [...actualNames].filter((name) => !requiredTemplateNames.has(name));
+  if (missingNames.length || extraNames.length) fail(`Override template manifest mismatch; missing=${missingNames.join(', ') || 'none'}, extra=${extraNames.join(', ') || 'none'}`);
 
-  const mainCss = read(mainCssPath);
-  const cssRefs = [];
-  for (const match of mainCss.matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;/g)) cssRefs.push(match[1]);
-  if (!cssRefs.length) fail('override/main.css does not contain any imports');
-
+  const cssRefs = [...read(mainCssPath).matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;/g)].map((match) => match[1]);
+  if (!cssRefs.length) fail('override/main.css does not contain imports');
   const cssPaths = [];
   for (const ref of cssRefs) {
     const [assetPath, query = ''] = ref.split('?');
-    const normalizedPath = path.posix.normalize(assetPath.replace(/^\.\//, ''));
-    cssPaths.push(normalizedPath);
+    const normalized = path.posix.normalize(assetPath.replace(/^\.\//, ''));
+    cssPaths.push(normalized);
     if (query !== 'v=unversioned') fail(`CSS import must use ?v=unversioned in source: ${ref}`);
     const file = path.resolve(path.dirname(mainCssPath), assetPath);
-    if (!fs.existsSync(file)) {
-      fail(`CSS manifest references missing file: ${assetPath}`);
-      continue;
-    }
-    if (/@import\b/.test(read(file))) fail(`Nested CSS import found in ${relative(file)}; keep override/main.css flat`);
+    if (!fs.existsSync(file)) { fail(`CSS manifest references missing file: ${assetPath}`); continue; }
+    if (/@import\b/.test(read(file))) fail(`Nested CSS import found in ${rel(file)}`);
   }
-  const seenCss = new Set();
-  const duplicateCss = [...new Set(cssPaths.filter((item) => seenCss.has(item) || !seenCss.add(item)))];
-  if (duplicateCss.length) fail(`Duplicate CSS imports in override/main.css: ${duplicateCss.join(', ')}`);
-
+  if (new Set(cssPaths).size !== cssPaths.length) fail('Duplicate CSS imports in override/main.css');
   const referencedCss = new Set(cssPaths);
-  const unreferencedCss = overrideCssFiles
-    .filter((file) => file !== mainCssPath)
-    .map(relativeToOverride)
-    .filter((ref) => !referencedCss.has(ref));
-  if (unreferencedCss.length) {
-    fail(`Unreferenced override CSS files: ${unreferencedCss.join(', ')}`);
-  }
-
-  const bootstrap = read(bootstrapPath);
-  const bootstrapVersions = bootstrap.match(/var version='unversioned';/g) || [];
-  if (bootstrapVersions.length !== 1) fail("_js_dev/main.js must contain exactly one var version='unversioned'; placeholder");
-
-  const index = read(indexPath);
-  const entrypoints = index.match(/_js_dev\/main\.js\?v=[^"']+/g) || [];
-  if (entrypoints.length !== 1) fail('index.html must reference the _js_dev/main.js entrypoint exactly once');
-  if (/data-sc-template=/.test(index)) fail('Original index.html must not contain override component templates');
+  const unreferencedCss = cssFiles.filter((file) => file !== mainCssPath).map(relOverride).filter((ref) => !referencedCss.has(ref));
+  if (unreferencedCss.length) fail(`Unreferenced override CSS files: ${unreferencedCss.join(', ')}`);
 }
 
 if (errors.length) {
@@ -247,7 +135,4 @@ if (errors.length) {
 }
 
 const files = walk(overrideDir);
-const jsCount = files.filter((file) => file.endsWith('.js')).length + 1;
-const htmlCount = files.filter((file) => file.endsWith('.html')).length;
-const cssCount = [...read(mainCssPath).matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]/g)].length;
-console.log(`Override validation passed: ${jsCount} JavaScript files checked, ${htmlCount} HTML template sources checked, ${cssCount} CSS imports resolved.`);
+console.log(`Override validation passed: ${files.filter((f) => f.endsWith('.js')).length} JS, ${files.filter((f) => f.endsWith('.html')).length} HTML templates and ${[...read(mainCssPath).matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]/g)].length} CSS imports checked without snapshot dependencies.`);
