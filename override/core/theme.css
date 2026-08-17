@@ -1,5 +1,6 @@
-/* Global color-mode contract. Manual theme changes flip one root state; system
-   theme changes are CSS-only so OS appearance updates cannot trigger JS work. */
+/* Global color-mode contract. Manual theme changes interpolate these shared
+   palette tokens with GSAP in catalog-tools/theme.js. System appearance changes
+   remain CSS-driven. */
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;
@@ -67,39 +68,4 @@ body.sushiShop a {
 body.sushiShop ::selection {
   background: var(--sc-color-ink);
   color: var(--sc-color-surface);
-}
-
-/* Manual theme state changes happen fully behind the previous surface. At the
-   commit point the veil is opaque, so no intermediate palette can flash. */
-html.sc-theme-transitioning body.sushiShop::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 2147483000;
-  background: var(--sc-theme-transition-surface, var(--sc-color-surface));
-  opacity: 0;
-  pointer-events: none;
-  will-change: opacity;
-  transition: opacity 180ms cubic-bezier(.4,0,.2,1);
-}
-
-html.sc-theme-transitioning[data-sc-theme-transition-phase='out'] body.sushiShop::after {
-  opacity: 1;
-}
-
-html.sc-theme-transitioning[data-sc-theme-transition-phase='in'] body.sushiShop::after {
-  opacity: 0;
-  transition-duration: 300ms;
-  transition-timing-function: cubic-bezier(.16,1,.3,1);
-}
-
-html.sc-theme-transitioning body.sushiShop .sc-theme-control {
-  z-index: 2147483001;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.sc-theme-transitioning body.sushiShop::after {
-    display: none !important;
-    transition: none !important;
-  }
 }
