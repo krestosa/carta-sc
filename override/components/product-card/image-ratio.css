@@ -26,8 +26,7 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
 }
 
 @media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
     width: 100% !important;
     height: auto !important;
