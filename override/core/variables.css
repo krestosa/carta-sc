@@ -24,6 +24,7 @@
   --sc-focus-ring-offset-tight: 2px;
   --sc-touch-target: 44px;
   --sc-z-raised: 1;
+  --sc-z-theme-popover: 120;
 
   /* Shared catalogue geometry. */
   --sc-content-max-width: 1240px;
