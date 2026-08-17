@@ -5,7 +5,9 @@ if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
 var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,waitObserver=null,waiters=[],initialViewportObserver=null,initialViewportStarted=false,initialViewportFrozen=false;
 function markStaticInitial(node){
   if(!node||node.nodeType!==1)return;
-  if(node.matches(S.productCards)){node.classList.add(K.staticInitialCard);return;}
+  /* Product cards intentionally remain motion-eligible. Only section labels are
+     frozen in the initial viewport so card entrance motion can run again. */
+  if(node.matches(S.productCards))return;
   node.classList.add(K.staticInitialSection);var host=node.matches(S.sectionTitle)?node.querySelector(':scope > div'):node;if(host)host.classList.add(K.staticInitialSection);
 }
 function applyInitialViewportEntries(entries){for(var i=0;i<(entries||[]).length;i++){var entry=entries[i];if(!entry.isIntersecting)continue;markStaticInitial(entry.target);if(initialViewportObserver)initialViewportObserver.unobserve(entry.target);}}
