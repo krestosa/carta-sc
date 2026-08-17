@@ -118,6 +118,25 @@ def ensure_image_dimensions(text, lookahead, width, height):
     return pattern.sub(replace, text), changed
 
 
+def force_image_dimensions(text, lookahead, width, height):
+    pattern = re.compile(rf'<img\b(?=[^>]*{lookahead})[^>]*>', re.IGNORECASE)
+    changed = 0
+
+    def replace(match):
+        nonlocal changed
+        tag = match.group(0)
+        out = re.sub(r'\s+width\s*=\s*["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        out = re.sub(r'\s+height\s*=\s*["\'][^"\']*["\']', '', out, flags=re.IGNORECASE)
+        closing = '/>' if out.endswith('/>') else '>'
+        body = out[:-len(closing)].rstrip()
+        out = f'{body} width="{width}" height="{height}"{closing}'
+        if out != tag:
+            changed += 1
+        return out
+
+    return pattern.sub(replace, text), changed
+
+
 def repair_category_anchor_ids(text):
     pattern = re.compile(
         r'<a\b(?=[^>]*\bname="(?P<name>anchor[^"]*)")[^>]*>',
@@ -150,7 +169,7 @@ html = index_path.read_text(encoding='utf-8')
 html, repaired_anchor_count = repair_category_anchor_ids(html)
 html, normalized_cols_count = strip_inline_properties_from_class(html, 'normCols', {'height', 'min-height'})
 html, banner_dimension_count = ensure_image_dimensions(html, r'\bclass=["\'][^"\']*\bimgBannerShop\b', 1500, 157)
-html, tiktok_dimension_count = ensure_image_dimensions(html, r'\bsrc=["\'][^"\']*icons8-tiktok-32\.png[^"\']*["\']', 32, 32)
+html, tiktok_dimension_count = force_image_dimensions(html, r'\bsrc=["\'][^"\']*icons8-tiktok-32\.png[^"\']*["\']', 22, 22)
 norm_cols_tag = re.search(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bnormCols\b[^"\']*["\'])[^>]*>', html, re.IGNORECASE)
 if not norm_cols_tag or re.search(r'\b(?:height|min-height)\s*:', norm_cols_tag.group(0), re.IGNORECASE):
     raise SystemExit('Captured normCols height remains after snapshot cleanup')
@@ -158,8 +177,8 @@ banner_tag = re.search(r'<img\b(?=[^>]*\bclass=["\'][^"\']*\bimgBannerShop\b)[^>
 if not banner_tag or not re.search(r'\bwidth=["\']1500["\']', banner_tag.group(0), re.IGNORECASE) or not re.search(r'\bheight=["\']157["\']', banner_tag.group(0), re.IGNORECASE):
     raise SystemExit('Banner intrinsic dimensions are missing after snapshot cleanup')
 tiktok_tags = re.findall(r'<img\b(?=[^>]*icons8-tiktok-32\.png)[^>]*>', html, re.IGNORECASE)
-if not tiktok_tags or any(not re.search(r'\bwidth=["\']\d+["\']', tag, re.IGNORECASE) or not re.search(r'\bheight=["\']\d+["\']', tag, re.IGNORECASE) for tag in tiktok_tags):
-    raise SystemExit('TikTok intrinsic dimensions are missing after snapshot cleanup')
+if not tiktok_tags or any(not re.search(r'\bwidth=["\']22["\']', tag, re.IGNORECASE) or not re.search(r'\bheight=["\']22["\']', tag, re.IGNORECASE) for tag in tiktok_tags):
+    raise SystemExit('TikTok 22x22 intrinsic dimensions are missing after snapshot cleanup')
 aria_repairs = 0
 for tag_name, lookahead, label in (
     ('select', r'\bname=["\']sucursalNews["\']', 'Espacio preferido'),
