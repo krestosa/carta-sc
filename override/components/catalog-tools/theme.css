@@ -36,13 +36,5 @@ body.sushiShop .sc-theme-option-mark{box-sizing:border-box;flex:0 0 7px;width:7p
 body.sushiShop .sc-theme-option[aria-checked='true'] .sc-theme-option-mark{border-color:var(--sc-color-ink);background:var(--sc-color-ink);transform:scale(1);}
 body.sushiShop .sc-catalog-search-input::placeholder{color:var(--sc-color-muted);}
 
-/* Theme palette transition: same gradual compositor crossfade on every breakpoint. */
-body.sushiShop .sc-theme-control{view-transition-name:sc-theme-control;}
-::view-transition-old(root){animation:sc-theme-vt-old var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1) both;}
-::view-transition-new(root){animation:sc-theme-vt-new var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1) both;}
-::view-transition-old(sc-theme-control),::view-transition-new(sc-theme-control){animation:none!important;opacity:0!important;}
-@keyframes sc-theme-vt-old{from{opacity:1}to{opacity:0}}
-@keyframes sc-theme-vt-new{from{opacity:0}to{opacity:1}}
-
 @media(max-width:640px){body.sushiShop .sc-theme-menu{top:calc(100% + 5px);width:182px;}body.sushiShop .sc-theme-option{min-height:var(--sc-touch-target);padding:9px 10px;font-size:12.5px;}}
-@media(prefers-reduced-motion:reduce){body.sushiShop .sc-theme-menu,body.sushiShop .sc-theme-option,body.sushiShop .sc-theme-option-mark{transition:none!important;}::view-transition-old(root),::view-transition-new(root){animation:none!important;}}
+@media(prefers-reduced-motion:reduce){body.sushiShop .sc-theme-menu,body.sushiShop .sc-theme-option,body.sushiShop .sc-theme-option-mark{transition:none!important;}}
