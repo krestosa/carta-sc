@@ -1,24 +1,23 @@
-/* Dynamic content normalization: consistent editorial typography and casing. */
-@media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion {
-    text-transform: uppercase !important;
-  }
+/* Dynamic content normalization is viewport-independent. Desktop defines the
+   editorial contract and every smaller breakpoint inherits it unchanged. */
+body.sushiShop .listadoShop .titleShopSeccion,
+body.sushiShop .listadoShop .subTitleShopSeccion {
+  text-transform: uppercase !important;
+}
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {
-    font-weight: var(--sc-font-weight-regular) !important;
-    font-style: normal !important;
-    text-transform: none !important;
-  }
+body.sushiShop .listadoShop .productoShop .descrip {
+  font-weight: var(--sc-font-weight-regular) !important;
+  font-style: normal !important;
+  text-transform: none !important;
+}
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip * {
-    font: inherit !important;
-    letter-spacing: inherit !important;
-    text-transform: none !important;
-  }
+body.sushiShop .listadoShop .productoShop .descrip * {
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: none !important;
+}
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip b,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip strong {
-    font-weight: var(--sc-font-weight-regular) !important;
-  }
+body.sushiShop .listadoShop .productoShop .descrip b,
+body.sushiShop .listadoShop .productoShop .descrip strong {
+  font-weight: var(--sc-font-weight-regular) !important;
 }
