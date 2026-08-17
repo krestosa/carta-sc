@@ -2,8 +2,6 @@
 html.sc-image-preloader-active {
   --sc-image-preloader-base: #eeeeeb;
   --sc-image-preloader-highlight: #fafaf7;
-  --sc-image-reveal-duration: 260ms;
-  --sc-image-skeleton-exit: 190ms;
 }
 
 html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
@@ -33,8 +31,8 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   background-color: var(--sc-image-preloader-base) !important;
 }
 
-/* Fail open: media is visible by default. The skeleton is only allowed to cover
-   an image while JS explicitly owns the stage with .sc-image-loading. */
+/* Fail open: media is visible by default. The skeleton only covers an image
+   while JS explicitly owns the stage with .sc-image-loading. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
   content: '';
@@ -46,7 +44,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   background: linear-gradient(100deg, transparent 18%, var(--sc-image-preloader-highlight) 50%, transparent 82%);
   transform: translate3d(115%, 0, 0);
   animation: none;
-  transition: opacity var(--sc-image-skeleton-exit) var(--sc-motion-ease-out);
+  transition: none !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading::before,
@@ -66,23 +64,15 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   z-index: 1;
   opacity: 1 !important;
   visibility: visible !important;
-  transform: scale(1) !important;
-  transform-origin: 50% 50% !important;
-  transition:
-    opacity var(--sc-image-reveal-duration) var(--sc-motion-ease-out),
-    transform 320ms var(--sc-motion-ease-out) !important;
+  transform: none !important;
+  transition: none !important;
   will-change: auto;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading > img {
   opacity: 0 !important;
-  transform: scale(.985) !important;
-}
-
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active > img,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active > img {
-  will-change: opacity, transform;
+  transform: none !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready::before,
@@ -95,7 +85,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-ready > img {
   opacity: 1 !important;
-  transform: scale(1) !important;
+  transform: none !important;
 }
 
 @keyframes sc-image-preloader-shimmer {
@@ -107,12 +97,5 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
     animation: none;
-    transition: none;
-  }
-
-  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
-  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img {
-    transform: none !important;
-    transition: none !important;
   }
 }
