@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;if(!SC||!CFG||!C||SC.__catalogThemePaletteBooted)return;SC.__catalogThemePaletteBooted=true;
-var doc=document.documentElement,V=['--sc-color-ink','--sc-color-heading','--sc-color-copy','--sc-color-muted','--sc-color-trait','--sc-color-surface','--sc-color-surface-transparent','--sc-color-border','--sc-color-border-strong'],deps=null,tween=null,viewTransition=null,token=0;
+var doc=document.documentElement,V=['--sc-color-ink','--sc-color-heading','--sc-color-copy','--sc-color-muted','--sc-color-trait','--sc-color-surface','--sc-color-surface-raised','--sc-color-surface-transparent','--sc-color-border','--sc-color-border-strong'],deps=null,tween=null,viewTransition=null,token=0;
 function reduce(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}function capture(){var s=getComputedStyle(doc),v={};V.forEach(function(n){v[n]=s.getPropertyValue(n).trim();});return v;}function clear(){V.forEach(function(n){doc.style.removeProperty(n);});}function apply(v){V.forEach(function(n){if(v[n])doc.style.setProperty(n,v[n]);});}
 function kill(){token++;if(tween){try{tween.kill();}catch(_){}tween=null;}if(viewTransition&&viewTransition.skipTransition){try{viewTransition.skipTransition();}catch(_){}}viewTransition=null;}
 function animate(before,commit){
