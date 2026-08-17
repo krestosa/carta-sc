@@ -3,13 +3,30 @@
    preserve final geometry until runtime hydration completes. */
 
 html {
-  --sc-banner-desktop-width: 1170px;
-  --sc-banner-desktop-height: 122.46px;
   --sc-banner-ratio: 1500 / 157;
 }
 
 html.sc-catalog-prepaint body.sushiShop {
   overflow-anchor: none;
+}
+
+/* The banner must keep the source 1500:157 ratio after hydration too. Width
+   and height attributes provide intrinsic reservation before the image bytes
+   arrive; persistent height:auto prevents the legacy 157px presentation hint
+   from stretching the image once the pre-paint class is removed. */
+body.sushiShop .bannerShop .BanContShop {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.sushiShop .bannerShop .imgBannerShop {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: var(--sc-banner-ratio) !important;
+  object-fit: contain !important;
 }
 
 /* Mobile logo: preserve the parent/header geometry but never hide the actual
@@ -65,9 +82,9 @@ html.sc-catalog-prepaint body.sushiShop {
   }
 }
 
-/* Banner geometry is deterministic from first paint. Bootstrap's desktop
-   container is 1170px wide, where the 1500x157 banner is 122.46px high. Below
-   desktop the same ratio scales with the real container width. */
+/* Banner geometry is deterministic from first paint. The image's intrinsic
+   1500:157 ratio is preserved at every breakpoint, so Bootstrap container
+   width changes cannot turn the legacy height attribute into a fixed height. */
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
@@ -91,13 +108,14 @@ html.sc-catalog-prepaint.sc-banner-media-ready body.sushiShop .bannerShop .imgBa
 @media (min-width: 993px) {
   html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop,
   html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
-    height: var(--sc-banner-desktop-height) !important;
-    min-height: var(--sc-banner-desktop-height) !important;
-    max-height: var(--sc-banner-desktop-height) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
   }
 
   html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
-    object-fit: cover !important;
+    aspect-ratio: var(--sc-banner-ratio) !important;
+    object-fit: contain !important;
   }
 }
 

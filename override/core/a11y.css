@@ -15,3 +15,23 @@
   padding: 0 23px 23px 0;
   margin: 0 -23px -23px 0;
 }
+
+/* Desktop country links are visually tiny flag controls in the legacy header.
+   Give the anchors a WCAG-sized hit area without scaling the artwork itself. */
+@media (min-width: 993px) {
+  body.sushiShop .newVer17topBar .top-paises > span > a {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    margin-inline: 2px;
+    vertical-align: middle;
+  }
+
+  body.sushiShop .newVer17topBar .socialTop img[src*='tiktok'] {
+    width: 15px !important;
+    height: 15px !important;
+    object-fit: contain;
+  }
+}
