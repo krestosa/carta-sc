@@ -1,14 +1,14 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.catalogTools,P=C&&C.themePalette;if(!SC||!C||!P||SC.__catalogThemeControllerBooted)return;SC.__catalogThemeControllerBooted=true;
-var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),fine=matchMedia('(hover:hover) and (pointer:fine)'),compact=matchMedia('(max-width:992px)'),deps=null,mainTimeline=null,contrastFlip=null,contrastRelease=null,contrastButton=null,saveHandle=0,pending='';
+var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),fine=matchMedia('(hover:hover) and (pointer:fine)'),compact=matchMedia('(max-width:992px)'),deps=null,mainTimeline=null,contrastFlip=null,contrastRelease=null,contrastButton=null;
 var FULL='M12 6.45A5.55 5.55 0 1 1 12 17.55A5.55 5.55 0 1 1 12 6.45Z';
 var MOON_FULL='M12 4.4A7.6 7.6 0 1 1 12 19.6A7.6 7.6 0 1 1 12 4.4Z';
 var AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';
 var MOON_BITE={cx:17.35,cy:7.1,r:7.25};
 function norm(m){return MODES.indexOf(m)>=0?m:'';}function selected(){return norm(doc.getAttribute('data-sc-theme')||'')||'system';}function resolved(m){return m==='system'?(systemDark.matches?'dark':'light'):m;}function gsap(){return deps&&deps.gsap;}function morph(){return deps&&deps.MorphSVGPlugin;}
 function load(){var m=norm(doc.getAttribute('data-sc-theme')||'');if(m)return m;try{m=norm(localStorage.getItem(KEY)||'');}catch(_){m='';}return m||'system';}
-function save(m){pending=m;if(saveHandle)return;var done=function(){saveHandle=0;try{localStorage.setItem(KEY,pending);}catch(_){}};saveHandle=window.requestIdleCallback?requestIdleCallback(done,{timeout:250}):setTimeout(done,0);}
+function save(m){try{localStorage.setItem(KEY,m);}catch(_){}}
 function options(root){return root?[].slice.call(root.querySelectorAll('[data-sc-theme-option]')):[];}function label(m){return m==='system'?'Tema automático. Elegir tema':m==='dark'?'Tema oscuro. Elegir tema':'Tema claro. Elegir tema';}
 function emit(m,a){try{dispatchEvent(new CustomEvent('sc:themechange',{detail:{mode:m,resolved:a}}));}catch(_){}}
 function meta(root,m){if(!root)return;var b=root.querySelector('.sc-theme-toggle'),a=resolved(m);root.setAttribute('data-sc-theme-mode',m);root.setAttribute('data-sc-theme-actual',a);if(b){b.setAttribute('aria-label',label(m));b.setAttribute('title',m==='system'?'Tema automático':'Tema '+(m==='dark'?'oscuro':'claro'));}options(root).forEach(function(o){var on=o.getAttribute('data-sc-theme-option')===m;o.setAttribute('aria-checked',on?'true':'false');o.classList.toggle('sc-theme-option-selected',on);});}
