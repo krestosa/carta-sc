@@ -1,60 +1,25 @@
-/* Hard presentation contract for the two catalog action icons.
-   Loaded last so legacy shop CSS cannot leave the controls clickable but transparent. */
+/* Final visibility/size contract for catalog action icons. */
 body.sushiShop .sc-catalog-actions,
 body.sushiShop .sc-theme-control,
 body.sushiShop .sc-theme-toggle,
 body.sushiShop .sc-catalog-view-toggle,
-body.sushiShop .sc-theme-icon-stack,
-body.sushiShop .sc-view-morph-icon {
-  visibility:visible !important;
-  opacity:1 !important;
-}
+body.sushiShop .sc-theme-icon,
+body.sushiShop .sc-view-morph-icon{visibility:visible!important;opacity:1!important;}
 body.sushiShop .sc-theme-toggle,
 body.sushiShop .sc-catalog-view-toggle,
-body.sushiShop .sc-theme-icon-stack,
-body.sushiShop .sc-view-morph-icon { color:var(--sc-color-ink,#0a0a0a) !important; }
-body.sushiShop .sc-theme-icon-stack,
-body.sushiShop .sc-view-morph-icon {
-  display:block !important;
-  width:var(--sc-view-icon-size,24px) !important;
-  min-width:var(--sc-view-icon-size,24px) !important;
-  height:var(--sc-view-icon-size,24px) !important;
-  min-height:var(--sc-view-icon-size,24px) !important;
-  overflow:visible !important;
-}
-body.sushiShop .sc-theme-icon-layer {
-  display:block !important;
-  visibility:visible !important;
-  width:var(--sc-view-icon-size,24px) !important;
-  min-width:var(--sc-view-icon-size,24px) !important;
-  height:var(--sc-view-icon-size,24px) !important;
-  min-height:var(--sc-view-icon-size,24px) !important;
-  overflow:visible !important;
-}
+body.sushiShop .sc-theme-icon,
+body.sushiShop .sc-view-morph-icon{color:var(--sc-color-ink,#0a0a0a)!important;}
+body.sushiShop .sc-theme-icon,
+body.sushiShop .sc-view-morph-icon{display:block!important;width:24px!important;min-width:24px!important;max-width:24px!important;height:24px!important;min-height:24px!important;max-height:24px!important;overflow:visible!important;}
 body.sushiShop .sc-theme-auto-half,
-body.sushiShop .sc-theme-static-sun,
-body.sushiShop .sc-theme-static-moon,
+body.sushiShop .sc-theme-disc,
 body.sushiShop .sc-theme-option-auto-half,
 body.sushiShop .sc-theme-option-sun-disc,
-body.sushiShop .sc-theme-option-dark-disc { fill:var(--sc-color-ink,#0a0a0a) !important; }
+body.sushiShop .sc-theme-option-dark-disc{fill:var(--sc-color-ink,#0a0a0a)!important;}
 body.sushiShop .sc-theme-auto-ring,
-body.sushiShop .sc-theme-static-rays,
+body.sushiShop .sc-theme-rays,
 body.sushiShop .sc-theme-option-auto-ring,
-body.sushiShop .sc-theme-option-rays { stroke:var(--sc-color-ink,#0a0a0a) !important; }
-body.sushiShop .sc-view-morph-icon [data-sc-view-live] {
-  display:inline !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-body.sushiShop .sc-view-morph-icon [data-sc-view-shape] {
-  display:inline !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  fill:var(--sc-color-ink,#0a0a0a) !important;
-}
-body.sushiShop .sc-view-morph-targets {
-  display:inline !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
+body.sushiShop .sc-theme-option-rays{stroke:var(--sc-color-ink,#0a0a0a)!important;}
+body.sushiShop .sc-view-morph-icon [data-sc-view-live]{display:inline!important;visibility:visible!important;opacity:1!important;}
+body.sushiShop .sc-view-morph-icon [data-sc-view-shape]{display:inline!important;visibility:visible!important;opacity:1!important;fill:var(--sc-color-ink,#0a0a0a)!important;}
+body.sushiShop .sc-view-morph-targets{display:inline!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
