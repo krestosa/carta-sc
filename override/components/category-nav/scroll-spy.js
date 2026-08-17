@@ -2,20 +2,30 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,K=C&&C.classes,N=SC&&SC.categoryNav,A=N&&N.categoryActive,I=N&&N.categoryIndicator,scrollState=SC&&SC.scrollState;
 if(!SC||!C||!N||!A||!I||SC.__categoryNavScrollSpyBooted)return;SC.__categoryNavScrollSpyBooted=true;
-var metrics=[],spyRaf=0,heldTarget=null,heldUntil=0,SPY_HOLD_MS=2200;
+var metrics=[],spyOffset=0,spyRaf=0,measureRaf=0,heldTarget=null,heldUntil=0,SPY_HOLD_MS=2200;
 function locked(){return document.body.classList.contains(K.catalogSearching);}
+function pageY(){return window.pageYOffset||document.documentElement.scrollTop||0;}
+function measureMetrics(){
+  measureRaf=0;if(locked()){I.markDirty();return;}var seen=[],next=[],y=pageY();
+  N.links().forEach(function(link){var target=N.anchor(link.getAttribute('href')),rect;if(!target||seen.indexOf(target)>=0)return;seen.push(target);rect=target.getBoundingClientRect();next.push({node:target,top:rect.top+y});});
+  next.sort(function(a,b){return a.top-b.top;});metrics=next;
+  /* Prime the sticky offset in the same settled read phase. Scroll frames then
+     need no geometry reads at all. */
+  spyOffset=N.offset();I.markDirty();scheduleSpy();
+}
 function refreshMetrics(){
-  if(locked()){I.markDirty();return;}var seen=[];metrics=[];
-  N.links().forEach(function(link){var target=N.anchor(link.getAttribute('href'));if(!target||seen.indexOf(target)>=0)return;seen.push(target);metrics.push(target);});
-  I.markDirty();scheduleSpy();
+  if(locked()){I.markDirty();return;}if(measureRaf)cancelAnimationFrame(measureRaf);
+  /* Layout/card/tool mutations often call refresh synchronously. Measure only
+     after two frames so style writes have been committed and cannot force a
+     write -> layout-read flush. */
+  measureRaf=requestAnimationFrame(function(){measureRaf=requestAnimationFrame(measureMetrics);});
 }
 function current(){
-  if(!metrics.length)return null;var mark=N.offset()+N.currentMarkOffset,best=null,bestTop=-Infinity,first=null,firstTop=Infinity;
-  for(var i=0;i<metrics.length;i++){
-    var node=metrics[i];if(!document.documentElement.contains(node))continue;var top=node.getBoundingClientRect().top;
-    if(top<firstTop){firstTop=top;first=node;}if(top<=mark&&top>bestTop){bestTop=top;best=node;}
-  }
-  return best||first;
+  if(!metrics.length)return null;var mark=pageY()+spyOffset+N.currentMarkOffset,lo=0,hi=metrics.length-1,best=-1;
+  while(lo<=hi){var mid=(lo+hi)>>1;if(metrics[mid].top<=mark){best=mid;lo=mid+1;}else hi=mid-1;}
+  var item=metrics[best>=0?best:0];
+  if(!item||!document.documentElement.contains(item.node)){refreshMetrics();return null;}
+  return item.node;
 }
 function hold(target){heldTarget=target||null;heldUntil=heldTarget?performance.now()+SPY_HOLD_MS:0;}
 function release(){heldTarget=null;heldUntil=0;}
@@ -29,6 +39,6 @@ function spy(){
   if(target&&target!==active)A.set(target,true);else if(target&&I.isDirty())I.move(target,false);
 }
 function scheduleSpy(){if(locked())return;if(!spyRaf)spyRaf=requestAnimationFrame(spy);}
-function stop(){if(spyRaf)cancelAnimationFrame(spyRaf);spyRaf=0;metrics=[];release();}
+function stop(){if(spyRaf)cancelAnimationFrame(spyRaf);if(measureRaf)cancelAnimationFrame(measureRaf);spyRaf=measureRaf=0;metrics=[];release();}
 N.holdSpy=hold;N.releaseSpyHold=release;N.refreshMetrics=refreshMetrics;N.refreshSections=refreshMetrics;N.current=current;N.scheduleSpy=scheduleSpy;N.stopSpy=stop;
 })();

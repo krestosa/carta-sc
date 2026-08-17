@@ -1,31 +1,33 @@
-/* SushiClub geometry-only pre-paint guard.
-   Real content paints immediately; only layout reservations remain until the
-   runtime finishes mounting. This protects CLS without gating FCP/LCP. */
+/* SushiClub full-site pre-paint geometry guard.
+   The first viewport now paints real content immediately. These rules only
+   preserve final geometry until runtime hydration completes. */
 
 html.sc-catalog-prepaint {
-  --sc-shell-base: rgba(72,72,68,.075);
   --sc-banner-desktop-width: 1170px;
   --sc-banner-desktop-height: 122.46px;
   --sc-banner-ratio: 1500 / 157;
 }
 
-html.sc-catalog-prepaint[data-sc-theme-resolved='dark'] {
-  --sc-shell-base: rgba(218,218,212,.065);
-}
-
-
 html.sc-catalog-prepaint body.sushiShop {
   overflow-anchor: none;
 }
 
-/* Mobile header: never hide the real logo. Provisional SlickNav copies stay
-   out of flow until the canonical mobile header is mounted. */
+/* Mobile logo: preserve the parent/header geometry but never hide the actual
+   LCP candidate while runtime modules are still loading. */
 @media (max-width: 992px) {
-  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile img {
-    opacity: 1 !important;
-    visibility: visible !important;
+  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
+    background: transparent !important;
+    animation: none !important;
   }
 
+  html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile img,
+  html.sc-catalog-prepaint.sc-mobile-logo-ready body.sushiShop .brandOnlyMobile img {
+    opacity: 1 !important;
+  }
+
+  /* SlickNav is created by legacy code before our repair marks the canonical
+     instance. Keep provisional copies completely out of flow so they cannot
+     expand/collapse the document while the header initializes. */
   html.sc-catalog-prepaint body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     position: absolute !important;
     top: 0 !important;
@@ -46,7 +48,7 @@ html.sc-catalog-prepaint body.sushiShop {
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
-  background: var(--sc-shell-base) !important;
+  background: transparent !important;
 }
 
 html.sc-catalog-prepaint body.sushiShop .bannerShop .imgBannerShop {
@@ -111,22 +113,19 @@ html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div {
   background-color: transparent !important;
 }
 
-/* Catalog tools mount after parse. Reserve exactly their outer footprint for
-   each breakpoint, then exchange it synchronously for the real component. */
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
-  padding-top: calc(var(--sc-view-toggle-size,42px) + 60px) !important;
-}
-
-@media (min-width: 641px) and (max-width: 992px) {
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
-    padding-top: calc(var(--sc-view-toggle-size,42px) + 52px) !important;
-  }
-}
-
-@media (max-width: 640px) {
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerShop > .row {
-    padding-top: calc(var(--sc-view-toggle-size,42px) + 44px) !important;
-  }
+/* The Pages build injects the catalog-tools shell before first paint. The
+   placeholder occupies the eventual trait-reference row so hydration can move
+   the real strip into the toolbar without changing its outer height. */
+body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  height: 17px;
+  min-height: 17px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
 }
 
 @media (min-width: 993px) {
@@ -179,7 +178,7 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     margin: var(--sc-category-toolbar-margin-top) 0 var(--sc-category-toolbar-margin-bottom);
     border: 0;
     border-bottom: var(--sc-border-hairline) solid var(--sc-color-border);
-    background-color: var(--sc-shell-base);
+    background-color: transparent;
     background-image: none;
     animation: none;
   }
@@ -258,5 +257,20 @@ html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-tools-ready) .containerS
     aspect-ratio: var(--sc-product-image-ratio);
     margin: 0 !important;
     overflow: hidden !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.sc-catalog-prepaint body.sushiShop :where(
+    .topBar.newVer17topBar .bord-line,
+    .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
+    .sc-catalog-toolbar,
+    .sc-catalog-tools,
+    footer .bord,
+    .brandOnlyMobile > a,
+    .bannerShop .BanContShop::after,
+    .containerShop::before
+  ) {
+    animation: none !important;
   }
 }
