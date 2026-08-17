@@ -1,13 +1,13 @@
 /* Catalog toolbar controls shared by view and color-mode state. */
 body.sushiShop .sc-catalog-actions{display:flex;flex:0 0 auto;align-items:center;gap:4px;margin-left:auto;}
 body.sushiShop .sc-theme-control{position:relative;display:flex;align-items:center;}
-body.sushiShop .sc-theme-toggle{box-sizing:border-box;display:inline-flex;position:relative;flex:0 0 var(--sc-view-toggle-size);align-items:center;justify-content:center;width:var(--sc-view-toggle-size);height:var(--sc-view-toggle-size);margin:0;padding:0;border:0;border-radius:0;outline:0;background:transparent;box-shadow:none;color:var(--sc-color-copy);cursor:pointer;-webkit-tap-highlight-color:transparent;will-change:transform;touch-action:manipulation;}
+body.sushiShop .sc-theme-toggle{box-sizing:border-box;display:inline-flex;position:relative;flex:0 0 var(--sc-view-toggle-size);align-items:center;justify-content:center;width:var(--sc-view-toggle-size);height:var(--sc-view-toggle-size);margin:0;padding:0;border:0;border-radius:0;outline:0;background:transparent;box-shadow:none;color:var(--sc-color-copy);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 body.sushiShop .sc-theme-toggle:hover,body.sushiShop .sc-theme-toggle[aria-expanded='true']{color:var(--sc-color-ink);}
 body.sushiShop .sc-theme-toggle:focus:not(:focus-visible),body.sushiShop .sc-theme-toggle:active{outline:0;background:transparent;box-shadow:none;}
 body.sushiShop .sc-theme-toggle:focus-visible{outline:var(--sc-focus-ring-width-subtle) solid var(--sc-focus-ring-color);outline-offset:var(--sc-focus-ring-offset-tight);}
 
 /* One 24px glyph. GSAP owns geometry; CSS keeps paint/layout stable. */
-body.sushiShop .sc-theme-icon{display:block;width:24px;min-width:24px;max-width:24px;height:24px;min-height:24px;max-height:24px;overflow:visible;color:currentColor;pointer-events:none;}
+body.sushiShop .sc-theme-icon{display:block;width:24px;min-width:24px;max-width:24px;height:24px;min-height:24px;max-height:24px;overflow:visible;color:currentColor;pointer-events:none;transform-box:view-box;transform-origin:50% 50%;}
 body.sushiShop .sc-theme-rotor{transform-box:view-box;transform-origin:12px 12px;}
 body.sushiShop .sc-theme-core{fill:currentColor;}
 body.sushiShop .sc-theme-auto-ring{fill:none;stroke:currentColor;stroke-width:1.55;}
