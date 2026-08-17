@@ -119,7 +119,9 @@ if not mobile_banner_path.is_file() or mobile_banner_path.stat().st_size > MAX_M
     raise SystemExit('mobile banner verification failed')
 for name in DESKTOP_ONLY:
     url = f'_chrome-media/{name}.webp?v={SHA}'
-    if re.search(r'\bsrc=["\']' + re.escape(url) + r'["\']', html, re.I):
+    # Require an actual whitespace-delimited src attribute. Do not confuse the
+    # intentionally retained data-sc-desktop-src attribute with an eager src.
+    if re.search(r'<img\b[^>]*\ssrc=["\']' + re.escape(url) + r'["\'][^>]*>', html, re.I):
         raise SystemExit(f'desktop-only media remains eager on mobile: {name}')
 if "querySelectorAll('img[data-sc-desktop-src]')" not in html:
     raise SystemExit('desktop breakpoint media activator missing')
