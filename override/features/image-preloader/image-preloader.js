@@ -5,7 +5,7 @@ var STATIC_PAGES=location.hostname==='krestosa.github.io',MOBILE_LOGO='https://w
 var observer=null,intersection=null,bindings=new Map(),readyHandler=null,started=false,generation=0,criticalCount=0,criticalLimitValue=0,initialQueue=[],initialIdle=0,initialTimer=0,STAGE='.imgShop,.imgLiquidNoFillShop';
 var INITIAL_SYNC=8,INITIAL_BATCH=8,INITIAL_BUDGET_MS=4,INITIAL_IDLE_TIMEOUT=1400;
 function preloadCriticalMedia(){
-  if(!document.head||!window.matchMedia('(max-width: 992px)').matches||document.querySelector('link[data-sc-mobile-logo-preload]'))return;
+  if(STATIC_PAGES||!document.head||!window.matchMedia('(max-width: 992px)').matches||document.querySelector('link[data-sc-mobile-logo-preload]'))return;
   var link=document.createElement('link');link.rel='preload';link.as='image';link.href=MOBILE_LOGO;link.setAttribute('fetchpriority','high');link.setAttribute('data-sc-mobile-logo-preload','');document.head.appendChild(link);
 }
 function installStaticKeepaliveGuard(){
@@ -20,8 +20,7 @@ function installStaticKeepaliveGuard(){
   $.ajax=function(first,second){if(!isKeepalive(first,second))return ajax.apply(this,arguments);return $.Deferred().resolve('','nocontent',null).promise();};
 }
 function decorateCriticalMedia(){
-  var logo=document.querySelector('.brandOnlyMobile img[src*="web-sushiclub2_black_m2.png"]')||document.querySelector('img[src="'+MOBILE_LOGO+'"]');
-  if(logo){logo.loading='eager';logo.decoding='async';try{logo.fetchPriority='high';}catch(_){}if(!logo.hasAttribute('width'))logo.setAttribute('width','333');if(!logo.hasAttribute('height'))logo.setAttribute('height','100');}
+  if(!STATIC_PAGES){var logo=document.querySelector('.brandOnlyMobile img[src*="web-sushiclub2_black_m2.png"]')||document.querySelector('img[src="'+MOBILE_LOGO+'"]');if(logo){logo.loading='eager';logo.decoding='async';try{logo.fetchPriority='high';}catch(_){}if(!logo.hasAttribute('width'))logo.setAttribute('width','333');if(!logo.hasAttribute('height'))logo.setAttribute('height','100');}}
   var banner=document.querySelector('img.imgBannerShop');if(banner)banner.decoding='async';
 }
 preloadCriticalMedia();installStaticKeepaliveGuard();

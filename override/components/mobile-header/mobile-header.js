@@ -68,7 +68,6 @@ function repairMobileHeader(finalAttempt){
   live.classList.add('sc-mobile-main-menu');live.style.removeProperty('visibility');live.style.removeProperty('pointer-events');
   var button=live.querySelector('.slicknav_btn'),nav=live.querySelector('.slicknav_nav');
   if(isPluginMenu(live))removeFallbackToggle(button);else installFallbackMenuToggle(live);syncMenuButton(button,nav);installA11ySync(button,nav);
-  var logo=document.querySelector('.brandOnlyMobile img');if(logo){logo.style.removeProperty('margin-left');logo.style.removeProperty('transform');}
   return true;
 }
 function clearRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=0;}}
