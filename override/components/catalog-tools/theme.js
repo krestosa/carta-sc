@@ -17,33 +17,9 @@ var MODES=['system','light','dark'],
     iconToken=0,
     iconTimeline=null,
     motionDeps=null,
-    SWITCH_COMMIT=190,
-    SWITCH_IN=205,
-    SWITCH_END=540;
-
-var ICON_STATE={
-  system:{
-    solar:{rotation:34,scale:.62,opacity:0},
-    rays:{rotation:26,scale:.34,opacity:0},
-    cut:{x:11.5,y:-8.5},
-    discScale:1,
-    auto:{rotation:0,scale:1,opacity:1}
-  },
-  light:{
-    solar:{rotation:0,scale:1,opacity:1},
-    rays:{rotation:0,scale:1,opacity:1},
-    cut:{x:11.5,y:-8.5},
-    discScale:1,
-    auto:{rotation:-38,scale:.62,opacity:0}
-  },
-  dark:{
-    solar:{rotation:-7,scale:1.13,opacity:1},
-    rays:{rotation:26,scale:.34,opacity:0},
-    cut:{x:0,y:0},
-    discScale:1.45,
-    auto:{rotation:38,scale:.62,opacity:0}
-  }
-};
+    SWITCH_COMMIT=180,
+    SWITCH_IN=195,
+    SWITCH_END=500;
 
 function normalize(mode){return MODES.indexOf(mode)>=0?mode:'';}
 function selected(){return normalize(doc.getAttribute('data-sc-theme')||'')||'system';}
@@ -110,34 +86,21 @@ function commit(root,mode,persist,skipSync){
   if(visualChanged)emit(mode,actual);
   if(persist&&modeChanged)scheduleSave(mode);
 }
-
 function prepareMotion(){
   if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();
 }
-function iconParts(root){
-  var button=root&&root.querySelector('.sc-theme-toggle');
-  return button?{
-    solar:button.querySelector('.sc-theme-solar-glyph'),
-    rays:button.querySelector('.sc-theme-rays'),
-    cut:button.querySelector('.sc-theme-cut'),
-    disc:button.querySelector('.sc-theme-disc'),
-    auto:button.querySelector('.sc-theme-auto-glyph')
-  }:null;
+
+function iconLayers(root){
+  var host=root&&root.querySelector('[data-sc-theme-icon]');
+  if(!host)return null;
+  var system=host.querySelector('[data-sc-theme-layer="system"]'),
+      light=host.querySelector('[data-sc-theme-layer="light"]'),
+      dark=host.querySelector('[data-sc-theme-layer="dark"]');
+  return system&&light&&dark?{system:system,light:light,dark:dark,all:[system,light,dark]}:null;
 }
-function usableParts(parts){
-  return!!(parts&&parts.solar&&parts.rays&&parts.cut&&parts.disc&&parts.auto);
-}
-function setGsapState(gsap,parts,state){
-  gsap.set(parts.solar,{rotation:state.solar.rotation,scale:state.solar.scale,autoAlpha:state.solar.opacity,svgOrigin:'12 12',force3D:false});
-  gsap.set(parts.rays,{rotation:state.rays.rotation,scale:state.rays.scale,autoAlpha:state.rays.opacity,svgOrigin:'12 12',force3D:false});
-  gsap.set(parts.cut,{x:state.cut.x,y:state.cut.y,force3D:false});
-  gsap.set(parts.disc,{scale:state.discScale,svgOrigin:'12 12',force3D:false});
-  gsap.set(parts.auto,{rotation:state.auto.rotation,scale:state.auto.scale,autoAlpha:state.auto.opacity,svgOrigin:'12 12',force3D:false});
-}
-function clearGsapState(gsap,parts){
-  if(!gsap||!usableParts(parts))return;
-  parts.disc.style.removeProperty('transition');
-  gsap.set([parts.solar,parts.rays,parts.cut,parts.disc,parts.auto],{clearProps:'transform,opacity,visibility'});
+function clearIconStyles(gsap,layers){
+  if(!gsap||!layers)return;
+  gsap.set(layers.all,{clearProps:'transform,opacity,visibility'});
 }
 function cancelIconMotion(root,clearInline){
   iconToken++;
@@ -147,28 +110,19 @@ function cancelIconMotion(root,clearInline){
   }
   if(root){
     root.removeAttribute('data-sc-theme-animating');
-    var parts=iconParts(root);
-    if(parts&&parts.disc)parts.disc.style.removeProperty('transition');
-    if(clearInline&&motionDeps&&motionDeps.gsap)clearGsapState(motionDeps.gsap,parts);
+    if(clearInline&&motionDeps&&motionDeps.gsap)clearIconStyles(motionDeps.gsap,iconLayers(root));
   }
   return iconToken;
 }
 function finalizeIcon(root,token){
   if(token!==iconToken||!root)return;
-  var gsap=motionDeps&&motionDeps.gsap,parts=iconParts(root);
+  var gsap=motionDeps&&motionDeps.gsap;
   if(iconTimeline){
     try{iconTimeline.kill();}catch(_){}
     iconTimeline=null;
   }
-  if(gsap)clearGsapState(gsap,parts);
+  if(gsap)clearIconStyles(gsap,iconLayers(root));
   root.removeAttribute('data-sc-theme-animating');
-}
-function tweenTarget(target,part){
-  if(part==='solar')return{rotation:target.solar.rotation,scale:target.solar.scale,autoAlpha:target.solar.opacity,svgOrigin:'12 12',force3D:false};
-  if(part==='rays')return{rotation:target.rays.rotation,scale:target.rays.scale,autoAlpha:target.rays.opacity,svgOrigin:'12 12',force3D:false};
-  if(part==='cut')return{x:target.cut.x,y:target.cut.y,force3D:false};
-  if(part==='disc')return{scale:target.discScale,svgOrigin:'12 12',force3D:false};
-  return{rotation:target.auto.rotation,scale:target.auto.scale,autoAlpha:target.auto.opacity,svgOrigin:'12 12',force3D:false};
 }
 function animateModeChange(root,from,to){
   if(!root)return;
@@ -176,53 +130,76 @@ function animateModeChange(root,from,to){
   to=normalize(to)||'system';
   syncMeta(root,to);
 
-  var parts=iconParts(root);
-  if(!usableParts(parts)||from===to||reducedMotion()){
+  var layers=iconLayers(root);
+  if(!layers||from===to||reducedMotion()){
     sync(root,to);
     return;
   }
 
   var gsap=motionDeps&&motionDeps.gsap;
   if(!gsap){
-    sync(root,to);
+    root.setAttribute('data-sc-theme-mode',to);
     return;
   }
 
-  var source=ICON_STATE[from],
-      target=ICON_STATE[to],
-      token=cancelIconMotion(root,false);
+  var outgoing=layers[from],
+      incoming=layers[to],
+      direction=MODES.indexOf(to)>=MODES.indexOf(from)?1:-1,
+      token=cancelIconMotion(root,true);
 
-  setGsapState(gsap,parts,source);
-  parts.disc.style.setProperty('transition','none','important');
-  root.setAttribute('data-sc-theme-mode',to);
   root.setAttribute('data-sc-theme-animating','true');
+  root.setAttribute('data-sc-theme-mode',to);
 
-  iconTimeline=gsap.timeline({
-    onComplete:function(){finalizeIcon(root,token);}
+  gsap.set(layers.all,{
+    autoAlpha:0,
+    scale:.84,
+    rotation:0,
+    x:0,
+    y:0,
+    transformOrigin:'50% 50%',
+    force3D:false
+  });
+  gsap.set(outgoing,{
+    autoAlpha:1,
+    scale:1,
+    rotation:0,
+    x:0,
+    y:0,
+    transformOrigin:'50% 50%',
+    force3D:false
+  });
+  gsap.set(incoming,{
+    autoAlpha:0,
+    scale:.84,
+    rotation:8*direction,
+    x:1.5*direction,
+    y:0,
+    transformOrigin:'50% 50%',
+    force3D:false
   });
 
-  if(from==='system'&&to!=='system'){
-    iconTimeline
-      .to(parts.auto,{rotation:to==='dark'?22:-22,scale:.78,autoAlpha:0,duration:.18,ease:'power2.in',svgOrigin:'12 12',force3D:false},0)
-      .to(parts.solar,Object.assign(tweenTarget(target,'solar'),{duration:.36,ease:'back.out(1.25)'}),.08)
-      .to(parts.rays,Object.assign(tweenTarget(target,'rays'),{duration:.34,ease:'power3.out'}),.08)
-      .to(parts.cut,Object.assign(tweenTarget(target,'cut'),{duration:.34,ease:'power3.out'}),.08)
-      .to(parts.disc,Object.assign(tweenTarget(target,'disc'),{duration:.36,ease:'power3.out'}),.08);
-  }else if(from!=='system'&&to==='system'){
-    iconTimeline
-      .to(parts.solar,{rotation:target.solar.rotation,scale:.72,autoAlpha:0,duration:.2,ease:'power2.in',svgOrigin:'12 12',force3D:false},0)
-      .to(parts.rays,Object.assign(tweenTarget(target,'rays'),{duration:.2,ease:'power2.in'}),0)
-      .to(parts.cut,Object.assign(tweenTarget(target,'cut'),{duration:.22,ease:'power2.inOut'}),0)
-      .to(parts.disc,Object.assign(tweenTarget(target,'disc'),{duration:.22,ease:'power2.inOut'}),0)
-      .to(parts.auto,Object.assign(tweenTarget(target,'auto'),{duration:.36,ease:'back.out(1.35)'}),.08);
-  }else{
-    iconTimeline
-      .to(parts.solar,Object.assign(tweenTarget(target,'solar'),{duration:.42,ease:'power3.out'}),0)
-      .to(parts.rays,Object.assign(tweenTarget(target,'rays'),{duration:.38,ease:'power2.inOut'}),0)
-      .to(parts.cut,Object.assign(tweenTarget(target,'cut'),{duration:.42,ease:'power3.out'}),0)
-      .to(parts.disc,Object.assign(tweenTarget(target,'disc'),{duration:.42,ease:'power3.out'}),0)
-      .to(parts.auto,Object.assign(tweenTarget(target,'auto'),{duration:.24,ease:'power2.inOut'}),0);
-  }
+  iconTimeline=gsap.timeline({onComplete:function(){finalizeIcon(root,token);}});
+  iconTimeline
+    .to(outgoing,{
+      autoAlpha:0,
+      scale:.84,
+      rotation:-8*direction,
+      x:-1.5*direction,
+      duration:.2,
+      ease:'power2.in',
+      transformOrigin:'50% 50%',
+      force3D:false
+    },0)
+    .to(incoming,{
+      autoAlpha:1,
+      scale:1,
+      rotation:0,
+      x:0,
+      duration:.34,
+      ease:'power3.out',
+      transformOrigin:'50% 50%',
+      force3D:false
+    },.07);
 }
 function apply(root,mode,persist){
   cancelIconMotion(root,true);
@@ -309,7 +286,6 @@ function install(root){
       control=button&&button.closest('.sc-theme-control');
   if(!button||!menu||!control)return function(){};
 
-  control.style.setProperty('--sc-theme-icon-duration','420ms');
   apply(root,load(),false);
   var closeTimer=0,hovering=false;
 
@@ -359,7 +335,6 @@ function install(root){
         index=itemsNow.indexOf(target);
     if(target===button&&(event.key==='ArrowDown'||event.key==='ArrowUp')){
       event.preventDefault();
-      prepareMotion();
       setOpen(root,true,true);
       return;
     }
@@ -389,7 +364,6 @@ function install(root){
 
   control.addEventListener('pointerenter',hoverEnter);
   control.addEventListener('pointerleave',hoverLeave);
-  control.addEventListener('focusin',prepareMotion);
   button.addEventListener('click',toggle);
   menu.addEventListener('click',choose);
   root.addEventListener('keydown',keydown);
@@ -399,10 +373,8 @@ function install(root){
     clearClose();
     clearSwitch();
     cancelIconMotion(root,true);
-    control.style.removeProperty('--sc-theme-icon-duration');
     control.removeEventListener('pointerenter',hoverEnter);
     control.removeEventListener('pointerleave',hoverLeave);
-    control.removeEventListener('focusin',prepareMotion);
     button.removeEventListener('click',toggle);
     menu.removeEventListener('click',choose);
     root.removeEventListener('keydown',keydown);
