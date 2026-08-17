@@ -15,19 +15,9 @@ var MODES=['compact','list'],
     cleanup=null,
     motionDeps=null;
 
-/* The SVG keeps one canonical grid geometry. List mode is represented entirely
-   by transforms, avoiding x/y/width/height writes during animation. */
-var ICON_TRANSFORMS={
-  grid:[
-    [0,0,1,1],[0,0,1,1],
-    [0,0,1,1],[0,0,1,1],
-    [0,0,1,1],[0,0,1,1]
-  ],
-  list:[
-    [0,.25,.4375,.875],[-4.5,.25,1.5625,.875],
-    [0,.25,.4375,.875],[-4.5,.25,1.5625,.875],
-    [0,.25,.4375,.875],[-4.5,.25,1.5625,.875]
-  ]
+var ICONS={
+  grid:[[3,3,8,4],[13,3,8,4],[3,10,8,4],[13,10,8,4],[3,17,8,4],[13,17,8,4]],
+  list:[[3,3.25,3.5,3.5],[8.5,3.25,12.5,3.5],[3,10.25,3.5,3.5],[8.5,10.25,12.5,3.5],[3,17.25,3.5,3.5],[8.5,17.25,12.5,3.5]]
 };
 
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
@@ -43,7 +33,6 @@ function label(mode){
   return'Vista grilla de alta densidad: '+count+' '+(count===1?'columna':'columnas')+'. Cambiar a vista lista';
 }
 function iconKey(mode){return effectiveMode(mode)==='list'?'list':'grid';}
-function oppositeKey(key){return key==='list'?'grid':'list';}
 function load(){
   var mode=normalize(doc.getAttribute('data-sc-catalog-view')||''),ctx=context(),legacy='';
   if(mode)return mode;
@@ -60,141 +49,121 @@ function load(){
 function save(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
 function reducedMotion(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
 function cells(host){return host?Array.prototype.slice.call(host.querySelectorAll('[data-sc-view-cell]')):[];}
-function mix(a,b,t){return a+(b-a)*t;}
-function mixTransforms(from,to,amount){
-  return from.map(function(item,index){
-    var target=to[index];
-    return[
-      mix(item[0],target[0],amount),
-      mix(item[1],target[1],amount),
-      mix(item[2],target[2],amount),
-      mix(item[3],target[3],amount)
-    ];
-  });
+function writeGeometry(cell,geometry){
+  cell.setAttribute('x',geometry[0]);
+  cell.setAttribute('y',geometry[1]);
+  cell.setAttribute('width',geometry[2]);
+  cell.setAttribute('height',geometry[3]);
 }
-function transformString(value){
-  return'translate('+value[0]+'px,'+value[1]+'px) scale('+value[2]+','+value[3]+')';
-}
-function setTransformState(host,target,instant){
+function setGeometry(host,target){
   var nodes=cells(host);
   if(!host||!target||nodes.length!==target.length)return;
-  if(instant)host.setAttribute('data-sc-view-icon-static','true');
-  nodes.forEach(function(cell,index){
-    cell.style.transform=transformString(target[index]);
-  });
-  if(instant){
-    host.getBoundingClientRect();
-    host.removeAttribute('data-sc-view-icon-static');
-  }
+  nodes.forEach(function(cell,index){writeGeometry(cell,target[index]);});
 }
 function clearViewIconMotion(host){
   var state=host&&host.__scViewIconMotion;
-  if(!state)return;
-  if(state.animation){try{state.animation.kill();}catch(_){} }
-  if(state.timer)window.clearTimeout(state.timer);
+  if(!host)return;
+  if(state){
+    if(state.timeline)try{state.timeline.kill();}catch(_){}
+    if(state.timer)window.clearTimeout(state.timer);
+    if(state.timer2)window.clearTimeout(state.timer2);
+  }
+  if(motionDeps&&motionDeps.gsap){
+    motionDeps.gsap.set(host,{clearProps:'transform,opacity,visibility'});
+  }
   host.removeAttribute('data-sc-view-icon-animating');
-  host.style.removeProperty('--sc-view-icon-duration');
+  host.removeAttribute('data-sc-view-icon-fallback');
+  host.removeAttribute('data-sc-view-icon-preview');
   host.__scViewIconMotion=null;
 }
 function finalizeViewIconMotion(host,state){
   if(!host||host.__scViewIconMotion!==state)return;
+  if(motionDeps&&motionDeps.gsap)motionDeps.gsap.set(host,{clearProps:'transform,opacity,visibility'});
   host.removeAttribute('data-sc-view-icon-animating');
-  host.style.removeProperty('--sc-view-icon-duration');
+  host.removeAttribute('data-sc-view-icon-fallback');
+  host.removeAttribute('data-sc-view-icon-preview');
   host.__scViewIconMotion=null;
 }
-function gsapVars(value){
-  return{
-    x:value[0],
-    y:value[1],
-    scaleX:value[2],
-    scaleY:value[3],
-    transformOrigin:'0% 0%',
-    force3D:false
-  };
+function fallbackSwap(host,target){
+  var state={timeline:null,timer:0,timer2:0};
+  host.__scViewIconMotion=state;
+  host.setAttribute('data-sc-view-icon-fallback','out');
+  state.timer=window.setTimeout(function(){
+    if(host.__scViewIconMotion!==state)return;
+    setGeometry(host,target);
+    host.setAttribute('data-sc-view-icon-fallback','in');
+    state.timer2=window.setTimeout(function(){finalizeViewIconMotion(host,state);},260);
+  },145);
 }
-function animateTransforms(host,target,duration,ease){
-  var nodes=cells(host);
-  if(!host||!target||nodes.length!==target.length)return;
+function animateSwap(host,target){
+  if(!host||!target)return;
   clearViewIconMotion(host);
-
-  if(reducedMotion()){
-    setTransformState(host,target,true);
-    return;
-  }
+  if(reducedMotion()){setGeometry(host,target);return;}
 
   var gsap=motionDeps&&motionDeps.gsap;
-  if(!gsap){
-    /* GSAP is loaded lazily. CSS handles the first transform-only transition
-       without introducing a second per-frame JavaScript animation loop. */
-    var fallback={animation:null,timer:0};
-    host.__scViewIconMotion=fallback;
-    host.style.setProperty('--sc-view-icon-duration',Math.round(duration*1000)+'ms');
-    setTransformState(host,target,false);
-    fallback.timer=window.setTimeout(function(){finalizeViewIconMotion(host,fallback);},Math.round(duration*1000)+40);
-    return;
-  }
+  if(!gsap){fallbackSwap(host,target);return;}
 
-  var state={animation:null,timer:0};
+  var state={timeline:null,timer:0,timer2:0};
   host.__scViewIconMotion=state;
   host.setAttribute('data-sc-view-icon-animating','true');
 
-  var timeline=gsap.timeline({
-    defaults:{duration:duration,ease:ease||'power3.out',overwrite:'auto'},
+  state.timeline=gsap.timeline({
     onComplete:function(){finalizeViewIconMotion(host,state);}
   });
-  nodes.forEach(function(cell,index){
-    timeline.to(cell,gsapVars(target[index]),0);
-  });
-  state.animation=timeline;
-}
-function setViewIcon(host,key){
-  clearViewIconMotion(host);
-  setTransformState(host,ICON_TRANSFORMS[key],true);
-}
-function animateViewIcon(host,key){
-  animateTransforms(host,ICON_TRANSFORMS[key],.28,(CFG.motion&&CFG.motion.easings&&CFG.motion.easings.strongOut)||'power3.out');
+  state.timeline
+    .to(host,{
+      autoAlpha:.16,
+      scale:.84,
+      rotation:-6,
+      duration:.14,
+      ease:'power2.in',
+      transformOrigin:'50% 50%',
+      force3D:false,
+      onComplete:function(){if(host.__scViewIconMotion===state)setGeometry(host,target);}
+    },0)
+    .fromTo(host,{
+      autoAlpha:.16,
+      scale:.84,
+      rotation:6
+    },{
+      autoAlpha:1,
+      scale:1,
+      rotation:0,
+      duration:.26,
+      ease:'power3.out',
+      transformOrigin:'50% 50%',
+      force3D:false
+    },.14);
 }
 function hoverPreview(host){
   if(!host||reducedMotion())return;
-  var gsap=motionDeps&&motionDeps.gsap,nodes=cells(host);
-  if(!nodes.length)return;
-
   clearViewIconMotion(host);
+  if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();
 
-  var key=iconKey(selectedMode()),
-      base=ICON_TRANSFORMS[key],
-      preview=mixTransforms(base,ICON_TRANSFORMS[oppositeKey(key)],.22),
-      state={animation:null,timer:0};
-
+  var gsap=motionDeps&&motionDeps.gsap;
   if(!gsap){
-    host.__scViewIconMotion=state;
-    host.style.setProperty('--sc-view-icon-duration','120ms');
-    setTransformState(host,preview,false);
-    state.timer=window.setTimeout(function(){
-      if(host.__scViewIconMotion!==state)return;
+    host.setAttribute('data-sc-view-icon-preview','true');
+    var fallback={timeline:null,timer:window.setTimeout(function(){
+      if(host.__scViewIconMotion!==fallback)return;
+      host.removeAttribute('data-sc-view-icon-preview');
       host.__scViewIconMotion=null;
-      host.style.removeProperty('--sc-view-icon-duration');
-      animateTransforms(host,base,.18,'power2.inOut');
-    },120);
+    },320),timer2:0};
+    host.__scViewIconMotion=fallback;
     return;
   }
 
+  var state={timeline:null,timer:0,timer2:0};
   host.__scViewIconMotion=state;
   host.setAttribute('data-sc-view-icon-animating','true');
-
-  var timeline=gsap.timeline({
-    onComplete:function(){finalizeViewIconMotion(host,state);}
-  });
-  nodes.forEach(function(cell,index){
-    timeline.to(cell,Object.assign(gsapVars(preview[index]),{duration:.12,ease:'power2.out',overwrite:'auto'}),0);
-  });
-  nodes.forEach(function(cell,index){
-    timeline.to(cell,Object.assign(gsapVars(base[index]),{duration:.18,ease:'power2.inOut',overwrite:'auto'}),.12);
-  });
-  state.animation=timeline;
+  state.timeline=gsap.timeline({onComplete:function(){finalizeViewIconMotion(host,state);}});
+  state.timeline
+    .to(host,{scale:1.06,rotation:2,duration:.12,ease:'power2.out',transformOrigin:'50% 50%',force3D:false},0)
+    .to(host,{scale:1,rotation:0,duration:.2,ease:'power2.inOut',transformOrigin:'50% 50%',force3D:false},.12);
 }
 function hoverRestore(host){
-  animateTransforms(host,ICON_TRANSFORMS[iconKey(selectedMode())],.16,'power2.out');
+  var state=host&&host.__scViewIconMotion;
+  if(!state)return;
+  clearViewIconMotion(host);
 }
 function sync(root,mode,animate){
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),
@@ -210,13 +179,15 @@ function sync(root,mode,animate){
   if(!host)return;
 
   if(previous===key){
-    if(!host.__scViewIconMotion)setTransformState(host,ICON_TRANSFORMS[key],true);
+    if(!host.__scViewIconMotion)setGeometry(host,ICONS[key]);
     return;
   }
 
-  if(animate!==false&&previous)animateViewIcon(host,key);
-  else setViewIcon(host,key);
-
+  if(animate!==false&&previous)animateSwap(host,ICONS[key]);
+  else{
+    clearViewIconMotion(host);
+    setGeometry(host,ICONS[key]);
+  }
   host.setAttribute('data-sc-icon-state',key);
 }
 
@@ -226,7 +197,6 @@ function viewportAnchor(){
       probe=Math.min(Math.max(height*.28,110),240),
       best=null,
       bestDistance=Infinity;
-
   for(var i=0;i<nodes.length;i++){
     var node=nodes[i],rect=node.getBoundingClientRect();
     if(rect.bottom<=0||rect.top>=height)continue;
@@ -271,9 +241,7 @@ function restoreViewport(viewport){
 }
 function refreshMotionNow(){
   if(SC.motion&&SC.motion.run){
-    SC.motion.run(function(deps){
-      if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();
-    });
+    SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});
   }
 }
 function syncMounted(){
@@ -336,7 +304,9 @@ function install(root){
 
   apply(root,load(),false);
 
+  function prepareMotion(){if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();}
   function click(){
+    prepareMotion();
     var current=selectedMode();
     apply(root,current==='compact'?'list':'compact',true);
   }
@@ -348,11 +318,13 @@ function install(root){
     if(event.pointerType==='touch')return;
     hoverRestore(host);
   }
+  function focus(){prepareMotion();}
   function breakpoint(){refreshLayout(null);}
 
   button.addEventListener('click',click);
   button.addEventListener('pointerenter',enter);
   button.addEventListener('pointerleave',leave);
+  button.addEventListener('focus',focus);
 
   if(phone.addEventListener)phone.addEventListener('change',breakpoint);
   else phone.addListener(breakpoint);
@@ -363,6 +335,7 @@ function install(root){
     button.removeEventListener('click',click);
     button.removeEventListener('pointerenter',enter);
     button.removeEventListener('pointerleave',leave);
+    button.removeEventListener('focus',focus);
     if(phone.removeEventListener)phone.removeEventListener('change',breakpoint);
     else phone.removeListener(breakpoint);
     if(tablet.removeEventListener)tablet.removeEventListener('change',breakpoint);
