@@ -1,5 +1,5 @@
-/* Section heading geometry extracted from the former card hierarchy stylesheet. */
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Section heading geometry. Desktop values are the base contract; responsive.css
+   only changes genuinely breakpoint-specific typography/spacing. */
 body.sushiShop {
   --sc-section-rule-scale: 1;
   --sc-section-title-margin: 6px 0 -3px;
@@ -11,110 +11,52 @@ body.sushiShop {
   --sc-section-subtitle-tracking: -.025em;
 }
 
-@media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion {
-    position: static !important;
-    top: auto !important;
-    box-sizing: border-box;
-    width: 100% !important;
-    margin: var(--sc-section-title-margin) !important;
-    padding: 0 !important;
-    background: transparent !important;
-    color: var(--sc-color-ink) !important;
-    font-family: var(--sc-font-primary) !important;
-    font-size: 28px !important;
-    line-height: var(--sc-section-title-line-height) !important;
-    font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: -.04em !important;
-    text-transform: none !important;
-    z-index: var(--sc-z-raised);
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div {
-    box-sizing: border-box;
-    width: 100% !important;
-    padding: var(--sc-section-title-padding) !important;
-    border-top: 0 !important;
-    border-bottom: var(--sc-border-hairline) solid var(--sc-color-border) !important;
-    background: transparent !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion {
-    margin-top: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
-    padding-top: 2px !important;
-    border-top: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion {
-    box-sizing: border-box;
-    width: 100% !important;
-    margin: var(--sc-section-subtitle-margin) !important;
-    padding: 0 !important;
-    color: var(--sc-color-heading) !important;
-    font-family: var(--sc-font-primary) !important;
-    font-size: var(--sc-section-subtitle-size) !important;
-    line-height: var(--sc-section-subtitle-line-height) !important;
-    font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: var(--sc-section-subtitle-tracking) !important;
-    text-transform: none !important;
-  }
+body.sushiShop .listadoShop .titleShopSeccion {
+  position: static !important;
+  top: auto !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: var(--sc-section-title-margin) !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--sc-color-ink) !important;
+  font-family: var(--sc-font-primary) !important;
+  font-size: 28px !important;
+  line-height: var(--sc-section-title-line-height) !important;
+  font-weight: var(--sc-font-weight-semibold) !important;
+  letter-spacing: -.04em !important;
+  text-transform: none !important;
+  z-index: var(--sc-z-raised);
 }
 
-@media (max-width: 992px) {
-  body.sushiShop .listadoShop .titleShopSeccion {
-    position: static !important;
-    box-sizing: border-box;
-    width: 100% !important;
-    margin: var(--sc-section-title-margin) !important;
-    padding: 0 !important;
-    background: transparent !important;
-    color: var(--sc-color-ink) !important;
-    font-family: var(--sc-font-primary) !important;
-    font-size: 26px !important;
-    line-height: var(--sc-section-title-line-height) !important;
-    font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: -.038em !important;
-    text-transform: none !important;
-  }
-
-  body.sushiShop .listadoShop .titleShopSeccion > div {
-    box-sizing: border-box;
-    width: 100% !important;
-    padding: var(--sc-section-title-padding) !important;
-    border-top: 0 !important;
-    border-bottom: var(--sc-border-hairline) solid var(--sc-color-border) !important;
-    background: transparent !important;
-  }
-
-  body.sushiShop .listadoShop .subTitleShopSeccion {
-    box-sizing: border-box;
-    width: 100% !important;
-    margin: var(--sc-section-subtitle-margin) !important;
-    padding: 0 !important;
-    color: var(--sc-color-heading) !important;
-    font-family: var(--sc-font-primary) !important;
-    font-size: var(--sc-section-subtitle-size) !important;
-    line-height: var(--sc-section-subtitle-line-height) !important;
-    font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: var(--sc-section-subtitle-tracking) !important;
-    text-transform: none !important;
-  }
+body.sushiShop .listadoShop .titleShopSeccion > div {
+  box-sizing: border-box;
+  width: 100% !important;
+  padding: var(--sc-section-title-padding) !important;
+  border-top: 0 !important;
+  border-bottom: var(--sc-border-hairline) solid var(--sc-color-border) !important;
+  background: transparent !important;
 }
 
-@media (max-width: 640px) {
-  body.sushiShop .listadoShop .titleShopSeccion {
-    font-size: 24px !important;
-  }
+body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion {
+  margin-top: 0 !important;
+}
 
-  body.sushiShop .listadoShop .titleShopSeccion > div {
-    padding-top: 16px !important;
-    padding-bottom: 12px !important;
-  }
+body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
+  padding-top: 2px !important;
+  border-top: 0 !important;
+}
 
-  body.sushiShop .listadoShop .subTitleShopSeccion {
-    font-size: 18px !important;
-  }
+body.sushiShop .listadoShop .subTitleShopSeccion {
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: var(--sc-section-subtitle-margin) !important;
+  padding: 0 !important;
+  color: var(--sc-color-heading) !important;
+  font-family: var(--sc-font-primary) !important;
+  font-size: var(--sc-section-subtitle-size) !important;
+  line-height: var(--sc-section-subtitle-line-height) !important;
+  font-weight: var(--sc-font-weight-semibold) !important;
+  letter-spacing: var(--sc-section-subtitle-tracking) !important;
+  text-transform: none !important;
 }
