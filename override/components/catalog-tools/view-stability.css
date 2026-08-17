@@ -1,4 +1,4 @@
-/* Canonical catalogue view geometry.
+/* Canonical catalogue list geometry.
    Desktop defines the base contract; narrower breakpoints override tokens only. */
 body.sushiShop {
   --sc-view-list-image-width: 210px;
@@ -29,11 +29,7 @@ body.sushiShop {
   }
 }
 
-/* :is(layout-ready, not-layout-ready) is intentionally exhaustive. It adds the
-   same specificity as the old desktop-only compatibility rules while keeping
-   one shared declaration body for every breakpoint. Because this file loads
-   after catalog-tools.css, the canonical contract wins without forking layout. */
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop,
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
   grid-template-columns: minmax(0, 1fr) !important;
@@ -41,9 +37,8 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
 }
 
 /* A list card always uses the same two-column anatomy:
-   media | title / price+traits / flexible gap / description.
-   Desktop only changes the size tokens above. */
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop,
+   media | title / price+traits / flexible gap / description. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
   align-self: start !important;
@@ -53,7 +48,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
   overflow: visible !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop > a.fancyboxModalAddProd,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop > a.fancyboxModalAddProd,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
   grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important;
@@ -66,7 +61,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop >
   overflow: visible !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .imgShop,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .imgShop,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
   box-sizing: border-box !important;
@@ -81,7 +76,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   border-bottom: 0 !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .imgShop > img,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .imgShop > img,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
   width: 100% !important;
@@ -90,7 +85,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   object-position: center !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .title-shop1,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .title-shop1,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
   display: -webkit-box !important;
@@ -109,7 +104,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .priceRow,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   position: static !important;
@@ -126,13 +121,13 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   padding: 0 !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .sc-product-flavors,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-flavors,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
   display: none !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .descrip,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
   box-sizing: border-box !important;
@@ -152,7 +147,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-/* Old low-density values may exist for a frame in legacy storage/bootstrap.
+/* Old low-density values may exist for one frame in legacy storage/bootstrap.
    Treat them exactly like density until JS migrates them to compact. */
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop {
   grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
@@ -167,8 +162,6 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop > 
   column-gap: 0 !important;
 }
 
-/* View switching owns viewport compensation; native anchoring must not add a
-   second correction while the catalogue is relaying out. */
 html.sc-catalog-view-switching,
 html.sc-catalog-view-switching body.sushiShop {
   overflow-anchor: none !important;
