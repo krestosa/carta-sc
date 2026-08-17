@@ -16,7 +16,7 @@ config.queries=config.queries||{};
 ['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion'].forEach(function(name){
   if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
 });
-/* Application-level external dependencies. Icon transitions are native and do not require MorphSVG. */
+/* Application-level external dependencies. Icon motion uses GSAP core; MorphSVG is not required. */
 config.urls=merged({
   gsap:GSAP_DIST+'gsap.min.js',
   scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
