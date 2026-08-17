@@ -120,6 +120,7 @@ jobs:
               'scripts/optimize-pages-delivery.py',
               'scripts/optimize-pages-first-paint.py',
               'scripts/optimize-pages-first-viewport-media.py',
+              'scripts/optimize-pages-breakpoint-media.py',
               'scripts/validate-pages-local-assets.py',
               'scripts/validate-pages-html.py',
               'scripts/validate-pages-performance-budget.py',
@@ -205,6 +206,10 @@ jobs:
           # assets and release them immediately after the logo resource is ready.
           python3 scripts/optimize-pages-first-viewport-media.py
 
+          # Breakpoint isolation: preserve the desktop CLS fixes without making
+          # mobile download desktop-only chrome or oversized first-paint media.
+          python3 scripts/optimize-pages-breakpoint-media.py
+
           node --check .pages-site/override/main.js
           node --check .pages-site/_pages/legacy.js
           node --check .pages-site/_pages/shop.js
@@ -214,6 +219,13 @@ jobs:
           grep -F 'id="sc-pages-critical-css"' .pages-site/index.html >/dev/null
           grep -F 'id="sc-pages-delivery-loader"' .pages-site/index.html >/dev/null
           test -s .pages-site/_pages/deferred.css
+          test -s .pages-site/_critical-media/mobile-logo.webp
+          test -s .pages-site/_critical-media/mobile-banner.webp
+          if grep -F '_critical-media/mobile-logo.png?v=' .pages-site/index.html >/dev/null; then
+            echo 'Legacy mobile LCP PNG remains after breakpoint optimization'
+            exit 1
+          fi
+          grep -F "querySelectorAll('img[data-sc-desktop-src]')" .pages-site/index.html >/dev/null
           test "$(grep -o 'data-sc-first-viewport=' .pages-site/index.html | wc -l)" -eq 4
           for n in 1 2 3 4; do
             test -s ".pages-site/_first-viewport/product-${n}.webp"
