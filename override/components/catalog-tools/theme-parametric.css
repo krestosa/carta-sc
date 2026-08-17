@@ -1,0 +1,49 @@
+/* Single parametric theme glyph. GSAP owns motion; CSS only owns paint/layout. */
+body.sushiShop .sc-theme-parametric-host {
+  box-sizing:border-box;
+  display:block!important;
+  flex:0 0 var(--sc-view-icon-size,24px);
+  width:var(--sc-view-icon-size,24px)!important;
+  min-width:var(--sc-view-icon-size,24px)!important;
+  height:var(--sc-view-icon-size,24px)!important;
+  min-height:var(--sc-view-icon-size,24px)!important;
+  opacity:1!important;
+  visibility:visible!important;
+  color:var(--sc-color-ink,#0a0a0a)!important;
+  line-height:0;
+  overflow:visible!important;
+  transform-origin:50% 50%;
+}
+body.sushiShop .sc-theme-parametric-icon {
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:1!important;
+  visibility:visible!important;
+  overflow:visible!important;
+  color:inherit;
+  pointer-events:none;
+}
+body.sushiShop .sc-theme-parametric-rays {
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.65;
+  stroke-linecap:round;
+  opacity:0;
+}
+body.sushiShop .sc-theme-parametric-core { fill:currentColor; }
+body.sushiShop .sc-theme-parametric-ring {
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.45;
+  opacity:1;
+}
+body.sushiShop .sc-theme-parametric-icon,
+body.sushiShop .sc-theme-parametric-icon * {
+  vector-effect:non-scaling-stroke;
+}
+body.sushiShop .sc-catalog-tools[data-sc-theme-animating='true'] .sc-theme-parametric-host { will-change:transform; }
+
+@media (prefers-reduced-motion:reduce) {
+  body.sushiShop .sc-theme-parametric-host { transition:none!important; }
+}
