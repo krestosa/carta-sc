@@ -9,12 +9,11 @@ if not INDEX.is_file():
     raise SystemExit('Pages index missing for superseded-media pruning')
 
 html = INDEX.read_text(encoding='utf-8')
-
-TRAIT_URL_RE = re.compile(
-    r'https://www\.sushiclub\.com\.ar/gfx/sabor_(?:pic_[0-3]|vegano)\.png',
+IMG_RE = re.compile(r'<img\b[^>]*>', re.I)
+TRAIT_SRC_RE = re.compile(
+    r'\s+src=(["\'])(?P<url>https://www\.sushiclub\.com\.ar/gfx/sabor_(?:pic_[0-3]|vegano)\.png)\1',
     re.I,
 )
-IMG_RE = re.compile(r'<img\b[^>]*>', re.I)
 
 trait_count = 0
 trait_urls = set()
@@ -22,7 +21,7 @@ trait_urls = set()
 def prune_trait_img(match):
     global trait_count
     tag = match.group(0)
-    src = re.search(r'\s+src=(["\'])(?P<url>https://www\.sushiclub\.com\.ar/gfx/sabor_(?:pic_[0-3]|vegano)\.png)\1', tag, re.I)
+    src = TRAIT_SRC_RE.search(tag)
     if not src:
         return tag
     if not re.search(r'\bdata-original-title=(["\'])[^"\']+\1', tag, re.I):
@@ -40,6 +39,8 @@ if trait_count == 0:
     raise SystemExit('no legacy trait image sources found to prune')
 if len(trait_urls) != 5:
     raise SystemExit(f'expected 5 unique legacy trait assets, found {len(trait_urls)}')
+if any(TRAIT_SRC_RE.search(tag) for tag in IMG_RE.findall(html)):
+    raise SystemExit('legacy trait <img src> remains after pruning')
 
 # Theme surfaces and the custom category rail supersede these legacy raster
 # backgrounds. Remove the declarations from the final CSS so they cannot enter
@@ -57,10 +58,8 @@ for url, expected in css_replacements.items():
     html, count = pattern.subn('background-image:none', html)
     if count != expected:
         raise SystemExit(f'superseded CSS asset contract mismatch for {url}: {count} != {expected}')
-
-for url in list(trait_urls) + list(css_replacements):
     if url in html:
-        raise SystemExit(f'superseded media URL remains in final HTML/CSS: {url}')
+        raise SystemExit(f'superseded CSS background URL remains in final HTML: {url}')
 
 INDEX.write_text(html, encoding='utf-8')
 print(
