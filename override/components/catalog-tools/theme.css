@@ -11,7 +11,7 @@ body.sushiShop .sc-theme-icon{display:block;width:24px;min-width:24px;max-width:
 body.sushiShop .sc-theme-rotor{transform-box:view-box;transform-origin:12px 12px;}
 body.sushiShop .sc-theme-core{fill:currentColor;}
 body.sushiShop .sc-theme-auto-ring{fill:none;stroke:currentColor;stroke-width:1.55;}
-body.sushiShop .sc-theme-rays{fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;transform-box:view-box;transform-origin:12px 12px;opacity:0;transform:scale(0);}
+body.sushiShop .sc-theme-rays{fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;opacity:0;}
 body.sushiShop .sc-theme-bite{pointer-events:none;}
 
 /* Menu opening is independent of icon motion. */
