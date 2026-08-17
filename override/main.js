@@ -3,59 +3,19 @@
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var version=window.__scCatalogAssetVersion||'unversioned',base='override/';
 if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
-function bootstrapStaticNetwork(){
-  if(window.__scStaticNetworkBooted)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticNetworkBooted=true;
-  var ajax=$.ajax;
-  function urlOf(first,second){if(typeof first==='string')return first;if(first&&typeof first.url==='string')return first.url;return second&&typeof second.url==='string'?second.url:'';}
-  function isKeepalive(url){if(!url)return false;try{var target=new URL(url,location.href);return target.origin===location.origin&&/\/carta_delivery\.php$/i.test(target.pathname)&&target.searchParams.get('keepalive')==='1';}catch(_){return false;}}
-  $.ajax=function(first,second){if(!isKeepalive(urlOf(first,second)))return ajax.apply(this,arguments);return $.Deferred().resolve('', 'nocontent', null).promise();};
-}
+function bootstrapStaticNetwork(){if(window.__scStaticNetworkBooted)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticNetworkBooted=true;var ajax=$.ajax;function urlOf(first,second){if(typeof first==='string')return first;if(first&&typeof first.url==='string')return first.url;return second&&typeof second.url==='string'?second.url:'';}function isKeepalive(url){if(!url)return false;try{var target=new URL(url,location.href);return target.origin===location.origin&&/\/carta_delivery\.php$/i.test(target.pathname)&&target.searchParams.get('keepalive')==='1';}catch(_){return false;}}$.ajax=function(first,second){if(!isKeepalive(urlOf(first,second)))return ajax.apply(this,arguments);return $.Deferred().resolve('', 'nocontent', null).promise();};}
 bootstrapStaticNetwork();
 var VIEW_MODES=['compact','list'],VIEW_STORE_KEY='scCatalogView:v3';
 function normalizeView(mode){if(mode==='normal')return'compact';return VIEW_MODES.indexOf(mode)>=0?mode:'';}
-function bootstrapCatalogView(){
-  var root=document.documentElement,mode='',ctx='',legacy='';if(!root)return;
-  try{
-    mode=normalizeView(localStorage.getItem(VIEW_STORE_KEY)||'');
-    if(!mode){ctx=window.matchMedia('(max-width: 640px)').matches?'phone':window.matchMedia('(max-width: 992px)').matches?'tablet':'desktop';legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacy==='list'?'list':legacy?'compact':'';if(mode){try{localStorage.setItem(VIEW_STORE_KEY,mode);}catch(_){}}}
-  }catch(_){mode='';}
-  if(!mode)mode='compact';root.setAttribute('data-sc-catalog-view',mode);if(document.body)document.body.setAttribute('data-sc-catalog-view',mode);
-}
+function bootstrapCatalogView(){var root=document.documentElement,mode='',ctx='',legacy='';if(!root)return;try{mode=normalizeView(localStorage.getItem(VIEW_STORE_KEY)||'');if(!mode){ctx=window.matchMedia('(max-width: 640px)').matches?'phone':window.matchMedia('(max-width: 992px)').matches?'tablet':'desktop';legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacy==='list'?'list':legacy?'compact':'';if(mode){try{localStorage.setItem(VIEW_STORE_KEY,mode);}catch(_){}}}}catch(_){mode='';}if(!mode)mode='compact';root.setAttribute('data-sc-catalog-view',mode);if(document.body)document.body.setAttribute('data-sc-catalog-view',mode);}
 bootstrapCatalogView();
 function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){return new Promise(function(resolve,reject){var existing=id&&document.getElementById(id);if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}var script=document.createElement('script');if(id)script.id=id;script.src=asset(path);script.async=false;script.onload=function(){script.dataset.loaded='true';resolve();};script.onerror=reject;document.head.appendChild(script);});}
 function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
 function waitForMotionDependencies(){var motion=window.SCOverride&&window.SCOverride.motion;if(!motion||typeof motion.ready!=='function')throw new Error('[SushiClub override] Motion dependency gate unavailable');return motion.ready();}
-var foundationStages=[
-  [
-    ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],
-    ['core/variables.js','sc-override-variables-js']
-  ],
-  [
-    ['core/utils.js','sc-override-utils-js'],
-    ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
-    ['templates/registry.js','sc-override-template-registry-js'],
-    ['motion/main.js','sc-override-motion-js']
-  ]
-];
-var beforeTemplates=[[
-  ['motion/global-ui.js','sc-global-ui-motion-js'],
-  ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
-  ['mutations/history.js','sc-override-history-js'],
-  ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
-  ['components/category-nav/core.js','sc-category-nav-core-js'],
-  ['features/content-normalizer/rules.js','sc-content-normalizer-rules-js'],
-  ['components/product-card/data.js','sc-product-card-data-js'],
-  ['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],
-  ['components/product-modal/view.js','sc-product-modal-view-js'],
-  ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
-  ['components/product-modal/motion.js','sc-product-modal-motion-js'],
-  ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
-  ['components/cart/list-motion.js','sc-cart-list-motion-js'],
-  ['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],
-  ['components/cart/badge-motion.js','sc-cart-badge-motion-js']
-]];
+var foundationStages=[[['features/image-preloader/image-preloader.js','sc-image-preloader-js'],['core/variables.js','sc-override-variables-js']],[['core/utils.js','sc-override-utils-js'],['core/render-lifecycle.js','sc-override-render-lifecycle-js'],['templates/registry.js','sc-override-template-registry-js'],['motion/main.js','sc-override-motion-js']]];
+var beforeTemplates=[[['motion/global-ui.js','sc-global-ui-motion-js'],['mutations/dom-normalization.js','sc-override-dom-normalization-js'],['mutations/history.js','sc-override-history-js'],['mutations/legacy-category-hover.js','sc-override-category-hover-js'],['components/category-nav/core.js','sc-category-nav-core-js'],['features/content-normalizer/rules.js','sc-content-normalizer-rules-js'],['components/product-card/data.js','sc-product-card-data-js'],['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],['components/product-modal/view.js','sc-product-modal-view-js'],['components/product-modal/a11y.js','sc-product-modal-a11y-js'],['components/product-modal/motion.js','sc-product-modal-motion-js'],['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],['components/cart/list-motion.js','sc-cart-list-motion-js'],['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],['components/cart/badge-motion.js','sc-cart-badge-motion-js']]];
 var afterTemplates=[
   [
     ['features/content-normalizer/dom.js','sc-content-normalizer-dom-js'],
@@ -65,7 +25,8 @@ var afterTemplates=[
     ['components/category-nav/sticky-state.js','sc-category-nav-sticky-state-js'],
     ['components/category-nav/indicator.js','sc-category-nav-indicator-js'],
     ['components/catalog-tools/search.js','sc-catalog-tools-search-js'],
-    ['components/catalog-tools/theme.js','sc-catalog-tools-theme-js'],
+    ['components/catalog-tools/theme-glyph.js','sc-catalog-tools-theme-glyph-js'],
+    ['components/catalog-tools/theme-palette.js','sc-catalog-tools-theme-palette-js'],
     ['components/catalog-tools/view.js','sc-catalog-tools-view-js'],
     ['components/product-card/a11y.js','sc-product-card-a11y-js'],
     ['components/product-card/content.js','sc-product-card-content-js'],
@@ -73,6 +34,7 @@ var afterTemplates=[
     ['components/cart/cart.js','sc-override-cart-js']
   ],
   [
+    ['components/catalog-tools/theme-controller.js','sc-catalog-tools-theme-controller-js'],
     ['features/content-normalizer/observer.js','sc-content-normalizer-observer-js'],
     ['features/content-normalizer/content-normalizer.js','sc-override-content-normalizer-js'],
     ['components/category-nav/rail.js','sc-category-nav-rail-js'],
@@ -87,12 +49,5 @@ var afterTemplates=[
     ['components/catalog-tools/catalog-tools.js','sc-catalog-tools-js']
   ]
 ];
-loadStages(foundationStages)
-  .then(waitForMotionDependencies)
-  .then(function(){return loadStages(beforeTemplates);})
-  .then(function(){var templates=window.SCOverride&&window.SCOverride.templates;if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');return templates.ready();})
-  .then(function(){return loadStages(afterTemplates);})
-  .then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();})
-  .then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');})
-  .catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
+loadStages(foundationStages).then(waitForMotionDependencies).then(function(){return loadStages(beforeTemplates);}).then(function(){var templates=window.SCOverride&&window.SCOverride.templates;if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');return templates.ready();}).then(function(){return loadStages(afterTemplates);}).then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();}).then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');}).catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
 })();
