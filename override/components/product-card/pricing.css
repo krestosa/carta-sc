@@ -1,123 +1,72 @@
-/* Product-card pricing column. */
+/* Product-card pricing. Shared rules are breakpoint-independent; catalogue view
+   geometry decides where this row is placed. */
+body.sushiShop .listadoShop .productoShop .priceRow {
+  box-sizing: border-box;
+  display: flex !important;
+  grid-column: 2;
+  grid-row: 2;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  align-self: start;
+  gap: var(--sc-card-price-gap) !important;
+  min-width: var(--sc-card-price-width) !important;
+  min-height: var(--sc-card-title-height) !important;
+  margin: 0 !important;
+  padding: var(--sc-card-title-padding-top) 0 0 !important;
+  float: none !important;
+  white-space: nowrap;
+  font-family: var(--sc-font-primary) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+body.sushiShop .listadoShop .productoShop .price,
+body.sushiShop .listadoShop .productoShop .priceHijass {
+  order: 1;
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--sc-color-ink) !important;
+  font-family: inherit !important;
+  font-size: var(--sc-card-price-size) !important;
+  line-height: var(--sc-card-price-line-height) !important;
+  font-weight: var(--sc-font-weight-semibold) !important;
+  letter-spacing: var(--sc-card-price-tracking) !important;
+}
+
 body.sushiShop .listadoShop .productoShop .ofertaPrice {
+  order: 2;
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
   color: var(--sc-color-muted) !important;
+  font-family: inherit !important;
+  font-size: var(--sc-card-offer-size) !important;
+  line-height: var(--sc-card-offer-line-height) !important;
+  font-weight: var(--sc-font-weight-regular) !important;
+  letter-spacing: 0 !important;
+  text-decoration: line-through;
+  opacity: 1 !important;
 }
 
-@media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow {
-    box-sizing: border-box;
-    display: flex !important;
-    grid-column: 2;
-    grid-row: 2;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    align-items: flex-end !important;
-    justify-content: flex-start !important;
-    align-self: start;
-    gap: var(--sc-card-price-gap) !important;
-    min-width: var(--sc-card-price-width) !important;
-    min-height: var(--sc-card-title-height) !important;
-    margin: 0 !important;
-    padding: var(--sc-card-title-padding-top) 0 0 !important;
-    float: none !important;
-    white-space: nowrap;
-    font-family: var(--sc-font-primary) !important;
-    font-variant-numeric: tabular-nums;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .price,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceHijass {
-    order: 1;
-    float: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    color: var(--sc-color-ink) !important;
-    font-family: inherit !important;
-    font-size: var(--sc-card-price-size) !important;
-    line-height: var(--sc-card-price-line-height) !important;
-    font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: var(--sc-card-price-tracking) !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .ofertaPrice {
-    order: 2;
-    float: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-family: inherit !important;
-    font-size: var(--sc-card-offer-size) !important;
-    line-height: var(--sc-card-offer-line-height) !important;
-    font-weight: var(--sc-font-weight-regular) !important;
-    letter-spacing: 0 !important;
-    text-decoration: line-through;
-    opacity: 1 !important;
-  }
-}
-
-@media (max-width: 992px) {
-  body.sushiShop .listadoShop .productoShop .priceRow {
-    box-sizing: border-box;
-    display: flex !important;
-    grid-column: 2;
-    grid-row: 2;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    align-items: flex-end !important;
-    justify-content: flex-start !important;
-    align-self: start;
-    min-width: var(--sc-card-price-width) !important;
-    min-height: var(--sc-card-title-height) !important;
-    margin: 0 !important;
-    padding: var(--sc-card-title-padding-top) 0 0 !important;
-    gap: var(--sc-card-price-gap) !important;
-    float: none !important;
-    white-space: nowrap;
-    font-family: var(--sc-font-primary) !important;
-    font-variant-numeric: tabular-nums;
-  }
-
-  body.sushiShop .listadoShop .productoShop .price,
-  body.sushiShop .listadoShop .productoShop .priceHijass {
-    order: 1;
-    float: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    color: var(--sc-color-ink) !important;
-    font-family: inherit !important;
-    font-size: var(--sc-card-price-size) !important;
-    line-height: var(--sc-card-price-line-height) !important;
-    font-weight: var(--sc-font-weight-semibold) !important;
-    letter-spacing: var(--sc-card-price-tracking) !important;
-  }
-
-  body.sushiShop .listadoShop .productoShop .ofertaPrice {
-    order: 2;
-    float: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-family: inherit !important;
-    font-size: var(--sc-card-offer-size) !important;
-    line-height: var(--sc-card-offer-line-height) !important;
-    font-weight: var(--sc-font-weight-regular) !important;
-    letter-spacing: 0 !important;
-    text-decoration: line-through;
-    opacity: 1 !important;
-  }
-}
-
-/* Dense and list views use one compact pricing line:
-   discounted price -> struck-through price -> dietary/spice traits. */
 body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   display: none !important;
 }
 
+/* Density and list share the same compact price anatomy on every breakpoint:
+   discounted price -> struck-through price -> dietary/spice traits. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-flavors,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
   display: none !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
@@ -125,32 +74,43 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   justify-content: flex-start !important;
   column-gap: 6px !important;
   row-gap: 0 !important;
+  min-width: 0 !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow {
   min-height: var(--sc-compact-price-line-height) !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
-  min-height: var(--sc-view-list-compact-price-height, 18px) !important;
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
+  min-height: var(--sc-view-list-price-height, 18px) !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .price,
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .price,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow .price,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow .priceHijass,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .price,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .priceHijass {
   order: 1 !important;
   flex: 0 0 auto !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow .ofertaPrice,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .ofertaPrice {
   order: 2 !important;
   flex: 0 0 auto !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-price-traits,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
   display: inline-flex !important;
   order: 3 !important;
@@ -170,7 +130,11 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-price-traits img,
+html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits img,
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
   align-self: flex-end !important;
@@ -179,69 +143,4 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
-}
-
-/* Search results become a list on compact breakpoints even when the stored
-   view remains normal, so they need the same one-line price treatment. */
-@media (max-width: 992px) {
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
-    display: none !important;
-  }
-
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: baseline !important;
-    justify-content: flex-start !important;
-    column-gap: 6px !important;
-    row-gap: 0 !important;
-    min-height: var(--sc-view-list-compact-price-height, 18px) !important;
-  }
-
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .price,
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .priceHijass {
-    order: 1 !important;
-    flex: 0 0 auto !important;
-  }
-
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .ofertaPrice {
-    order: 2 !important;
-    flex: 0 0 auto !important;
-  }
-
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits {
-    box-sizing: border-box !important;
-    display: inline-flex !important;
-    order: 3 !important;
-    flex: 0 0 auto !important;
-    align-items: flex-end !important;
-    align-self: center !important;
-    gap: 5px !important;
-    width: auto !important;
-    height: var(--sc-card-offer-line-height) !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    color: var(--sc-color-trait) !important;
-    line-height: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits img,
-  body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits .sc-trait-icon {
-    display: block !important;
-    flex: 0 0 auto !important;
-    align-self: flex-end !important;
-    max-width: 16px !important;
-    max-height: 13px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    object-fit: contain !important;
-  }
-}
-
-@media (min-width: 993px) {
-  html[data-sc-catalog-view='list'] body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow {
-    justify-content: flex-end !important;
-  }
 }
