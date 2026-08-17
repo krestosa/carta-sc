@@ -17,9 +17,9 @@ var MODES=['system','light','dark'],
     iconToken=0,
     iconTimeline=null,
     motionDeps=null,
-    SWITCH_COMMIT=180,
-    SWITCH_IN=195,
-    SWITCH_END=500;
+    SWITCH_COMMIT=210,
+    SWITCH_IN=225,
+    SWITCH_END=545;
 
 function normalize(mode){return MODES.indexOf(mode)>=0?mode:'';}
 function selected(){return normalize(doc.getAttribute('data-sc-theme')||'')||'system';}
