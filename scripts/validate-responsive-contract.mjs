@@ -11,11 +11,13 @@ const main=read('override/main.js');
 const tools=read('override/components/catalog-tools/catalog-tools.css');
 const list=read('override/components/catalog-tools/view-stability.css');
 const grid=read('override/features/catalog/layout.css');
-const structural=[
+const sharedStructural=[
   'override/components/product-card/layout.css',
   'override/components/product-card/pricing.css',
   'override/components/product-card/image-ratio.css',
   'override/components/section-heading/layout.css',
+  'override/features/content-normalizer/content-normalizer.css',
+  'override/components/product-modal/motion.css',
 ];
 
 if(!view.includes("MODES=['compact','list']"))fail('view.js must expose density + list only');
@@ -39,7 +41,7 @@ if(/object-fit:\s*cover\s*!important/.test(list))fail('list geometry must not fo
 if(/@media\s*\(min-width\s*:\s*993px\)/.test(list))fail('list structure must not fork into a desktop-only media block');
 
 if(!grid.includes('--sc-catalog-base-columns: 4'))fail('catalog layout desktop base must be 4 columns');
-for(const file of structural){
+for(const file of sharedStructural){
   const css=read(file);
   if(/@media\s*\(min-width\s*:\s*993px\)/.test(css))fail(`${file} contains a desktop-only structural fork`);
 }
@@ -49,4 +51,4 @@ if(errors.length){
   errors.forEach((e)=>console.error(`- ${e}`));
   process.exit(1);
 }
-console.log('Responsive contract validation passed: desktop owns shared geometry; density/list inherit across breakpoints.');
+console.log('Responsive contract validation passed: desktop owns shared geometry/behavior; density/list inherit across breakpoints.');
