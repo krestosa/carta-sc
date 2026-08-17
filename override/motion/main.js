@@ -46,7 +46,7 @@ function requestDependencies(){
 }
 function disarmDependencyTriggers(){
   if(!dependencyArmed)return;dependencyArmed=false;
-  window.removeEventListener('pointerdown',triggerDependencies);window.removeEventListener('touchstart',triggerDependencies);window.removeEventListener('wheel',triggerDependencies);window.removeEventListener('scroll',triggerDependencies);window.removeEventListener('keydown',triggerDependencies);
+  window.removeEventListener('pointerdown',triggerDependencies);window.removeEventListener('touchstart',triggerDependencies);window.removeEventListener('wheel',triggerDependencies);window.removeEventListener('keydown',triggerDependencies);
   if(dependencyFallback){window.clearTimeout(dependencyFallback);dependencyFallback=0;}
 }
 function triggerDependencies(event){
@@ -59,7 +59,7 @@ function triggerDependencies(event){
 }
 function armDependencyTriggers(){
   if(dependencyArmed||dependenciesRequested||deps)return;dependencyArmed=true;
-  window.addEventListener('pointerdown',triggerDependencies,{passive:true});window.addEventListener('touchstart',triggerDependencies,{passive:true});window.addEventListener('wheel',triggerDependencies,{passive:true});window.addEventListener('scroll',triggerDependencies,{passive:true});window.addEventListener('keydown',triggerDependencies);
+  window.addEventListener('pointerdown',triggerDependencies,{passive:true});window.addEventListener('touchstart',triggerDependencies,{passive:true});window.addEventListener('wheel',triggerDependencies,{passive:true});window.addEventListener('keydown',triggerDependencies);
   dependencyFallback=window.setTimeout(function(){triggerDependencies();},30000);
 }
 function unlock(){if(unlocked)return;unlocked=true;armDependencyTriggers();installRefreshLifecycle();flush();}
