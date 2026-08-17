@@ -342,6 +342,11 @@ body.sushiShop .sc-view-layout-icon rect {
   shape-rendering:geometricPrecision;
   transform-box:fill-box;
   transform-origin:0 0;
+  transition:transform var(--sc-view-icon-duration,280ms) var(--sc-theme-icon-ease);
+}
+body.sushiShop .sc-view-layout-icon[data-sc-view-icon-animating='true'] rect,
+body.sushiShop .sc-view-layout-icon[data-sc-view-icon-static='true'] rect {
+  transition:none!important;
 }
 body.sushiShop .sc-view-layout-icon[data-sc-view-icon-animating='true'] rect {
   will-change:transform;
