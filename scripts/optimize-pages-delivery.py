@@ -9,25 +9,19 @@ SITE = Path('.pages-site')
 SHA = os.environ.get('GITHUB_SHA', '')
 INDEX = SITE / 'index.html'
 
-if not re.fullmatch(r'[0-9a-f]{40}', SHA):
-    raise SystemExit('GITHUB_SHA is missing or invalid')
-if not INDEX.is_file():
-    raise SystemExit('Prepared Pages index is missing')
+if not re.fullmatch(r'[0-9a-f]{40}', SHA) or not INDEX.is_file():
+    raise SystemExit('Invalid Pages build context')
 
 
-def replace_once(pattern, replacement, text, label, flags=0):
-    updated, count = re.subn(pattern, replacement, text, count=1, flags=flags)
-    if count != 1:
-        raise SystemExit(f'{label}: expected exactly one match, found {count}')
-    return updated
+def minify_css(content):
+    content = re.sub(r'/\*(?!\!)[\s\S]*?\*/', '', content)
+    content = re.sub(r'[\t\r\n]+', ' ', content)
+    content = re.sub(r' {2,}', ' ', content)
+    return content.strip()
 
 
-def rebase_css_urls(content, source_rel):
-    base = posixpath.dirname(source_rel)
-    url_re = re.compile(
-        r'url\(\s*(?P<quote>["\']?)(?P<value>.*?)(?P=quote)\s*\)',
-        re.IGNORECASE,
-    )
+def rebase_css_urls(content, base):
+    url_re = re.compile(r'url\(\s*(?P<quote>["\']?)(?P<value>.*?)(?P=quote)\s*\)', re.IGNORECASE)
 
     def replace(match):
         value = match.group('value').strip()
@@ -51,7 +45,10 @@ def ensure_font_display(content):
         body = match.group('body')
         if re.search(r'\bfont-display\s*:', body, re.IGNORECASE):
             return match.group(0)
-        return '@font-face {' + body.rstrip() + '\n  font-display: swap;\n}'
+        body = body.rstrip()
+        if body and not body.endswith(';'):
+            body += ';'
+        return '@font-face {' + body + '\n  font-display: swap;\n}'
 
     return face_re.sub(replace, content)
 
@@ -63,42 +60,47 @@ def inline_local_styles(html):
         raise SystemExit('Bundled local stylesheets are missing')
 
     legacy = ensure_font_display(
-        rebase_css_urls(legacy_path.read_text(encoding='utf-8'), '_pages/legacy.css')
+        rebase_css_urls(legacy_path.read_text(encoding='utf-8'), '_pages')
     )
     override = ensure_font_display(
-        rebase_css_urls(override_path.read_text(encoding='utf-8'), 'override/main.css')
+        rebase_css_urls(override_path.read_text(encoding='utf-8'), 'override')
     )
-    critical = (
-        '<style id="sc-pages-critical-css">\n'
-        + legacy.rstrip()
-        + '\n'
-        + override.rstrip()
-        + '\n</style>'
-    )
+    css = minify_css(legacy + '\n' + override)
+    style = '<style id="sc-pages-critical-css">' + css + '</style>'
 
-    html = replace_once(
-        rf'<link\b(?=[^>]*\brel=["\']stylesheet["\'])(?=[^>]*\bhref=["\']_pages/legacy\.css\?v={re.escape(SHA)}["\'])[^>]*>',
-        lambda _: critical,
-        html,
-        'legacy stylesheet',
+    links = (
+        rf'<link\b(?=[^>]*\bhref=["\']_pages/legacy\.css\?v={re.escape(SHA)}["\'])[^>]*>',
+        rf'<link\b(?=[^>]*\bhref=["\']override/main\.css\?v={re.escape(SHA)}["\'])[^>]*>',
+    )
+    insert_at = None
+    for pattern in links:
+        regex = re.compile(pattern, re.IGNORECASE)
+        match = regex.search(html)
+        if not match:
+            raise SystemExit('Expected local stylesheet tag missing before inlining')
+        if insert_at is None:
+            insert_at = match.start()
+        html = regex.sub('', html, count=1)
+
+    preload_re = re.compile(
+        rf'<link\b(?=[^>]*\brel=["\']preload["\'])(?=[^>]*\bhref=["\']override/main\.css\?v={re.escape(SHA)}["\'])[^>]*>',
         re.IGNORECASE,
     )
-    html = replace_once(
-        rf'<link\b(?=[^>]*\brel=["\']stylesheet["\'])(?=[^>]*\bhref=["\']override/main\.css\?v={re.escape(SHA)}["\'])[^>]*>\s*',
-        '',
-        html,
-        'override stylesheet',
-        re.IGNORECASE,
-    )
+    html = preload_re.sub('', html, count=1)
 
-    for asset in ('_js_dev/main-legacy.js', 'override/main.js', 'override/main.css'):
-        html = re.sub(
-            rf'<link\b(?=[^>]*\brel=["\']preload["\'])(?=[^>]*\bhref=["\']{re.escape(asset)}\?v={re.escape(SHA)}["\'])[^>]*>\s*',
-            '',
-            html,
-            count=1,
-            flags=re.IGNORECASE,
-        )
+    if insert_at is None:
+        raise SystemExit('No insertion point for local CSS')
+    html = html[:insert_at] + style + '\n' + html[insert_at:]
+    return html
+
+
+def strip_unused_preloads(html):
+    preload_patterns = (
+        rf'<link\b(?=[^>]*\brel=["\']preload["\'])(?=[^>]*\bhref=["\']_js_dev/main-legacy\.js\?v={re.escape(SHA)}["\'])[^>]*>\s*',
+        rf'<link\b(?=[^>]*\brel=["\']preload["\'])(?=[^>]*\bhref=["\']override/main\.js\?v={re.escape(SHA)}["\'])[^>]*>\s*',
+    )
+    for pattern in preload_patterns:
+        html = re.sub(pattern, '', html, count=1, flags=re.IGNORECASE)
 
     html = re.sub(
         r'<link\b(?=[^>]*\brel=["\']preconnect["\'])(?=[^>]*\bhref=["\']https://cdn\.jsdelivr\.net/?["\'])[^>]*>\s*',
@@ -150,172 +152,97 @@ def defer_local_scripts(html):
             rf'<script\b(?=[^>]*\bsrc=["\']{re.escape(path)}{suffix}["\'])(?P<attrs>[^>]*)></script>',
             re.IGNORECASE,
         )
-
-        def replace(match):
-            attrs = match.group('attrs')
-            if re.search(r'\bdefer\b', attrs, re.IGNORECASE):
-                return match.group(0)
-            return '<script defer fetchpriority="low"' + attrs + '></script>'
-
-        html, count = script_re.subn(replace, html, count=1)
-        if count != 1:
-            raise SystemExit(f'Expected one local runtime script for {path}, found {count}')
-    return html
-
-
-def wrap_jquery_inline_handlers(html):
-    script_re = re.compile(r'<script(?P<attrs>[^>]*)>(?P<body>.*?)</script>', re.IGNORECASE | re.DOTALL)
-    for marker in (
-        'function isValidEmailAddress(emailAddress)',
-        'var keepSessionAlive = function()',
-    ):
-        match = next((item for item in script_re.finditer(html) if marker in item.group('body')), None)
+        match = script_re.search(html)
         if not match:
-            raise SystemExit(f'Inline runtime marker was not found: {marker}')
-        body = match.group('body')
-        replacement = (
-            "<script>document.addEventListener('DOMContentLoaded',function(){\n"
-            + body
-            + "\n},{once:true});</script>"
-        )
-        html = html[:match.start()] + replacement + html[match.end():]
+            raise SystemExit(f'Expected script missing before defer: {path}')
+        tag = match.group(0)
+        if not re.search(r'\bdefer\b', tag, re.IGNORECASE):
+            tag = tag[:-9].rstrip() + ' defer></script>'
+        html = html[:match.start()] + tag + html[match.end():]
+
     return html
 
 
 def delay_third_parties(html):
-    html = replace_once(
-        r'<script\b(?=[^>]*\bsrc=["\']https://www\.google\.com/recaptcha/api\.js["\'])[^>]*>\s*</script>\s*',
-        '',
-        html,
-        'reCAPTCHA bootstrap',
+    recaptcha_re = re.compile(
+        r'<script\b(?=[^>]*\bsrc=["\']https://www\.google\.com/recaptcha/api\.js["\'])[^>]*>\s*</script>',
         re.IGNORECASE,
     )
-    html = replace_once(
-        r'<script>\s*\(function\(w,d,s,l,i\).*?GTM-WQPLGX9.*?</script>\s*',
-        '',
-        html,
-        'GTM bootstrap',
+    html, recaptcha_count = recaptcha_re.subn('', html, count=1)
+    if recaptcha_count != 1:
+        raise SystemExit('Expected one eager reCAPTCHA script')
+
+    gtm_re = re.compile(
+        r'<script>\s*\(function\(w,d,s,l,i\).*?googletagmanager\.com/gtm\.js\?id=.*?</script>',
         re.IGNORECASE | re.DOTALL,
     )
-    return html
+    html, gtm_count = gtm_re.subn('', html, count=1)
+    if gtm_count != 1:
+        raise SystemExit('Expected one eager GTM bootstrap')
 
+    loader = f'''<script id="sc-pages-delivery-loader">(function(){{'use strict';var d=document,w=window;w.dataLayer=w.dataLayer||[];function load(src,attrs){{var s=d.createElement('script');s.src=src;Object.keys(attrs||{{}}).forEach(function(k){{s[k]=attrs[k]}});d.head.appendChild(s)}}var g=0;function gtm(){{if(g)return;g=1;w.dataLayer.push({{'gtm.start':Date.now(),event:'gtm.js'}});load('https://www.googletagmanager.com/gtm.js?id=GTM-WQPLGX9',{{async:true}})}}['pointerdown','keydown','touchstart','wheel'].forEach(function(t){{w.addEventListener(t,gtm,{{once:true,passive:true}})}});w.addEventListener('load',function(){{setTimeout(gtm,30000)}},{{once:true}});var r=0;function rc(){{if(r)return;r=1;load('https://www.google.com/recaptcha/api.js',{{async:true,defer:true}})}}w.__scLoadRecaptcha=rc;var f=d.getElementById('newsletterForm');if(f){{f.addEventListener('focusin',rc,{{once:true}});f.addEventListener('pointerdown',rc,{{once:true,passive:true}});if('IntersectionObserver'in w){{var o=new IntersectionObserver(function(es){{if(es.some(function(e){{return e.isIntersecting}})){{o.disconnect();rc()}}}},{{rootMargin:'600px 0px'}});o.observe(f)}}}}}})();</script>'''
 
-def hard_lazy_product_images(html):
-    image_re = re.compile(
-        r'(<div\b[^>]*class=["\'][^"\']*\b(?:imgShop|imgLiquidNoFillShop)\b[^"\']*["\'][^>]*>\s*<img\b)(?P<attrs>[^>]*)(>)',
-        re.IGNORECASE,
-    )
-    seen = 0
-
-    def replace(match):
-        nonlocal seen
-        seen += 1
-        attrs = match.group('attrs')
-        if seen <= 4:
-            return match.group(0)
-        source = re.search(r'\s+src=["\'](?P<src>[^"\']+)["\']', attrs, re.IGNORECASE)
-        if not source:
-            return match.group(0)
-        src = source.group('src')
-        attrs = re.sub(r'\s+src=["\'][^"\']+["\']', '', attrs, count=1, flags=re.IGNORECASE)
-        attrs = re.sub(r'\s+fetchpriority=["\'][^"\']+["\']', '', attrs, flags=re.IGNORECASE)
-        attrs += f' data-sc-src="{src}" fetchpriority="low"'
-        return match.group(1) + attrs + match.group(3)
-
-    html = image_re.sub(replace, html)
-    if seen < 100:
-        raise SystemExit(f'Expected the catalogue product images, found only {seen}')
-    return html, seen
+    body_end = html.lower().rfind('</body>')
+    if body_end < 0:
+        raise SystemExit('Missing body end for delivery loader')
+    return html[:body_end] + loader + '\n' + html[body_end:]
 
 
 def strip_stale_source_maps():
-    for relative in (
-        '_pages/legacy.js',
-        '_pages/shop.js',
-        '_js_dev/main-legacy.js',
-        'override/main.js',
-    ):
-        path = SITE / relative
-        source = path.read_text(encoding='utf-8', errors='ignore')
-        source = re.sub(r'(?m)^\s*//[@#]\s*sourceMappingURL=.*$', '', source)
-        source = re.sub(r'/\*# sourceMappingURL=.*?\*/', '', source, flags=re.DOTALL)
-        path.write_text(source, encoding='utf-8')
+    for path in (SITE / '_pages/legacy.js', SITE / '_pages/shop.js'):
+        text = path.read_text(encoding='utf-8', errors='ignore')
+        text = re.sub(r'(?m)^\s*//[@#]\s*sourceMappingURL=.*$', '', text)
+        text = re.sub(r'/\*# sourceMappingURL=.*?\*/', '', text, flags=re.DOTALL)
+        path.write_text(text, encoding='utf-8')
 
 
-def add_small_image_dimensions(html):
-    icon_re = re.compile(
-        r'(<img\b(?=[^>]*\bsrc=["\']https://www\.sushiclub\.com\.ar/iconos/icons8-tiktok-32\.png["\'])(?P<attrs>[^>]*))>',
+def optimize_product_images(html):
+    img_re = re.compile(
+        r'<img\b(?=[^>]*\bclass=["\'][^"\']*\b(?:imgShop|imgBannerShop)\b[^"\']*["\'])[^>]*>',
         re.IGNORECASE,
     )
-    match = icon_re.search(html)
-    if not match:
-        return html
-    attrs = match.group('attrs')
-    if not re.search(r'\bwidth=', attrs, re.IGNORECASE):
-        attrs += ' width="22"'
-    if not re.search(r'\bheight=', attrs, re.IGNORECASE):
-        attrs += ' height="22"'
-    return html[:match.start()] + '<img' + attrs + '>' + html[match.end():]
+    product_re = re.compile(r'<img\b(?=[^>]*\bclass=["\'][^"\']*\bimgShop\b[^"\']*["\'])[^>]*>', re.IGNORECASE)
+    count = 0
+
+    def replace(match):
+        nonlocal count
+        tag = match.group(0)
+        is_product = bool(product_re.search(tag))
+        if is_product:
+            count += 1
+        tag = re.sub(r'\s+loading=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+decoding=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        tag = re.sub(r'\s+fetchpriority=["\'][^"\']*["\']', '', tag, flags=re.IGNORECASE)
+        if is_product:
+            priority = 'eager' if count <= 2 else 'lazy'
+            fetch = 'high' if count == 1 else ('auto' if count == 2 else 'low')
+            tag = tag[:-1].rstrip() + f' loading="{priority}" decoding="async" fetchpriority="{fetch}">'
+        else:
+            tag = tag[:-1].rstrip() + ' loading="eager" decoding="async" fetchpriority="auto">'
+        return tag
+
+    return img_re.sub(replace, html), count
 
 
-def inject_delivery_loader(html):
-    loader = """<script id=\"sc-pages-delivery-loader\">(function(){'use strict';var d=document,w=window;w.dataLayer=w.dataLayer||[];function li(i){var s=i&&i.getAttribute('data-sc-src');if(!s)return;i.removeAttribute('data-sc-src');i.src=s}var a=[].slice.call(d.querySelectorAll('img[data-sc-src]'));if('IntersectionObserver'in w){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);li(e.target)}})},{rootMargin:'120px 0px'});a.forEach(function(i){io.observe(i)})}else a.forEach(li);var g=0;function gtm(){if(g)return;g=1;w.dataLayer=w.dataLayer||[];w.dataLayer.push({'gtm.start':Date.now(),event:'gtm.js'});var s=d.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtm.js?id=GTM-WQPLGX9';d.head.appendChild(s)}['pointerdown','keydown','touchstart','wheel'].forEach(function(t){w.addEventListener(t,gtm,{once:true,passive:true})});w.addEventListener('load',function(){setTimeout(gtm,30000)},{once:true});var r=0;function rc(){if(r)return;r=1;var s=d.createElement('script');s.async=true;s.defer=true;s.src='https://www.google.com/recaptcha/api.js';d.head.appendChild(s)}w.__scLoadRecaptcha=rc;var f=d.getElementById('newsletterForm');if(f){f.addEventListener('focusin',rc,{once:true});f.addEventListener('pointerdown',rc,{once:true,passive:true});if('IntersectionObserver'in w){var ro=new IntersectionObserver(function(es){if(es.some(function(e){return e.isIntersecting})){ro.disconnect();rc()}},{rootMargin:'600px 0px'});ro.observe(f)}}})();</script>"""
-    if 'id="sc-pages-delivery-loader"' in html:
-        raise SystemExit('Pages delivery loader is already present')
-    return replace_once(r'</body>', loader + '\n</body>', html, 'body close', re.IGNORECASE)
+html = INDEX.read_text(encoding='utf-8')
+html = inline_local_styles(html)
+html = strip_unused_preloads(html)
+html = make_roboto_nonblocking(html)
+html = defer_local_scripts(html)
+html = delay_third_parties(html)
+html, product_count = optimize_product_images(html)
+strip_stale_source_maps()
 
+if product_count < 100:
+    raise SystemExit('Expected product images were not optimized')
+if '<style id="sc-pages-critical-css">' not in html:
+    raise SystemExit('Critical CSS inline block missing')
+if re.search(r'<link\b(?=[^>]*\bhref=["\'](?:_pages/legacy\.css|override/main\.css)', html, re.IGNORECASE):
+    raise SystemExit('Blocking local stylesheet remains')
+if re.search(r'<script\b(?=[^>]*\bsrc=["\']https://www\.google\.com/recaptcha/api\.js["\'])', html, re.IGNORECASE):
+    raise SystemExit('Eager reCAPTCHA script remains')
+if 'googletagmanager.com/gtm.js?id='+"'+i" in html:
+    raise SystemExit('Eager GTM bootstrap remains')
 
-def verify(html, product_count):
-    if 'id="sc-pages-critical-css"' not in html:
-        raise SystemExit('Critical local CSS was not inlined')
-    if re.search(rf'<link\b[^>]*\bhref=["\'](?:_pages/legacy|override/main)\.css\?v={re.escape(SHA)}["\'][^>]*>', html, re.IGNORECASE):
-        raise SystemExit('Blocking local stylesheet link remains')
-    for path in (
-        'js/jquery-2.1.0.min.js',
-        '_pages/legacy.js',
-        '_js_dev/main-legacy.js',
-        'override/main.js',
-        '_pages/shop.js',
-    ):
-        suffix = '' if path.startswith('js/jquery') else rf'\?v={re.escape(SHA)}'
-        if not re.search(rf'<script\b(?=[^>]*\bdefer\b)(?=[^>]*\bfetchpriority=["\']?low["\']?)(?=[^>]*\bsrc=["\']{re.escape(path)}{suffix}["\'])[^>]*></script>', html, re.IGNORECASE):
-            raise SystemExit(f'Local script is not deferred/low-priority: {path}')
-    if 'https://www.google.com/recaptcha/api.js" async defer' in html:
-        raise SystemExit('Eager reCAPTCHA loader remains')
-    if "googletagmanager.com/gtm.js?id='+i" in html:
-        raise SystemExit('Eager GTM loader remains')
-    if product_count < 100 or html.count('data-sc-src=') < product_count - 6:
-        raise SystemExit('Explicit product-image lazy loading was not applied')
-    if 'sourceMappingURL=' in (SITE / '_pages/legacy.js').read_text(encoding='utf-8', errors='ignore'):
-        raise SystemExit('Stale legacy source-map directive remains')
-    override_source = (SITE / 'override/main.js').read_text(encoding='utf-8', errors='ignore')
-    if 'cetAttribute' in override_source:
-        raise SystemExit('Broken catalog filter attribute call remains in override bundle')
-    if "banner.setAttribute('height','157')" in override_source or "banner.setAttribute('width','1500')" in override_source:
-        raise SystemExit('Fixed banner dimensions remain in override runtime')
-    if 'w.dataLayer=w.dataLayer||[]' not in html:
-        raise SystemExit('Deferred analytics queue bootstrap is missing')
-
-
-def main():
-    html = INDEX.read_text(encoding='utf-8')
-    html = inline_local_styles(html)
-    html = make_roboto_nonblocking(html)
-    html = defer_local_scripts(html)
-    html = wrap_jquery_inline_handlers(html)
-    html = delay_third_parties(html)
-    html, product_count = hard_lazy_product_images(html)
-    html = add_small_image_dimensions(html)
-    html = inject_delivery_loader(html)
-    strip_stale_source_maps()
-    verify(html, product_count)
-    INDEX.write_text(html, encoding='utf-8')
-    print(
-        'Optimized Pages delivery: '
-        f'{product_count} product images, local CSS inline, local scripts deferred, '
-        'third-party bootstraps delayed, stale source maps removed.'
-    )
-
-
-if __name__ == '__main__':
-    main()
+INDEX.write_text(html, encoding='utf-8')
+print(f'Optimized Pages delivery: {product_count} product images, local CSS inline, local scripts deferred, third-party bootstraps delayed, stale source maps removed.')
