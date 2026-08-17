@@ -1,8 +1,23 @@
 (function(){
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
-var version=window.__scCatalogAssetVersion||'20260817-icons-v3';
-var base='override/';
+var inheritedVersion=window.__scCatalogAssetVersion||'',
+    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-icons-v3':inheritedVersion,
+    base='override/';
+window.__scCatalogAssetVersion=version;
+/* The immutable legacy bootstrap still exposes `unversioned`. Repoint the
+   already-created override stylesheet immediately so HTML/CSS/JS cannot come
+   from different cached generations. */
+if(inheritedVersion==='unversioned'){
+  var mainCss=document.getElementById('sc-override-main-css');
+  if(mainCss){
+    try{
+      var cssUrl=new URL(mainCss.href,location.href);
+      cssUrl.searchParams.set('v',version);
+      mainCss.href=cssUrl.href;
+    }catch(_){mainCss.href='override/main.css?v='+version;}
+  }
+}
 if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
 function bootstrapStaticNetwork(){
   if(window.__scStaticNetworkBooted)return;var $=window.jQuery;if(!$||typeof $.ajax!=='function')return;window.__scStaticNetworkBooted=true;
