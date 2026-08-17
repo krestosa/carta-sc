@@ -2,7 +2,7 @@
    The first viewport now paints real content immediately. These rules only
    preserve final geometry until runtime hydration completes. */
 
-html.sc-catalog-prepaint {
+html {
   --sc-banner-desktop-width: 1170px;
   --sc-banner-desktop-height: 122.46px;
   --sc-banner-ratio: 1500 / 157;
@@ -23,6 +23,29 @@ html.sc-catalog-prepaint body.sushiShop {
   html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile img,
   html.sc-catalog-prepaint.sc-mobile-logo-ready body.sushiShop .brandOnlyMobile img {
     opacity: 1 !important;
+  }
+
+  /* Keep the banner at its natural 1500:157 geometry both before and after
+     hydration. The legacy snapshot otherwise falls back to a fixed 157px
+     height on mobile, stretching the image and moving the catalogue by more
+     than 100px when the runtime settles. */
+  body.sushiShop .bannerShop .BanContShop,
+  body.sushiShop .bannerShop .imgBannerShop {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: var(--sc-banner-ratio) !important;
+  }
+
+  body.sushiShop .bannerShop .BanContShop {
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  body.sushiShop .bannerShop .imgBannerShop {
+    display: block !important;
+    object-fit: contain !important;
   }
 
   /* SlickNav is created by legacy code before our repair marks the canonical
