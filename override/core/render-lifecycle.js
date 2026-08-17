@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config,S=C&&C.selectors,K=C&&C.classes;
 if(SC.__renderLifecycleBooted)return;SC.__renderLifecycleBooted=true;
-var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MEDIA_TIMEOUT=1200,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[],initialViewportObserver=null,initialViewportStarted=false,initialViewportFrozen=false;
+var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MOBILE_HEADER_TIMEOUT=500,desktopQuery=C.queries.desktop,waitObserver=null,waiters=[],initialViewportObserver=null,initialViewportStarted=false,initialViewportFrozen=false;
 function markStaticInitial(node){
   if(!node||node.nodeType!==1)return;
   if(node.matches(S.productCards)){node.classList.add(K.staticInitialCard);return;}
@@ -32,16 +32,12 @@ function waitForCatalogLayout(){if(!desktopQuery.matches)return Promise.resolve(
 function waitForCatalogTools(){return waitFor(function(){return!!(document.body&&document.body.classList.contains('sc-catalog-tools-ready'));},STABLE_LAYOUT_TIMEOUT);}
 function waitForMobileHeader(){if(desktopQuery.matches)return Promise.resolve();return waitFor(function(){return!!document.querySelector('body > .slicknav_menu.sc-mobile-main-menu');},MOBILE_HEADER_TIMEOUT);}
 function waitForFonts(){if(!document.fonts||!document.fonts.ready)return Promise.resolve();return withTimeout(document.fonts.ready,FONT_TIMEOUT);}
-function waitForImage(img){if(!img)return Promise.resolve();if(img.complete){if(img.naturalWidth&&typeof img.decode==='function')return withTimeout(img.decode(),MEDIA_TIMEOUT);return Promise.resolve();}return withTimeout(new Promise(function(resolve){function done(){img.removeEventListener('load',done);img.removeEventListener('error',done);resolve();}img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});}),MEDIA_TIMEOUT);}
-function waitForVisibleMedia(img,className){return waitForImage(img).then(function(){if(root&&img&&img.complete&&img.naturalWidth)root.classList.add(className);});}
-function waitForCriticalMedia(){return waitFor(function(){return!!document.querySelector('.bannerShop .imgBannerShop');},STABLE_LAYOUT_TIMEOUT).then(function(){return withTimeout(waitForVisibleMedia(document.querySelector('.bannerShop .imgBannerShop'),'sc-banner-media-ready'),MEDIA_TIMEOUT);});}
-function clearPrepaint(){if(!root)return;root.classList.remove('sc-catalog-prepaint');root.classList.remove('sc-banner-media-ready');root.classList.remove('sc-mobile-logo-ready');}
 function waitForStableLayout(){
   return whenDomReady().then(function(){
     var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];
-    if(desktopQuery.matches)waits.push(waitForFonts(),waitForCriticalMedia());
+    if(desktopQuery.matches)waits.push(waitForFonts());
     return Promise.all(waits);
-  }).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);
+  }).then(function(){return new Promise(afterLayoutFrame);});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',markInitialViewport,{once:true});else markInitialViewport();
 SC.renderLifecycle={markInitialViewport:markInitialViewport,freezeInitialViewport:freezeInitialViewport,waitForStableLayout:waitForStableLayout};
