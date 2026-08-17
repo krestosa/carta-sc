@@ -24,6 +24,7 @@
 @import "./features/content-normalizer/content-normalizer.css?v=unversioned";
 @import "./components/section-heading/responsive.css?v=unversioned";
 @import "./components/mobile-header/mobile-header.css?v=unversioned";
+@import "./components/site-brand/logo.css?v=unversioned";
 @import "./components/mobile-header/morph.css?v=unversioned";
 @import "./components/category-nav/compatibility.css?v=unversioned";
 @import "./components/product-modal/shell.css?v=unversioned";
