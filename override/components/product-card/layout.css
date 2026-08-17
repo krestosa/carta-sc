@@ -1,5 +1,5 @@
-/* Product-card structural layout only. */
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Product-card structural layout. Desktop is the base contract; responsive
+   view files only change density/list geometry and breakpoint-specific tokens. */
 body.sushiShop {
   --sc-card-rule: var(--sc-color-ink);
   --sc-card-subrule: var(--sc-color-border-strong);
@@ -25,12 +25,59 @@ body.sushiShop {
   --sc-card-action-active-scale: .97;
 }
 
+body.sushiShop .listadoShop .productoShop,
+body.sushiShop .listadoShop .productoShop.ConCarr {
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  vertical-align: top;
+}
+
+body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+  box-sizing: border-box;
+  display: grid !important;
+  position: relative !important;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr) var(--sc-card-price-width);
+  grid-template-rows: auto auto auto var(--sc-card-meta-row-height);
+  column-gap: var(--sc-card-content-gap);
+  align-content: start;
+  min-width: 0;
+  height: 100%;
+  color: inherit;
+  text-decoration: none !important;
+  cursor: pointer;
+  outline: none;
+}
+
+body.sushiShop .listadoShop .productoShop .imgShop {
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: var(--sc-product-image-ratio);
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  overflow: hidden !important;
+}
+
 body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   box-sizing: border-box !important;
   display: flex !important;
   grid-column: 1 / -1 !important;
   grid-row: 4 !important;
   align-items: flex-end !important;
+  align-self: start !important;
   gap: 7px !important;
   width: 100% !important;
   height: 20px !important;
@@ -44,105 +91,11 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors[aria-hidden='true'
   visibility: hidden !important;
 }
 
-@media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop,
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop.ConCarr {
-    box-sizing: border-box;
-    display: flex !important;
-    flex-direction: column;
-    width: auto !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    vertical-align: top;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd {
-    box-sizing: border-box;
-    display: grid !important;
-    position: relative !important;
-    flex: 1 1 auto;
-    grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-rows: auto auto auto var(--sc-card-meta-row-height) !important;
-    column-gap: var(--sc-card-content-gap);
-    align-content: start;
-    min-width: 0;
-    height: 100%;
-    color: inherit;
-    text-decoration: none !important;
-    cursor: pointer;
-    outline: none;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {
-    box-sizing: border-box;
-    grid-column: 1 / -1;
-    grid-row: 1;
-    width: 100% !important;
-    margin: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
-    align-self: start;
-  }
-
-  html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .sc-product-flavors {
-    opacity: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
-    outline: var(--sc-focus-ring-width-subtle) solid var(--sc-card-rule);
-    outline-offset: 6px;
-  }
+html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+  opacity: 0 !important;
 }
 
-@media (max-width: 992px) {
-  body.sushiShop .listadoShop .productoShop,
-  body.sushiShop .listadoShop .productoShop.ConCarr {
-    box-sizing: border-box;
-    display: flex !important;
-    flex-direction: column;
-    width: auto !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    vertical-align: top;
-  }
-
-  body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
-    box-sizing: border-box;
-    display: grid !important;
-    position: relative !important;
-    flex: 1 1 auto;
-    grid-template-columns: minmax(0, 1fr) var(--sc-card-price-width);
-    grid-template-rows: auto auto auto var(--sc-card-meta-row-height);
-    column-gap: var(--sc-card-content-gap);
-    align-content: start;
-    min-width: 0;
-    height: 100%;
-    color: inherit;
-    text-decoration: none !important;
-    outline: none;
-  }
-
-  body.sushiShop .listadoShop .productoShop .imgShop {
-    box-sizing: border-box;
-    grid-column: 1 / -1;
-    grid-row: 1;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    aspect-ratio: var(--sc-product-image-ratio);
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background-color: transparent !important;
-    overflow: hidden !important;
-  }
+body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
+  outline: var(--sc-focus-ring-width-subtle) solid var(--sc-card-rule);
+  outline-offset: 6px;
 }
