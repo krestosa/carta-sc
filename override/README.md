@@ -1,141 +1,76 @@
-# Override architecture
+# Override frontend architecture
 
-`override/` contains the UX layer for the static SushiClub catalogue snapshot. The source snapshot and legacy runtime stay intact; new behavior, presentation and compatibility fixes belong here unless a change explicitly requires touching the original files.
+`override/` es la capa frontend entregable. Su responsabilidad es UX: estilos, layout, componentes, interacción, accesibilidad, animación y compatibilidad con el DOM/runtime existente.
+
+No debe depender de GitHub Pages ni de transformaciones ejecutadas por `lab/pages/`. Si el directorio `lab/` desaparece, `override/` debe seguir describiendo por sí solo la implementación frontend que se entrega a Sistemas.
+
+## Límite de responsabilidad
+
+Pertenece a `override/`:
+
+- CSS y layout;
+- markup propio de componentes mediante templates;
+- JavaScript de comportamiento UI;
+- accesibilidad frontend;
+- observers/listeners necesarios para la interfaz;
+- optimizaciones de reflow/repaint causadas por estos componentes;
+- animaciones y su scheduling;
+- adaptación compatible con el DOM legacy.
+
+No pertenece a `override/`:
+
+- reescritura del HTML generado por servidor;
+- cache/CDN/headers;
+- compresión o conversión de assets en CI;
+- generación de `srcset` como sustituto de la infraestructura real;
+- bundling específico de GitHub Pages;
+- hacks para que la réplica estática simule endpoints/backend;
+- GTM/reCAPTCHA/server delivery policy.
+
+Esos experimentos viven en `lab/pages/` y, cuando correspondan al sitio real, deben convertirse en requerimientos para Sistemas.
 
 ## Source boot flow
 
-1. Source `index.html` references `_js_dev/main.js`.
-2. Source `_js_dev/main.js` uses `unversioned` as a placeholder and loads `main-legacy`, `override/main.css` and `override/main.js`.
-3. Source `override/main.js` loads JavaScript in dependency stages. Independent modules in each stage download in parallel while execution order stays deterministic.
-4. `override/templates/registry.js` loads component-owned `.html` template sources from `override/` and exposes them through `SC.templates`. Fixed component markup does not live in the original `index.html` and is not hardcoded inside component JS.
-5. Modules that depend on fixed markup wait for the template registry before mounting.
-6. `core/render-lifecycle.js` waits for the catalogue layout-ready signal and marks content already visible in the initial viewport.
-7. Motion is unlocked only after the initial layout is stable; section-heading motion is initialized last.
+1. `_js_dev/main.js` carga la capa frontend de desarrollo.
+2. `override/main.css` mantiene un manifest plano de estilos propiedad de componentes/features.
+3. `override/main.js` carga módulos JavaScript en orden de dependencia.
+4. `templates/registry.js` expone templates HTML propiedad de cada componente.
+5. Los módulos esperan sus dependencias antes de montar UI.
+6. `core/render-lifecycle.js` coordina estabilidad inicial y desbloqueo de motion.
 
-The source flow remains readable and modular for development. It is not the network shape served by GitHub Pages.
+## Responsabilidades por carpeta
 
-## Pages production flow
+- `core/`: configuración, utilities, theme, a11y, performance frontend y lifecycle.
+- `templates/`: registry de templates.
+- `motion/`: infraestructura de motion y efectos globales.
+- `mutations/`: adaptaciones controladas al runtime/DOM legacy.
+- `features/catalog/`: layout y comportamiento del catálogo.
+- `features/content-normalizer/`: normalización incremental de contenido.
+- `features/image-preloader/`: coordinación frontend de estados/prioridades de imágenes.
+- `components/category-nav/`: rail, sticky state, indicador, scroll-spy y controles.
+- `components/product-card/`: tarjeta, precio, traits, accesibilidad y motion.
+- `components/product-modal/`: modal, foco, contenido, controles y motion.
+- `components/catalog-tools/`: búsqueda, vista y theme.
+- `components/cart/`: comportamiento visual del carrito.
+- `components/mobile-header/`: adaptación del header mobile.
+- `components/section-heading/`: títulos y motion.
 
-The Pages workflow copies the exact triggering `ux` commit to `.pages-site` and transforms only that staging copy. Source files in Git are not rewritten by the production build.
+## Invariantes
 
-The staging pipeline currently:
+- El markup fijo nuevo pertenece a `.html` bajo `override/`, no al snapshot legacy.
+- Los lifecycle `init/start/destroy` deben ser idempotentes.
+- No duplicar listeners, observers, timers o nodos al reinicializar.
+- Browser Back/Forward conserva scroll restoration nativo.
+- No usar internals privados de jQuery.
+- No introducir una dependencia del host `krestosa.github.io` ni condicionar funcionalidad de producción al benchmark.
+- Los hallazgos de Lighthouse sólo modifican `override/` cuando la causa raíz está en esta capa frontend.
 
-1. Compiles component-owned override `.html` templates into `override/templates/registry.js` inside `.pages-site`; it never injects those templates into `index.html`.
-2. Stamps the exact commit SHA into deployed asset URLs.
-3. Marks the catalogue banner as eager/high-priority, product images as lazy/async and adds CORS-correct Acumin preload hints.
-4. Moves critical preconnect/preload hints to the start of `<head>` and preloads the exact current banner URL.
-5. Bundles all override CSS into one deployed `override/main.css` while preserving source import order and rebasing relative `url(...)` values.
-6. Bundles all override JavaScript modules, including the compiled template registry, into one deployed `override/main.js` while preserving the source loader order.
-7. Flattens the production bootstrap so Pages executes `main-legacy -> override CSS -> override JS` directly instead of requesting `_js_dev/main.js` and using `document.write`.
-8. Bundles 16 legacy local stylesheets into `_pages/legacy.css` and normalizes legacy font fallbacks to assets that actually exist.
-9. Bundles 16 synchronous legacy vendor scripts into `_pages/legacy.js`.
-10. Bundles the remaining two synchronous shop scripts into `_pages/shop.js`.
-11. Removes snapshot-only duplicate runtime state: redundant jQuery fallback, captured GTM runtime and captured reCAPTCHA runtime/iframes while retaining the canonical GTM bootstrap and official reCAPTCHA API.
-12. Removes the unused Google Maps runtime from this catalogue snapshot only when build guards prove no map markup or map-helper consumer exists.
-13. Removes generated imgLiquid background-image styles in staging so product images have one download path.
-14. Validates every active local HTML/CSS asset path in the final artifact.
-15. Enforces production request/image budgets: exactly the expected bundled local script/stylesheet topology, no blocking remote script tags, lazy product images and one high-priority preloaded banner.
-16. Runs syntax, dependency, template, bundle-integrity and stale-SHA guards before deploying the exact commit.
+## Validación
 
-Production bundling is an output optimization only. Do not collapse the source modules merely because Pages serves fewer files.
-
-## Responsibilities
-
-- `core/`: shared configuration, utilities, accessibility helpers, prepaint/loading guards and render lifecycle.
-- `templates/`: template registry infrastructure. Component markup itself stays with the component as `.html` source.
-- `motion/`: GSAP/ScrollTrigger infrastructure and global UI effects. Component motion stays inside the component.
-- `mutations/`: compatibility mutations against the legacy runtime. Do not place presentation CSS here.
-- `features/catalog/`: catalogue-level container/grid behavior that is not owned by a single component.
-- `features/content-normalizer/`: content normalization split into `rules.js` (editorial casing rules), `dom.js` (DOM/text normalization), `observer.js` (incremental MutationObserver batching) and `content-normalizer.js` (bootstrap/orchestration). The bootstrap is required runtime behavior and must stay loaded.
-- `components/category-nav/`: category navigation split into core/layout, rail controls/position/sticky scheduler, indicator, active state, scroll spy, motion, compatibility styles and `category-nav.html` for fixed toolbar/arrow/indicator markup.
-- `components/product-card/`: product data extraction, accessibility, content normalization, reveal/parallax motion, card-specific layout/content/pricing styles and `product-card.html` for fixed accessibility/trait-group markup.
-- `components/product-modal/`: view construction, accessibility/focus isolation, controller state, motion, modal shell/content/control/responsive styles and `product-modal.html` for the fixed dialog skeleton.
-- `components/cart/`: cart list reveal, sticky scroll response, badge feedback and their orchestrator.
-- `components/mobile-header/`: mobile header/SlickNav adaptation.
-- `components/section-heading/`: section-title layout and SplitText motion.
-
-## HTML templates
-
-Fixed override UI structure belongs in component-owned `.html` files, not in the legacy `index.html` and not as structural strings inside component JavaScript.
-
-Current sources:
-
-- `components/product-modal/product-modal.html`
-- `components/category-nav/category-nav.html`
-- `components/product-card/product-card.html`
-- `components/catalog-tools/catalog-tools.html`
-
-`templates/registry.js` is the only generic parser/registry layer. Components call `SC.templates.clone(name)`, then populate dynamic content, bind events, manage state and mount/unmount the cloned node.
-
-Rules:
-
-- Every template uses `<template data-sc-template="name">` and has exactly one root element.
-- Template names are unique across `override/`.
-- The source registry must reference every override `.html` template source; orphan template files fail validation.
-- Structural component modules must not recreate fixed UI with `document.createElement()` or `innerHTML`.
-- Pages compiles the `.html` sources into the override JS bundle; production does not fetch template HTML and does not inject override templates into `index.html`.
-
-## CSS manifest
-
-`override/main.css` is the source CSS manifest. It imports leaf styles directly and intentionally preserves cascade order.
-
-Rules:
-
-- Imported CSS files must not contain further `@import` statements.
-- Source imports use `?v=unversioned`; staging turns the manifest into a single production file.
-- Put rules in the component or feature that owns them. Use a late compatibility stylesheet only when legacy cascade constraints require it.
-
-## Runtime lifecycle
-
-- `SC.categoryNav.init()` / `destroy()` own the category-navigation global listeners, structural observer, scheduled RAF/timer work and rail listeners. Re-initialization must not duplicate any of them.
-- `SC.catalogTools.init()` / `destroy()` own the injected catalogue-tools root plus search/view subscriptions. DOM repair reuses that lifecycle instead of accumulating detached-root listeners.
-- `SC.contentNormalizer.init()` / `destroy()` own incremental mutation observation. Destroying the observer stops future normalization; it does not reverse text that was already normalized.
-- `SC.productCard.init()` / `destroy()` own card repair observation, responsive measurement tracking, media-query listeners and pending geometry work. Re-initialization must preserve a single set of generated card metadata/trait rows.
-- `SC.productModal.init()` / `destroy()` own the delegated document listeners, opening RAF, close timer, active/closing modal state, focus restoration and background isolation release. Destroy must remove any active or closing modal immediately and leave the controller safe to initialize again.
-- `SC.mobileHeader.init()` / `destroy()` own the desktop media-query subscription, SlickNav repair retry timer, deferred accessibility-sync timers and fallback/button listeners installed by the override adapter. Destroy does not remove the host SlickNav DOM; it removes only override-owned runtime work.
-- `SC.sectionHeading.init()` / `destroy()` own SplitText instances, ScrollTrigger/tween instances created for section headings and the staged RAF work used before initialization. Async SplitText/font continuations must not revive a destroyed generation.
-- `SC.imagePreloader.start()` / `destroy()` own the mutation/intersection observers, native image load/error listeners and the `sc-image-preloader-active` root state. Repeated `start()` must not duplicate image listeners.
-- `SC.mutations.domNormalization.init()` / `destroy()` own legacy-DOM mutation observation. Applied compatibility mutations are intentionally one-way; destroy stops future normalization rather than attempting to reconstruct legacy state.
-- `SC.mutations.legacyCategoryHover.init()` / `destroy()` own the delayed retry work used to remove legacy hover handlers. Removed host handlers cannot be restored safely, so teardown cancels pending override work only.
-- `SC.globalUiMotion.init()` / `destroy()` own the namespaced Bootstrap-dropdown motion listener.
-
-Lifecycle APIs are expected to be idempotent. Calling `init()`/`start()` twice must not duplicate listeners, observers, timers, generated nodes or animations; calling `destroy()` twice must be safe.
-
-## Runtime invariants
-
-- Keep the source `index.html` snapshot unchanged for override component markup. Do not add override templates or new component structure to the legacy HTML, either in source or staging.
-- All fixed new UI markup must originate from `.html` files under `override/`.
-- Browser Back/Forward scroll restoration stays native. Do not add `history.scrollRestoration` handling or a manual scroll-restoration module.
-- Do not use private jQuery internals such as `jQuery._data`.
-- Override modules must not depend on `document.currentScript`, `import.meta` or development-loader script element IDs because Pages concatenates them into one classic production bundle.
-- Keep `features/content-normalizer/content-normalizer.js` loaded.
-- Preserve the existing category order and structure.
-- The footer is outside the ownership of this override layer.
-- Keep legacy source files intact unless an explicit source-runtime change is required; staging optimizations belong under `scripts/`.
-
-## Pages build scripts
-
-- `scripts/validate-overrides.mjs`: validates source override topology, JS/CSS/HTML template ownership and invariants.
-- `scripts/compile-pages-templates.py`: compiles component-owned override `.html` templates into the staging template registry without touching `index.html`.
-- `scripts/prepare-pages-artifact.py`: SHA stamping, initial resource hints, image loading priorities, safe map pruning and override bundle generation.
-- `scripts/optimize-pages-critical-path.py`: moves critical hints to the start of `<head>` and preloads the exact current banner asset.
-- `scripts/clean-pages-product-images.py`: removes generated imgLiquid product background styles from staging.
-- `scripts/clean-pages-snapshot.py`: removes captured duplicate runtime state and repairs canonical third-party integrations in staging.
-- `scripts/flatten-pages-bootstrap.py`: replaces the staging development bootstrap with direct production tags.
-- `scripts/bundle-pages-legacy-css.py`: builds `_pages/legacy.css` and normalizes missing legacy font fallbacks.
-- `scripts/bundle-pages-legacy-js.py`: builds `_pages/legacy.js`.
-- `scripts/bundle-pages-shop-js.py`: builds `_pages/shop.js`.
-- `scripts/validate-pages-local-assets.py`: resolves active final HTML/CSS local references and rejects missing assets.
-- `scripts/validate-pages-performance-budget.py`: enforces the expected local request topology, image-loading policy and critical preloads.
-
-Each builder is intentionally strict. If source structure changes, update the builder only after understanding the new dependency instead of weakening its guard.
-
-## Validation
-
-Run:
+Desde la raíz del repo:
 
 ```bash
 node scripts/validate-overrides.mjs
 ```
 
-The Pages workflow also parses all Python build scripts, builds the staging artifact, compiles override templates, runs `node --check` on generated JavaScript bundles, validates local assets and production performance budgets, checks exact bundle source counts, verifies that component templates never appear in `index.html`, and confirms that the branch SHA is still current immediately before deploy.
+El laboratorio de GitHub Pages ejecuta esta misma validación antes de construir su réplica, pero sus transforms posteriores no forman parte del contrato de producción.
