@@ -1,16 +1,33 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={initialViewportRatio:.96,behindViewportOffset:-20,revealDuration:.34,revealStagger:.03,batchInterval:.06,reflowDuration:.22,rescueViewportRatio:1.03,rescueBottomOffset:-30,rescueOpacityThreshold:.05,rescueDuration:.20,rescueDelay:900};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={initialViewportRatio:.96,behindViewportOffset:-20,revealDuration:.34,revealStagger:.03,initialStagger:.032,batchInterval:.06,reflowDuration:.22,rescueViewportRatio:1.03,rescueBottomOffset:-30,rescueOpacityThreshold:.05,rescueDuration:.20,rescueDelay:900};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
 parts.setupReveal=function(gsap,ST,profile,reduce){
-  var cards=gsap.utils.toArray(S.productCards),triggers=[],timer=0;
+  var cards=gsap.utils.toArray(S.productCards),triggers=[],timer=0,initialRafA=0,initialRafB=0;
   function noop(){}
   function suppressReveal(){var state=SC.scrollState;return!!(state&&(state.programmatic||performance.now()<(state.suppressRevealUntil||0)));}
   function showNow(batch){gsap.killTweensOf(batch);gsap.set(batch,{autoAlpha:1,clearProps:'opacity,visibility'});}
   function reveal(batch){
     gsap.killTweensOf(batch);
     gsap.to(batch,{autoAlpha:1,duration:CFG.revealDuration,stagger:CFG.revealStagger,ease:M.easings.out,overwrite:'auto',onComplete:function(){gsap.set(batch,{clearProps:'opacity,visibility'});}});
+  }
+  function revealInitial(batch){
+    if(!batch.length)return;
+    gsap.killTweensOf(batch);
+    gsap.set(batch,{autoAlpha:0});
+    /* Preserve the old two-frame paint separation: the hidden state must reach
+       the compositor before visibility/opacity animate, otherwise first-row
+       cards appear instantly. The CSS visibility selector supplies the small
+       upward translate without touching transform/imgLiquid geometry. */
+    initialRafA=requestAnimationFrame(function(){
+      initialRafA=0;
+      initialRafB=requestAnimationFrame(function(){
+        initialRafB=0;
+        if(suppressReveal()){showNow(batch);return;}
+        gsap.to(batch,{autoAlpha:1,duration:CFG.revealDuration,stagger:CFG.initialStagger,ease:M.easings.out,overwrite:'auto',onComplete:function(){gsap.set(batch,{clearProps:'opacity,visibility'});}});
+      });
+    });
   }
   function revealViewport(){
     var batch=[];
@@ -39,7 +56,7 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   });
   if(staticCards.length)showNow(staticCards);
   if(behind.length)showNow(behind);
-  if(initial.length)showNow(initial);
+  if(initial.length)revealInitial(initial);
   if(deferred.length){
     gsap.set(deferred,{autoAlpha:0});
     triggers=ST.batch(deferred,{start:profile.start,once:true,interval:CFG.batchInterval,batchMax:profile.batchMax,onEnter:reveal,onEnterBack:reveal})||[];
@@ -61,6 +78,8 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   }
   return function(){
     if(parts.revealViewport===revealViewport)parts.revealViewport=null;
+    if(initialRafA)cancelAnimationFrame(initialRafA);
+    if(initialRafB)cancelAnimationFrame(initialRafB);
     if(timer)clearTimeout(timer);
     triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});
     gsap.killTweensOf(cards);
