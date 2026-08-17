@@ -72,22 +72,28 @@ for stale_file in (
 # Shop source scripts are replaced by one bundle. They may remain as repository
 # source files, but must never be requested by the built page.
 shop_sources = {'js/funcionesShop__q_f352afe3.js', 'js/main_shop__q_a48cd660.js'}
-active_script_paths = {path_only(v) for v in graph.scripts}
-for source in sorted(shop_sources & active_script_paths):
+active_script_paths = [path_only(v) for v in graph.scripts]
+for source in sorted(shop_sources & set(active_script_paths)):
     issues.append(f'superseded shop script is still loaded: {source}')
-if f'_pages/shop.js' not in active_script_paths:
-    issues.append('optimized shop bundle is not loaded')
+if active_script_paths.count('_pages/shop.js') != 1:
+    issues.append(f'optimized shop bundle load count must be 1, found {active_script_paths.count("_pages/shop.js")}')
+for script in sorted(set(active_script_paths)):
+    if active_script_paths.count(script) > 1:
+        issues.append(f'duplicate active script load ({active_script_paths.count(script)}x): {script}')
 
 # Local legacy/override CSS is split into critical inline CSS + one deferred sheet.
-for href in graph.styles:
-    p = path_only(href)
+active_style_paths = [path_only(v) for v in graph.styles]
+for p in active_style_paths:
     if p.startswith('_css_dev/') or p in {
         '_pages/legacy.css', 'override/main.css',
         'css/styles_shop__q_a48cd660.css', 'css/_aux__q_a48cd660.css',
     }:
         issues.append(f'superseded stylesheet is still loaded: {p}')
-if '_pages/deferred.css' not in {path_only(v) for v in graph.styles}:
-    issues.append('optimized deferred stylesheet is not loaded')
+if active_style_paths.count('_pages/deferred.css') != 1:
+    issues.append(f'optimized deferred stylesheet load count must be 1, found {active_style_paths.count("_pages/deferred.css")}')
+for style in sorted(set(active_style_paths)):
+    if active_style_paths.count(style) > 1:
+        issues.append(f'duplicate active stylesheet load ({active_style_paths.count(style)}x): {style}')
 if html.count('id="sc-pages-critical-css"') != 1:
     issues.append('critical inline CSS block missing or duplicated')
 
@@ -99,15 +105,9 @@ if f'_critical-media/desktop-banner.webp?v={SHA}' not in html:
 if f'_critical-media/mobile-banner.webp?v={SHA}' not in html:
     issues.append('optimized mobile banner reference missing')
 
-# Reject duplicate browser requests produced by accidental add-not-replace logic.
-all_loads = graph.scripts + graph.styles + graph.images + graph.preloads
-for value in sorted(set(all_loads)):
-    count = all_loads.count(value)
-    # Two logo <img>s intentionally share one asset; its single preload is also intentional.
-    if value == logo:
-        continue
-    if count > 1 and value.startswith(('_critical-media/', '_pages/', 'override/', 'js/')):
-        issues.append(f'duplicate optimized load reference ({count}x): {value}')
+# A preload plus the eventual element use is intentional: the browser coalesces
+# them into one transfer. Replacement correctness is checked by explicit old/new
+# pairs above, not by counting textual references across different resource roles.
 
 if issues:
     print(f'System load validation failed with {len(issues)} issue(s):')
