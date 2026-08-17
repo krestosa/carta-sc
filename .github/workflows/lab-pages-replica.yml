@@ -54,6 +54,7 @@ jobs:
         run: |
           node scripts/validate-overrides.mjs
           node scripts/validate-production-boundary.mjs
+          node scripts/validate-responsive-contract.mjs
 
       - name: Validate lab tooling syntax
         shell: bash
