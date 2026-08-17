@@ -10,7 +10,7 @@ function refreshMetrics(){
   I.markDirty();scheduleSpy();
 }
 function current(){
-  if(!metrics.length)return null;if(N.invalidateOffset)N.invalidateOffset();var mark=N.offset()+N.currentMarkOffset,best=null,bestTop=-Infinity,first=null,firstTop=Infinity;
+  if(!metrics.length)return null;var mark=N.offset()+N.currentMarkOffset,best=null,bestTop=-Infinity,first=null,firstTop=Infinity;
   for(var i=0;i<metrics.length;i++){
     var node=metrics[i];if(!document.documentElement.contains(node))continue;var top=node.getBoundingClientRect().top;
     if(top<firstTop){firstTop=top;first=node;}if(top<=mark&&top>bestTop){bestTop=top;best=node;}

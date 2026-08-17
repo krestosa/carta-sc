@@ -14,7 +14,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
 }
 
 /* Treat every trait SVG as a typographic glyph. Its geometric box sits slightly
-   lower than adjacent text, so apply one optical correction everywhere. */
+   lower than adjacent text, so apply one optical compensation everywhere. */
 body.sushiShop .sc-trait-icon {
   transform: translateY(-.8px) !important;
   transform-origin: 50% 50% !important;
@@ -137,7 +137,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   height: auto !important;
   margin: 0 !important;
   padding: 0 !important;
-  color: var(--sc-color-copy) !important;
+  color: var(--sc-color-heading) !important;
   font-family: var(--sc-font-primary) !important;
   font-size: 11.5px !important;
   line-height: 16px !important;
