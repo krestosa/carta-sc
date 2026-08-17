@@ -2,8 +2,10 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.catalogTools,P=C&&C.themePalette;if(!SC||!C||!P||SC.__catalogThemeControllerBooted)return;SC.__catalogThemeControllerBooted=true;
 var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),fine=matchMedia('(hover:hover) and (pointer:fine)'),compact=matchMedia('(max-width:992px)'),deps=null,mainTimeline=null,hoverTween=null,saveHandle=0,pending='';
-var FULL='M12 6.45A5.55 5.55 0 1 1 12 17.55A5.55 5.55 0 1 1 12 6.45Z',AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';
-var RAYS=[[12,1.2,12,3.8],[12,20.2,12,22.8],[1.2,12,3.8,12],[20.2,12,22.8,12],[4.35,4.35,6.18,6.18],[17.82,17.82,19.65,19.65],[17.82,6.18,19.65,4.35],[4.35,19.65,6.18,17.82]];
+var FULL='M12 6.45A5.55 5.55 0 1 1 12 17.55A5.55 5.55 0 1 1 12 6.45Z';
+var MOON_FULL='M12 4.4A7.6 7.6 0 1 1 12 19.6A7.6 7.6 0 1 1 12 4.4Z';
+var AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';
+var MOON_BITE={cx:17.35,cy:7.1,r:7.25};
 function norm(m){return MODES.indexOf(m)>=0?m:'';}function selected(){return norm(doc.getAttribute('data-sc-theme')||'')||'system';}function resolved(m){return m==='system'?(systemDark.matches?'dark':'light'):m;}function gsap(){return deps&&deps.gsap;}function morph(){return deps&&deps.MorphSVGPlugin;}
 function load(){var m=norm(doc.getAttribute('data-sc-theme')||'');if(m)return m;try{m=norm(localStorage.getItem(KEY)||'');}catch(_){m='';}return m||'system';}
 function save(m){pending=m;if(saveHandle)return;var done=function(){saveHandle=0;try{localStorage.setItem(KEY,pending);}catch(_){}};saveHandle=window.requestIdleCallback?requestIdleCallback(done,{timeout:250}):setTimeout(done,0);}
@@ -11,36 +13,38 @@ function options(root){return root?[].slice.call(root.querySelectorAll('[data-sc
 function emit(m,a){try{dispatchEvent(new CustomEvent('sc:themechange',{detail:{mode:m,resolved:a}}));}catch(_){}}
 function meta(root,m){if(!root)return;var b=root.querySelector('.sc-theme-toggle'),a=resolved(m);root.setAttribute('data-sc-theme-mode',m);root.setAttribute('data-sc-theme-actual',a);if(b){b.setAttribute('aria-label',label(m));b.setAttribute('title',m==='system'?'Tema automático':'Tema '+(m==='dark'?'oscuro':'claro'));}options(root).forEach(function(o){var on=o.getAttribute('data-sc-theme-option')===m;o.setAttribute('aria-checked',on?'true':'false');o.classList.toggle('sc-theme-option-selected',on);});}
 function parts(root){var b=root&&root.querySelector('.sc-theme-toggle');if(!b)return null;var svg=b.querySelector('[data-sc-theme-icon]'),core=b.querySelector('[data-sc-theme-core]'),bite=b.querySelector('[data-sc-theme-bite]'),ring=b.querySelector('[data-sc-theme-auto-ring]'),rays=b.querySelector('[data-sc-theme-rays]'),lines=[].slice.call(b.querySelectorAll('[data-sc-theme-rays] line'));return svg&&core&&bite&&ring&&rays&&lines.length===8?{button:b,svg:svg,core:core,bite:bite,ring:ring,rays:rays,lines:lines}:null;}
-function rayAttrs(i,on){var r=RAYS[i],mx=(r[0]+r[2])/2,my=(r[1]+r[3])/2;return on?{x1:r[0],y1:r[1],x2:r[2],y2:r[3]}:{x1:mx,y1:my,x2:mx,y2:my};}
 function attrs(node,v){Object.keys(v).forEach(function(k){node.setAttribute(k,String(v[k]));});}
 function stopMain(){if(mainTimeline){try{mainTimeline.kill();}catch(_){}mainTimeline=null;}}
 function stopHover(){if(hoverTween){try{hoverTween.kill();}catch(_){}hoverTween=null;}}
-function setButtonRotation(p,deg,animate){var g=gsap();if(!p)return;stopHover();if(g&&animate)hoverTween=g.to(p.button,{rotation:deg,duration:.28,ease:'power2.out',overwrite:'auto',onComplete:function(){hoverTween=null;}});else if(g)g.set(p.button,{rotation:deg});else p.button.style.transform='rotate('+deg+'deg)';}
-function setStatic(root,mode){var p=parts(root),g=gsap();if(!p)return;stopMain();stopHover();mode=norm(mode)||'system';p.core.setAttribute('d',mode==='system'?AUTO:FULL);attrs(p.bite,{r:mode==='dark'?5.65:0});attrs(p.ring,{r:8.4});p.ring.style.opacity=mode==='system'?'1':'0';p.rays.style.opacity=mode==='light'?'1':'0';p.lines.forEach(function(line,i){attrs(line,rayAttrs(i,mode==='light'));});if(g)g.set(p.button,{rotation:0});else p.button.style.transform='rotate(0deg)';p.svg.setAttribute('data-sc-theme-glyph-state',mode);}
+function setButtonRotation(p,deg,animate){var g=gsap();if(!p)return;stopHover();if(g&&animate)hoverTween=g.to(p.button,{rotation:deg,duration:compact.matches?.2:.28,ease:'power2.out',overwrite:'auto',onComplete:function(){hoverTween=null;}});else if(g)g.set(p.button,{rotation:deg});else p.button.style.transform='rotate('+deg+'deg)';}
+function prepareRays(p,on){var g=gsap(),offset=on?0:1;p.lines.forEach(function(line){line.setAttribute('pathLength','1');line.style.strokeDasharray='1';line.style.strokeDashoffset=String(offset);});if(g)g.set(p.lines,{strokeDasharray:1,strokeDashoffset:offset});p.rays.style.opacity=on?'1':'0';}
+function setStatic(root,mode){var p=parts(root),g=gsap();if(!p)return;stopMain();stopHover();mode=norm(mode)||'system';p.core.setAttribute('d',mode==='system'?AUTO:(mode==='dark'?MOON_FULL:FULL));attrs(p.bite,{cx:MOON_BITE.cx,cy:MOON_BITE.cy,r:mode==='dark'?MOON_BITE.r:0});attrs(p.ring,{r:8.4});p.ring.style.opacity=mode==='system'?'1':'0';prepareRays(p,mode==='light');if(g)g.set(p.button,{rotation:0});else p.button.style.transform='rotate(0deg)';p.svg.setAttribute('data-sc-theme-glyph-state',mode);}
 function commit(root,mode,persist,keepIcon){mode=norm(mode)||'system';var prev=selected(),before=doc.getAttribute('data-sc-theme-resolved')||resolved(prev),after=resolved(mode);doc.setAttribute('data-sc-theme',mode);doc.setAttribute('data-sc-theme-resolved',after);meta(root,mode);if(!keepIcon)setStatic(root,mode);if(before!==after)emit(mode,after);if(persist&&prev!==mode)save(mode);}
-function rayTween(tl,line,i,on,pos,duration,ease){tl.to(line,{duration:duration,ease:ease,attr:rayAttrs(i,on),overwrite:'auto'},pos);}
 function morphCore(tl,core,shape,pos,duration,ease){if(!morph()){tl.call(function(){core.setAttribute('d',shape);},null,pos+duration);return;}tl.to(core,{duration:duration,ease:ease,morphSVG:{shape:shape},overwrite:'auto'},pos);}
-function animateGeometry(root,from,to){var p=parts(root),g=gsap();from=norm(from)||'system';to=norm(to)||'system';if(!p||!g||from===to){setStatic(root,to);return;}stopMain();stopHover();setStatic(root,from);var neutral=.24,build=.26,ease='power2.inOut';root.setAttribute('data-sc-theme-animating','true');p.svg.setAttribute('data-sc-theme-glyph-state',to);mainTimeline=g.timeline({onComplete:function(){mainTimeline=null;root.removeAttribute('data-sc-theme-animating');setStatic(root,to);}});
-/* Phase 1: every source physically returns to the same full circle. */
+function animateGeometry(root,from,to){var p=parts(root),g=gsap();from=norm(from)||'system';to=norm(to)||'system';if(!p||!g||from===to){setStatic(root,to);return;}stopMain();stopHover();setStatic(root,from);var mobile=compact.matches||!fine.matches,neutral=mobile?.18:.24,build=mobile?.2:.26,ease=mobile?'power2.out':'power2.inOut';root.setAttribute('data-sc-theme-animating','true');p.svg.setAttribute('data-sc-theme-glyph-state',to);mainTimeline=g.timeline({defaults:{overwrite:'auto'},onComplete:function(){mainTimeline=null;root.removeAttribute('data-sc-theme-animating');setStatic(root,to);}});
+/* Phase 1: normalize every source to one clean full circle. */
 if(from==='light'){
-  p.lines.forEach(function(line,i){rayTween(mainTimeline,line,i,false,0,neutral,'power2.in');});
-  mainTimeline.to(p.rays,{opacity:0,duration:neutral*.7,ease:'power2.in',overwrite:'auto'},neutral*.3);
+  mainTimeline.to(p.lines,{strokeDashoffset:1,duration:neutral,ease:'power2.in'},0)
+    .to(p.rays,{opacity:0,duration:neutral*.72,ease:'power2.in'},neutral*.28);
 }else if(from==='dark'){
   mainTimeline.to(p.bite,{duration:neutral,ease:ease,attr:{r:0},overwrite:'auto'},0);
+  morphCore(mainTimeline,p.core,FULL,0,neutral,ease);
 }else{
   morphCore(mainTimeline,p.core,FULL,0,neutral,ease);
-  mainTimeline.to(p.ring,{duration:neutral,ease:ease,attr:{r:5.55},opacity:0,overwrite:'auto'},0);
+  mainTimeline.to(p.ring,{duration:neutral,ease:ease,attr:{r:5.55},opacity:0},0);
 }
-/* Phase 2: build only the requested destination from that full circle. */
+/* Phase 2: build the requested destination from that same circle. */
 if(to==='light'){
   p.rays.style.opacity='1';
-  p.lines.forEach(function(line,i){rayTween(mainTimeline,line,i,true,neutral,build,'power3.out');});
-  mainTimeline.fromTo(p.rays,{opacity:0},{opacity:1,duration:build*.72,ease:'power2.out',overwrite:'auto'},neutral);
+  g.set(p.lines,{strokeDasharray:1,strokeDashoffset:1});
+  mainTimeline.to(p.lines,{strokeDashoffset:0,duration:build,ease:'power3.out'},neutral)
+    .fromTo(p.rays,{opacity:0},{opacity:1,duration:build*.78,ease:'power2.out'},neutral);
 }else if(to==='dark'){
-  mainTimeline.to(p.bite,{duration:build,ease:ease,attr:{r:5.65},overwrite:'auto'},neutral);
+  morphCore(mainTimeline,p.core,MOON_FULL,neutral,build,ease);
+  mainTimeline.to(p.bite,{duration:build,ease:ease,attr:{cx:MOON_BITE.cx,cy:MOON_BITE.cy,r:MOON_BITE.r}},neutral);
 }else{
   morphCore(mainTimeline,p.core,AUTO,neutral,build,ease);
-  mainTimeline.fromTo(p.ring,{attr:{r:5.55},opacity:0},{duration:build,ease:ease,attr:{r:8.4},opacity:1,overwrite:'auto'},neutral);
+  mainTimeline.fromTo(p.ring,{attr:{r:5.55},opacity:0},{duration:build,ease:ease,attr:{r:8.4},opacity:1},neutral);
 }
 }
 function transition(root,mode,persist){mode=norm(mode)||'system';var from=norm(root&&root.getAttribute('data-sc-theme-mode')||'')||selected(),before=doc.getAttribute('data-sc-theme-resolved')||resolved(selected()),after=resolved(mode);animateGeometry(root,from,mode);if(before===after)commit(root,mode,persist,true);else P.animate(before,function(){commit(root,mode,persist,true);});}
