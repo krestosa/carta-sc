@@ -1,1 +1,0 @@
-(function(){'use strict';var SC=window.SCOverride;if(SC)SC['__catalogThemeBooted']=true;})();
