@@ -32,9 +32,9 @@
   --sc-catalog-inline-space: 64px;
   --sc-product-image-ratio: 286 / 200;
 
-  /* Shared motion. Theme motion is a single compositor cross-fade, not per-node color interpolation. */
+  /* Shared motion. Theme color movement is intentionally slower than micro-interactions. */
   --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --sc-motion-fast: 160ms;
-  --sc-motion-theme: 160ms;
+  --sc-motion-theme: 560ms;
   --sc-motion-icon: 180ms;
 }
