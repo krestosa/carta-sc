@@ -21,6 +21,7 @@ function cleanupRoot(remove){
   if(cleanSearch){cleanSearch();cleanSearch=null;}if(cleanTheme){cleanTheme();cleanTheme=null;}if(cleanView){cleanView();cleanView=null;}
   if(remove&&currentRoot&&currentRoot.parentNode)currentRoot.parentNode.removeChild(currentRoot);currentRoot=null;
 }
+function seedTheme(root){if(root&&C.theme&&C.theme.seed)C.theme.seed(root);return root;}
 function install(root){
   currentRoot=root;if(SC.productCardContent&&SC.productCardContent.positionTraitReferences)SC.productCardContent.positionTraitReferences();
   cleanSearch=C.search&&C.search.install?C.search.install(root):null;cleanTheme=C.theme&&C.theme.install?C.theme.install(root):null;cleanView=C.view&&C.view.install?C.view.install(root):null;
@@ -28,8 +29,8 @@ function install(root){
 }
 function mount(){
   var container=document.querySelector(S.container);if(!container)return null;var existing=container.querySelector('.sc-catalog-tools');
-  if(existing){if(existing!==currentRoot){cleanupRoot(false);install(existing);}return existing;}if(currentRoot)cleanupRoot(false);
-  var root=T.clone('catalog-tools'),toolbar=container.querySelector(S.categoryToolbar);if(toolbar&&toolbar.nextSibling)container.insertBefore(root,toolbar.nextSibling);else if(toolbar)container.appendChild(root);else container.insertBefore(root,container.firstChild);return install(root);
+  if(existing){if(existing!==currentRoot){cleanupRoot(false);seedTheme(existing);install(existing);}return existing;}if(currentRoot)cleanupRoot(false);
+  var root=seedTheme(T.clone('catalog-tools')),toolbar=container.querySelector(S.categoryToolbar);if(toolbar&&toolbar.nextSibling)container.insertBefore(root,toolbar.nextSibling);else if(toolbar)container.appendChild(root);else container.insertBefore(root,container.firstChild);return install(root);
 }
 function repair(){repairRaf=0;if(!initialized)return;if(currentRoot&&!document.documentElement.contains(currentRoot))cleanupRoot(false);mount();}
 function scheduleRepair(){if(initialized&&!repairRaf)repairRaf=requestAnimationFrame(repair);}
