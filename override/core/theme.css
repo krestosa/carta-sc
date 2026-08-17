@@ -22,9 +22,6 @@ html[data-sc-theme-resolved='dark'] {
   --sc-color-border-strong: #44443e;
 }
 
-/* In system mode, the OS media query is the source of truth. These blocks are
-   deliberately after the resolved-state rules so they also override a stale
-   data-sc-theme-resolved value if a mobile browser recreates UI chrome. */
 @media (prefers-color-scheme: light) {
   html[data-sc-theme='system'] {
     color-scheme: light;
@@ -72,9 +69,9 @@ body.sushiShop ::selection {
   color: var(--sc-color-surface);
 }
 
-/* Manual theme changes are staged as one short crossfade. The veil keeps every
-   component visually synchronized while the theme icon remains above it and
-   continues morphing. The system theme path stays CSS-only and bypasses this. */
+/* The theme flip happens behind the previous surface. The old surface reaches
+   almost full opacity before the CSS variables change, then eases away slowly;
+   this removes the hard light/dark flash that was visible in Firefox. */
 html.sc-theme-transitioning body.sushiShop::after {
   content: '';
   position: fixed;
@@ -83,26 +80,54 @@ html.sc-theme-transitioning body.sushiShop::after {
   background: var(--sc-theme-transition-surface, var(--sc-color-surface));
   opacity: 0;
   pointer-events: none;
-  transition: opacity 135ms cubic-bezier(.4,0,.2,1);
+  transition: opacity 190ms cubic-bezier(.4,0,.2,1);
 }
 
 html.sc-theme-transitioning[data-sc-theme-transition-phase='out'] body.sushiShop::after {
-  opacity: .82;
+  opacity: .96;
 }
 
 html.sc-theme-transitioning[data-sc-theme-transition-phase='in'] body.sushiShop::after {
   opacity: 0;
-  transition-duration: 190ms;
-  transition-timing-function: cubic-bezier(.4,0,.2,1);
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.16,1,.3,1);
 }
 
 html.sc-theme-transitioning body.sushiShop .sc-theme-control {
   z-index: 2147483001;
 }
 
+/* Firefox-safe first-interaction fallback for the grid/list glyph. Geometry is
+   swapped only while the whole SVG is visually collapsed; no child SVG scale
+   transforms are used, so there is no transform-box/origin jump. */
+body.sushiShop .sc-view-layout-icon {
+  transform-origin: 50% 50%;
+  transition: opacity 140ms cubic-bezier(.4,0,.2,1), transform 180ms cubic-bezier(.4,0,.2,1);
+}
+body.sushiShop .sc-view-layout-icon[data-sc-view-icon-fallback='out'] {
+  opacity: .16;
+  transform: scale(.84) rotate(-6deg);
+}
+body.sushiShop .sc-view-layout-icon[data-sc-view-icon-fallback='in'] {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition-duration: 220ms,260ms;
+  transition-timing-function: cubic-bezier(.16,1,.3,1),cubic-bezier(.16,1,.3,1);
+}
+body.sushiShop .sc-view-layout-icon[data-sc-view-icon-preview='true'] {
+  transform: scale(1.06) rotate(2deg);
+}
+body.sushiShop .sc-view-layout-icon[data-sc-view-icon-animating='true'] {
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.sc-theme-transitioning body.sushiShop::after {
     display: none !important;
     transition: none !important;
+  }
+  body.sushiShop .sc-view-layout-icon {
+    transition: none !important;
+    transform: none !important;
   }
 }
