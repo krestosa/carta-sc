@@ -4,8 +4,7 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
 }
 
 @media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .priceRow {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .priceRow {
     box-sizing: border-box;
     display: flex !important;
     grid-column: 2;
