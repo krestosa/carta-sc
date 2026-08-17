@@ -5,21 +5,21 @@
       <input class="sc-catalog-search-input" type="search" inputmode="search" autocomplete="off" spellcheck="false" placeholder="Buscar en la carta" aria-label="Buscar productos en la carta">
       <span class="sc-catalog-search-line" aria-hidden="true"></span>
     </label>
-    <div class="sc-catalog-actions">
-      <div class="sc-theme-control">
-        <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu">
-          <span class="sc-theme-icon-stack" data-sc-theme-icon aria-hidden="true">
-            <svg class="sc-theme-icon-layer" data-sc-theme-layer="system" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4"></circle>
-              <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z"></path>
+    <div class="sc-catalog-actions" style="opacity:1;visibility:visible">
+      <div class="sc-theme-control" style="opacity:1;visibility:visible">
+        <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
+          <span class="sc-theme-icon-stack" data-sc-theme-icon aria-hidden="true" style="display:block;width:24px;height:24px;opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a);overflow:visible">
+            <svg class="sc-theme-icon-layer" data-sc-theme-layer="system" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;opacity:1;visibility:visible;overflow:visible;color:var(--sc-color-ink,#0a0a0a)">
+              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4" style="fill:none;stroke:var(--sc-color-ink,#0a0a0a);stroke-width:1.55"></circle>
+              <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" style="fill:var(--sc-color-ink,#0a0a0a)"></path>
             </svg>
-            <svg class="sc-theme-icon-layer" data-sc-theme-layer="light" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-              <g class="sc-theme-static-rays">
+            <svg class="sc-theme-icon-layer" data-sc-theme-layer="light" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;opacity:0;visibility:visible;overflow:visible;color:var(--sc-color-ink,#0a0a0a)">
+              <g class="sc-theme-static-rays" style="fill:none;stroke:var(--sc-color-ink,#0a0a0a);stroke-width:1.65;stroke-linecap:round">
                 <line x1="12" y1="1.2" x2="12" y2="3.8"></line><line x1="12" y1="20.2" x2="12" y2="22.8"></line><line x1="1.2" y1="12" x2="3.8" y2="12"></line><line x1="20.2" y1="12" x2="22.8" y2="12"></line><line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line><line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line><line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line><line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
               </g>
-              <circle class="sc-theme-static-sun" cx="12" cy="12" r="5.55"></circle>
+              <circle class="sc-theme-static-sun" cx="12" cy="12" r="5.55" style="fill:var(--sc-color-ink,#0a0a0a)"></circle>
             </svg>
-            <svg class="sc-theme-icon-layer" data-sc-theme-layer="dark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path class="sc-theme-static-moon" d="M19.2 15.5A8 8 0 0 1 8.5 4.8A8.6 8.6 0 1 0 19.2 15.5Z"></path></svg>
+            <svg class="sc-theme-icon-layer" data-sc-theme-layer="dark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;opacity:0;visibility:visible;overflow:visible;color:var(--sc-color-ink,#0a0a0a)"><path class="sc-theme-static-moon" d="M19.2 15.5A8 8 0 0 1 8.5 4.8A8.6 8.6 0 1 0 19.2 15.5Z" style="fill:var(--sc-color-ink,#0a0a0a)"></path></svg>
           </span>
         </button>
         <div class="sc-theme-menu" id="sc-theme-menu" role="menu" aria-label="Elegir tema" aria-hidden="true">
@@ -28,12 +28,12 @@
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="dark"><span class="sc-theme-option-main"><svg class="sc-theme-option-icon sc-theme-option-icon--dark" viewBox="0 0 18 18" aria-hidden="true"><path class="sc-theme-option-dark-disc" d="M14.65 11.85A6.1 6.1 0 0 1 6.15 3.35A6.55 6.55 0 1 0 14.65 11.85Z"></path></svg><span>Oscuro</span></span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
         </div>
       </div>
-      <button class="sc-catalog-view-toggle" type="button" aria-label="Cambiar vista de productos" title="Cambiar vista">
-        <svg class="sc-view-morph-icon" data-sc-view-icon width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-          <g data-sc-view-live>
-            <rect data-sc-view-shape="0" x="3" y="3" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-shape="1" x="13" y="3" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-shape="2" x="3" y="10" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-shape="3" x="13" y="10" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-shape="4" x="3" y="17" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-shape="5" x="13" y="17" width="8" height="4" rx="1.1" ry="1.1"></rect>
+      <button class="sc-catalog-view-toggle" type="button" aria-label="Cambiar vista de productos" title="Cambiar vista" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
+        <svg class="sc-view-morph-icon" data-sc-view-icon width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;width:24px;height:24px;opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a);fill:var(--sc-color-ink,#0a0a0a);overflow:visible">
+          <g data-sc-view-live style="display:inline;opacity:1;visibility:visible;fill:var(--sc-color-ink,#0a0a0a)">
+            <rect data-sc-view-shape="0" x="3" y="3" width="8" height="4" rx="1.1" ry="1.1" style="fill:var(--sc-color-ink,#0a0a0a);opacity:1;visibility:visible"></rect><rect data-sc-view-shape="1" x="13" y="3" width="8" height="4" rx="1.1" ry="1.1" style="fill:var(--sc-color-ink,#0a0a0a);opacity:1;visibility:visible"></rect><rect data-sc-view-shape="2" x="3" y="10" width="8" height="4" rx="1.1" ry="1.1" style="fill:var(--sc-color-ink,#0a0a0a);opacity:1;visibility:visible"></rect><rect data-sc-view-shape="3" x="13" y="10" width="8" height="4" rx="1.1" ry="1.1" style="fill:var(--sc-color-ink,#0a0a0a);opacity:1;visibility:visible"></rect><rect data-sc-view-shape="4" x="3" y="17" width="8" height="4" rx="1.1" ry="1.1" style="fill:var(--sc-color-ink,#0a0a0a);opacity:1;visibility:visible"></rect><rect data-sc-view-shape="5" x="13" y="17" width="8" height="4" rx="1.1" ry="1.1" style="fill:var(--sc-color-ink,#0a0a0a);opacity:1;visibility:visible"></rect>
           </g>
-          <g class="sc-view-morph-targets" aria-hidden="true">
+          <g class="sc-view-morph-targets" aria-hidden="true" style="visibility:hidden;opacity:0;pointer-events:none">
             <rect data-sc-view-target="grid-0" x="3" y="3" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-target="grid-1" x="13" y="3" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-target="grid-2" x="3" y="10" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-target="grid-3" x="13" y="10" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-target="grid-4" x="3" y="17" width="8" height="4" rx="1.1" ry="1.1"></rect><rect data-sc-view-target="grid-5" x="13" y="17" width="8" height="4" rx="1.1" ry="1.1"></rect>
             <rect data-sc-view-target="list-0" x="3" y="3.25" width="3.5" height="3.5" rx="1" ry="1"></rect><rect data-sc-view-target="list-1" x="8.5" y="3.25" width="12.5" height="3.5" rx="1" ry="1"></rect><rect data-sc-view-target="list-2" x="3" y="10.25" width="3.5" height="3.5" rx="1" ry="1"></rect><rect data-sc-view-target="list-3" x="8.5" y="10.25" width="12.5" height="3.5" rx="1" ry="1"></rect><rect data-sc-view-target="list-4" x="3" y="17.25" width="3.5" height="3.5" rx="1" ry="1"></rect><rect data-sc-view-target="list-5" x="8.5" y="17.25" width="12.5" height="3.5" rx="1" ry="1"></rect>
           </g>
