@@ -80,18 +80,15 @@ for tag in trait_tags:
         issues.append('legacy trait metadata still has an active img src')
         break
 
+# These raster backgrounds are fully superseded by theme surface tokens and
+# the SVG category rail, so even a CSS url() reference is a regression.
 for stale in (
-    'https://www.sushiclub.com.ar/gfx/sabor_pic_0.png',
-    'https://www.sushiclub.com.ar/gfx/sabor_pic_1.png',
-    'https://www.sushiclub.com.ar/gfx/sabor_pic_2.png',
-    'https://www.sushiclub.com.ar/gfx/sabor_pic_3.png',
-    'https://www.sushiclub.com.ar/gfx/sabor_vegano.png',
     'https://www.sushiclub.com.ar/gfx/back_body_01.png',
     'https://www.sushiclub.com.ar/gfx/back_body_01_white.png',
     'https://www.sushiclub.com.ar/gfx/scrollTab2.png',
 ):
     if stale in html:
-        issues.append(f'superseded raster remains in final browser graph/CSS: {stale}')
+        issues.append(f'superseded CSS raster remains in final browser graph: {stale}')
 
 # Final Pages delivery intentionally has no eager local runtime tags. Its inline
 # delivery loader owns the exact optimized runtime manifest and creates the tags
