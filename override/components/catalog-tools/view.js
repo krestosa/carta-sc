@@ -75,10 +75,17 @@ function mixTransforms(from,to,amount){
 function transformString(value){
   return'translate('+value[0]+'px,'+value[1]+'px) scale('+value[2]+','+value[3]+')';
 }
-function setTransformState(host,target){
+function setTransformState(host,target,instant){
   var nodes=cells(host);
   if(!host||!target||nodes.length!==target.length)return;
-  nodes.forEach(function(cell,index){cell.style.transform=transformString(target[index]);});
+  if(instant)host.setAttribute('data-sc-view-icon-static','true');
+  nodes.forEach(function(cell,index){
+    cell.style.transform=transformString(target[index]);
+  });
+  if(instant){
+    host.getBoundingClientRect();
+    host.removeAttribute('data-sc-view-icon-static');
+  }
 }
 function clearViewIconMotion(host){
   var state=host&&host.__scViewIconMotion;
@@ -86,11 +93,13 @@ function clearViewIconMotion(host){
   if(state.animation){try{state.animation.kill();}catch(_){} }
   if(state.timer)window.clearTimeout(state.timer);
   host.removeAttribute('data-sc-view-icon-animating');
+  host.style.removeProperty('--sc-view-icon-duration');
   host.__scViewIconMotion=null;
 }
 function finalizeViewIconMotion(host,state){
   if(!host||host.__scViewIconMotion!==state)return;
   host.removeAttribute('data-sc-view-icon-animating');
+  host.style.removeProperty('--sc-view-icon-duration');
   host.__scViewIconMotion=null;
 }
 function gsapVars(value){
@@ -109,15 +118,19 @@ function animateTransforms(host,target,duration,ease){
   clearViewIconMotion(host);
 
   if(reducedMotion()){
-    setTransformState(host,target);
+    setTransformState(host,target,true);
     return;
   }
 
   var gsap=motionDeps&&motionDeps.gsap;
   if(!gsap){
-    /* GSAP is loaded lazily. Until it is ready, snap to the correct geometry
-       rather than running a second JS animation engine. */
-    setTransformState(host,target);
+    /* GSAP is loaded lazily. CSS handles the first transform-only transition
+       without introducing a second per-frame JavaScript animation loop. */
+    var fallback={animation:null,timer:0};
+    host.__scViewIconMotion=fallback;
+    host.style.setProperty('--sc-view-icon-duration',Math.round(duration*1000)+'ms');
+    setTransformState(host,target,false);
+    fallback.timer=window.setTimeout(function(){finalizeViewIconMotion(host,fallback);},Math.round(duration*1000)+40);
     return;
   }
 
@@ -129,12 +142,14 @@ function animateTransforms(host,target,duration,ease){
     defaults:{duration:duration,ease:ease||'power3.out',overwrite:'auto'},
     onComplete:function(){finalizeViewIconMotion(host,state);}
   });
-  nodes.forEach(function(cell,index){timeline.to(cell,gsapVars(target[index]),0);});
+  nodes.forEach(function(cell,index){
+    timeline.to(cell,gsapVars(target[index]),0);
+  });
   state.animation=timeline;
 }
 function setViewIcon(host,key){
   clearViewIconMotion(host);
-  setTransformState(host,ICON_TRANSFORMS[key]);
+  setTransformState(host,ICON_TRANSFORMS[key],true);
 }
 function animateViewIcon(host,key){
   animateTransforms(host,ICON_TRANSFORMS[key],.28,(CFG.motion&&CFG.motion.easings&&CFG.motion.easings.strongOut)||'power3.out');
@@ -142,7 +157,7 @@ function animateViewIcon(host,key){
 function hoverPreview(host){
   if(!host||reducedMotion())return;
   var gsap=motionDeps&&motionDeps.gsap,nodes=cells(host);
-  if(!gsap||!nodes.length)return;
+  if(!nodes.length)return;
 
   clearViewIconMotion(host);
 
@@ -150,6 +165,19 @@ function hoverPreview(host){
       base=ICON_TRANSFORMS[key],
       preview=mixTransforms(base,ICON_TRANSFORMS[oppositeKey(key)],.22),
       state={animation:null,timer:0};
+
+  if(!gsap){
+    host.__scViewIconMotion=state;
+    host.style.setProperty('--sc-view-icon-duration','120ms');
+    setTransformState(host,preview,false);
+    state.timer=window.setTimeout(function(){
+      if(host.__scViewIconMotion!==state)return;
+      host.__scViewIconMotion=null;
+      host.style.removeProperty('--sc-view-icon-duration');
+      animateTransforms(host,base,.18,'power2.inOut');
+    },120);
+    return;
+  }
 
   host.__scViewIconMotion=state;
   host.setAttribute('data-sc-view-icon-animating','true');
@@ -182,7 +210,7 @@ function sync(root,mode,animate){
   if(!host)return;
 
   if(previous===key){
-    if(!host.__scViewIconMotion)setTransformState(host,ICON_TRANSFORMS[key]);
+    if(!host.__scViewIconMotion)setTransformState(host,ICON_TRANSFORMS[key],true);
     return;
   }
 
@@ -243,7 +271,9 @@ function restoreViewport(viewport){
 }
 function refreshMotionNow(){
   if(SC.motion&&SC.motion.run){
-    SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});
+    SC.motion.run(function(deps){
+      if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();
+    });
   }
 }
 function syncMounted(){
