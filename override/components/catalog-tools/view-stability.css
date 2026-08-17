@@ -29,7 +29,11 @@ body.sushiShop {
   }
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop,
+/* :is(layout-ready, not-layout-ready) is intentionally exhaustive. It adds the
+   same specificity as the old desktop-only compatibility rules while keeping
+   one shared declaration body for every breakpoint. Because this file loads
+   after catalog-tools.css, the canonical contract wins without forking layout. */
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop,
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
   grid-template-columns: minmax(0, 1fr) !important;
@@ -39,7 +43,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
 /* A list card always uses the same two-column anatomy:
    media | title / price+traits / flexible gap / description.
    Desktop only changes the size tokens above. */
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
   align-self: start !important;
@@ -49,7 +53,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
   overflow: visible !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop > a.fancyboxModalAddProd,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop > a.fancyboxModalAddProd,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop > a.fancyboxModalAddProd {
   grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important;
@@ -62,7 +66,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop >
   overflow: visible !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .imgShop,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .imgShop,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop {
   box-sizing: border-box !important;
@@ -77,7 +81,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   border-bottom: 0 !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .imgShop > img,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .imgShop > img,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .imgShop > img,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .imgShop > img {
   width: 100% !important;
@@ -86,7 +90,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   object-position: center !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .title-shop1,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .title-shop1,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .title-shop1,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .title-shop1 {
   display: -webkit-box !important;
@@ -105,7 +109,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   -webkit-line-clamp: 2 !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
   position: static !important;
@@ -122,13 +126,13 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
   padding: 0 !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .sc-product-flavors,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-flavors,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
   display: none !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
+html[data-sc-catalog-view='list'] body.sushiShop:is(.sc-catalog-layout-ready, :not(.sc-catalog-layout-ready)) .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
   box-sizing: border-box !important;
