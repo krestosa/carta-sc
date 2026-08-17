@@ -1,0 +1,27 @@
+/* MorphSVG-driven grid/list icon. Geometry is converted to <path> once before
+   interaction; only path data changes during the state transition. */
+body.sushiShop .sc-view-morph-icon {
+  display:block;
+  flex:0 0 var(--sc-view-icon-size,24px);
+  width:var(--sc-view-icon-size,24px);
+  height:var(--sc-view-icon-size,24px);
+  overflow:visible;
+  color:currentColor;
+  fill:currentColor;
+}
+body.sushiShop .sc-view-morph-icon [data-sc-view-live] rect,
+body.sushiShop .sc-view-morph-icon [data-sc-view-live] path {
+  fill:currentColor;
+  shape-rendering:geometricPrecision;
+}
+body.sushiShop .sc-view-morph-targets {
+  visibility:hidden;
+  pointer-events:none;
+}
+body.sushiShop .sc-view-morph-targets rect,
+body.sushiShop .sc-view-morph-targets path {
+  fill:currentColor;
+}
+@media (prefers-reduced-motion:reduce) {
+  body.sushiShop .sc-view-morph-icon { transition:none!important; }
+}
