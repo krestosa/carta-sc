@@ -41,7 +41,16 @@ def measure():
             f'unexpected mobile logo optical width {mobile_width}px from '
             f'source={mobile_size} bbox={mobile_bbox}'
         )
-    desktop_width = 75  # original .newVer17topBar .brand max-width contract
+
+    # Desktop source is rendered at its intrinsic 250px canvas. The SVG has a
+    # tight viewBox, so preserve the raster's visible wordmark width instead of
+    # the obsolete 75px wrapper constraint.
+    desktop_width = desktop_bbox[2] - desktop_bbox[0]
+    if not 160 <= desktop_width <= 280:
+        raise SystemExit(
+            f'unexpected desktop logo optical width {desktop_width}px from '
+            f'source={desktop_size} bbox={desktop_bbox}'
+        )
 
     state = {
         'mobile_source': mobile_size,
@@ -77,13 +86,16 @@ def apply():
     css = f'''<style id="sc-system-brand-css">
 body.sushiShop .sc-system-brand-logo{{display:block!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;opacity:1!important;visibility:visible!important;object-fit:contain!important;object-position:center center!important;filter:invert(1)!important;transform:none!important;transition:filter var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1)!important}}
 html[data-sc-theme-resolved='dark'] body.sushiShop .sc-system-brand-logo{{filter:none!important}}
-@media(min-width:993px){{body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo){{box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:{dw}px!important;max-width:{dw}px!important;height:55px!important;max-height:55px!important;margin:0 auto!important;padding:0!important;line-height:0!important;vertical-align:top!important}}body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo)>a{{display:flex!important;position:static!important;top:auto!important;left:auto!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important;transform:none!important}}body.sushiShop .newVer17topBar .sc-system-brand-logo{{width:{dw}px!important;max-width:{dw}px!important;height:auto!important;max-height:45px!important}}}}
+@media(min-width:993px){{body.sushiShop .topBar.newVer17topBar{{background-color:var(--sc-color-surface)!important;color:var(--sc-color-ink)!important}}body.sushiShop .newVer17topBar span,body.sushiShop .newVer17topBar a,body.sushiShop .newVer17topBar .dropdown a,body.sushiShop .newVer17topBar .top-reservas span a,body.sushiShop .newVer17topBar .socialTop .fa{{color:var(--sc-color-ink)!important}}body.sushiShop .newVer17topBar .brandCol,body.sushiShop .newVer17topBar .main-nav,body.sushiShop .newVer17topBar .nav{{background-color:transparent!important}}body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo){{box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:{dw}px!important;max-width:{dw}px!important;height:55px!important;max-height:55px!important;margin:0 auto!important;padding:0!important;line-height:0!important;vertical-align:top!important}}body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo)>a{{display:flex!important;position:static!important;top:auto!important;left:auto!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important;transform:none!important}}body.sushiShop .newVer17topBar .sc-system-brand-logo{{width:{dw}px!important;max-width:{dw}px!important;height:auto!important;max-height:45px!important}}}}
 @media(max-width:992px){{body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo){{display:flex!important;position:relative!important;align-items:center!important;justify-content:center!important;height:var(--sc-mobile-header-height,100px)!important;margin:0!important;padding:0!important}}body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo)>a{{display:flex!important;position:static!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;align-items:center!important;justify-content:center!important;width:{mw}px!important;max-width:calc(100vw - 96px)!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important;transform:none!important}}body.sushiShop .brandOnlyMobile .sc-system-brand-logo{{width:{mw}px!important;max-width:100%!important;height:auto!important;max-height:45px!important;aspect-ratio:312/45!important}}}}
 </style>'''
     html = html[:start] + css + html[end:]
     INDEX.write_text(html, encoding='utf-8')
     STATE.unlink()
-    print(f'System logo optical size applied: desktop={dw}px mobile={mw}px; centered on both axes.')
+    print(
+        f'System logo optical size applied: desktop={dw}px mobile={mw}px; '
+        'centered on both axes; desktop nav bound to theme surface/ink.'
+    )
 
 
 if len(sys.argv) != 2 or sys.argv[1] not in {'measure', 'apply'}:
