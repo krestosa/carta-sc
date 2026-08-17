@@ -5,7 +5,6 @@
 @import "./components/category-nav/desktop.css?v=unversioned";
 @import "./components/category-nav/mobile.css?v=unversioned";
 @import "./components/category-nav/controls.css?v=unversioned";
-@import "./core/performance.css?v=unversioned";
 @import "./core/no-loading-state.css?v=unversioned";
 @import "./motion/main.css?v=unversioned";
 @import "./components/category-nav/motion.css?v=unversioned";
