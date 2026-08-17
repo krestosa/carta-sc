@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
-var version=window.__scCatalogAssetVersion||'unversioned';
+var version=window.__scCatalogAssetVersion||'20260817-icons-v3';
 var base='override/';
 if(document.documentElement)document.documentElement.classList.add('sc-image-preloader-active');
 function bootstrapStaticNetwork(){
