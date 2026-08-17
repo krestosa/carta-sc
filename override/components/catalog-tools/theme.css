@@ -36,6 +36,7 @@ body.sushiShop .sc-theme-toggle {
   color:var(--sc-color-copy);
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
+  transition:color 240ms cubic-bezier(.4,0,.2,1);
 }
 body.sushiShop .sc-theme-toggle:hover,
 body.sushiShop .sc-theme-toggle[aria-expanded='true'] { color:var(--sc-color-ink); }
