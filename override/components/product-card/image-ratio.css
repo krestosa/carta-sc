@@ -1,11 +1,17 @@
-/* SushiClub product media.
-   Owns product image stage and raster fitting. */
-
+/* SushiClub product media. One geometry contract is inherited by every
+   breakpoint; view-specific list sizing is applied later by view-stability.css. */
 body.sushiShop .listadoShop .productoShop .imgShop {
+  box-sizing: border-box;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow: hidden !important;
   background-color: transparent !important;
   background-image: none !important;
   line-height: 0 !important;
+  aspect-ratio: var(--sc-product-image-ratio);
 }
 
 body.sushiShop .listadoShop .productoShop .imgShop > img {
@@ -25,22 +31,10 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
   transform: none !important;
 }
 
-@media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .imgShop {
-    box-sizing: border-box;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    aspect-ratio: var(--sc-product-image-ratio);
-    margin: 0 !important;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .listadoShop .productoShop .imgShop > img {
     transform: none !important;
   }
 }
 
-/* Deploy marker: native-product-image-v2. */
+/* Deploy marker: native-product-image-v3-shared. */
