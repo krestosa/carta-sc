@@ -24,12 +24,11 @@ prepaint = (
     "if(['system','light','dark'].indexOf(t)<0)t='system';a=t==='system'?(d?'dark':'light'):t;"
     "r.setAttribute('data-sc-theme',t);r.setAttribute('data-sc-theme-resolved',a);r.style.colorScheme=a;"
     "var w=window.innerWidth||r.clientWidth||0,c=w<=640?'phone':w<=992?'tablet':'desktop',v='',l='';"
-    "function m(x){if(x==='list')return'list';if(c==='phone')return x==='two'?'compact':x==='one'?'normal':'';"
-    "if(c==='tablet')return x==='three'||x==='four'?'compact':x==='two'?'normal':'';return x==='four'?'compact':x==='three'?'normal':''}"
-    "try{v=localStorage.getItem('scCatalogView:v3')||'';if(['normal','compact','list'].indexOf(v)<0){"
+    "function m(x){return x==='list'?'list':x?'compact':''}"
+    "try{v=localStorage.getItem('scCatalogView:v3')||'';if(v==='normal')v='compact';if(['compact','list'].indexOf(v)<0){"
     "l=localStorage.getItem('scCatalogView:v2:'+c)||localStorage.getItem(c==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';"
     "v=m(l);if(v){try{localStorage.setItem('scCatalogView:v3',v)}catch(e2){}}}}catch(e){v=''}"
-    "if(['normal','compact','list'].indexOf(v)<0)v='compact';r.setAttribute('data-sc-catalog-view',v);"
+    "if(['compact','list'].indexOf(v)<0)v='compact';r.setAttribute('data-sc-catalog-view',v);"
     "r.classList.add('sc-catalog-prepaint','sc-no-loading-state')})();"
 )
 replacement = '\n'.join([
@@ -48,6 +47,8 @@ if 'data-sc-catalog-view' not in html or 'scCatalogView:v3' not in html:
     raise SystemExit('Remembered unified catalogue view prepaint bootstrap is missing')
 if "v='compact';r.setAttribute('data-sc-catalog-view',v)" not in html:
     raise SystemExit('Catalogue prepaint default must be compact')
+if "['compact','list'].indexOf(v)" not in html or "['normal','compact','list']" in html:
+    raise SystemExit('Pages prepaint must expose density and list only')
 if 'data-sc-theme-resolved' not in html or 'scTheme:v1' not in html:
     raise SystemExit('Remembered color theme prepaint bootstrap is missing')
 if len(re.findall(rf'<script\b[^>]*\bsrc=["\']_js_dev/main-legacy\.js\?v={re.escape(SHA)}["\'][^>]*>\s*</script>', html, re.IGNORECASE)) != 1:
@@ -58,4 +59,4 @@ if len(re.findall(rf'<script\b[^>]*\bsrc=["\']override/main\.js\?v={re.escape(SH
     raise SystemExit('Direct override runtime script must appear exactly once')
 
 index_path.write_text(html, encoding='utf-8')
-print('Flattened Pages bootstrap with remembered theme/view prepaint and main-legacy -> CSS -> override order')
+print('Flattened Pages bootstrap with density/list view prepaint and main-legacy -> CSS -> override order')
