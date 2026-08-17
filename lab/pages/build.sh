@@ -61,7 +61,7 @@ test -s "$SITE/_critical-media/sushiclub-logo.svg"
 test -s "$SITE/_critical-media/mobile-banner.webp"
 test ! -e "$SITE/_critical-media/mobile-logo.webp"
 test ! -e "$SITE/_chrome-media/desktop-logo.webp"
-test "$(grep -o 'sc-system-brand-logo' "$SITE/index.html" | wc -l)" -eq 2
+test "$(grep -o 'class="[^"]*sc-system-brand-logo[^"]*"' "$SITE/index.html" | wc -l)" -eq 2
 test "$(grep -o 'data-sc-first-viewport=' "$SITE/index.html" | wc -l)" -eq 4
 for n in 1 2 3 4; do
   test -s "$SITE/_first-viewport/product-${n}.webp"
