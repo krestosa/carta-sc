@@ -22,7 +22,12 @@ function railState(){
   overflowDirty=false;
 }
 function scheduleFrame(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
-function scheduleRail(){overflowDirty=true;stickyDirty=true;scheduleMeasure();scheduleFrame();}
+function scheduleRail(){
+  /* Dirty rail requests normally follow DOM/style writes. Wait for the
+     double-rAF sticky measurement, then let measureSticky() schedule the
+     read/write rail frame. This avoids forcing layout in the invalidated frame. */
+  overflowDirty=true;stickyDirty=true;scheduleMeasure();
+}
 function scheduleSticky(){scheduleFrame();}
 function cancel(){if(railRaf)cancelAnimationFrame(railRaf);if(measureRaf)cancelAnimationFrame(measureRaf);if(measureRaf2)cancelAnimationFrame(measureRaf2);railRaf=measureRaf=measureRaf2=0;}
 function requestCenter(previous,target){if(document.body.classList.contains(K.catalogSearching)){scheduleRail();return;}if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleRail();}
