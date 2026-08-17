@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var inheritedVersion=window.__scCatalogAssetVersion||'',
-    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-gsap-morph-v2':inheritedVersion,
+    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-gsap-morph-v3':inheritedVersion,
     base='override/';
 window.__scCatalogAssetVersion=version;
 if(inheritedVersion==='unversioned'){
@@ -37,10 +37,6 @@ function loadScript(path,id){return new Promise(function(resolve,reject){var exi
 function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
 function waitForMotionDependencies(){var motion=window.SCOverride&&window.SCOverride.motion;if(!motion||typeof motion.ready!=='function')throw new Error('[SushiClub override] Motion dependency gate unavailable');return motion.ready();}
-
-/* Stage 1 establishes config first. Stage 2 may then evaluate motion/main.js,
-   which immediately loads GSAP core and plugins. Nothing interactive loads
-   until motion.ready() confirms every configured plugin is registered. */
 var foundationStages=[
   [
     ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],
@@ -101,7 +97,6 @@ var afterTemplates=[
     ['components/catalog-tools/catalog-tools.js','sc-catalog-tools-js']
   ]
 ];
-
 loadStages(foundationStages)
   .then(waitForMotionDependencies)
   .then(function(){return loadStages(beforeTemplates);})
