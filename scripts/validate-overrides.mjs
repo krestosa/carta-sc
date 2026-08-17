@@ -42,6 +42,27 @@ if (!errors.length) {
   if (/\bimport\.meta\b/.test(jsSource)) fail('Override modules must remain compatible with the current classic-script runtime');
   if (fs.existsSync(path.join(overrideDir, 'mutations', 'scroll-restoration.js'))) fail('Manual scroll-restoration mutation must not be reintroduced');
 
+  /* Responsive catalogue invariant: there are exactly two user-selectable
+     layouts everywhere. Desktop owns the structural contract; smaller
+     breakpoints may only adapt responsive values. */
+  const viewModulePath = path.join(overrideDir, 'components', 'catalog-tools', 'view.js');
+  const viewStabilityPath = path.join(overrideDir, 'components', 'catalog-tools', 'view-stability.css');
+  const pricingPath = path.join(overrideDir, 'components', 'product-card', 'pricing.css');
+  const cardLayoutPath = path.join(overrideDir, 'components', 'product-card', 'layout.css');
+  const imageRatioPath = path.join(overrideDir, 'components', 'product-card', 'image-ratio.css');
+  const viewModule = read(viewModulePath);
+  const mainSource = read(mainJsPath);
+  const viewStability = read(viewStabilityPath);
+  if (!viewModule.includes("MODES=['compact','list']")) fail('Catalog view toggle must expose only density and list');
+  if (/MODES=\[[^\]]*normal/.test(viewModule)) fail('Low-density normal view must not be reintroduced');
+  if (!mainSource.includes("VIEW_MODES=['compact','list']")) fail('Catalog bootstrap must expose only density and list');
+  if (!viewStability.includes('--sc-view-list-image-width: 210px')) fail('Desktop list geometry must be the canonical base contract');
+  if (!viewStability.includes('grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important')) fail('List cards must use the shared two-column anatomy');
+  if (/--sc-view-list-desktop-image-width/.test(viewStability)) fail('List geometry must not fork into a desktop-only implementation');
+  for (const file of [pricingPath, cardLayoutPath, imageRatioPath]) {
+    if (/@media\s*\(min-width\s*:\s*993px\)/.test(read(file))) fail(`${rel(file)} must inherit its structural rules from the shared desktop-first contract`);
+  }
+
   const structuralUiFiles = [
     'components/product-modal/view.js',
     'components/category-nav/layout.js',
