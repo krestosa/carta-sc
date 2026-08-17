@@ -8,18 +8,28 @@
     <div class="sc-catalog-actions" style="opacity:1;visibility:visible">
       <div class="sc-theme-control" style="opacity:1;visibility:visible">
         <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
-          <span class="sc-theme-icon-stack" data-sc-theme-icon aria-hidden="true" style="display:block;width:24px;height:24px;opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a);overflow:visible">
-            <svg class="sc-theme-icon-layer" data-sc-theme-layer="system" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;opacity:1;visibility:visible;overflow:visible;color:var(--sc-color-ink,#0a0a0a)">
-              <circle class="sc-theme-auto-ring" cx="12" cy="12" r="8.4" style="fill:none;stroke:var(--sc-color-ink,#0a0a0a);stroke-width:1.55"></circle>
-              <path class="sc-theme-auto-half" d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" style="fill:var(--sc-color-ink,#0a0a0a)"></path>
-            </svg>
-            <svg class="sc-theme-icon-layer" data-sc-theme-layer="light" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;opacity:0;visibility:visible;overflow:visible;color:var(--sc-color-ink,#0a0a0a)">
-              <g class="sc-theme-static-rays" style="fill:none;stroke:var(--sc-color-ink,#0a0a0a);stroke-width:1.65;stroke-linecap:round">
-                <line x1="12" y1="1.2" x2="12" y2="3.8"></line><line x1="12" y1="20.2" x2="12" y2="22.8"></line><line x1="1.2" y1="12" x2="3.8" y2="12"></line><line x1="20.2" y1="12" x2="22.8" y2="12"></line><line x1="4.35" y1="4.35" x2="6.18" y2="6.18"></line><line x1="17.82" y1="17.82" x2="19.65" y2="19.65"></line><line x1="17.82" y1="6.18" x2="19.65" y2="4.35"></line><line x1="4.35" y1="19.65" x2="6.18" y2="17.82"></line>
+          <span class="sc-theme-parametric-host" data-sc-theme-icon aria-hidden="true">
+            <svg class="sc-theme-parametric-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <defs>
+                <mask id="sc-theme-parametric-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                  <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
+                  <circle class="sc-theme-parametric-bite" data-sc-theme-bite cx="16.15" cy="8.15" r="0" fill="#000"></circle>
+                  <rect class="sc-theme-parametric-auto-cut" data-sc-theme-auto-cut x="11.15" y="6.25" width="1.7" height="11.5" rx=".85" fill="#000"></rect>
+                </mask>
+              </defs>
+              <g class="sc-theme-parametric-rays" data-sc-theme-rays style="opacity:0">
+                <line x1="12" y1="2.5" x2="12" y2="2.5" data-sc-ray="0"></line>
+                <line x1="12" y1="21.5" x2="12" y2="21.5" data-sc-ray="1"></line>
+                <line x1="2.5" y1="12" x2="2.5" y2="12" data-sc-ray="2"></line>
+                <line x1="21.5" y1="12" x2="21.5" y2="12" data-sc-ray="3"></line>
+                <line x1="5.265" y1="5.265" x2="5.265" y2="5.265" data-sc-ray="4"></line>
+                <line x1="18.735" y1="18.735" x2="18.735" y2="18.735" data-sc-ray="5"></line>
+                <line x1="18.735" y1="5.265" x2="18.735" y2="5.265" data-sc-ray="6"></line>
+                <line x1="5.265" y1="18.735" x2="5.265" y2="18.735" data-sc-ray="7"></line>
               </g>
-              <circle class="sc-theme-static-sun" cx="12" cy="12" r="5.55" style="fill:var(--sc-color-ink,#0a0a0a)"></circle>
+              <circle class="sc-theme-parametric-core" data-sc-theme-core cx="12" cy="12" r="5.55" mask="url(#sc-theme-parametric-mask)"></circle>
+              <circle class="sc-theme-parametric-ring" data-sc-theme-ring cx="12" cy="12" r="5.55"></circle>
             </svg>
-            <svg class="sc-theme-icon-layer" data-sc-theme-layer="dark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;opacity:0;visibility:visible;overflow:visible;color:var(--sc-color-ink,#0a0a0a)"><path class="sc-theme-static-moon" d="M19.2 15.5A8 8 0 0 1 8.5 4.8A8.6 8.6 0 1 0 19.2 15.5Z" style="fill:var(--sc-color-ink,#0a0a0a)"></path></svg>
           </span>
         </button>
         <div class="sc-theme-menu" id="sc-theme-menu" role="menu" aria-label="Elegir tema" aria-hidden="true">
