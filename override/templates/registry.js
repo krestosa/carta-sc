@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride=window.SCOverride||{};
 if(SC.__templateRegistryBooted)return;SC.__templateRegistryBooted=true;
-var version=window.__scCatalogAssetVersion||'unversioned';
+var version=window.__scCatalogAssetVersion||'20260817-icons-v3';
 var base='override/';
 var TEMPLATE_SELECTOR='template[data-sc-template]',TEMPLATE_ATTRIBUTE='data-sc-template';
 var COMPILED_TEMPLATES=null;/*__SC_TEMPLATE_PAYLOAD__*/
