@@ -16,25 +16,31 @@ var MODES=['system','light','dark'],
     switchTimers=[],
     iconToken=0,
     iconTimeline=null,
-    motionDeps=null;
+    motionDeps=null,
+    SWITCH_COMMIT=190,
+    SWITCH_IN=205,
+    SWITCH_END=540;
 
 var ICON_STATE={
   system:{
     solar:{rotation:34,scale:.62,opacity:0},
     rays:{rotation:26,scale:.34,opacity:0},
     cut:{x:11.5,y:-8.5},
+    discScale:1,
     auto:{rotation:0,scale:1,opacity:1}
   },
   light:{
     solar:{rotation:0,scale:1,opacity:1},
     rays:{rotation:0,scale:1,opacity:1},
     cut:{x:11.5,y:-8.5},
+    discScale:1,
     auto:{rotation:-38,scale:.62,opacity:0}
   },
   dark:{
     solar:{rotation:-7,scale:1.13,opacity:1},
     rays:{rotation:26,scale:.34,opacity:0},
     cut:{x:0,y:0},
+    discScale:1.45,
     auto:{rotation:38,scale:.62,opacity:0}
   }
 };
@@ -49,7 +55,7 @@ function load(){
   try{mode=normalize(localStorage.getItem(STORE_KEY)||'');}catch(_){mode='';}
   return mode||'system';
 }
-function saveNow(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){}}
+function saveNow(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
 function scheduleSave(mode){
   persistMode=mode;
   if(persistHandle)return;
@@ -105,27 +111,33 @@ function commit(root,mode,persist,skipSync){
   if(persist&&modeChanged)scheduleSave(mode);
 }
 
+function prepareMotion(){
+  if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();
+}
 function iconParts(root){
   var button=root&&root.querySelector('.sc-theme-toggle');
   return button?{
     solar:button.querySelector('.sc-theme-solar-glyph'),
     rays:button.querySelector('.sc-theme-rays'),
     cut:button.querySelector('.sc-theme-cut'),
+    disc:button.querySelector('.sc-theme-disc'),
     auto:button.querySelector('.sc-theme-auto-glyph')
   }:null;
 }
 function usableParts(parts){
-  return!!(parts&&parts.solar&&parts.rays&&parts.cut&&parts.auto);
+  return!!(parts&&parts.solar&&parts.rays&&parts.cut&&parts.disc&&parts.auto);
 }
 function setGsapState(gsap,parts,state){
   gsap.set(parts.solar,{rotation:state.solar.rotation,scale:state.solar.scale,autoAlpha:state.solar.opacity,svgOrigin:'12 12',force3D:false});
   gsap.set(parts.rays,{rotation:state.rays.rotation,scale:state.rays.scale,autoAlpha:state.rays.opacity,svgOrigin:'12 12',force3D:false});
   gsap.set(parts.cut,{x:state.cut.x,y:state.cut.y,force3D:false});
+  gsap.set(parts.disc,{scale:state.discScale,svgOrigin:'12 12',force3D:false});
   gsap.set(parts.auto,{rotation:state.auto.rotation,scale:state.auto.scale,autoAlpha:state.auto.opacity,svgOrigin:'12 12',force3D:false});
 }
 function clearGsapState(gsap,parts){
   if(!gsap||!usableParts(parts))return;
-  gsap.set([parts.solar,parts.rays,parts.cut,parts.auto],{clearProps:'transform,opacity,visibility'});
+  parts.disc.style.removeProperty('transition');
+  gsap.set([parts.solar,parts.rays,parts.cut,parts.disc,parts.auto],{clearProps:'transform,opacity,visibility'});
 }
 function cancelIconMotion(root,clearInline){
   iconToken++;
@@ -135,7 +147,9 @@ function cancelIconMotion(root,clearInline){
   }
   if(root){
     root.removeAttribute('data-sc-theme-animating');
-    if(clearInline&&motionDeps&&motionDeps.gsap)clearGsapState(motionDeps.gsap,iconParts(root));
+    var parts=iconParts(root);
+    if(parts&&parts.disc)parts.disc.style.removeProperty('transition');
+    if(clearInline&&motionDeps&&motionDeps.gsap)clearGsapState(motionDeps.gsap,parts);
   }
   return iconToken;
 }
@@ -148,6 +162,13 @@ function finalizeIcon(root,token){
   }
   if(gsap)clearGsapState(gsap,parts);
   root.removeAttribute('data-sc-theme-animating');
+}
+function tweenTarget(target,part){
+  if(part==='solar')return{rotation:target.solar.rotation,scale:target.solar.scale,autoAlpha:target.solar.opacity,svgOrigin:'12 12',force3D:false};
+  if(part==='rays')return{rotation:target.rays.rotation,scale:target.rays.scale,autoAlpha:target.rays.opacity,svgOrigin:'12 12',force3D:false};
+  if(part==='cut')return{x:target.cut.x,y:target.cut.y,force3D:false};
+  if(part==='disc')return{scale:target.discScale,svgOrigin:'12 12',force3D:false};
+  return{rotation:target.auto.rotation,scale:target.auto.scale,autoAlpha:target.auto.opacity,svgOrigin:'12 12',force3D:false};
 }
 function animateModeChange(root,from,to){
   if(!root)return;
@@ -163,28 +184,45 @@ function animateModeChange(root,from,to){
 
   var gsap=motionDeps&&motionDeps.gsap;
   if(!gsap){
-    /* First interaction may happen while the lazily-loaded GSAP bundle is still
-       arriving. CSS handles that one transition; no per-frame JS fallback. */
     sync(root,to);
     return;
   }
 
-  var source=ICON_STATE[from],target=ICON_STATE[to],token=cancelIconMotion(root,false),
-      ease=(CFG.motion&&CFG.motion.easings&&CFG.motion.easings.strongOut)||'power3.out';
+  var source=ICON_STATE[from],
+      target=ICON_STATE[to],
+      token=cancelIconMotion(root,false);
 
   setGsapState(gsap,parts,source);
+  parts.disc.style.setProperty('transition','none','important');
   root.setAttribute('data-sc-theme-mode',to);
   root.setAttribute('data-sc-theme-animating','true');
 
   iconTimeline=gsap.timeline({
-    defaults:{duration:.28,ease:ease,overwrite:'auto'},
     onComplete:function(){finalizeIcon(root,token);}
   });
-  iconTimeline
-    .to(parts.solar,{rotation:target.solar.rotation,scale:target.solar.scale,autoAlpha:target.solar.opacity,svgOrigin:'12 12',force3D:false},0)
-    .to(parts.rays,{rotation:target.rays.rotation,scale:target.rays.scale,autoAlpha:target.rays.opacity,svgOrigin:'12 12',force3D:false},0)
-    .to(parts.cut,{x:target.cut.x,y:target.cut.y,force3D:false},0)
-    .to(parts.auto,{rotation:target.auto.rotation,scale:target.auto.scale,autoAlpha:target.auto.opacity,svgOrigin:'12 12',force3D:false},0);
+
+  if(from==='system'&&to!=='system'){
+    iconTimeline
+      .to(parts.auto,{rotation:to==='dark'?22:-22,scale:.78,autoAlpha:0,duration:.18,ease:'power2.in',svgOrigin:'12 12',force3D:false},0)
+      .to(parts.solar,Object.assign(tweenTarget(target,'solar'),{duration:.36,ease:'back.out(1.25)'}),.08)
+      .to(parts.rays,Object.assign(tweenTarget(target,'rays'),{duration:.34,ease:'power3.out'}),.08)
+      .to(parts.cut,Object.assign(tweenTarget(target,'cut'),{duration:.34,ease:'power3.out'}),.08)
+      .to(parts.disc,Object.assign(tweenTarget(target,'disc'),{duration:.36,ease:'power3.out'}),.08);
+  }else if(from!=='system'&&to==='system'){
+    iconTimeline
+      .to(parts.solar,{rotation:target.solar.rotation,scale:.72,autoAlpha:0,duration:.2,ease:'power2.in',svgOrigin:'12 12',force3D:false},0)
+      .to(parts.rays,Object.assign(tweenTarget(target,'rays'),{duration:.2,ease:'power2.in'}),0)
+      .to(parts.cut,Object.assign(tweenTarget(target,'cut'),{duration:.22,ease:'power2.inOut'}),0)
+      .to(parts.disc,Object.assign(tweenTarget(target,'disc'),{duration:.22,ease:'power2.inOut'}),0)
+      .to(parts.auto,Object.assign(tweenTarget(target,'auto'),{duration:.36,ease:'back.out(1.35)'}),.08);
+  }else{
+    iconTimeline
+      .to(parts.solar,Object.assign(tweenTarget(target,'solar'),{duration:.42,ease:'power3.out'}),0)
+      .to(parts.rays,Object.assign(tweenTarget(target,'rays'),{duration:.38,ease:'power2.inOut'}),0)
+      .to(parts.cut,Object.assign(tweenTarget(target,'cut'),{duration:.42,ease:'power3.out'}),0)
+      .to(parts.disc,Object.assign(tweenTarget(target,'disc'),{duration:.42,ease:'power3.out'}),0)
+      .to(parts.auto,Object.assign(tweenTarget(target,'auto'),{duration:.24,ease:'power2.inOut'}),0);
+  }
 }
 function apply(root,mode,persist){
   cancelIconMotion(root,true);
@@ -206,6 +244,7 @@ function transitionApply(root,mode,persist){
       actual=resolved(mode),
       currentActual=doc.getAttribute('data-sc-theme-resolved')||resolved(current);
 
+  prepareMotion();
   animateModeChange(root,visual,mode);
 
   if(currentActual===actual){
@@ -223,6 +262,7 @@ function transitionApply(root,mode,persist){
   var token=switchToken,surface='';
   try{surface=getComputedStyle(doc).getPropertyValue('--sc-color-surface').trim();}catch(_){}
   if(surface)doc.style.setProperty('--sc-theme-transition-surface',surface);
+
   doc.classList.add('sc-theme-transitioning');
   doc.setAttribute('data-sc-theme-transition-phase','idle');
   requestAnimationFrame(function(){
@@ -232,18 +272,18 @@ function transitionApply(root,mode,persist){
   switchTimers.push(setTimeout(function(){
     if(token!==switchToken)return;
     commit(root,mode,persist,true);
-  },105));
+  },SWITCH_COMMIT));
   switchTimers.push(setTimeout(function(){
     if(token!==switchToken)return;
     doc.setAttribute('data-sc-theme-transition-phase','in');
-  },135));
+  },SWITCH_IN));
   switchTimers.push(setTimeout(function(){
     if(token!==switchToken)return;
     switchTimers.length=0;
     doc.classList.remove('sc-theme-transitioning');
     doc.removeAttribute('data-sc-theme-transition-phase');
     doc.style.removeProperty('--sc-theme-transition-surface');
-  },340));
+  },SWITCH_END));
 }
 
 function syncMounted(){
@@ -269,6 +309,7 @@ function install(root){
       control=button&&button.closest('.sc-theme-control');
   if(!button||!menu||!control)return function(){};
 
+  control.style.setProperty('--sc-theme-icon-duration','420ms');
   apply(root,load(),false);
   var closeTimer=0,hovering=false;
 
@@ -277,6 +318,7 @@ function install(root){
   }
   function hoverEnter(event){
     if(event.pointerType==='touch'||!finePointer.matches)return;
+    prepareMotion();
     hovering=true;
     clearClose();
     setOpen(root,true,false);
@@ -291,6 +333,7 @@ function install(root){
     },120);
   }
   function toggle(event){
+    prepareMotion();
     if(event){event.preventDefault();event.stopPropagation();}
     if(finePointer.matches&&hovering){setOpen(root,true,false);return;}
     setOpen(root,button.getAttribute('aria-expanded')!=='true',false);
@@ -316,6 +359,7 @@ function install(root){
         index=itemsNow.indexOf(target);
     if(target===button&&(event.key==='ArrowDown'||event.key==='ArrowUp')){
       event.preventDefault();
+      prepareMotion();
       setOpen(root,true,true);
       return;
     }
@@ -345,6 +389,7 @@ function install(root){
 
   control.addEventListener('pointerenter',hoverEnter);
   control.addEventListener('pointerleave',hoverLeave);
+  control.addEventListener('focusin',prepareMotion);
   button.addEventListener('click',toggle);
   menu.addEventListener('click',choose);
   root.addEventListener('keydown',keydown);
@@ -354,8 +399,10 @@ function install(root){
     clearClose();
     clearSwitch();
     cancelIconMotion(root,true);
+    control.style.removeProperty('--sc-theme-icon-duration');
     control.removeEventListener('pointerenter',hoverEnter);
     control.removeEventListener('pointerleave',hoverLeave);
+    control.removeEventListener('focusin',prepareMotion);
     button.removeEventListener('click',toggle);
     menu.removeEventListener('click',choose);
     root.removeEventListener('keydown',keydown);
