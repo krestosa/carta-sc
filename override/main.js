@@ -2,7 +2,7 @@
 'use strict';
 if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;
 var inheritedVersion=window.__scCatalogAssetVersion||'',
-    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-icons-v3':inheritedVersion,
+    version=!inheritedVersion||inheritedVersion==='unversioned'?'20260817-gsap-morph-v1':inheritedVersion,
     base='override/';
 window.__scCatalogAssetVersion=version;
 /* The immutable legacy bootstrap still exposes `unversioned`. Repoint the
@@ -49,15 +49,23 @@ function asset(path){return base+path+'?v='+version;}
 function loadScript(path,id){return new Promise(function(resolve,reject){var existing=id&&document.getElementById(id);if(existing){if(existing.dataset.loaded==='true')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}var script=document.createElement('script');if(id)script.id=id;script.src=asset(path);script.async=false;script.onload=function(){script.dataset.loaded='true';resolve();};script.onerror=reject;document.head.appendChild(script);});}
 function loadAll(items){return Promise.all(items.map(function(item){return loadScript(item[0],item[1]);}));}
 function loadStages(stages){return stages.reduce(function(chain,stage){return chain.then(function(){return loadAll(stage);});},Promise.resolve());}
+function waitForMotionDependencies(){
+  var motion=window.SCOverride&&window.SCOverride.motion;
+  if(!motion||typeof motion.ready!=='function')throw new Error('[SushiClub override] Motion dependency gate unavailable');
+  return motion.ready();
+}
+
+/* Foundation contains the motion loader itself. GSAP core and every configured
+   plugin must resolve and register before the remaining modules are evaluated. */
+var foundation=[
+  ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],
+  ['core/variables.js','sc-override-variables-js'],
+  ['core/utils.js','sc-override-utils-js'],
+  ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
+  ['templates/registry.js','sc-override-template-registry-js'],
+  ['motion/main.js','sc-override-motion-js']
+];
 var beforeTemplates=[
-  [
-    ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],
-    ['core/variables.js','sc-override-variables-js'],
-    ['core/utils.js','sc-override-utils-js'],
-    ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
-    ['templates/registry.js','sc-override-template-registry-js'],
-    ['motion/main.js','sc-override-motion-js']
-  ],
   [
     ['motion/global-ui.js','sc-global-ui-motion-js'],
     ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
@@ -107,9 +115,17 @@ var afterTemplates=[
     ['components/catalog-tools/catalog-tools.js','sc-catalog-tools-js']
   ]
 ];
-loadStages(beforeTemplates).then(function(){
-  var templates=window.SCOverride&&window.SCOverride.templates;
-  if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');
-  return templates.ready();
-}).then(function(){return loadStages(afterTemplates);}).then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();}).then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');}).catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
+
+loadAll(foundation)
+  .then(waitForMotionDependencies)
+  .then(function(){return loadStages(beforeTemplates);})
+  .then(function(){
+    var templates=window.SCOverride&&window.SCOverride.templates;
+    if(!templates||typeof templates.ready!=='function')throw new Error('[SushiClub override] Template registry unavailable');
+    return templates.ready();
+  })
+  .then(function(){return loadStages(afterTemplates);})
+  .then(function(){return window.SCOverride.renderLifecycle.waitForStableLayout();})
+  .then(function(){window.SCOverride.renderLifecycle.markInitialViewport();if(window.SCOverride.motion)window.SCOverride.motion.unlock();return loadScript('components/section-heading/section-heading.js','sc-section-lines-motion-js');})
+  .catch(function(error){if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
 })();
