@@ -164,8 +164,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 }
 
 @media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .title-shop1 {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .title-shop1 {
     display: -webkit-box !important;
     position: static !important;
     grid-column: 1;
@@ -187,8 +186,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
     -webkit-line-clamp: 2;
   }
 
-  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip,
-  html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .descrip {
+  body.sushiShop.sc-catalog-layout-ready .listadoShop .productoShop .descrip {
     box-sizing: border-box;
     display: block !important;
     position: relative;
