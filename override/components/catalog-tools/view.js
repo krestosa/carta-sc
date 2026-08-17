@@ -15,11 +15,6 @@ var MODES=['compact','list'],
     cleanup=null,
     motionDeps=null;
 
-var ICONS={
-  grid:[[3,3,8,4],[13,3,8,4],[3,10,8,4],[13,10,8,4],[3,17,8,4],[13,17,8,4]],
-  list:[[3,3.25,3.5,3.5],[8.5,3.25,12.5,3.5],[3,10.25,3.5,3.5],[8.5,10.25,12.5,3.5],[3,17.25,3.5,3.5],[8.5,17.25,12.5,3.5]]
-};
-
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
 function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf(mode)>=0?mode:'';}
 function selectedMode(){return normalize(doc.getAttribute('data-sc-catalog-view')||'')||'compact';}
@@ -48,122 +43,123 @@ function load(){
 }
 function save(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
 function reducedMotion(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
-function cells(host){return host?Array.prototype.slice.call(host.querySelectorAll('[data-sc-view-cell]')):[];}
-function writeGeometry(cell,geometry){
-  cell.setAttribute('x',geometry[0]);
-  cell.setAttribute('y',geometry[1]);
-  cell.setAttribute('width',geometry[2]);
-  cell.setAttribute('height',geometry[3]);
+function prepareMotion(){if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();}
+
+function iconLayers(host){
+  if(!host)return null;
+  var grid=host.querySelector('[data-sc-view-layer="grid"]'),
+      list=host.querySelector('[data-sc-view-layer="list"]');
+  return grid&&list?{grid:grid,list:list}:null;
 }
-function setGeometry(host,target){
-  var nodes=cells(host);
-  if(!host||!target||nodes.length!==target.length)return;
-  nodes.forEach(function(cell,index){writeGeometry(cell,target[index]);});
+function clearLayerStyles(gsap,layers){
+  if(!gsap||!layers)return;
+  gsap.set([layers.grid,layers.list],{clearProps:'transform,opacity,visibility'});
 }
-function clearViewIconMotion(host){
-  var state=host&&host.__scViewIconMotion;
+function clearViewIconMotion(host,clearInline){
+  var state=host&&host.__scViewIconMotion,
+      layers=iconLayers(host),
+      gsap=motionDeps&&motionDeps.gsap;
   if(!host)return;
-  if(state){
-    if(state.timeline)try{state.timeline.kill();}catch(_){}
-    if(state.timer)window.clearTimeout(state.timer);
-    if(state.timer2)window.clearTimeout(state.timer2);
-  }
-  if(motionDeps&&motionDeps.gsap){
-    motionDeps.gsap.set(host,{clearProps:'transform,opacity,visibility'});
-  }
-  host.removeAttribute('data-sc-view-icon-animating');
-  host.removeAttribute('data-sc-view-icon-fallback');
-  host.removeAttribute('data-sc-view-icon-preview');
+  if(state&&state.timeline)try{state.timeline.kill();}catch(_){}
+  if(state&&state.timer)window.clearTimeout(state.timer);
   host.__scViewIconMotion=null;
+  host.removeAttribute('data-sc-view-icon-animating');
+  host.removeAttribute('data-sc-view-icon-preview');
+  if(clearInline&&gsap)clearLayerStyles(gsap,layers);
 }
 function finalizeViewIconMotion(host,state){
   if(!host||host.__scViewIconMotion!==state)return;
-  if(motionDeps&&motionDeps.gsap)motionDeps.gsap.set(host,{clearProps:'transform,opacity,visibility'});
-  host.removeAttribute('data-sc-view-icon-animating');
-  host.removeAttribute('data-sc-view-icon-fallback');
-  host.removeAttribute('data-sc-view-icon-preview');
+  var gsap=motionDeps&&motionDeps.gsap,layers=iconLayers(host);
+  if(gsap)clearLayerStyles(gsap,layers);
   host.__scViewIconMotion=null;
+  host.removeAttribute('data-sc-view-icon-animating');
+  host.removeAttribute('data-sc-view-icon-preview');
 }
-function fallbackSwap(host,target){
-  var state={timeline:null,timer:0,timer2:0};
-  host.__scViewIconMotion=state;
-  host.setAttribute('data-sc-view-icon-fallback','out');
-  state.timer=window.setTimeout(function(){
-    if(host.__scViewIconMotion!==state)return;
-    setGeometry(host,target);
-    host.setAttribute('data-sc-view-icon-fallback','in');
-    state.timer2=window.setTimeout(function(){finalizeViewIconMotion(host,state);},260);
-  },145);
-}
-function animateSwap(host,target){
-  if(!host||!target)return;
-  clearViewIconMotion(host);
-  if(reducedMotion()){setGeometry(host,target);return;}
-
-  var gsap=motionDeps&&motionDeps.gsap;
-  if(!gsap){fallbackSwap(host,target);return;}
-
-  var state={timeline:null,timer:0,timer2:0};
-  host.__scViewIconMotion=state;
-  host.setAttribute('data-sc-view-icon-animating','true');
-
-  state.timeline=gsap.timeline({
-    onComplete:function(){finalizeViewIconMotion(host,state);}
-  });
-  state.timeline
-    .to(host,{
-      autoAlpha:.16,
-      scale:.84,
-      rotation:-6,
-      duration:.14,
-      ease:'power2.in',
-      transformOrigin:'50% 50%',
-      force3D:false,
-      onComplete:function(){if(host.__scViewIconMotion===state)setGeometry(host,target);}
-    },0)
-    .fromTo(host,{
-      autoAlpha:.16,
-      scale:.84,
-      rotation:6
-    },{
-      autoAlpha:1,
-      scale:1,
-      rotation:0,
-      duration:.26,
-      ease:'power3.out',
-      transformOrigin:'50% 50%',
-      force3D:false
-    },.14);
-}
-function hoverPreview(host){
-  if(!host||reducedMotion())return;
-  clearViewIconMotion(host);
-  if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();
-
-  var gsap=motionDeps&&motionDeps.gsap;
-  if(!gsap){
-    host.setAttribute('data-sc-view-icon-preview','true');
-    var fallback={timeline:null,timer:window.setTimeout(function(){
-      if(host.__scViewIconMotion!==fallback)return;
-      host.removeAttribute('data-sc-view-icon-preview');
-      host.__scViewIconMotion=null;
-    },320),timer2:0};
-    host.__scViewIconMotion=fallback;
+function animateSwap(host,from,to){
+  var layers=iconLayers(host);
+  if(!host||!layers||from===to){
+    if(host)host.setAttribute('data-sc-icon-state',to);
     return;
   }
 
-  var state={timeline:null,timer:0,timer2:0};
+  clearViewIconMotion(host,true);
+  host.setAttribute('data-sc-icon-state',to);
+
+  if(reducedMotion())return;
+
+  var gsap=motionDeps&&motionDeps.gsap,
+      outgoing=layers[from],
+      incoming=layers[to];
+
+  if(!gsap){
+    host.setAttribute('data-sc-view-icon-fallback',from+'-'+to);
+    window.setTimeout(function(){
+      if(host.getAttribute('data-sc-view-icon-fallback')===from+'-'+to){
+        host.removeAttribute('data-sc-view-icon-fallback');
+      }
+    },360);
+    return;
+  }
+
+  var direction=to==='list'?1:-1,
+      state={timeline:null,timer:0};
+  host.__scViewIconMotion=state;
+  host.setAttribute('data-sc-view-icon-animating','true');
+
+  gsap.set(outgoing,{autoAlpha:1,scale:1,rotation:0,x:0,y:0,transformOrigin:'50% 50%',force3D:false});
+  gsap.set(incoming,{autoAlpha:0,scale:.82,rotation:7*direction,x:2*direction,y:0,transformOrigin:'50% 50%',force3D:false});
+
+  state.timeline=gsap.timeline({onComplete:function(){finalizeViewIconMotion(host,state);}});
+  state.timeline
+    .to(outgoing,{
+      autoAlpha:0,
+      scale:.82,
+      rotation:-7*direction,
+      x:-2*direction,
+      duration:.18,
+      ease:'power2.in',
+      transformOrigin:'50% 50%',
+      force3D:false
+    },0)
+    .to(incoming,{
+      autoAlpha:1,
+      scale:1,
+      rotation:0,
+      x:0,
+      duration:.28,
+      ease:'power3.out',
+      transformOrigin:'50% 50%',
+      force3D:false
+    },.08);
+}
+function hoverPreview(host){
+  if(!host||reducedMotion())return;
+  prepareMotion();
+  clearViewIconMotion(host,true);
+
+  var layers=iconLayers(host),
+      key=host.getAttribute('data-sc-icon-state')||'grid',
+      active=layers&&layers[key],
+      gsap=motionDeps&&motionDeps.gsap;
+  if(!active)return;
+
+  if(!gsap){
+    host.setAttribute('data-sc-view-icon-preview','true');
+    return;
+  }
+
+  var state={timeline:null,timer:0};
   host.__scViewIconMotion=state;
   host.setAttribute('data-sc-view-icon-animating','true');
   state.timeline=gsap.timeline({onComplete:function(){finalizeViewIconMotion(host,state);}});
   state.timeline
-    .to(host,{scale:1.06,rotation:2,duration:.12,ease:'power2.out',transformOrigin:'50% 50%',force3D:false},0)
-    .to(host,{scale:1,rotation:0,duration:.2,ease:'power2.inOut',transformOrigin:'50% 50%',force3D:false},.12);
+    .to(active,{scale:1.055,rotation:key==='grid'?2:-2,duration:.12,ease:'power2.out',transformOrigin:'50% 50%',force3D:false},0)
+    .to(active,{scale:1,rotation:0,duration:.2,ease:'power2.inOut',transformOrigin:'50% 50%',force3D:false},.12);
 }
 function hoverRestore(host){
-  var state=host&&host.__scViewIconMotion;
-  if(!state)return;
-  clearViewIconMotion(host);
+  if(!host)return;
+  host.removeAttribute('data-sc-view-icon-preview');
+  clearViewIconMotion(host,true);
 }
 function sync(root,mode,animate){
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),
@@ -178,17 +174,12 @@ function sync(root,mode,animate){
   }
   if(!host)return;
 
-  if(previous===key){
-    if(!host.__scViewIconMotion)setGeometry(host,ICONS[key]);
-    return;
-  }
-
-  if(animate!==false&&previous)animateSwap(host,ICONS[key]);
+  if(previous===key)return;
+  if(animate!==false&&previous)animateSwap(host,previous,key);
   else{
-    clearViewIconMotion(host);
-    setGeometry(host,ICONS[key]);
+    clearViewIconMotion(host,true);
+    host.setAttribute('data-sc-icon-state',key);
   }
-  host.setAttribute('data-sc-icon-state',key);
 }
 
 function viewportAnchor(){
@@ -286,7 +277,7 @@ function apply(root,mode,persist){
 }
 function destroy(){
   var host=document.querySelector('.sc-catalog-view-toggle [data-sc-view-icon]');
-  if(host)clearViewIconMotion(host);
+  if(host)clearViewIconMotion(host,true);
   if(raf){cancelAnimationFrame(raf);raf=0;}
   if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}
   doc.classList.remove('sc-catalog-view-switching');
@@ -304,7 +295,6 @@ function install(root){
 
   apply(root,load(),false);
 
-  function prepareMotion(){if(SC.motion&&typeof SC.motion.prepare==='function')SC.motion.prepare();}
   function click(){
     prepareMotion();
     var current=selectedMode();
