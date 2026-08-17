@@ -43,7 +43,9 @@ python3 "$SCRIPTS/optimize-pages-delivery.py"
 python3 "$SCRIPTS/optimize-pages-first-paint.py"
 python3 "$SCRIPTS/optimize-pages-first-viewport-media.py"
 python3 "$SCRIPTS/optimize-pages-breakpoint-media.py"
+python3 "$SCRIPTS/calibrate-system-logo.py" measure
 python3 "$SCRIPTS/replace-system-logo.py"
+python3 "$SCRIPTS/calibrate-system-logo.py" apply
 
 node --check "$SITE/override/main.js"
 node --check "$SITE/_pages/legacy.js"
@@ -51,6 +53,7 @@ node --check "$SITE/_pages/shop.js"
 node --check "$SITE/_js_dev/main-legacy.js"
 python3 "$SCRIPTS/validate-pages-local-assets.py"
 python3 "$SCRIPTS/validate-pages-html.py"
+python3 "$SCRIPTS/validate-system-load.py"
 
 # Lab invariants. These verify the benchmark artifact only; they are not
 # production integration requirements.
@@ -61,6 +64,7 @@ test -s "$SITE/_critical-media/sushiclub-logo.svg"
 test -s "$SITE/_critical-media/mobile-banner.webp"
 test ! -e "$SITE/_critical-media/mobile-logo.webp"
 test ! -e "$SITE/_chrome-media/desktop-logo.webp"
+test ! -e "$SITE/.system-logo-optics.json"
 test "$(grep -o 'class="[^"]*sc-system-brand-logo[^"]*"' "$SITE/index.html" | wc -l)" -eq 2
 test "$(grep -o 'data-sc-first-viewport=' "$SITE/index.html" | wc -l)" -eq 4
 for n in 1 2 3 4; do
