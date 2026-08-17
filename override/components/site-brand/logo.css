@@ -1,0 +1,74 @@
+body.sushiShop .sc-system-brand-logo {
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: 312px !important;
+  max-width: 100% !important;
+  height: 45px !important;
+  max-height: 45px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  color: var(--sc-color-ink, #0a0a0a) !important;
+}
+
+@media (min-width: 993px) {
+  body.sushiShop .newVer17topBar .brand.sc-system-brand {
+    box-sizing: border-box !important;
+    display: flex !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 312px !important;
+    max-width: 312px !important;
+    height: 55px !important;
+    max-height: 55px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(-50%) !important;
+  }
+
+  body.sushiShop .newVer17topBar .brand.sc-system-brand > a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    pointer-events: auto !important;
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop .brandOnlyMobile.sc-system-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  body.sushiShop .brandOnlyMobile.sc-system-brand > a {
+    display: flex !important;
+    position: static !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 312px !important;
+    max-width: calc(100vw - 120px) !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    transform: none !important;
+  }
+
+  body.sushiShop .brandOnlyMobile.sc-system-brand .sc-system-brand-logo {
+    width: 312px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 312 / 45 !important;
+  }
+}
