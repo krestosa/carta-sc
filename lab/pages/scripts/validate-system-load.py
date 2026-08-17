@@ -69,6 +69,30 @@ for stale_file in (
     if stale_file.exists():
         issues.append(f'superseded logo file remains in artifact: {stale_file.relative_to(SITE)}')
 
+# Trait PNGs are metadata sources only. The visible product/reference traits are
+# generated as inline SVGs, so retaining an <img src> would cause redundant
+# network work even when the legacy node is display:none.
+trait_tags = re.findall(r'<img\b(?=[^>]*\bdata-original-title=)[^>]*>', html, re.I)
+if not trait_tags:
+    issues.append('legacy trait metadata nodes are missing')
+for tag in trait_tags:
+    if re.search(r'\bsrc\s*=', tag, re.I):
+        issues.append('legacy trait metadata still has an active img src')
+        break
+
+for stale in (
+    'https://www.sushiclub.com.ar/gfx/sabor_pic_0.png',
+    'https://www.sushiclub.com.ar/gfx/sabor_pic_1.png',
+    'https://www.sushiclub.com.ar/gfx/sabor_pic_2.png',
+    'https://www.sushiclub.com.ar/gfx/sabor_pic_3.png',
+    'https://www.sushiclub.com.ar/gfx/sabor_vegano.png',
+    'https://www.sushiclub.com.ar/gfx/back_body_01.png',
+    'https://www.sushiclub.com.ar/gfx/back_body_01_white.png',
+    'https://www.sushiclub.com.ar/gfx/scrollTab2.png',
+):
+    if stale in html:
+        issues.append(f'superseded raster remains in final browser graph/CSS: {stale}')
+
 # Final Pages delivery intentionally has no eager local runtime tags. Its inline
 # delivery loader owns the exact optimized runtime manifest and creates the tags
 # only after first paint / idle. Audit that real browser load path as well.
@@ -128,6 +152,6 @@ if issues:
 print(
     'System load validation passed: optimized resources replace originals in the actual browser load graph; '
     f'{len(graph.scripts)} eager scripts, {len(graph.styles)} eager stylesheets, '
-    f'{len(graph.images)} eager image srcs and {len(graph.preloads)} preloads audited; '
-    'deferred runtime manifest audited separately.'
+    f'{len(graph.images)} src-bearing images and {len(graph.preloads)} preloads audited; '
+    f'{len(trait_tags)} legacy trait nodes retained as metadata only; deferred runtime manifest audited separately.'
 )
