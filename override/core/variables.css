@@ -1,14 +1,15 @@
 :root {
-  /* Shared palette: roles are intentionally distinct, not component-specific. */
+  /* Shared palette: neutral only; no accent color. */
   --sc-color-ink: #0a0a0a;
   --sc-color-heading: #303030;
   --sc-color-copy: #5f5f5f;
   --sc-color-muted: #767676;
   --sc-color-trait: #989898;
-  --sc-color-surface: #fff;
-  --sc-color-surface-transparent: rgba(255,255,255,0);
-  --sc-color-border: #e7e7e2;
-  --sc-color-border-strong: #d4d4ce;
+  --sc-color-surface: #f7f7f5;
+  --sc-color-surface-raised: #fbfbfa;
+  --sc-color-surface-transparent: rgba(247,247,245,0);
+  --sc-color-border: #e3e3de;
+  --sc-color-border-strong: #d1d1cb;
 
   /* Shared typography. */
   --sc-font-primary: 'SC Acumin', Arial, sans-serif;
@@ -32,7 +33,7 @@
   --sc-catalog-inline-space: 64px;
   --sc-product-image-ratio: 286 / 200;
 
-  /* Shared motion. Theme color movement is intentionally slower than micro-interactions. */
+  /* Shared motion. */
   --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --sc-motion-fast: 160ms;
   --sc-motion-theme: 560ms;
