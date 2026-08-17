@@ -5,6 +5,8 @@ LAB="lab/pages"
 SCRIPTS="$LAB/scripts"
 SITE=".pages-site"
 
+node "$SCRIPTS/validate-snapshot-override-integration.mjs"
+
 rm -rf "$SITE"
 mkdir -p "$SITE"
 rsync -a \
