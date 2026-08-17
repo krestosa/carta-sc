@@ -51,7 +51,9 @@ jobs:
 
       - name: Validate production frontend boundary
         shell: bash
-        run: node scripts/validate-overrides.mjs
+        run: |
+          node scripts/validate-overrides.mjs
+          node scripts/validate-production-boundary.mjs
 
       - name: Validate lab tooling syntax
         shell: bash
