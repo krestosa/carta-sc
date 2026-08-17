@@ -13,13 +13,6 @@ body.sushiShop .listadoShop .subTitleShopSeccion {
   background-image: none !important;
 }
 
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion,
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .titleShopSeccion > div,
-html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .subTitleShopSeccion {
-  border-top: 0 !important;
-  border-bottom: 0 !important;
-}
-
 /* Wrappers and subcategories never own rules. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::before,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::after,
