@@ -1,5 +1,5 @@
-/* SushiClub catalogue foundation.
-   Shared tokens and desktop container/base state. Component styling lives with each component. */
+/* SushiClub catalogue foundation. Shared tokens and container geometry are the
+   desktop-first base; breakpoint files only override viewport-specific values. */
 
 @font-face {
   font-family: 'SC Acumin';
@@ -23,8 +23,32 @@ body.sushiShop #busquedaJSBoxResults {
   display: none !important;
 }
 
+body.sushiShop .containerShop {
+  box-sizing: border-box;
+  width: calc(100% - var(--sc-catalog-inline-space)) !important;
+  max-width: var(--sc-content-max-width) !important;
+  margin-right: auto !important;
+  margin-left: auto !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+body.sushiShop .containerShop > .row {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+body.sushiShop .containerShop .col-md-9.normCols {
+  float: none !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
 @media (min-width: 993px) {
-  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile {
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile {
     position: static !important;
     top: auto !important;
     right: auto !important;
@@ -34,47 +58,14 @@ body.sushiShop #busquedaJSBoxResults {
     z-index: auto !important;
   }
 
-  body.sushiShop.sc-catalog-layout-ready .fixedTopShop.wtopShopMenuMobile > .topShop {
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile > .topShop {
     display: none !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .topShop.bottomShop,
-  body.sushiShop.sc-catalog-layout-ready .productoShop .sumar {
-    display: none !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .containerShop {
-    box-sizing: border-box;
-    width: calc(100% - var(--sc-catalog-inline-space)) !important;
-    max-width: var(--sc-content-max-width) !important;
-    margin-right: auto !important;
-    margin-left: auto !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .containerShop > .row {
-    margin-right: 0 !important;
-    margin-left: 0 !important;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .containerShop .col-md-9.normCols {
-    float: none !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    height: auto !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
   }
 }
 
 @media (min-width: 993px) and (max-width: 1120px) {
-  body.sushiShop.sc-catalog-layout-ready {
+  body.sushiShop {
     --sc-catalog-gutter: 24px;
     --sc-catalog-inline-space: 48px;
-  }
-
-  body.sushiShop.sc-catalog-layout-ready .containerShop {
-    width: calc(100% - var(--sc-catalog-inline-space)) !important;
   }
 }
