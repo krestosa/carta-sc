@@ -1,21 +1,21 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,MS=SC&&SC.productModalSelectors,M=C&&C.motion,CFG={openOffsetY:10,openScale:.992,closeOffsetY:6,closeScale:.994,openBackdropDuration:.14,openDialogDuration:.20,openDialogDelay:.015,closeDialogDuration:.11,closeBackdropDuration:.13,closeBackdropDelay:.005};if(!SC||!C||!MS||SC.__productModalMotionBooted)return;SC.__productModalMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,MS=SC&&SC.productModalSelectors,M=C&&C.motion,CFG={openOffsetY:10,openScale:.992,closeOffsetY:6,closeScale:.994,openBackdropDuration:.14,openDialogDuration:.20,openDialogDelay:.015,closeDialogDuration:.11,closeBackdropDuration:.13,closeBackdropDelay:.005};if(!SC||!C||!MS||SC.__productModalMotionBooted)return;SC.__productModalMotionBooted=true;
 function open(modal){
   if(!modal||!SC.motion||!SC.motion.run||SC.motion.reduced())return;
   SC.motion.run(function(deps){
     var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;
-    gsap.killTweensOf([modal,dialog]);gsap.set(modal,{autoAlpha:0});gsap.set(dialog,{autoAlpha:0,y:CFG.openOffsetY,scale:CFG.openScale,transformOrigin:'50% 50%'});
-    gsap.timeline({defaults:{overwrite:'auto'}})
+    gsap.killTweensOf([modal,dialog]);gsap.set(modal,{autoAlpha:0,willChange:'opacity'});gsap.set(dialog,{autoAlpha:0,y:CFG.openOffsetY,scale:CFG.openScale,transformOrigin:'50% 50%',willChange:'transform,opacity'});
+    gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){gsap.set(modal,{clearProps:'opacity,visibility,willChange'});gsap.set(dialog,{clearProps:'transform,opacity,visibility,willChange'});}})
       .to(modal,{autoAlpha:1,duration:CFG.openBackdropDuration,ease:M.easings.out},0)
-      .to(dialog,{autoAlpha:1,y:0,scale:1,duration:CFG.openDialogDuration,ease:M.easings.strongOut,clearProps:'transform,opacity,visibility'},CFG.openDialogDelay);
+      .to(dialog,{autoAlpha:1,y:0,scale:1,duration:CFG.openDialogDuration,ease:M.easings.strongOut},CFG.openDialogDelay);
   });
 }
 function close(modal){
   if(!modal||!SC.motion||!SC.motion.run||SC.motion.reduced())return;
   SC.motion.run(function(deps){
     var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;
-    gsap.killTweensOf([modal,dialog]);
+    gsap.killTweensOf([modal,dialog]);gsap.set(modal,{willChange:'opacity'});gsap.set(dialog,{willChange:'transform,opacity'});
     gsap.timeline({defaults:{overwrite:'auto'}})
       .to(dialog,{autoAlpha:0,y:CFG.closeOffsetY,scale:CFG.closeScale,duration:CFG.closeDialogDuration,ease:M.easings.in},0)
       .to(modal,{autoAlpha:0,duration:CFG.closeBackdropDuration,ease:M.easings.inOut},CFG.closeBackdropDelay);
