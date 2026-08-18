@@ -9,17 +9,31 @@ var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 parts.setupReveal=function(gsap,ST,profile,reduce){
   var cards=gsap.utils.toArray(S.productCards),states=new WeakMap(),observer=null,mutationObserver=null,fallbackTriggers=[],lastY=window.scrollY||window.pageYOffset||0,lastT=performance.now(),velocity=0,direction=1,scrollRaf=0,destroyed=false;
   function noop(){}
-  function state(card){var value=states.get(card);if(!value){value={prepared:false,done:false,started:false,tween:null,observed:false};states.set(card,value);}return value;}
+  function state(card){var value=states.get(card);if(!value){value={prepared:false,done:false,started:false,tween:null,observed:false,stage:null};states.set(card,value);}return value;}
   function renderable(card){return!!(card&&!card.hidden&&card.offsetParent!==null&&card.getBoundingClientRect().height>0);}
   function programmatic(){var scroll=SC.scrollState;return!!(scroll&&(scroll.programmatic||performance.now()<(scroll.suppressRevealUntil||0)));}
-  function clear(card){gsap.set(card,{clearProps:'top,opacity,visibility,willChange'});}
+  function clear(card){gsap.set(card,{clearProps:'top,opacity,visibility,willChange'});var value=state(card);if(value.stage)gsap.set(value.stage,{clearProps:'opacity,willChange'});}
   function phase(card){var top=card.offsetTop,count=0,node=card.previousElementSibling;while(node){if(node.matches&&node.matches(S.productCard)){if(Math.abs(node.offsetTop-top)<=3)count++;else break;}node=node.previousElementSibling;}return Math.min(count,5);}
   function durationFor(speed){var factor=Math.max(0,Math.min(1,(Math.abs(speed)-CFG.velocityFloor)/(CFG.velocityCeil-CFG.velocityFloor)));return CFG.baseDuration+(CFG.fastDuration-CFG.baseDuration)*factor;}
   function delayFor(card,speed){var factor=Math.max(0,Math.min(1,(Math.abs(speed)-CFG.velocityFloor)/(CFG.velocityCeil-CFG.velocityFloor)));return Math.min(CFG.rowDelayMax,phase(card)*CFG.rowDelay)*(1-.8*factor);}
-  function finish(card){var value=state(card);if(value.done)return;value.done=true;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}if(value.tween){value.tween.progress(1);value.tween.kill();value.tween=null;}gsap.set(card,{autoAlpha:1,top:0});clear(card);}
-  function reveal(card,speed){var value=state(card);if(value.done||value.started)return;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}if(reduce||programmatic()){finish(card);return;}value.tween=gsap.to(card,{autoAlpha:1,top:0,duration:durationFor(speed),delay:delayFor(card,speed),ease:(M.easings&&M.easings.strongOut)||'power3.out',overwrite:'auto',onComplete:function(){value.tween=null;finish(card);}});}
+  /* El preloader procesa esta card justo antes del reveal. Así el placeholder ya existe en el
+     primer frame animado y no aparece después, estático, cuando el scan idle alcanza la imagen. */
+  function syncSkeleton(card){
+    var preloader=SC.imagePreloader;if(preloader&&typeof preloader.scan==='function')preloader.scan(card);
+    var value=state(card),stage=card.querySelector('.imgShop.sc-image-loading,.imgLiquidNoFillShop.sc-image-loading');value.stage=stage||null;
+    if(stage)gsap.set(stage,{opacity:.72,willChange:'opacity'});
+  }
+  function finish(card){var value=state(card);if(value.done)return;value.done=true;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}if(value.tween){value.tween.progress(1);value.tween.kill();value.tween=null;}gsap.set(card,{autoAlpha:1,top:0});if(value.stage)gsap.set(value.stage,{opacity:1});clear(card);}
+  function reveal(card,speed){
+    var value=state(card);if(value.done||value.started)return;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}
+    syncSkeleton(card);
+    if(reduce||programmatic()){finish(card);return;}
+    var duration=durationFor(speed),delay=delayFor(card,speed),targets=value.stage?[card,value.stage]:[card];
+    value.tween=gsap.timeline({delay:delay,onComplete:function(){value.tween=null;finish(card);}})
+      .to(card,{autoAlpha:1,top:0,duration:duration,ease:(M.easings&&M.easings.strongOut)||'power3.out',overwrite:'auto'},0);
+    if(value.stage)value.tween.to(value.stage,{opacity:1,duration:Math.max(.12,duration*.82),ease:(M.easings&&M.easings.out)||'power2.out',overwrite:'auto'},0);
+  }
   function prepare(card){var value=state(card);if(value.prepared||value.done||!renderable(card))return false;var rect=card.getBoundingClientRect();value.prepared=true;if(rect.bottom<=0){finish(card);return false;}gsap.set(card,{autoAlpha:0,top:rect.top<innerHeight?(Number(profile.initialY)||4):(Number(profile.revealY)||7),willChange:'top,opacity'});return true;}
-  function inView(card){var rect=card.getBoundingClientRect(),visible=Math.max(0,Math.min(rect.bottom,innerHeight)-Math.max(rect.top,0));return visible>0&&visible/Math.max(1,rect.height)>=(Number(profile.threshold)||.05);}
   function arm(card){var value=state(card);if(!prepare(card)||value.done)return;if(reduce){finish(card);return;}if(observer){observer.observe(card);value.observed=true;return;}var trigger=ST.create({trigger:card,start:'top 100%',once:true,onEnter:function(self){if(self.direction>0)reveal(card,self.getVelocity?self.getVelocity():velocity);else finish(card);},onEnterBack:function(){finish(card);}});fallbackTriggers.push(trigger);}
   function armNode(node){if(!node||node.hidden)return;if(node.matches&&node.matches(S.productList)){node.querySelectorAll(S.productCard).forEach(arm);return;}if(node.matches&&node.matches(S.productCard))arm(node);}
   function revealViewport(){cards.forEach(function(card){var value=state(card);if(!value.prepared)arm(card);if(value.done||value.started||!renderable(card))return;var rect=card.getBoundingClientRect();if(rect.bottom<=0)finish(card);});}
