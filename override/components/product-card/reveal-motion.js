@@ -1,73 +1,78 @@
-/* Reveal individual de la tarjeta completa. Cada card confirma posición documental estable
-   antes de entrar a la secuencia; skeleton e imagen no participan de la decisión. */
+/* Reveal forward-only ligado al scroll. Cada tarjeta tiene su propio tramo de progreso:
+   al bajar avanza con el viewport; al subir nunca revierte y queda definitivamente visible. */
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,CFG={duration:.32,reflowDuration:.22,stableDelta:1.5,stableFrames:1,maxChecks:5,rescueDelay:650};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
-
-/* Secuencia DOM con handoff solapado. La velocidad de scroll acorta duración y adelanta
-   el handoff de forma continua, sin convertir las cards en un batch. */
-function ensureQueue(){
-  if(SC.catalogRevealQueue)return SC.catalogRevealQueue;
-  var waiting=[],states=new WeakMap(),gateOpen=true,pumpScheduled=false,lastY=window.scrollY||window.pageYOffset||0,lastT=performance.now(),velocity=0;
-  function state(node){var value=states.get(node);if(!value){value={queued:false,running:false,done:false,timer:0,release:null};states.set(node,value);}return value;}
-  function before(a,b){if(a===b)return 0;var relation=a.compareDocumentPosition(b);return relation&(window.Node?Node.DOCUMENT_POSITION_FOLLOWING:4)?-1:1;}
-  function sort(){waiting.sort(function(a,b){return before(a.node,b.node);});}
-  function track(){var now=performance.now(),y=window.scrollY||window.pageYOffset||0,dt=Math.max(16,now-lastT),instant=Math.abs(y-lastY)*1000/dt;velocity=velocity*.55+instant*.45;lastY=y;lastT=now;}
-  window.addEventListener('scroll',track,{passive:true});
-  function motion(base){var age=Math.max(0,performance.now()-lastT),speed=velocity*Math.exp(-age/220),factor=Math.max(0,Math.min(1,(speed-180)/2200)),duration=Math.max(base*.46,base*(1-.54*factor));return{speed:speed,factor:factor,duration:duration,handoffRatio:.68-.38*factor,aheadPx:Math.round(innerHeight*.30*factor)};}
-  function schedulePump(){if(pumpScheduled)return;pumpScheduled=true;Promise.resolve().then(function(){pumpScheduled=false;pump();});}
-  function pump(){
-    if(!gateOpen||!waiting.length)return;sort();var item=waiting.shift(),value=state(item.node);value.queued=false;if(value.done){schedulePump();return;}gateOpen=false;value.running=true;var timing=motion(item.duration||.3),settled=false,released=false;
-    function release(){if(released)return;released=true;if(value.timer){clearTimeout(value.timer);value.timer=0;}value.release=null;gateOpen=true;schedulePump();}
-    function done(){if(settled)return;settled=true;value.running=false;value.done=true;release();}
-    value.release=release;value.timer=setTimeout(release,Math.max(36,timing.duration*timing.handoffRatio*1000));
-    try{item.run(done,timing);}catch(error){if(window.console&&console.error)console.error('[SushiClub catalog reveal]',error);done();}
-  }
-  function enqueue(node,options,run){if(typeof options==='function'){run=options;options={};}if(!node||typeof run!=='function')return;var value=state(node);if(value.done||value.queued||value.running)return;value.queued=true;waiting.push({node:node,run:run,duration:options&&Number(options.duration)||.3});schedulePump();}
-  function complete(node){if(!node)return;var value=state(node);value.done=true;value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(value.release)value.release();else schedulePump();}
-  function cancel(node){if(!node)return;var value=state(node);value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(value.timer){clearTimeout(value.timer);value.timer=0;}if(value.release)value.release();else schedulePump();}
-  function isDone(node){return!!(node&&state(node).done);}
-  return SC.catalogRevealQueue={enqueue:enqueue,complete:complete,cancel:cancel,isDone:isDone,pump:schedulePump,motion:motion};
-}
-ensureQueue();
-
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,CFG={initialDuration:.30,reflowDuration:.18,phaseTolerance:3};
+if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
+
 parts.setupReveal=function(gsap,ST,profile,reduce){
-  var cards=gsap.utils.toArray(S.productCards),observer=null,mutationObserver=null,pending=new Set(),states=new WeakMap(),triggers=[],timer=0,generation=1,ratio=Math.max(.5,Math.min(1,Number(profile&&profile.triggerRatio)||.92));
+  var cards=gsap.utils.toArray(S.productCards),states=new WeakMap(),observer=null,mutationObserver=null,triggers=[],initialRaf=0,destroyed=false;
   function noop(){}
-  function queue(){return ensureQueue();}
-  function state(card){var value=states.get(card);if(!value){value={prepared:false,checking:false,trigger:null};states.set(card,value);}return value;}
+  function state(card){var value=states.get(card);if(!value){value={prepared:false,done:false,started:false,max:0,tween:null,trigger:null};states.set(card,value);}return value;}
   function renderable(card){return!!(card&&!card.hidden&&card.offsetParent!==null&&card.getBoundingClientRect().height>0);}
-  function nearViewport(card){var rect=card.getBoundingClientRect(),q=queue(),timing=q.motion?q.motion(CFG.duration):{aheadPx:0};return rect.bottom>=-timing.aheadPx&&rect.top<=innerHeight*ratio+timing.aheadPx;}
-  function documentY(card){return card.getBoundingClientRect().top+(window.scrollY||window.pageYOffset||0);}
+  function programmatic(){var scroll=SC.scrollState;return!!(scroll&&(scroll.programmatic||performance.now()<(scroll.suppressRevealUntil||0)));}
   function clear(card){gsap.set(card,{clearProps:'top,opacity,visibility,willChange'});}
-  function showCard(card){var q=queue();gsap.killTweensOf(card);gsap.set(card,{autoAlpha:1,top:0});clear(card);if(q&&q.complete)q.complete(card);}
-  function animateCard(card,done,timing){gsap.killTweensOf(card);gsap.to(card,{autoAlpha:1,top:0,duration:timing&&timing.duration||CFG.duration,ease:(M.easings&&M.easings.out)||'power2.out',overwrite:'auto',onComplete:function(){clear(card);done();}});}
-  function consume(card,duration){
-    var q=queue(),value=state(card);if(!q||!q.enqueue||!pending.has(card)||q.isDone(card))return;pending.delete(card);value.checking=false;if(observer)observer.unobserve(card);if(value.trigger){value.trigger.kill();value.trigger=null;}
-    if(SC.sectionHeading&&typeof SC.sectionHeading.requestBefore==='function')SC.sectionHeading.requestBefore(card);
-    q.enqueue(card,{duration:duration||CFG.duration},function(done,timing){animateCard(card,done,timing);});
+  function phase(card){
+    var top=card.offsetTop,count=0,node=card.previousElementSibling;
+    while(node){
+      if(node.matches&&node.matches(S.productCard)){
+        if(Math.abs(node.offsetTop-top)<=CFG.phaseTolerance)count++;else break;
+      }
+      node=node.previousElementSibling;
+    }
+    return Math.min(count,5);
   }
-  /* rect.top cambia al scrollear; rect.top + scrollY sólo cambia cuando el layout se mueve. */
-  function confirm(card,duration){
-    var value=state(card),token=generation;if(!pending.has(card)||value.checking)return;value.checking=true;var checks=0,stable=0,lastY=null;
-    function sample(){requestAnimationFrame(function(){if(token!==generation||!pending.has(card)){value.checking=false;return;}if(!renderable(card)){value.checking=false;return;}if(!nearViewport(card)){value.checking=false;return;}var y=documentY(card);if(lastY!==null&&Math.abs(y-lastY)<=CFG.stableDelta)stable++;else stable=0;lastY=y;checks++;if(stable>=CFG.stableFrames){consume(card,duration);return;}if(checks<CFG.maxChecks){sample();return;}value.checking=false;});}
-    sample();
+  function windowFor(card){var p=phase(card),step=Number(profile.phaseStep)||0,start=(Number(profile.startPct)||98)-p*step,end=(Number(profile.endPct)||82)-p*step;return{start:'top '+start+'%',end:'top '+end+'%'};}
+  function killTrigger(value){if(value.trigger){value.trigger.kill();value.trigger=null;}}
+  function finish(card){
+    var value=state(card);if(value.done)return;value.done=true;value.started=true;value.max=1;killTrigger(value);if(observer)observer.unobserve(card);
+    if(value.tween){value.tween.progress(1);value.tween.kill();value.tween=null;}
+    gsap.set(card,{autoAlpha:1,top:0});clear(card);
   }
-  function arm(card){
-    var q=queue(),value=state(card);if(!q||q.isDone(card)||value.prepared||!renderable(card))return;var rect=card.getBoundingClientRect();if(rect.bottom<0){showCard(card);return;}value.prepared=true;pending.add(card);gsap.set(card,{autoAlpha:0,top:rect.top<=innerHeight?profile.initialY:profile.revealY,willChange:'top,opacity'});
-    value.trigger=ST.create({trigger:card,start:profile.start,invalidateOnRefresh:true,onEnter:function(){confirm(card,CFG.duration);},onEnterBack:function(){confirm(card,CFG.duration);}});triggers.push(value.trigger);if(observer)observer.observe(card);if(nearViewport(card))confirm(card,CFG.duration);
+  function showNow(card){var value=state(card);if(value.tween){value.tween.kill();value.tween=null;}gsap.killTweensOf(card);value.prepared=true;finish(card);}
+  function advance(card,progress,direction){
+    var value=state(card);if(value.done||!value.tween)return;
+    if(direction<0){if(value.started||progress>0)finish(card);return;}
+    if(programmatic()){finish(card);return;}
+    if(progress<=0&&!value.started)return;value.started=true;value.max=Math.max(value.max,progress);value.tween.progress(value.max);
+    if(value.max>=.995)finish(card);
   }
-  function armNode(node){if(!node||node.hidden)return;if(node.matches&&node.matches(S.productList)){node.querySelectorAll(S.productCard).forEach(arm);return;}if(node.matches&&node.matches(S.productCard))arm(node);}
-  function revealViewport(){cards.forEach(function(card){if(!state(card).prepared)arm(card);if(pending.has(card)&&nearViewport(card))confirm(card,CFG.reflowDuration);});}
+  function autoplay(card){
+    var value=state(card);if(value.done||!value.tween)return;value.started=true;
+    var delay=phase(card)*.025;
+    gsap.to(value.tween,{progress:1,duration:CFG.initialDuration,delay:delay,ease:(M.easings&&M.easings.out)||'power2.out',overwrite:true,onComplete:function(){finish(card);}});
+  }
+  function arm(card,initialPass){
+    var value=state(card);if(value.done||value.prepared||!renderable(card))return;var rect=card.getBoundingClientRect();
+    if(rect.bottom<=0){showNow(card);return;}
+    value.prepared=true;gsap.set(card,{autoAlpha:0,top:rect.top<innerHeight?(Number(profile.initialY)||4):(Number(profile.revealY)||6),willChange:'top,opacity'});
+    value.tween=gsap.to(card,{autoAlpha:1,top:0,duration:1,ease:(M.easings&&M.easings.out)||'power2.out',paused:true,overwrite:'auto'});
+    if(reduce){finish(card);return;}
+    if(initialPass&&rect.top<innerHeight&&rect.bottom>0){autoplay(card);return;}
+    value.trigger=ST.create({
+      trigger:card,
+      start:function(){return windowFor(card).start;},
+      end:function(){return windowFor(card).end;},
+      invalidateOnRefresh:true,
+      onUpdate:function(self){advance(card,self.progress,self.direction);},
+      onEnter:function(self){if(self.direction>0)advance(card,self.progress||.001,1);},
+      onLeave:function(self){if(self.direction>0)finish(card);},
+      onLeaveBack:function(){var current=state(card);if(current.started)finish(card);}
+    });
+    triggers.push(value.trigger);if(observer)observer.observe(card);
+  }
+  function armNode(node){if(!node||node.hidden)return;if(node.matches&&node.matches(S.productList)){node.querySelectorAll(S.productCard).forEach(function(card){arm(card,false);});return;}if(node.matches&&node.matches(S.productCard))arm(node,false);}
+  function revealViewport(){cards.forEach(function(card){var value=state(card);if(!value.prepared)arm(card,false);if(value.done||!renderable(card))return;var rect=card.getBoundingClientRect();if(rect.bottom<=0||programmatic())finish(card);});}
+
   if(!cards.length){parts.revealViewport=null;return noop;}parts.revealViewport=revealViewport;
-  if(reduce){cards.forEach(showCard);return function(){if(parts.revealViewport===revealViewport)parts.revealViewport=null;};}
-  if(window.IntersectionObserver){observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)confirm(entry.target,CFG.duration);});},{root:null,rootMargin:'0px 0px 35% 0px',threshold:0});}
-  cards.forEach(arm);
+  if(window.IntersectionObserver)observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var value=state(entry.target);if(value.done)return;if(programmatic())finish(entry.target);});},{root:null,rootMargin:'0px 0px 12% 0px',threshold:0});
+  initialRaf=requestAnimationFrame(function(){initialRaf=0;cards.forEach(function(card){arm(card,true);});});
   var container=document.querySelector(S.container);if(container&&window.MutationObserver){mutationObserver=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==='attributes'&&mutation.attributeName==='hidden'&&!mutation.target.hidden)armNode(mutation.target);});});mutationObserver.observe(container,{subtree:true,attributes:true,attributeFilter:['hidden']});}
-  timer=setTimeout(revealViewport,CFG.rescueDelay);
+
   return function(){
-    generation++;if(parts.revealViewport===revealViewport)parts.revealViewport=null;if(timer)clearTimeout(timer);if(observer)observer.disconnect();if(mutationObserver)mutationObserver.disconnect();var q=queue();cards.forEach(function(card){var value=state(card);value.checking=false;if(q&&q.isDone&&!q.isDone(card)&&q.cancel)q.cancel(card);if(value.trigger){value.trigger.kill();value.trigger=null;}value.prepared=false;});pending.clear();gsap.killTweensOf(cards);cards.forEach(clear);triggers=[];
+    destroyed=true;if(parts.revealViewport===revealViewport)parts.revealViewport=null;if(initialRaf)cancelAnimationFrame(initialRaf);if(observer)observer.disconnect();if(mutationObserver)mutationObserver.disconnect();
+    triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});cards.forEach(function(card){var value=state(card);if(value.tween)value.tween.kill();gsap.killTweensOf(card);clear(card);});triggers=[];
   };
 };
 })();
