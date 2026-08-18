@@ -1,10 +1,10 @@
 /* Reveal de headings con SplitText. Cada unidad confirma posición documental estable antes
-   de entrar a la cola; un reflow no puede consumir la animación fuera del viewport. */
+   de entrar a la secuencia y comparte el handoff adaptativo con las cards. */
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion;
 if(!SC||!C||!SC.motion||typeof SC.motion.whenLoaded!=='function'||SC.__sectionHeadingBooted)return;SC.__sectionHeadingBooted=true;
-var initialized=false,motionDeps=null,generation=0,observer=null,mutationObserver=null,pending=null,elements=[],splits=[],tweens=[],triggers=[],headingStates=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={ruleDuration:.20,textDuration:.20,textStagger:.018,triggerStart:'clamp(top 90%)',triggerRatio:.90,lineOffsetPercent:64,stableDelta:1.5,stableFrames:1,maxChecks:5,refreshDelay:60};
+var initialized=false,motionDeps=null,generation=0,observer=null,mutationObserver=null,pending=null,elements=[],splits=[],tweens=[],triggers=[],headingStates=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={ruleDuration:.34,textDuration:.36,textStagger:.012,triggerStart:'clamp(top 94%)',triggerRatio:.94,lineOffsetPercent:34,stableDelta:1.5,stableFrames:1,maxChecks:5,refreshDelay:60};
 
 /* El prepaint se libera sólo cuando headings y cards ya dejaron preparados sus estados GSAP. */
 function ensureGate(){
@@ -16,20 +16,32 @@ function ensureGate(){
 }
 var gate=ensureGate();
 
-/* Cola única del catálogo. Sólo contiene unidades ya confirmadas cerca del viewport. */
-var queue=SC.catalogRevealQueue;
-if(!queue){
-  var waiting=[],active=null,states=new WeakMap();
-  function state(node){var value=states.get(node);if(!value){value={queued:false,running:false,done:false};states.set(node,value);}return value;}
+/* Secuencia DOM con handoff solapado. La velocidad de scroll acorta duración y adelanta
+   el handoff de forma continua; nunca espera a que termine por completo el elemento anterior. */
+function ensureQueue(){
+  if(SC.catalogRevealQueue)return SC.catalogRevealQueue;
+  var waiting=[],states=new WeakMap(),gateOpen=true,pumpScheduled=false,lastY=window.scrollY||window.pageYOffset||0,lastT=performance.now(),velocity=0;
+  function state(node){var value=states.get(node);if(!value){value={queued:false,running:false,done:false,timer:0,release:null};states.set(node,value);}return value;}
   function before(a,b){if(a===b)return 0;var relation=a.compareDocumentPosition(b);return relation&(window.Node?Node.DOCUMENT_POSITION_FOLLOWING:4)?-1:1;}
   function sort(){waiting.sort(function(a,b){return before(a.node,b.node);});}
-  function pump(){if(active||!waiting.length)return;sort();var item=waiting.shift(),value=state(item.node);value.queued=false;if(value.done){pump();return;}active=item;value.running=true;var settled=false;function done(){if(settled)return;settled=true;value.running=false;value.done=true;if(active===item)active=null;pump();}try{item.run(done);}catch(error){if(window.console&&console.error)console.error('[SushiClub catalog reveal]',error);done();}}
-  function enqueue(node,run){if(!node||typeof run!=='function')return;var value=state(node);if(value.done||value.queued||value.running)return;value.queued=true;waiting.push({node:node,run:run});pump();}
-  function complete(node){if(!node)return;var value=state(node);value.done=true;value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(active&&active.node===node)active=null;pump();}
-  function cancel(node){if(!node)return;var value=state(node);value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(active&&active.node===node)active=null;pump();}
+  function track(){var now=performance.now(),y=window.scrollY||window.pageYOffset||0,dt=Math.max(16,now-lastT),instant=Math.abs(y-lastY)*1000/dt;velocity=velocity*.55+instant*.45;lastY=y;lastT=now;}
+  window.addEventListener('scroll',track,{passive:true});
+  function motion(base){var age=Math.max(0,performance.now()-lastT),speed=velocity*Math.exp(-age/220),factor=Math.max(0,Math.min(1,(speed-180)/2200)),duration=Math.max(base*.46,base*(1-.54*factor));return{speed:speed,factor:factor,duration:duration,handoffRatio:.68-.38*factor,aheadPx:Math.round(innerHeight*.30*factor)};}
+  function schedulePump(){if(pumpScheduled)return;pumpScheduled=true;Promise.resolve().then(function(){pumpScheduled=false;pump();});}
+  function pump(){
+    if(!gateOpen||!waiting.length)return;sort();var item=waiting.shift(),value=state(item.node);value.queued=false;if(value.done){schedulePump();return;}gateOpen=false;value.running=true;var timing=motion(item.duration||.3),settled=false,released=false;
+    function release(){if(released)return;released=true;if(value.timer){clearTimeout(value.timer);value.timer=0;}value.release=null;gateOpen=true;schedulePump();}
+    function done(){if(settled)return;settled=true;value.running=false;value.done=true;release();}
+    value.release=release;value.timer=setTimeout(release,Math.max(36,timing.duration*timing.handoffRatio*1000));
+    try{item.run(done,timing);}catch(error){if(window.console&&console.error)console.error('[SushiClub catalog reveal]',error);done();}
+  }
+  function enqueue(node,options,run){if(typeof options==='function'){run=options;options={};}if(!node||typeof run!=='function')return;var value=state(node);if(value.done||value.queued||value.running)return;value.queued=true;waiting.push({node:node,run:run,duration:options&&Number(options.duration)||.3});schedulePump();}
+  function complete(node){if(!node)return;var value=state(node);value.done=true;value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(value.release)value.release();else schedulePump();}
+  function cancel(node){if(!node)return;var value=state(node);value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(value.timer){clearTimeout(value.timer);value.timer=0;}if(value.release)value.release();else schedulePump();}
   function isDone(node){return!!(node&&state(node).done);}
-  queue=SC.catalogRevealQueue={enqueue:enqueue,complete:complete,cancel:cancel,isDone:isDone,pump:pump};
+  return SC.catalogRevealQueue={enqueue:enqueue,complete:complete,cancel:cancel,isDone:isDone,pump:schedulePump,motion:motion};
 }
+var queue=ensureQueue();
 
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function targets(){return Array.prototype.filter.call(document.querySelectorAll('.listadoShop .titleShopSeccion > div, .listadoShop .subTitleShopSeccion'),function(el){return(el.textContent||'').replace(/\s+/g,' ').trim().length>0;});}
@@ -40,7 +52,7 @@ function clearInvalidHostAria(el){if(el&&el.classList&&el.classList.contains('sc
 function refresh(token){if(initialized&&token===generation)SC.motion.refresh(CFG.refreshDelay);}
 function stateFor(el){var value=headingStates.get(el);if(!value){value={split:null,revealed:false,prepared:false,checking:false,trigger:null};headingStates.set(el,value);}return value;}
 function renderable(el){var target=host(el);return!!(target&&!target.hidden&&target.offsetParent!==null&&target.getBoundingClientRect().height>0);}
-function nearViewport(el){var rect=host(el).getBoundingClientRect();return rect.bottom>=0&&rect.top<=innerHeight*CFG.triggerRatio;}
+function nearViewport(el){var rect=host(el).getBoundingClientRect(),timing=queue.motion?queue.motion(CFG.textDuration):{aheadPx:0};return rect.bottom>=-timing.aheadPx&&rect.top<=innerHeight*CFG.triggerRatio+timing.aheadPx;}
 function documentY(el){return host(el).getBoundingClientRect().top+(window.scrollY||window.pageYOffset||0);}
 
 function prepare(gsap,SplitText,el){
@@ -51,8 +63,8 @@ function prepare(gsap,SplitText,el){
 }
 function clearHeading(gsap,el){var value=stateFor(el),lines=value.split&&value.split.lines&&value.split.lines.length?value.split.lines:[el];gsap.set(lines,{clearProps:'transform,opacity,visibility,willChange'});if(isParentCategory(el))gsap.set(el,{clearProps:RULE_PROPERTY});}
 function showNow(gsap,el){var value=stateFor(el),lines=value.split&&value.split.lines&&value.split.lines.length?value.split.lines:[el];value.revealed=true;gsap.killTweensOf(lines);gsap.set(lines,{yPercent:0,autoAlpha:1});if(isParentCategory(el))gsap.set(el,{[RULE_PROPERTY]:1});clearHeading(gsap,el);queue.complete(el);}
-function reveal(gsap,el,done){var value=stateFor(el),lines=value.split&&value.split.lines&&value.split.lines.length?value.split.lines:[el],parent=isParentCategory(el);value.revealed=true;gsap.killTweensOf(lines);var tl=gsap.timeline({onComplete:function(){clearHeading(gsap,el);done();}});tl.to(lines,{yPercent:0,autoAlpha:1,duration:CFG.textDuration,ease:M.easings.strongOut,stagger:CFG.textStagger,overwrite:'auto'},0);if(parent)tl.to(el,{[RULE_PROPERTY]:1,duration:CFG.ruleDuration,ease:M.easings.strongOut,overwrite:'auto'},0);tweens.push(tl);}
-function consume(gsap,el){var value=stateFor(el);if(!pending||!pending.has(el)||queue.isDone(el))return;pending.delete(el);value.checking=false;if(observer)observer.unobserve(host(el));if(value.trigger){value.trigger.kill();value.trigger=null;}queue.enqueue(el,function(done){reveal(gsap,el,done);});}
+function reveal(gsap,el,done,timing){var value=stateFor(el),lines=value.split&&value.split.lines&&value.split.lines.length?value.split.lines:[el],parent=isParentCategory(el),duration=timing&&timing.duration||CFG.textDuration,ruleDuration=Math.max(.12,Math.min(CFG.ruleDuration,duration*.94));value.revealed=true;gsap.killTweensOf(lines);var tl=gsap.timeline({onComplete:function(){clearHeading(gsap,el);done();}});tl.to(lines,{yPercent:0,autoAlpha:1,duration:duration,ease:(M.easings&&M.easings.out)||'power2.out',stagger:CFG.textStagger,overwrite:'auto'},0);if(parent)tl.to(el,{[RULE_PROPERTY]:1,duration:ruleDuration,ease:(M.easings&&M.easings.out)||'power2.out',overwrite:'auto'},0);tweens.push(tl);}
+function consume(gsap,el){var value=stateFor(el);if(!pending||!pending.has(el)||queue.isDone(el))return;pending.delete(el);value.checking=false;if(observer)observer.unobserve(host(el));if(value.trigger){value.trigger.kill();value.trigger=null;}queue.enqueue(el,{duration:CFG.textDuration},function(done,timing){reveal(gsap,el,done,timing);});}
 
 /* Confirma estabilidad en coordenadas de documento: el scroll cambia rect.top, pero no docY. */
 function confirm(gsap,el,force){
@@ -78,7 +90,7 @@ function requestBefore(node){
 function initMotion(deps,token){
   var SplitText=deps&&deps.SplitText;if(initialized||token!==generation||!SplitText)return;initialized=true;var gsap=deps.gsap,ST=deps.ScrollTrigger;elements=targets();splits=[];tweens=[];triggers=[];pending=new Set();
   if(SC.motion.reduced()){elements.forEach(function(el){queue.complete(el);gsap.set(el,{clearProps:'transform,opacity,visibility'});});gate.mark('headings');return;}
-  if(window.IntersectionObserver)observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var el=entry.target.matches(S.sectionTitle)?entry.target.querySelector(':scope > div'):entry.target;if(el)confirm(gsap,el,false);});},{root:null,rootMargin:'0px 0px -10% 0px',threshold:0});
+  if(window.IntersectionObserver)observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var el=entry.target.matches(S.sectionTitle)?entry.target.querySelector(':scope > div'):entry.target;if(el)confirm(gsap,el,false);});},{root:null,rootMargin:'0px 0px 35% 0px',threshold:0});
   elements.forEach(function(el){arm(gsap,SplitText,ST,el);});
   var container=document.querySelector(S.container);if(container&&window.MutationObserver){mutationObserver=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==='attributes'&&mutation.attributeName==='hidden'&&!mutation.target.hidden)armNode(gsap,SplitText,ST,mutation.target);});});mutationObserver.observe(container,{subtree:true,attributes:true,attributeFilter:['hidden']});}
   gate.mark('headings');refresh(token);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(token);}).catch(function(){});
