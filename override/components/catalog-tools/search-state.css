@@ -10,10 +10,30 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .produc
   display: none !important;
 }
 
-/* Search results must never wait for the normal ScrollTrigger reveal pipeline. */
+/* Filtering removes/reorders whole catalogue groups, so preserve the same visual
+   breathing room before the first visible section. Later visible groups keep the
+   canonical section rhythm and must not accumulate this leading offset. */
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
+  margin-top: 18px !important;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) {
+  margin-top: 0 !important;
+}
+
+/* Search results must never wait for the normal ScrollTrigger reveal pipeline.
+   Some cards can retain an inline `visibility:hidden` marker after the search
+   makes them visible. product-card/motion.css keys its reveal translate from that
+   marker, so explicitly neutralize translate/transition here to keep every grid
+   item on the exact same row from the first search frame. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
   opacity: 1 !important;
   visibility: visible !important;
+  translate: 0 0 !important;
+  transition: none !important;
+}
+html[data-sc-catalog-view='compact'] body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]),
+html[data-sc-catalog-view='normal'] body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
+  align-self: stretch !important;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion:not([hidden]),
@@ -29,28 +49,30 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleS
   --sc-section-rule-scale: 1 !important;
 }
 
-/* Search reveal remains compositor-only and short. */
+/* Search reveal is deliberately opacity-only. Geometry must stay invariant while
+   results are being hidden/unhidden or reordered, otherwise cards that enter a
+   few milliseconds later appear vertically misaligned. */
 @keyframes sc-search-card-reveal {
-  from { opacity: 0; transform: translate3d(0, 5px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes sc-search-heading-reveal {
-  from { opacity: 0; transform: translate3d(0, 4px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes sc-search-rule-reveal {
   from { opacity: 0; transform: scaleX(0); }
   to { opacity: 1; transform: scaleX(1); }
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) > a.fancyboxModalAddProd {
-  animation: sc-search-card-reveal 180ms cubic-bezier(.22,1,.36,1) both;
+  animation: sc-search-card-reveal 160ms cubic-bezier(.22,1,.36,1) both;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion:not([hidden]) {
-  animation: sc-search-heading-reveal 200ms cubic-bezier(.22,1,.36,1) both;
+  animation: sc-search-heading-reveal 180ms cubic-bezier(.22,1,.36,1) both;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div::after {
-  animation: sc-search-rule-reveal 240ms cubic-bezier(.22,1,.36,1) both;
+  animation: sc-search-rule-reveal 220ms cubic-bezier(.22,1,.36,1) both;
   transform-origin: 0 50% !important;
 }
 
