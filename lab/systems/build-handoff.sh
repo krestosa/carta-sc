@@ -21,19 +21,21 @@ rsync -a \
 
 # Copia la salida ya compilada como referencia.
 rsync -a "$SITE/" "$OUT/compiled/"
-
 printf '%s\n' "$SHA" > "$OUT/BUILD_SHA"
 
 cat > "$OUT/build-local.sh" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+VENV="\$ROOT/.venv"
 cd "\$ROOT/source"
 export GITHUB_SHA="\${GITHUB_SHA:-$SHA}"
 export GITHUB_PAGES="true"
 
-# Instala lo mínimo para el build.
-python3 -m pip install --disable-pip-version-check --no-input -r lab/pages/requirements.txt
+# Prepara el entorno Python local.
+if [ ! -x "\$VENV/bin/python" ]; then python3 -m venv "\$VENV"; fi
+"\$VENV/bin/python" -m pip install --disable-pip-version-check --no-input -r lab/pages/requirements.txt
+export PATH="\$VENV/bin:\$PATH"
 
 # Reconstruye la versión optimizada.
 bash lab/pages/build.sh
@@ -61,15 +63,15 @@ cat > "$OUT/README.md" <<'EOF'
 Este paquete separa la implementación editable de la salida final.
 
 - `source/override/`: diseño, UX, motion y optimizaciones propias.
-- `source/lab/pages/`: pipeline y scripts que generan la versión estática optimizada.
+- `source/lab/pages/`: pipeline y scripts de optimización/build.
 - `source/scripts/`: validadores usados por el build.
 - `source/`: snapshot y assets legacy necesarios para reproducir la integración.
-- `compiled/`: resultado exacto ya construido. Usarlo como referencia; no editarlo a mano.
-- `BUILD_SHA`: versión del paquete.
+- `compiled/`: salida exacta ya construida. Usarla como referencia; no editarla a mano.
+- `BUILD_SHA`: versión exacta del paquete.
 
 ## Requisitos
 
-Bash, Python 3 + pip, Node.js, `rsync` e Internet durante el rebuild. En Windows usar WSL.
+Bash, Python 3 con `venv`, Node.js, `rsync` e Internet durante el rebuild. En Windows usar WSL.
 
 ## Comandos
 
@@ -78,17 +80,17 @@ bash serve-local.sh
 # Levanta compiled/ en localhost:8080.
 
 bash build-local.sh
-# Instala dependencias mínimas y reconstruye compiled/ desde source/.
+# Prepara dependencias y reconstruye compiled/ desde source/.
 ```
 
-## Para implementar cambios
+## Implementación
 
 1. Trabajar principalmente en `source/override/`.
-2. Si cambia el pipeline/performance, tocar `source/lab/pages/scripts/`.
+2. Para optimizaciones de build, usar `source/lab/pages/scripts/`.
 3. Ejecutar `bash build-local.sh`.
-4. Comparar el resultado en `compiled/`.
+4. Revisar el resultado en `compiled/`.
 
-No hace falta GitHub Actions para reproducir el build.
+No requiere GitHub Actions para reproducir el build.
 EOF
 
 chmod +x "$OUT/build-local.sh" "$OUT/serve-local.sh"
@@ -96,6 +98,7 @@ chmod +x "$OUT/build-local.sh" "$OUT/serve-local.sh"
 test -s "$OUT/README.md"
 test -s "$OUT/BUILD_SHA"
 test -d "$OUT/source/override"
+test -d "$OUT/source/lab/pages/scripts"
 test -x "$OUT/build-local.sh"
 test -x "$OUT/serve-local.sh"
 test -s "$OUT/compiled/index.html"
