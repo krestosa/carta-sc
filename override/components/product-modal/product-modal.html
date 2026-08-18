@@ -1,17 +1,22 @@
+<!-- Template estructural del detalle de producto. JavaScript completa imagen, texto, precio
+     y rasgos al abrir; el markup mantiene semántica de diálogo y acciones accesibles. -->
 <template data-sc-template="product-modal">
   <div class="sc-product-modal" role="presentation">
     <section class="sc-product-modal__dialog" role="dialog" aria-modal="true" tabindex="-1">
+      <!-- El botón de cierre conserva un nombre accesible independiente del SVG. -->
       <button class="sc-product-modal__close" type="button" aria-label="Cerrar detalle del producto">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
         </svg>
       </button>
+      <!-- La imagen se completa desde la card y se elimina si el producto no tiene recurso válido. -->
       <div class="sc-product-modal__image-stage">
         <img class="sc-product-modal__image" alt="" decoding="async">
       </div>
       <div class="sc-product-modal__content">
         <h2 class="sc-product-modal__title"></h2>
         <p class="sc-product-modal__description"></p>
+        <!-- Footer reservado para precio normalizado y la acción externa de pedido. -->
         <div class="sc-product-modal__footer">
           <div class="sc-product-modal__price-slot"></div>
           <div class="sc-product-modal__actions">
