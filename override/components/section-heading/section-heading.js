@@ -54,6 +54,9 @@ function arm(gsap,SplitText,ST,el){
   var value=stateFor(el);if(queue.isDone(el)||value.prepared||!renderable(el))return;var target=host(el);if(target.getBoundingClientRect().bottom<0){queue.complete(el);return;}prepare(gsap,SplitText,el);pending.add(el);
   value.trigger=ST.create({trigger:target,start:CFG.triggerStart,invalidateOnRefresh:true,onEnter:function(){confirm(gsap,el,false);},onEnterBack:function(){confirm(gsap,el,false);}});triggers.push(value.trigger);if(observer)observer.observe(target);if(nearViewport(el))confirm(gsap,el,false);
 }
+function armNode(gsap,SplitText,ST,node){
+  if(!node||node.hidden)return;if(node.matches&&node.matches(S.productList)){node.querySelectorAll(S.sectionTitle+','+S.sectionSubtitle).forEach(function(item){var el=headingUnit(item);if(el)arm(gsap,SplitText,ST,el);});return;}var el=headingUnit(node);if(el)arm(gsap,SplitText,ST,el);
+}
 
 /* Cuando una card está confirmada, cualquier heading anterior pendiente se encola primero. */
 function requestBefore(node){
@@ -67,7 +70,7 @@ function initMotion(deps,token){
   if(SC.motion.reduced()){elements.forEach(function(el){queue.complete(el);gsap.set(el,{clearProps:'transform,opacity,visibility'});});return;}
   if(window.IntersectionObserver)observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var el=entry.target.matches(S.sectionTitle)?entry.target.querySelector(':scope > div'):entry.target;if(el)confirm(gsap,el,false);});},{root:null,rootMargin:'0px 0px -10% 0px',threshold:0});
   elements.forEach(function(el){arm(gsap,SplitText,ST,el);});
-  var container=document.querySelector(S.container);if(container&&window.MutationObserver){mutationObserver=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type!=='attributes'||mutation.attributeName!=='hidden')return;var target=mutation.target,el=headingUnit(target);if(el&&!target.hidden)arm(gsap,SplitText,ST,el);});});mutationObserver.observe(container,{subtree:true,attributes:true,attributeFilter:['hidden']});}
+  var container=document.querySelector(S.container);if(container&&window.MutationObserver){mutationObserver=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==='attributes'&&mutation.attributeName==='hidden'&&!mutation.target.hidden)armNode(gsap,SplitText,ST,mutation.target);});});mutationObserver.observe(container,{subtree:true,attributes:true,attributeFilter:['hidden']});}
   refresh(token);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(token);}).catch(function(){});
 }
 function init(){if(initialized||!motionDeps)return;initMotion(motionDeps,++generation);}
