@@ -62,12 +62,14 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   display: none !important;
 }
 
+/* Una única geometría para phone, tablet y desktop: precio vigente anclado al inicio y
+   tachado + rasgos inmediatamente después. El centrado es vertical, no horizontal. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: wrap !important;
-  align-items: baseline !important;
+  align-items: center !important;
   justify-content: flex-start !important;
   column-gap: 6px !important;
   row-gap: 2px !important;
@@ -90,10 +92,12 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
   order: 1 !important;
   flex: 0 0 auto !important;
+  align-self: center !important;
+  margin: 0 !important;
   white-space: nowrap !important;
 }
 
-/* El tachado e iconos forman una unidad; los rasgos se centran sobre la altura del precio anterior. */
+/* El tachado e iconos forman una unidad. Así, si falta ancho, bajan juntos sin mover el precio vigente. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
   box-sizing: border-box !important;
@@ -101,6 +105,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   order: 2 !important;
   flex: 0 0 auto !important;
   align-items: center !important;
+  align-self: center !important;
   justify-content: flex-start !important;
   gap: 5px !important;
   width: max-content !important;
@@ -110,47 +115,10 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   white-space: nowrap !important;
 }
 
-/* Con descuento, el tachado es el eje horizontal real. Esta geometría es común a phone,
-   tablet y desktop; la especificidad también prevalece sobre el layout tardío de vista lista. */
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr) !important;
-  align-items: center !important;
-  justify-content: stretch !important;
-  column-gap: 0 !important;
-  row-gap: 0 !important;
-  white-space: nowrap !important;
-}
-
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer > .price,
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer > .priceHijass,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer > .price,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer > .priceHijass {
-  grid-column: 1 !important;
-  justify-self: end !important;
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta .ofertaPrice,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta .ofertaPrice {
   align-self: center !important;
-  margin-right: 6px !important;
-}
-
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer > .sc-product-secondary-meta,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer > .sc-product-secondary-meta {
-  display: contents !important;
-}
-
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer .ofertaPrice,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer .ofertaPrice {
-  grid-column: 2 !important;
-  justify-self: center !important;
-  align-self: center !important;
-}
-
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer .sc-product-price-traits,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer .sc-product-price-traits {
-  grid-column: 3 !important;
-  justify-self: start !important;
-  align-self: center !important;
-  margin-left: 5px !important;
+  margin: 0 !important;
 }
 
 /* Fuego y hoja comparten base dentro del grupo, sin depender del baseline tipográfico. */
