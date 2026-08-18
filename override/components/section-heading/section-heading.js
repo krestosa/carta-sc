@@ -3,8 +3,18 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion;
-if(!SC||!C||!SC.motion||typeof SC.motion.whenReady!=='function'||SC.__sectionHeadingBooted)return;SC.__sectionHeadingBooted=true;
+if(!SC||!C||!SC.motion||typeof SC.motion.whenLoaded!=='function'||SC.__sectionHeadingBooted)return;SC.__sectionHeadingBooted=true;
 var initialized=false,motionDeps=null,generation=0,observer=null,mutationObserver=null,pending=null,elements=[],splits=[],tweens=[],triggers=[],headingStates=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={ruleDuration:.20,textDuration:.20,textStagger:.018,triggerStart:'clamp(top 90%)',triggerRatio:.90,lineOffsetPercent:64,stableDelta:1.5,stableFrames:1,maxChecks:5,refreshDelay:60};
+
+/* El prepaint se libera sólo cuando headings y cards ya dejaron preparados sus estados GSAP. */
+function ensureGate(){
+  if(SC.catalogRevealGate)return SC.catalogRevealGate;
+  var root=document.documentElement,gate={headings:false,cards:false,released:false};
+  gate.release=function(){if(gate.released)return;gate.released=true;if(root){root.setAttribute('data-sc-catalog-reveal-ready','true');root.classList.remove('sc-catalog-reveal-prepaint');}};
+  gate.mark=function(part){if(part==='headings')gate.headings=true;if(part==='cards')gate.cards=true;if(gate.headings&&gate.cards)gate.release();};
+  return SC.catalogRevealGate=gate;
+}
+var gate=ensureGate();
 
 /* Cola única del catálogo. Sólo contiene unidades ya confirmadas cerca del viewport. */
 var queue=SC.catalogRevealQueue;
@@ -67,14 +77,14 @@ function requestBefore(node){
 
 function initMotion(deps,token){
   var SplitText=deps&&deps.SplitText;if(initialized||token!==generation||!SplitText)return;initialized=true;var gsap=deps.gsap,ST=deps.ScrollTrigger;elements=targets();splits=[];tweens=[];triggers=[];pending=new Set();
-  if(SC.motion.reduced()){elements.forEach(function(el){queue.complete(el);gsap.set(el,{clearProps:'transform,opacity,visibility'});});return;}
+  if(SC.motion.reduced()){elements.forEach(function(el){queue.complete(el);gsap.set(el,{clearProps:'transform,opacity,visibility'});});gate.mark('headings');return;}
   if(window.IntersectionObserver)observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var el=entry.target.matches(S.sectionTitle)?entry.target.querySelector(':scope > div'):entry.target;if(el)confirm(gsap,el,false);});},{root:null,rootMargin:'0px 0px -10% 0px',threshold:0});
   elements.forEach(function(el){arm(gsap,SplitText,ST,el);});
   var container=document.querySelector(S.container);if(container&&window.MutationObserver){mutationObserver=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==='attributes'&&mutation.attributeName==='hidden'&&!mutation.target.hidden)armNode(gsap,SplitText,ST,mutation.target);});});mutationObserver.observe(container,{subtree:true,attributes:true,attributeFilter:['hidden']});}
-  refresh(token);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(token);}).catch(function(){});
+  gate.mark('headings');refresh(token);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(token);}).catch(function(){});
 }
 function init(){if(initialized||!motionDeps)return;initMotion(motionDeps,++generation);}
 function destroy(){generation++;if(observer){observer.disconnect();observer=null;}if(mutationObserver){mutationObserver.disconnect();mutationObserver=null;}elements.forEach(function(el){var value=stateFor(el);value.checking=false;if(!queue.isDone(el))queue.cancel(el);if(value.trigger){value.trigger.kill();value.trigger=null;}});if(pending){pending.clear();pending=null;}tweens.forEach(function(tween){if(tween&&tween.kill)tween.kill();});if(motionDeps){var gsap=motionDeps.gsap;elements.forEach(function(el){clearHeading(gsap,el);el.classList.remove('sc-section-rule-host');stateFor(el).prepared=false;});splits.forEach(function(split){if(split&&split.revert)split.revert();});}initialized=false;elements=[];splits=[];tweens=[];triggers=[];}
 SC.sectionHeading={init:init,destroy:destroy,cleanup:destroy,queue:queue,requestBefore:requestBefore};
-SC.motion.whenReady(function(deps){motionDeps=deps;ready(init);});
+SC.motion.whenLoaded(function(deps){motionDeps=deps;ready(init);});
 })();
