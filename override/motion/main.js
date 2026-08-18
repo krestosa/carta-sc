@@ -2,6 +2,7 @@
 'use strict';
 if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
 
+/* Estado compartido y dependencias GSAP. */
 var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},M=C.motion||{},URL=C.urls||{},MEDIA=C.media||{};
 var readyQueue=[],loadedQueue=[],deps=null,unlocked=false,refreshLifecycleInstalled=false,refreshTimer=0,lastRefreshAt=0,refreshing=false,REFRESH_DELAY=120,MIN_REFRESH_GAP=120;
 var IDS={core:'sc-gsap-core',morphSVG:'sc-gsap-morphsvg',scrollTrigger:'sc-gsap-scrolltrigger',splitText:'sc-gsap-splittext'};
@@ -9,6 +10,7 @@ var SOURCES={core:URL.gsap,morphSVG:URL.morphSVG,scrollTrigger:URL.scrollTrigger
 var ROOT=document.documentElement;
 if(ROOT)ROOT.classList.add('sc-motion-dependencies-loading');
 
+/* Carga scripts una sola vez y confirma su global. */
 function reduced(){return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion)).matches;}
 function globalReady(name){return!!(name&&window[name]);}
 function loadScript(src,id,globalName){
@@ -27,14 +29,19 @@ function loadScript(src,id,globalName){
     script.onerror=function(){reject(new Error('[SushiClub motion] No se pudo cargar '+src));};document.head.appendChild(script);
   });
 }
+
+/* Ejecuta callbacks cuando las dependencias están cargadas o habilitadas. */
 function flushQueue(queue){var callbacks=queue.splice(0);callbacks.forEach(function(fn){try{fn(deps);}catch(error){if(window.console&&console.error)console.error('[SushiClub motion]',error);}});}
 function whenLoaded(fn){if(typeof fn!=='function')return;if(deps)fn(deps);else loadedQueue.push(fn);}
 function whenReady(fn){if(typeof fn!=='function')return;if(deps&&unlocked)fn(deps);else readyQueue.push(fn);}
 function run(fn){if(!deps||!unlocked||typeof fn!=='function')return false;fn(deps);return true;}
 function runLoaded(fn){if(!deps||typeof fn!=='function')return false;fn(deps);return true;}
+
+/* Agrupa refresh de ScrollTrigger para evitar trabajo repetido. */
 function runRefresh(){refreshTimer=0;if(!deps||!deps.ScrollTrigger||refreshing)return;refreshing=true;lastRefreshAt=performance.now();try{deps.ScrollTrigger.refresh();}catch(error){if(!(error&&error.name==='SecurityError')&&window.console&&console.error)console.error('[SushiClub motion]',error);}finally{refreshing=false;}}
 function refresh(delay){if(!deps||!deps.ScrollTrigger)return;if(refreshTimer)window.clearTimeout(refreshTimer);var requested=Math.max(0,delay==null?0:delay),elapsed=performance.now()-lastRefreshAt,wait=Math.max(requested,Math.max(0,MIN_REFRESH_GAP-elapsed));refreshTimer=window.setTimeout(runRefresh,wait);}
 
+/* Cambia geometría de iconos con MorphSVG o aplica el path directo. */
 function clearIconMotion(host){var state=host&&host.__scIconMotion;if(!state)return;if(state.timeline)try{state.timeline.kill();}catch(_){}host.__scIconMotion=null;}
 function morphIcon(path,shape,options){
   if(!path||!shape)return false;var opts=options||{},animate=opts.animate!==false,host=path.ownerSVGElement||path,gsap=deps&&deps.gsap,MorphSVGPlugin=deps&&deps.MorphSVGPlugin;clearIconMotion(host);
@@ -43,6 +50,7 @@ function morphIcon(path,shape,options){
   state.timeline=gsap.timeline({onComplete:function(){if(host.__scIconMotion===state)host.__scIconMotion=null;}}).to(path,{duration:duration,ease:opts.ease||'power2.inOut',morphSVG:{shape:shape,map:opts.map||'complexity'},overwrite:'auto'},0);return true;
 }
 
+/* Unifica hover, foco, presión y teclado en microinteracciones. */
 function bindMicroInteraction(control,target,options){
   if(!control||!target)return function(){};
   var opts=options||{},tween=null,destroyed=false,hover=false,focus=false,pressed=false;
@@ -77,6 +85,7 @@ function bindMicroInteraction(control,target,options){
   return function(){if(destroyed)return;destroyed=true;control.removeEventListener('pointerenter',pointerEnter);control.removeEventListener('pointerleave',pointerLeave);control.removeEventListener('pointerdown',pointerDown);control.removeEventListener('pointerup',pointerUp);control.removeEventListener('pointercancel',pointerLeave);control.removeEventListener('focus',focusIn);control.removeEventListener('blur',focusOut);control.removeEventListener('keydown',keyDown);control.removeEventListener('keyup',keyUp);kill();clear();};
 }
 
+/* Inicializa GSAP y habilita refresh después de layout/fuentes. */
 function installRefreshLifecycle(){if(refreshLifecycleInstalled||!deps||!unlocked)return;refreshLifecycleInstalled=true;if(document.readyState==='complete')refresh(REFRESH_DELAY);else window.addEventListener('load',function(){refresh(REFRESH_DELAY);},{once:true});if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){refresh(REFRESH_DELAY);}).catch(function(){});}
 function initialize(){if(!window.gsap||!window.MorphSVGPlugin||!window.ScrollTrigger||!window.SplitText)throw new Error('[SushiClub motion] Dependencias GSAP incompletas');window.gsap.registerPlugin(window.MorphSVGPlugin,window.ScrollTrigger,window.SplitText);window.ScrollTrigger.config({limitCallbacks:true});deps={gsap:window.gsap,MorphSVGPlugin:window.MorphSVGPlugin,ScrollTrigger:window.ScrollTrigger,SplitText:window.SplitText};if(ROOT){ROOT.classList.remove('sc-motion-dependencies-loading');ROOT.classList.remove('sc-motion-dependencies-failed');ROOT.classList.add('sc-motion-dependencies-ready');}flushQueue(loadedQueue);if(unlocked){installRefreshLifecycle();flushQueue(readyQueue);}return deps;}
 function loadDependencies(){return loadScript(SOURCES.core,IDS.core,'gsap').then(function(){return Promise.all([loadScript(SOURCES.morphSVG,IDS.morphSVG,'MorphSVGPlugin'),loadScript(SOURCES.scrollTrigger,IDS.scrollTrigger,'ScrollTrigger'),loadScript(SOURCES.splitText,IDS.splitText,'SplitText')]);}).then(initialize).catch(function(error){if(ROOT){ROOT.classList.remove('sc-motion-dependencies-loading');ROOT.classList.add('sc-motion-dependencies-failed');}if(window.console&&console.error)console.error('[SushiClub motion]',error);return null;});}
