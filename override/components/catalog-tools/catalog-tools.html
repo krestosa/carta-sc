@@ -1,5 +1,8 @@
+<!-- Template completo de herramientas del catálogo. Reúne búsqueda, filtros, tema y cambio
+     de vista en un único bloque que el runtime monta y reutiliza sin duplicar controles. -->
 <template data-sc-template="catalog-tools">
   <section class="sc-catalog-tools" aria-label="Herramientas de la carta">
+    <!-- Búsqueda principal con botón explícito de limpieza y línea visual de foco. -->
     <div class="sc-catalog-search">
       <label class="sc-catalog-search-main" style="display:contents">
         <svg class="sc-catalog-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
@@ -10,6 +13,7 @@
       </button>
       <span class="sc-catalog-search-line" aria-hidden="true"></span>
     </div>
+    <!-- Acciones persistentes: selector de tema y alternancia entre grilla y lista. -->
     <div class="sc-catalog-actions" style="opacity:1;visibility:visible">
       <div class="sc-theme-control" style="opacity:1;visibility:visible">
         <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
@@ -36,12 +40,14 @@
             </g>
           </svg>
         </button>
+        <!-- Menú de tema con estado radio; theme-controller.js mantiene aria-checked sincronizado. -->
         <div class="sc-theme-menu" id="sc-theme-menu" role="menu" aria-label="Elegir tema" aria-hidden="true">
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="true" data-sc-theme-option="system"><span class="sc-theme-option-main"><svg class="sc-theme-option-icon sc-theme-option-icon--system" viewBox="0 0 18 18" aria-hidden="true"><circle class="sc-theme-option-auto-ring" cx="9" cy="9" r="6.55"></circle><path class="sc-theme-option-auto-half" d="M9 2.45a6.55 6.55 0 0 1 0 13.1z"></path></svg><span>Automático</span></span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="light"><span class="sc-theme-option-main"><svg class="sc-theme-option-icon sc-theme-option-icon--light" viewBox="0 0 18 18" aria-hidden="true"><g class="sc-theme-option-rays"><line x1="9" y1="1.2" x2="9" y2="3"></line><line x1="9" y1="15" x2="9" y2="16.8"></line><line x1="1.2" y1="9" x2="3" y2="9"></line><line x1="15" y1="9" x2="16.8" y2="9"></line><line x1="3.5" y1="3.5" x2="4.78" y2="4.78"></line><line x1="13.22" y1="13.22" x2="14.5" y2="14.5"></line><line x1="13.22" y1="4.78" x2="14.5" y2="3.5"></line><line x1="3.5" y1="14.5" x2="4.78" y2="13.22"></line></g><circle class="sc-theme-option-sun-disc" cx="9" cy="9" r="3.2"></circle></svg><span>Claro</span></span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
           <button class="sc-theme-option" type="button" role="menuitemradio" aria-checked="false" data-sc-theme-option="dark"><span class="sc-theme-option-main"><svg class="sc-theme-option-icon sc-theme-option-icon--dark" viewBox="0 0 18 18" aria-hidden="true"><path class="sc-theme-option-dark-disc" d="M14.65 11.85A6.1 6.1 0 0 1 6.15 3.35A6.55 6.55 0 1 0 14.65 11.85Z"></path></svg><span>Oscuro</span></span><span class="sc-theme-option-mark" aria-hidden="true"></span></button>
         </div>
       </div>
+      <!-- El SVG contiene las dos geometrías; view.js interpola entre grilla y lista. -->
       <button class="sc-catalog-view-toggle" type="button" aria-label="Cambiar vista de productos" title="Cambiar vista" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
         <svg class="sc-view-morph-icon" data-sc-view-icon width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="display:block;width:24px;height:24px;opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a);fill:var(--sc-color-ink,#0a0a0a);overflow:visible">
           <g data-sc-view-live style="display:inline;opacity:1;visibility:visible;fill:var(--sc-color-ink,#0a0a0a)">
@@ -54,6 +60,7 @@
         </svg>
       </button>
     </div>
+    <!-- Región aria-live y contenedor de resultados que search.js completa dinámicamente. -->
     <span class="sc-catalog-search-status sc-sr-only" aria-live="polite"></span>
     <div class="sc-catalog-search-results" aria-label="Resultados de búsqueda" hidden><section class="sc-catalog-search-group" data-sc-search-group-prototype hidden><h2 class="sc-catalog-search-group-title"></h2><div class="sc-catalog-search-grid listadoShop"></div></section><p class="sc-catalog-search-empty-message" hidden>No encontramos productos para esa búsqueda.</p></div>
   </section>
