@@ -5,6 +5,7 @@ body.sushiShop {
   --sc-catalog-base-columns: 4;
   --sc-catalog-grid-row-gap: 36px;
   --sc-catalog-section-bottom: 74px;
+  --sc-catalog-gutter: 28px;
 }
 
 body.sushiShop .topShop.bottomShop,
@@ -50,6 +51,7 @@ body.sushiShop .listadoShop > br {
     --sc-catalog-base-columns: 3;
     --sc-catalog-grid-row-gap: 34px;
     --sc-catalog-section-bottom: 64px;
+    --sc-catalog-gutter: 24px;
   }
 
   body.sushiShop .containerShop {
@@ -82,6 +84,7 @@ body.sushiShop .listadoShop > br {
     --sc-catalog-base-columns: 2;
     --sc-catalog-grid-row-gap: 28px;
     --sc-catalog-section-bottom: 44px;
+    --sc-catalog-gutter: 20px;
   }
 
   body.sushiShop .containerShop {
