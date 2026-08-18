@@ -4,8 +4,12 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
-/* Anticipa el reveal antes de que la card entre al viewport. Mobile suma un guard nativo para evitar cards ocultas si ScrollTrigger pierde una entrada. */
-var installed=false,reflowRaf=0,PROFILES={mobile:{batchMax:4,start:'clamp(top bottom+=96px)',revealAhead:96,nativeRevealGuard:true},tablet:{batchMax:6,start:'clamp(top bottom+=80px)',revealAhead:80},desktop:{batchMax:8,start:'clamp(top bottom+=64px)',revealAhead:64}};
+/* Recupera el desplazamiento histórico y deja que el título entre antes que las cards. */
+var installed=false,reflowRaf=0,PROFILES={
+  mobile:{batchMax:4,start:'clamp(top 92%)',initialY:8,revealY:8,revealAhead:48,nativeRevealGuard:true},
+  tablet:{batchMax:6,start:'clamp(top 91%)',initialY:9,revealY:10,revealAhead:56},
+  desktop:{batchMax:8,start:'clamp(top 90%)',initialY:10,revealY:12,revealAhead:64}
+};
 /* Espera dos frames antes de rescatar cards visibles y refrescar geometría de motion. */
 function reflow(){
   if(reflowRaf)cancelAnimationFrame(reflowRaf);
@@ -17,7 +21,7 @@ function install(){
   installed=true;
   SC.motion.whenReady(function(deps){
     var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia(),profiles=PROFILES;
-    mm.add({mobile:C.media.mobile,tablet:C.media.tablet,desktop:C.media.desktop,reduceMotion:C.media.reducedMotion},function(ctx){
+    mm.add({mobile:C.media.phone,tablet:C.media.compactWide,desktop:C.media.desktop,reduceMotion:C.media.reducedMotion},function(ctx){
       var tablet=!!ctx.conditions.tablet,desktop=!!ctx.conditions.desktop,reduce=!!ctx.conditions.reduceMotion;
       var profile=desktop?profiles.desktop:tablet?profiles.tablet:profiles.mobile;
       return parts.setupReveal?parts.setupReveal(gsap,ST,profile,reduce):function(){};
