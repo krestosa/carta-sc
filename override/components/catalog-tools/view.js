@@ -47,9 +47,8 @@ function initMorph(host){
 }
 function clearViewIconMotion(host){
   if(!host)return;
-  var state=host.__scViewIconMotion,gsap=motionDeps&&motionDeps.gsap,live=livePaths(host);
+  var state=host.__scViewIconMotion;
   if(state&&state.timeline)try{state.timeline.kill();}catch(_){}
-  if(gsap&&live.length)gsap.killTweensOf(live);
   host.__scViewIconMotion=null;
   host.removeAttribute('data-sc-view-icon-animating');
   ensureHostPresentation(host);
@@ -67,7 +66,7 @@ function animateMorph(host,from,to){
   if(!host||from===to){if(host){host.setAttribute('data-sc-icon-state',to);ensureHostPresentation(host);}return;}
   if(!initMorph(host)||!motionDeps||!motionDeps.gsap||!motionDeps.MorphSVGPlugin){setMorphState(host,to);return;}
   clearViewIconMotion(host);
-  var gsap=motionDeps.gsap,live=livePaths(host),targets=targetPaths(host,to),short=reducedMotion(),duration=short?.12:.24,ease=short?'power1.inOut':'power2.inOut',state={timeline:null};
+  var gsap=motionDeps.gsap,live=livePaths(host),targets=targetPaths(host,to),short=reducedMotion(),duration=short?.1:.19,ease=short?'power1.inOut':'power2.inOut',state={timeline:null};
   if(!live.length||targets.some(function(target){return!target;})){setMorphState(host,to);return;}
 
   host.setAttribute('data-sc-icon-state',to);
@@ -75,7 +74,7 @@ function animateMorph(host,from,to){
   host.__scViewIconMotion=state;
   state.timeline=gsap.timeline({onComplete:function(){if(host.__scViewIconMotion!==state)return;host.__scViewIconMotion=null;host.removeAttribute('data-sc-view-icon-animating');ensureHostPresentation(host);}});
   live.forEach(function(path,index){
-    state.timeline.to(path,{duration:duration,ease:ease,morphSVG:{shape:targets[index]},overwrite:'auto'},short?0:Math.floor(index/2)*.012);
+    state.timeline.to(path,{duration:duration,ease:ease,morphSVG:{shape:targets[index]},overwrite:'auto'},short?0:Math.floor(index/2)*.008);
   });
 }
 function sync(root,mode,animate){
@@ -85,6 +84,33 @@ function sync(root,mode,animate){
   ensureHostPresentation(host);
   if(previous===key)return;
   if(animate!==false&&previous)animateMorph(host,previous,key);else setMorphState(host,key);
+}
+
+function bindViewMicroInteraction(button,host){
+  if(!button||!host||!motionDeps||!motionDeps.gsap)return function(){};
+  var gsap=motionDeps.gsap,paths=livePaths(host),hover=false,focus=false,pressed=false,destroyed=false;
+  if(paths.length!==6)return function(){};
+  var hoverOffsets=[[.58,.38],[-.58,.38],[.58,0],[-.58,0],[.58,-.38],[-.58,-.38]],pressOffsets=[[.82,.52],[-.82,.52],[.82,0],[-.82,0],[.82,-.52],[-.82,-.52]];
+  function focusVisible(){try{return button.matches(':focus-visible');}catch(_){return document.activeElement===button;}}
+  function stop(){gsap.killTweensOf(paths,'x,y');}
+  function apply(offsets,duration,ease){
+    if(destroyed)return;stop();
+    if(reducedMotion()){gsap.set(paths,{x:0,y:0,clearProps:'willChange'});return;}
+    paths.forEach(function(path,index){var o=offsets[index];gsap.to(path,{x:o[0],y:o[1],duration:duration,ease:ease,overwrite:'auto',force3D:true,willChange:'transform',delay:index*.004,onComplete:function(){path.style.removeProperty('will-change');}});});
+  }
+  function active(){apply(hoverOffsets,.068,'power3.out');}
+  function home(){apply([[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],.09,'power3.out');}
+  function press(){apply(pressOffsets,.042,'power2.out');}
+  function enter(e){if(e.pointerType==='touch')return;hover=true;if(!pressed)active();}
+  function leave(){hover=false;pressed=false;if(focus)active();else home();}
+  function down(){pressed=true;press();}
+  function up(){pressed=false;if(hover||focus)active();else home();}
+  function focusIn(){if(focusVisible()){focus=true;if(!pressed)active();}}
+  function focusOut(){focus=false;pressed=false;if(hover)active();else home();}
+  function keyDown(e){if(e.repeat||(e.key!=='Enter'&&e.key!==' '))return;pressed=true;press();}
+  function keyUp(e){if(e.key!=='Enter'&&e.key!==' ')return;pressed=false;if(hover||focus)active();else home();}
+  button.addEventListener('pointerenter',enter);button.addEventListener('pointerleave',leave);button.addEventListener('pointerdown',down);button.addEventListener('pointerup',up);button.addEventListener('pointercancel',leave);button.addEventListener('focus',focusIn);button.addEventListener('blur',focusOut);button.addEventListener('keydown',keyDown);button.addEventListener('keyup',keyUp);
+  return function(){if(destroyed)return;destroyed=true;button.removeEventListener('pointerenter',enter);button.removeEventListener('pointerleave',leave);button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',leave);button.removeEventListener('focus',focusIn);button.removeEventListener('blur',focusOut);button.removeEventListener('keydown',keyDown);button.removeEventListener('keyup',keyUp);stop();gsap.set(paths,{x:0,y:0,clearProps:'transform,willChange'});};
 }
 
 function viewportAnchor(){var nodes=document.querySelectorAll('.listadoShop .titleShopSeccion,.listadoShop .subTitleShopSeccion,.listadoShop .productoShop'),height=window.innerHeight||doc.clientHeight||0,probe=Math.min(Math.max(height*.28,110),240),best=null,bestDistance=Infinity;for(var i=0;i<nodes.length;i++){var node=nodes[i],rect=node.getBoundingClientRect();if(rect.bottom<=0||rect.top>=height)continue;var distance=rect.top<=probe&&rect.bottom>=probe?0:Math.abs(rect.top-probe);if(distance<bestDistance){best=node;bestDistance=distance;if(distance===0&&node.matches('.titleShopSeccion,.subTitleShopSeccion'))break;}}return best;}
@@ -101,7 +127,7 @@ function install(root){
   if(!button||!host)return function(){};
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
-  var microCleanup=SC.motion&&SC.motion.bindMicroInteraction?SC.motion.bindMicroInteraction(button,host,{active:{rotation:-10},press:{rotation:5},enterDuration:.1,exitDuration:.15}):function(){};
+  var microCleanup=bindViewMicroInteraction(button,host);
   function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(null);}
   button.addEventListener('click',click);
