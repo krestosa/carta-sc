@@ -1,5 +1,7 @@
 (function(){
 'use strict';
+/* Normaliza fragmentos del DOM heredado que interfieren con la capa nueva. Corrige nombres
+   accesibles, anchors y restos visuales sin modificar la estructura de negocio original. */
 var SC=window.SCOverride,utils=SC&&SC.utils,CFG=SC&&SC.config,S=CFG&&CFG.selectors;if(!SC||!utils||!CFG||SC.__domNormalizationBooted)return;SC.__domNormalizationBooted=true;
 var each=utils.each,matches=utils.matches,observer=null,initialized=false,readyHandler=null;
 var TARGETS=[
@@ -18,6 +20,7 @@ var TARGETS=[
   "a[href*=\"pinterest.com/sushiclub\"]"
 ].join(',');
 
+/* Reparaciones puntuales sobre nodos legacy ya existentes o agregados dinámicamente. */
 function repairCategoryAnchor(anchor){var name=anchor.getAttribute('name');if(name&&anchor.id!==name)anchor.id=name;}
 function removeLegacySearch(node){if(node.parentNode)node.parentNode.removeChild(node);}
 function setAccessibleName(node,label){if(!node.hasAttribute('aria-label')&&!node.hasAttribute('aria-labelledby'))node.setAttribute('aria-label',label);}
@@ -48,6 +51,8 @@ function handle(node){
   if(matches(node,["a[href*=\"facebook.com/sushiclubargentina\"]","a[href*=\"instagram.com/SushiClub_ar\"]","a[href*=\"tiktok.com/@sushiclub_ar\"]","a[href*=\"pinterest.com/sushiclub\"]"].join(',')))enhanceSocialLink(node);
 }
 function scan(root){if(matches(root,TARGETS))handle(root);if(root&&root.querySelectorAll)each(root.querySelectorAll(TARGETS),handle);}
+
+/* Completa semántica global mínima y observa únicamente altas de nodos relevantes. */
 function normalizeDocumentLanguage(){var root=document.documentElement;if(root&&!root.lang)root.lang='es-AR';}
 function normalizeMainLandmark(){if(document.querySelector('main,[role="main"]'))return;var main=document.querySelector(S.container);if(main)main.setAttribute('role','main');}
 function disconnect(){if(observer){observer.disconnect();observer=null;}}

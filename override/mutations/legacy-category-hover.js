@@ -1,5 +1,7 @@
 (function(){
 'use strict';
+/* Desactiva el hover heredado de categorías para que el rail nuevo sea el único dueño
+   de apertura y cierre. Repite la limpieza tras el montaje tardío del menú original. */
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors;if(!SC||!C||SC.__legacyCategoryHoverBooted)return;SC.__legacyCategoryHoverBooted=true;
 SC.mutations=SC.mutations||{};
 var timers=[],initialized=false,readyHandler=null,REPAIR_DELAYS=[0,120];
@@ -15,7 +17,7 @@ function init(){
 }
 function destroy(){
   initialized=false;clearTimers();if(readyHandler){document.removeEventListener('DOMContentLoaded',readyHandler);readyHandler=null;}
-  /* Removed host hover handlers cannot be restored safely; teardown only owns pending override work. */
+  /* Los handlers originales removidos no se pueden reconstruir con seguridad; destroy solo cancela trabajo pendiente del override. */
 }
 function boot(){readyHandler=null;init();}
 SC.mutations.closeLegacyCategoryMenus=closeLegacyCategoryMenus;SC.mutations.stripLegacyHoverHandlers=stripLegacyHoverHandlers;

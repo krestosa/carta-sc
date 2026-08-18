@@ -1,5 +1,7 @@
 (function(){
 'use strict';
+/* Añade una respuesta vertical mínima al carrito fijo según la velocidad de scroll.
+   El desplazamiento se limita por breakpoint y vuelve a cero apenas el scroll se estabiliza. */
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={scrollQuickDuration:.14,scrollVelocityFloor:55,scrollSettleDelay:70};if(!SC||!C||SC.__cartScrollMotionBooted)return;SC.__cartScrollMotionBooted=true;
 var parts=SC.cartParts=SC.cartParts||{};
 
@@ -23,6 +25,7 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
     settleCall.restart(true);
   }
   function stopTracker(){if(settleCall){settleCall.kill();settleCall=null;}if(tracker){tracker.kill();tracker=null;}}
+  /* Un único ScrollTrigger calcula velocidad y alimenta todos los carritos fijos encontrados. */
   function ensureTracker(){
     if(reduce||!entries.length){stopTracker();return;}
     if(tracker)return;

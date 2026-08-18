@@ -1,8 +1,11 @@
 (function(){
 'use strict';
+/* Mantiene el historial del navegador bajo control del sitio y limpia hashes internos
+   de categorías después de navegar, sin persistir estado adicional del catálogo. */
 var SC=window.SCOverride;if(!SC||SC.__historyMutationBooted)return;SC.__historyMutationBooted=true;
 SC.mutations=SC.mutations||{};
 
+/* Restaura replaceState nativo si código heredado dejó una implementación propia. */
 function restoreNativeHistory(){
   try{
     var proto=window.History&&window.History.prototype;
@@ -15,6 +18,8 @@ function restoreNativeHistory(){
     }
   }catch(_){}
 }
+
+/* Elimina solo hashes técnicos de anchors y conserva pathname y query actuales. */
 function cleanCategoryHash(){
   if(!/^#anchor/i.test(location.hash||''))return;
   try{history.replaceState(history.state,document.title,location.pathname+location.search);}catch(_){}

@@ -1,5 +1,7 @@
 (function(){
 'use strict';
+/* Revela únicamente filas nuevas del carrito. Un WeakSet evita reanimar filas existentes
+   y el observer dispara trabajo solo cuando una mutación realmente afecta la tabla. */
 var SC=window.SCOverride,C=SC&&SC.config,M=C&&C.motion,CFG={listOffsetY:4,listDuration:.18,listReducedDuration:.12,listStagger:.028,listReducedStagger:.018},REFRESH_DELAY=80;if(!SC||!C||SC.__cartListMotionBooted)return;SC.__cartListMotionBooted=true;
 var parts=SC.cartParts=SC.cartParts||{};
 
@@ -15,6 +17,7 @@ parts.setupList=function(gsap,ST,reduce){
     if(changed&&SC.motion&&SC.motion.refresh)SC.motion.refresh(REFRESH_DELAY);
   }
   function schedule(){if(!raf)raf=requestAnimationFrame(scan);}
+  /* Filtra mutaciones ajenas al carrito para no recorrer tablas ante cualquier cambio global. */
   function affectsCart(mutation){
     var target=mutation.target&&mutation.target.nodeType===1?mutation.target:mutation.target&&mutation.target.parentElement;if(target&&target.closest&&target.closest('.carritoTable'))return true;
     for(var i=0;i<(mutation.addedNodes||[]).length;i+=1){var node=mutation.addedNodes[i];if(!node||node.nodeType!==1)continue;if(node.matches('.carritoTable,tr,.carritoFixedContent,.carritoBox,.shop_carrito')||(node.querySelector&&node.querySelector('.carritoTable,tr')))return true;}return false;
