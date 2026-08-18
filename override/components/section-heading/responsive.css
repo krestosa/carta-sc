@@ -1,4 +1,5 @@
-/* Ajusta títulos para tablet. */
+/* Ajusta escala y alineación de títulos en tablet sin cambiar la jerarquía definida en
+   layout.css. Solo reduce tipografía y tracking para conservar el ritmo del catálogo. */
 @media (max-width: 992px) {
   body.sushiShop .listadoShop .titleShopSeccion,
   body.sushiShop .listadoShop .titleShopSeccion > div {
@@ -19,7 +20,8 @@
   }
 }
 
-/* Compacta títulos y espaciado en móvil. */
+/* En móvil compacta márgenes, padding y cuerpo tipográfico para ganar altura útil sin
+   eliminar la separación visual entre categoría, subcategoría y productos. */
 @media (max-width: 640px) {
   body.sushiShop .listadoShop .titleShopSeccion {
     margin: 2px 0 -2px !important;
