@@ -64,6 +64,12 @@ body.sushiShop .sc-product-modal__traits .sc-trait-icon {
   max-height: 13px !important;
   margin: 0 !important;
   overflow: visible !important;
+  transform: none !important;
+}
+
+/* Separa medio píxel el fuego del límite izquierdo de su viewport SVG sin mover la hoja. */
+body.sushiShop .sc-product-modal__traits .sc-trait-icon[data-sc-trait*='picante'] {
+  transform: translateX(.5px) !important;
 }
 
 /* Descripción completa del producto. */
