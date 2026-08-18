@@ -48,6 +48,7 @@ python3 "$SCRIPTS/calibrate-system-logo.py" measure
 python3 "$SCRIPTS/replace-system-logo.py"
 python3 "$SCRIPTS/calibrate-system-logo.py" apply
 python3 "$SCRIPTS/prune-pages-superseded-media.py"
+python3 "$SCRIPTS/optimize-pages-lcp.py"
 python3 "$SCRIPTS/disable-pages-php-runtime.py"
 
 node --check "$SITE/override/main.js"
@@ -64,6 +65,7 @@ python3 "$SCRIPTS/validate-system-load.py"
 grep -F 'id="sc-pages-critical-css"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-pages-delivery-loader"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-theme-prepaint"' "$SITE/index.html" >/dev/null
+grep -F 'id="sc-product-lcp-preload"' "$SITE/index.html" >/dev/null
 grep -F "'_pages/php-guard.js?v='+S" "$SITE/index.html" >/dev/null
 test -s "$SITE/_pages/deferred.css"
 test -s "$SITE/_pages/php-guard.js"
@@ -77,11 +79,27 @@ test "$(grep -o 'data-sc-first-viewport=' "$SITE/index.html" | wc -l)" -eq 4
 for n in 1 2 3 4; do
   test -s "$SITE/_first-viewport/product-${n}.webp"
   test "$(stat -c%s "$SITE/_first-viewport/product-${n}.webp")" -le 36000
+  grep -E "<img[^>]*data-sc-first-viewport=\"${n}\"[^>]*src=\"_first-viewport/product-${n}\.webp\?v=${GITHUB_SHA}\"[^>]*loading=\"eager\"[^>]*fetchpriority=\"high\"" "$SITE/index.html" >/dev/null
 done
 
 grep -F "querySelectorAll('img[data-sc-first-viewport]')" "$SITE/index.html" >/dev/null
 grep -F "querySelectorAll('img[data-sc-desktop-src]')" "$SITE/index.html" >/dev/null
 
+if grep -E '<img[^>]*data-sc-first-viewport="[1-4]"[^>]*loading="lazy"' "$SITE/index.html" >/dev/null; then
+  echo 'First-viewport LCP candidate is still lazy-loaded' >&2
+  exit 1
+fi
+if grep -F 'fonts.gstatic.com' "$SITE/_pages/deferred.css" "$SITE/index.html" >/dev/null; then
+  echo 'Remote Google font remains in the Pages critical dependency graph' >&2
+  exit 1
+fi
+if grep -F 'fonts.googleapis.com' "$SITE/_pages/deferred.css" "$SITE/index.html" >/dev/null; then
+  echo 'Google Fonts stylesheet remains in the Pages artifact' >&2
+  exit 1
+fi
+if grep -F 'fontawesome-webfont.woff2' "$SITE/_pages/deferred.css" >/dev/null; then
+  grep -F 'id="sc-fontawesome-preload"' "$SITE/index.html" >/dev/null
+fi
 if grep -F 'keepSessionAlive' "$SITE/index.html" >/dev/null; then
   echo 'Captured PHP session keepalive remains in lab artifact' >&2
   exit 1
