@@ -1,3 +1,5 @@
+/* Coordina lifecycle, submenús, listeners y cambios estructurales del riel de categorías.
+   Los cálculos específicos viven en módulos menores; este archivo conecta sus contratos. */
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
@@ -5,6 +7,7 @@ if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavB
 var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
 var submenuHost=null,submenuParent=null,submenuPinned=false,submenuCloseTimer=0,submenuPositionRaf=0,submenuScroller=null;
 
+/* Construye el submenú flotante desde la estructura legacy sin mover sus enlaces originales. */
 function submenuLinks(parent){
   if(!parent)return[];var item=parent.closest('.nav-top-li'),source=item&&item.querySelector('.topPullDown .topPullChild');if(!source)return[];
   return Array.prototype.filter.call(source.querySelectorAll('a[href^="#"]'),function(link){return!!N.anchor(link.getAttribute('href'));});
@@ -16,6 +19,7 @@ function unbindSubmenuScroller(){if(submenuScroller){submenuScroller.removeEvent
 function setParentExpanded(parent,on){
   if(!parent)return;var item=parent.closest('.nav-top-li');if(item)item.classList.toggle('sc-submenu-open',!!on);parent.setAttribute('aria-expanded',on?'true':'false');
 }
+/* Crea un único host en body para evitar que el overflow horizontal recorte el menú. */
 function ensureSubmenu(){
   if(submenuHost&&document.documentElement.contains(submenuHost))return submenuHost;
   submenuHost=document.createElement('div');submenuHost.id='sc-category-submenu';submenuHost.className='sc-category-submenu';submenuHost.setAttribute('role','menu');submenuHost.setAttribute('aria-hidden','true');
@@ -34,6 +38,7 @@ function renderSubmenu(parent){
 function bindSubmenuScroller(parent){
   unbindSubmenuScroller();submenuScroller=parent&&parent.closest(N.selectors.scroller+','+N.selectors.mobileScroller);if(submenuScroller)submenuScroller.addEventListener('scroll',scheduleSubmenuPosition,{passive:true});
 }
+/* Posiciona el menú respecto del trigger y cambia arriba/abajo según espacio disponible. */
 function positionSubmenu(){
   submenuPositionRaf=0;if(!submenuHost||!submenuParent||!submenuHost.classList.contains('sc-category-submenu-open'))return;
   if(!document.documentElement.contains(submenuParent)){closeSubmenu(false);return;}
@@ -44,6 +49,7 @@ function positionSubmenu(){
   var originX=Math.max(12,Math.min(Math.max(12,width-12),(rect.left+rect.width*.5)-left));submenuHost.style.setProperty('--sc-submenu-origin-x',Math.round(originX)+'px');submenuHost.style.setProperty('--sc-submenu-origin-y',above?Math.round(height)+'px':'0px');
 }
 function scheduleSubmenuPosition(){if(submenuHost&&submenuHost.classList.contains('sc-category-submenu-open')&&!submenuPositionRaf)submenuPositionRaf=requestAnimationFrame(positionSubmenu);}
+/* Abrir/cerrar conserva estado ARIA y permite fijar el menú cuando el usuario hace click. */
 function openSubmenu(parent,pin){
   if(!hasSubmenu(parent))return false;clearCloseTimer();var same=parent===submenuParent;
   if(!same&&submenuParent)setParentExpanded(submenuParent,false);
@@ -54,6 +60,7 @@ function closeSubmenu(restoreFocus){
   var parent=submenuParent;submenuParent=null;submenuPinned=false;if(parent)setParentExpanded(parent,false);if(restoreFocus&&parent&&document.documentElement.contains(parent))parent.focus();
 }
 function scheduleSubmenuClose(){clearCloseTimer();submenuCloseTimer=setTimeout(function(){submenuCloseTimer=0;if(!submenuPinned)closeSubmenu(false);},110);}
+/* Revisa qué categorías tienen hijos y expone semántica de menú únicamente en ellas. */
 function scanSubmenus(){
   each(document.querySelectorAll('.nav-top-li > a.anchorLink[href^="#"]'),function(link){
     var item=link.closest('.nav-top-li'),has=hasSubmenu(link);if(item)item.classList.toggle('sc-has-subcategories',has);
@@ -62,6 +69,7 @@ function scanSubmenus(){
   });
   if(submenuParent&&!document.documentElement.contains(submenuParent))closeSubmenu(false);
 }
+/* Eventos de puntero y foco comparten la misma lógica para no bifurcar comportamiento. */
 function categoryParentFromEvent(event){var link=event.target&&event.target.closest?event.target.closest('.nav-top-li > a.anchorLink[href^="#"]'):null;return link&&hasSubmenu(link)?link:null;}
 function pointerOver(event){if(event.pointerType==='touch')return;var parent=categoryParentFromEvent(event);if(!parent)return;if(submenuPinned&&submenuParent&&submenuParent!==parent)return;openSubmenu(parent,false);}
 function pointerOut(event){
@@ -74,6 +82,7 @@ function keydown(event){if(event.key==='Escape'&&submenuParent){event.preventDef
 function destroySubmenu(){closeSubmenu(false);if(submenuHost&&submenuHost.parentNode)submenuHost.parentNode.removeChild(submenuHost);submenuHost=null;}
 N.categorySubmenu={scan:scanSubmenus,has:hasSubmenu,open:function(parent,pin){return openSubmenu(parent,pin!==false);},close:closeSubmenu,position:scheduleSubmenuPosition};
 
+/* Mantiene listeners de scroll ligados solo a scrollers que siguen conectados al documento. */
 function pruneRailScrollers(){boundScrollers.forEach(function(scroller){if(document.documentElement.contains(scroller))return;scroller.removeEventListener('scroll',onRailScroll);boundScrollers.delete(scroller);});}
 function bindRailScrollers(){
   pruneRailScrollers();
@@ -88,6 +97,7 @@ function resize(){if(initialized&&!resizeRaf)resizeRaf=requestAnimationFrame(run
 function windowScroll(){(N.scheduleSticky||N.scheduleRail)();N.scheduleSpy();scheduleSubmenuPosition();}
 function interrupt(){if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.releaseSpyHold)N.releaseSpyHold();}
 function observeStructure(){if(structureObserver&&document.body)structureObserver.observe(document.body,{childList:true,subtree:true});}
+/* Refresca ScrollTrigger fuera del callback del observer y evita observar sus propias mutaciones. */
 function refreshMotionSafely(){
   if(!initialized||motionRefreshRaf)return;
   motionRefreshRaf=requestAnimationFrame(function(){
@@ -100,6 +110,7 @@ function refreshMotionSafely(){
     if(structureObserver){structureObserver.takeRecords();observeStructure();}
   });
 }
+/* Repara layout, semántica, submenús y métricas después de un cambio estructural real. */
 function syncStructure(){
   structureRaf=0;if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();
   if(structureObserver)structureObserver.takeRecords();
@@ -119,6 +130,7 @@ function watchStructure(){
   structureObserver=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i++){var mutation=mutations[i],nodes=Array.prototype.concat.call([],Array.from(mutation.addedNodes||[]),Array.from(mutation.removedNodes||[]));if(nodes.some(structural)){scheduleStructure();return;}}});
   observeStructure();
 }
+/* Registra eventos una sola vez y usa listeners pasivos donde no se cancela el evento. */
 function addListeners(){
   document.addEventListener('click',N.onCategory,true);document.addEventListener('change',N.onSelect,true);
   document.addEventListener('pointerover',pointerOver,true);document.addEventListener('pointerout',pointerOut,true);document.addEventListener('pointerdown',outsidePointer,true);document.addEventListener('focusin',focusIn,true);document.addEventListener('focusout',focusOut,true);document.addEventListener('keydown',keydown,true);
@@ -132,11 +144,13 @@ function removeListeners(){
   window.removeEventListener('scroll',windowScroll);window.removeEventListener('resize',resize);window.removeEventListener('wheel',interrupt);window.removeEventListener('touchstart',interrupt);
   if(mq.removeEventListener)mq.removeEventListener('change',breakpoint);else mq.removeListener(breakpoint);
 }
+/* Monta todo el coordinador y programa una segunda medición cuando fuentes/layout se estabilizan. */
 function init(){
   if(initialized)return;initialized=true;addListeners();syncStructure();if(N.categoryIndicator&&N.categoryIndicator.resume)N.categoryIndicator.resume();watchStructure();if(N.installMotion)N.installMotion();
   geometryTimer=window.setTimeout(function(){geometryTimer=0;if(!initialized)return;N.semantics();scanSubmenus();refreshGeometry();},M.geometryRefreshDelay);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshGeometry).catch(function(){});
 }
+/* Cleanup simétrico: listeners, observers, RAF, timers, scroll automático e indicador. */
 function destroy(){
   if(!initialized)return;initialized=false;removeListeners();unbindRailScrollers();destroySubmenu();
   if(structureObserver){structureObserver.disconnect();structureObserver=null;}
