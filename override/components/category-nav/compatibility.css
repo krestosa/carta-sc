@@ -1,4 +1,4 @@
-/* Category-rail compatibility with the legacy menu runtime. */
+/* Compatibilidad del riel con el menú legacy. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
   overscroll-behavior: auto !important;
@@ -11,6 +11,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile._open .topShopMenuMobileSc
   overflow-y: hidden !important;
 }
 
+/* Refuerza el foco visible del riel. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus-visible {
   outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
@@ -18,6 +19,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   border-radius: 1px !important;
 }
 
+/* Fades laterales cuando hay contenido fuera de vista. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before,
@@ -42,16 +44,13 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
   background: linear-gradient(270deg,var(--sc-color-surface) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
 }
 
-/* The legacy runtime may keep its own .active class while the override scroll-spy
-   owns the actual section. Never let that stale class impersonate our active state. */
+/* Evita que .active legacy suplante el estado real del scroll-spy. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']),
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']) {
   color: var(--sc-color-muted) !important;
 }
 
-/* Legacy category CSS can paint its own active underline through li/a pseudo-elements.
-   The override indicator is the sole visual owner, so suppress every legacy underline
-   in both resting and sticky rails. */
+/* Desactiva subrayados legacy; el indicador propio es el único activo. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li::after,
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li::after,
@@ -63,9 +62,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   box-shadow: none !important;
 }
 
-/* The active category may be tracked before the rail sticks, but its indicator is
-   intentionally a sticky-only affordance. Keep it hidden in the resting rail and
-   reveal it only once the rail host enters sc-is-stuck. */
+/* Muestra el indicador solo cuando el riel está sticky. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
     opacity: 0 !important;
@@ -83,6 +80,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
     opacity: 1 !important;
   }
 
+  /* Igual altura para rail, scroller y targets en móvil. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     height: var(--sc-category-height) !important;
@@ -119,6 +117,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   }
 }
 
+/* Respeta reducción de movimiento. */
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
   body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink {
