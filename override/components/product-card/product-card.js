@@ -7,7 +7,7 @@ if(!SC||!U||!C||!D||!A||!P||SC.__productCardBooted)return;SC.__productCardBooted
 var ready=U.ready,S=C.selectors,desktopQuery=C.queries.desktop,resizeObserver=null,cardObserver=null,cardRaf=0,lastWidth=-1,resizeFallback=false,initialized=false,initialQueue=[],initialIdle=0,initialTimer=0,initialDone=false,RESIZE_WIDTH_TOLERANCE=.5,INITIAL_BATCH=1,INITIAL_BUDGET_MS=4,INITIAL_IDLE_TIMEOUT=1500;
 
 /* Detecta cards nuevas o incompletas. */
-function needsEnhancement(card){return!!(card&&(!card.querySelector('.sc-product-flavors')||!card.querySelector('.sc-product-price-traits')||!card.querySelector('.sc-card-a11y-meta')));}
+function needsEnhancement(card){return!!(card&&(!card.querySelector('.sc-product-flavors')||!card.querySelector('.sc-product-price-traits')||!card.querySelector('.sc-product-secondary-meta')||!card.querySelector('.sc-card-a11y-meta')));}
 function addedNeedsEnhancement(node){if(!node||node.nodeType!==1)return false;if(node.matches&&node.matches(S.productCard))return needsEnhancement(node);if(!node.querySelectorAll)return false;var cards=node.querySelectorAll(S.productCard);for(var i=0;i<cards.length;i++)if(needsEnhancement(cards[i]))return true;return false;}
 
 /* Observa mutaciones solo después de completar el primer lote. */
