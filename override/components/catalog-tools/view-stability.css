@@ -48,7 +48,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
 
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important;
-  grid-template-rows: auto var(--sc-view-list-price-track) minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
+  grid-template-rows: auto auto minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
   column-gap: var(--sc-view-list-column-gap) !important;
   align-content: stretch !important;
   height: auto !important;
@@ -94,6 +94,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .tit
   -webkit-line-clamp: 2 !important;
 }
 
+/* La fila crece cuando el bloque secundario baja, evitando superposición en anchos chicos. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   position: static !important;
   inset: auto !important;
@@ -104,7 +105,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   justify-content: flex-start !important;
   min-width: 0 !important;
   min-height: var(--sc-view-list-price-height) !important;
-  height: var(--sc-view-list-price-height) !important;
+  height: auto !important;
   margin: 0 !important;
   padding: 0 !important;
 }
