@@ -1,5 +1,9 @@
 /* Product-card title, description and trait content. Shared card rules are
    breakpoint-independent; only genuine compact-width adjustments use media queries. */
+body.sushiShop {
+  --sc-card-description-lines: 3;
+}
+
 body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
   display: none !important;
 }
@@ -171,7 +175,7 @@ body.sushiShop .listadoShop .productoShop .title-shop1 {
 
 body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box;
-  display: block !important;
+  display: -webkit-box !important;
   position: relative;
   grid-column: 1 / -1;
   grid-row: 3;
@@ -187,16 +191,18 @@ body.sushiShop .listadoShop .productoShop .descrip {
   line-height: var(--sc-card-description-line-height) !important;
   font-weight: var(--sc-font-weight-regular) !important;
   letter-spacing: 0 !important;
-  -webkit-box-orient: initial !important;
-  -webkit-line-clamp: initial !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: var(--sc-card-description-lines) !important;
 }
 
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
   content: 'Ver detalle';
+  display: block;
   position: absolute;
   right: 0;
   bottom: 0;
-  padding-left: 22px;
+  height: var(--sc-card-description-line-height);
+  padding: 0 0 0 22px;
   background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%);
   color: var(--sc-color-copy);
   font-family: var(--sc-font-primary);
@@ -204,6 +210,7 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::aft
   line-height: var(--sc-card-description-line-height);
   font-weight: var(--sc-font-weight-semibold);
   letter-spacing: 0;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--sc-motion-fast) ease;
@@ -214,16 +221,27 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   opacity: 1;
 }
 
-/* Compact view reserves the full canonical box: three complete 16px lines
-   plus the 10px top inset and the hairline rule. Never shrink this per breakpoint,
-   otherwise the final text line is clipped mid-glyph. */
+/* Desktop compact uses exactly three complete text lines. Narrower grid modes
+   reduce this to two lines below; list mode owns its two-line contract separately. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   min-height: var(--sc-card-description-height) !important;
   max-height: var(--sc-card-description-height) !important;
 }
 
+@media (min-width: 641px) and (max-width: 992px) {
+  body.sushiShop {
+    --sc-card-description-height: 43px;
+    --sc-card-description-lines: 2;
+  }
+}
+
 @media (max-width: 640px) {
+  body.sushiShop {
+    --sc-card-description-height: 43px;
+    --sc-card-description-lines: 2;
+  }
+
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
     gap: 16px !important;
     margin-top: -8px !important;
