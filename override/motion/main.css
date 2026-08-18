@@ -5,6 +5,18 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* Diagnóstico de reveal: desactiva cualquier virtualización/containment heredado sobre las
+   unidades del catálogo para que IntersectionObserver y ScrollTrigger midan geometría real. */
+body.sushiShop .listadoShop,
+body.sushiShop .listadoShop .titleShopSeccion,
+body.sushiShop .listadoShop .titleShopSeccion > div,
+body.sushiShop .listadoShop .subTitleShopSeccion,
+body.sushiShop .listadoShop .productoShop {
+  content-visibility: visible !important;
+  contain: none !important;
+  contain-intrinsic-size: none !important;
+}
+
 /* Sólo títulos y cards esperan ocultos hasta que GSAP registra su estado inicial. */
 html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
 html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
