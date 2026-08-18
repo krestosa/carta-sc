@@ -4,11 +4,12 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
-/* Recupera el desplazamiento histórico y deja que el título entre antes que las cards. */
+/* Perfiles exclusivos: <=640, 641-992 y >=993. triggerRatio replica el punto de entrada
+   de ScrollTrigger y permite confirmar la geometría antes de consumir cada reveal. */
 var installed=false,reflowRaf=0,PROFILES={
-  mobile:{batchMax:4,start:'clamp(top 92%)',initialY:8,revealY:8,revealAhead:48,nativeRevealGuard:true},
-  tablet:{batchMax:6,start:'clamp(top 91%)',initialY:9,revealY:10,revealAhead:56,nativeRevealGuard:true},
-  desktop:{batchMax:8,start:'clamp(top 90%)',initialY:10,revealY:12,revealAhead:64,nativeRevealGuard:true}
+  mobile:{start:'clamp(top 92%)',triggerRatio:.92,initialY:8,revealY:8},
+  tablet:{start:'clamp(top 91%)',triggerRatio:.91,initialY:9,revealY:10},
+  desktop:{start:'clamp(top 90%)',triggerRatio:.90,initialY:10,revealY:12}
 };
 /* Espera dos frames antes de rescatar cards visibles y refrescar geometría de motion. */
 function reflow(){
