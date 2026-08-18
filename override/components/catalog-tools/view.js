@@ -101,7 +101,7 @@ function install(root){
   if(!button||!host)return function(){};
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
-  var microCleanup=SC.motion&&SC.motion.bindMicroInteraction?SC.motion.bindMicroInteraction(button,host,{active:{rotation:-5},press:{rotation:3}}):function(){};
+  var microCleanup=SC.motion&&SC.motion.bindMicroInteraction?SC.motion.bindMicroInteraction(button,host,{active:{rotation:-10},press:{rotation:5},enterDuration:.1,exitDuration:.15}):function(){};
   function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(null);}
   button.addEventListener('click',click);
