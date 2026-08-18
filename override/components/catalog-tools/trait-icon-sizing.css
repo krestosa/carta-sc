@@ -1,0 +1,9 @@
+/* Keep spice-intensity glyphs at one canonical optical height. */
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='poco picante'] .sc-trait-icon,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='picante'] .sc-trait-icon,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='muy picante'] .sc-trait-icon {
+  width: auto !important;
+  height: 13px !important;
+  min-height: 13px !important;
+  max-height: 13px !important;
+}
