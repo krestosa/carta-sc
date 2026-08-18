@@ -40,7 +40,7 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
   float: none !important;
   margin: 0 !important;
   padding: 0 !important;
-  color: var(--sc-color-muted) !important;
+  color: var(--sc-color-copy) !important;
   font-family: inherit !important;
   font-size: var(--sc-card-offer-size) !important;
   line-height: var(--sc-card-offer-line-height) !important;
