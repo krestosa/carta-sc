@@ -49,7 +49,26 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anc
   color: var(--sc-color-muted) !important;
 }
 
+/* The active category may be tracked before the rail sticks, but its indicator is
+   intentionally a sticky-only affordance. Keep it hidden in the resting rail and
+   reveal it only once the rail host enters sc-is-stuck. */
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
+    opacity: 0 !important;
+  }
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-is-stuck .sc-category-indicator {
+    opacity: 1 !important;
+  }
+}
+
 @media (max-width: 992px) {
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
+    opacity: 0 !important;
+  }
+  body.sushiShop .fixedTopShop.wtopShopMenuMobile.sc-is-stuck .topShopMenuMobile .sc-category-indicator {
+    opacity: 1 !important;
+  }
+
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     height: var(--sc-category-height) !important;
