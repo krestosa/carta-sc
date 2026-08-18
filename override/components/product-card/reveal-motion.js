@@ -2,7 +2,7 @@
    antes de entrar a la cola; skeleton e imagen no participan de la decisión. */
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,CFG={duration:.34,reflowDuration:.22,stableDelta:1.5,stableFrames:2,maxChecks:8,rescueDelay:900};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,CFG={duration:.16,reflowDuration:.14,stableDelta:1.5,stableFrames:1,maxChecks:5,rescueDelay:700};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 parts.setupReveal=function(gsap,ST,profile,reduce){
   var cards=gsap.utils.toArray(S.productCards),observer=null,mutationObserver=null,pending=new Set(),states=new WeakMap(),triggers=[],timer=0,generation=1,ratio=Math.max(.5,Math.min(1,Number(profile&&profile.triggerRatio)||.9));
