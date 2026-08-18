@@ -1,0 +1,105 @@
+/* Igual a la vista compacta mientras el runtime todavía no resolvió la preferencia.
+   Evita que precio y contenido nazcan con la geometría legacy y salten al montar la vista. */
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop {
+  grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
+  column-gap: var(--sc-compact-column-gap) !important;
+  row-gap: var(--sc-compact-row-gap) !important;
+  margin-bottom: var(--sc-compact-section-bottom) !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto auto var(--sc-compact-meta-height) !important;
+  column-gap: 0 !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .title-shop1 {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+}
+
+/* El precio nace en la misma columna y composición que conservará la vista compacta. */
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .priceRow {
+  display: flex !important;
+  grid-column: 1 !important;
+  grid-row: 3 !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  justify-content: flex-start !important;
+  column-gap: 6px !important;
+  row-gap: 2px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: var(--sc-compact-price-line-height) !important;
+  margin: 0 !important;
+  padding-top: var(--sc-compact-price-padding-top) !important;
+  white-space: normal !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .priceRow .price,
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
+  flex: 0 0 auto !important;
+  font-size: var(--sc-compact-price-size) !important;
+  line-height: var(--sc-compact-price-line-height) !important;
+  white-space: nowrap !important;
+}
+
+/* Si los rasgos se montan antes que la vista, mantienen desde ese instante la composición final. */
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-product-flavors {
+  display: none !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: flex-end !important;
+  align-self: center !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  height: 13px !important;
+  min-height: 13px !important;
+  max-height: 13px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  overflow: visible !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
+  align-self: flex-end !important;
+  max-width: 16px !important;
+  max-height: 13px !important;
+  overflow: visible !important;
+  transform: none !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait*='picante'] {
+  transform: translateX(.5px) !important;
+}
+
+html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .descrip {
+  grid-column: 1 !important;
+  grid-row: 4 !important;
+  min-height: var(--sc-card-description-height) !important;
+  max-height: var(--sc-card-description-height) !important;
+  margin-top: var(--sc-compact-description-margin-top) !important;
+  padding-top: var(--sc-compact-description-padding-top) !important;
+  font-size: var(--sc-compact-description-size) !important;
+  line-height: var(--sc-compact-description-line-height) !important;
+}
