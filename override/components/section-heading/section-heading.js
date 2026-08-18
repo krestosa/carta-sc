@@ -19,7 +19,12 @@ if(!order){
   function stateFor(node){var state=states.get(node);if(!state){state={ready:false,waiters:[]};states.set(node,state);}return state;}
   function reset(node){if(node)stateFor(node).ready=false;}
   function markReady(node){if(!node)return;var state=stateFor(node);if(state.ready)return;state.ready=true;var queue=state.waiters.splice(0);queue.forEach(function(fn){try{fn();}catch(error){if(window.console&&console.error)console.error('[SushiClub catalog reveal]',error);}});}
-  function whenPreviousReady(node,callback){if(typeof callback!=='function')return;var prev=previous(node);if(!prev){callback();return;}var state=stateFor(prev);if(state.ready){callback();return;}state.waiters.push(callback);}
+  function alreadyPassed(node){var target=host(node);if(!target||target.hidden||target.offsetParent===null)return true;var rect=target.getBoundingClientRect();return rect.bottom<-20;}
+  function whenPreviousReady(node,callback){
+    if(typeof callback!=='function')return;var prev=previous(node);
+    while(prev&&alreadyPassed(prev)){markReady(prev);prev=previous(prev);}
+    if(!prev){callback();return;}var state=stateFor(prev);if(state.ready){callback();return;}state.waiters.push(callback);
+  }
   order=SC.catalogRevealOrder={previous:previous,reset:reset,markReady:markReady,whenPreviousReady:whenPreviousReady};
 }
 
