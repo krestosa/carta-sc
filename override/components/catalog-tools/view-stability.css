@@ -139,20 +139,21 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .des
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
   box-sizing: border-box !important;
-  display: -webkit-box !important;
+  display: block !important;
   position: relative !important;
   grid-column: 2 !important;
   grid-row: 4 !important;
   align-self: end !important;
   min-width: 0 !important;
-  min-height: 0 !important;
-  height: auto !important;
+  min-height: var(--sc-view-list-description-max-height) !important;
+  height: var(--sc-view-list-description-max-height) !important;
   max-height: var(--sc-view-list-description-max-height) !important;
   margin: 0 !important;
   padding: var(--sc-view-list-description-padding-top) 0 0 !important;
   overflow: hidden !important;
-  -webkit-box-orient: vertical !important;
-  -webkit-line-clamp: 2 !important;
+  contain: paint;
+  -webkit-box-orient: initial !important;
+  -webkit-line-clamp: unset !important;
 }
 
 /* Old low-density values may exist for one frame in legacy storage/bootstrap.
@@ -174,4 +175,37 @@ html.sc-catalog-view-switching,
 html.sc-catalog-view-switching body.sushiShop {
   overflow-anchor: none !important;
   scroll-behavior: auto !important;
+}
+
+/* Final description clipping contract. Do not rely on multiline clamp here:
+   a fixed paint-contained box is deterministic across engines and leaves no
+   room for the first pixels of an extra line. The CTA uses the last 16px line
+   box, so its bottom edge is aligned with the final visible text line. */
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
+html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
+  display: block !important;
+  min-height: 59px !important;
+  height: 59px !important;
+  max-height: 59px !important;
+  overflow: hidden !important;
+  contain: paint;
+  -webkit-box-orient: initial !important;
+  -webkit-line-clamp: unset !important;
+}
+
+body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
+  bottom: 0 !important;
+  height: var(--sc-card-description-line-height) !important;
+  line-height: var(--sc-card-description-line-height) !important;
+  vertical-align: baseline !important;
+  transform: none !important;
+}
+
+@media (max-width: 992px) {
+  html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
+  html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
+    min-height: 43px !important;
+    height: 43px !important;
+    max-height: 43px !important;
+  }
 }
