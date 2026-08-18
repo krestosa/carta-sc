@@ -1,13 +1,13 @@
-/* Orquesta el reveal de tarjetas por breakpoint. Cada card usa una ventana propia de scroll
-   forward-only: el progreso depende de su posición, no de una cola temporal. */
+/* Orquesta el reveal individual de tarjetas por breakpoint. Cada card conserva su propio
+   punto de entrada; las de una misma fila se separan físicamente para que no disparen juntas. */
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
 var installed=false,reflowRaf=0,PROFILES={
-  mobile:{startPct:99,endPct:83,phaseStep:1.15,initialY:4,revealY:5},
-  tablet:{startPct:98.5,endPct:82.5,phaseStep:1.15,initialY:4,revealY:6},
-  desktop:{startPct:98,endPct:82,phaseStep:1.1,initialY:5,revealY:6}
+  mobile:{startPct:97.5,phaseStep:2.4,initialY:4,revealY:6},
+  tablet:{startPct:97,phaseStep:2.2,initialY:4,revealY:7},
+  desktop:{startPct:96.5,phaseStep:2,initialY:5,revealY:8}
 };
 function ensureGate(){
   if(SC.catalogRevealGate)return SC.catalogRevealGate;
