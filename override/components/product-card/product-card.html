@@ -1,7 +1,11 @@
+<!-- Templates auxiliares de las tarjetas. El runtime los clona para añadir información
+     accesible y rasgos visuales sin duplicar markup dentro de los módulos JavaScript. -->
 <template data-sc-template="product-card-a11y-meta">
+  <!-- Texto solo para lectores de pantalla con precio y características del producto. -->
   <span class="sc-card-a11y-meta sc-sr-only"></span>
 </template>
 
 <template data-sc-template="product-trait-group">
+  <!-- Contenedor reutilizable para los iconos de picante y vegetariano generados en runtime. -->
   <span class="sabores" role="img"></span>
 </template>
