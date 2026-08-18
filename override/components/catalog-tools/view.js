@@ -12,7 +12,7 @@ function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf
 function selectedMode(){return normalize(doc.getAttribute('data-sc-catalog-view')||'')||'compact';}
 function legacyMode(mode){return mode==='list'?'list':mode?'compact':'';}
 function columns(){var ctx=context();return ctx==='phone'?2:ctx==='tablet'?3:4;}
-function effectiveMode(mode){return document.body.classList.contains(CFG.classes.catalogSearching)?'list':normalize(mode)||'compact';}
+function effectiveMode(mode){return normalize(mode)||'compact';}
 function label(mode){var effective=effectiveMode(mode),count;if(effective==='list')return'Vista lista. Cambiar a grilla de alta densidad';count=columns();return'Vista grilla de alta densidad: '+count+' '+(count===1?'columna':'columnas')+'. Cambiar a vista lista';}
 function iconKey(mode){return effectiveMode(mode)==='list'?'list':'grid';}
 function load(){var mode=normalize(doc.getAttribute('data-sc-catalog-view')||''),ctx=context(),legacy='';if(mode)return mode;try{mode=normalize(localStorage.getItem(STORE_KEY)||'');if(!mode){legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacyMode(legacy);if(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){}}}}catch(_){mode='';}return mode||'compact';}
