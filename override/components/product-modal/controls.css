@@ -1,10 +1,11 @@
-/* Product modal interactive controls. */
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Controles interactivos del modal. */
+/* Tokens locales del componente. */
 body.sushiShop {
   --sc-modal-action-background: #000;
   --sc-radius-round: 50%;
 }
 
+/* Acción principal del modal. */
 body.sushiShop .sc-product-modal__cart-button {
   box-sizing: border-box !important;
   display: flex !important;
@@ -36,6 +37,8 @@ body.sushiShop .sc-product-modal__cart-button:focus-visible {
   outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
   outline-offset: var(--sc-focus-ring-offset) !important;
 }
+
+/* Cerrar mantiene target táctil grande e icono chico. */
 body.sushiShop .sc-product-modal__close {
   box-sizing: border-box !important;
   display: grid !important;
@@ -95,6 +98,7 @@ body.sushiShop .sc-product-modal__close:focus-visible {
   color: var(--sc-color-ink) !important;
 }
 
+/* Respeta reducción de movimiento. */
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-product-modal__cart-button,
   body.sushiShop .sc-product-modal__close::before { transition: none !important; }
