@@ -212,14 +212,9 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::aft
   font-weight: var(--sc-font-weight-semibold);
   letter-spacing: 0;
   white-space: nowrap;
-  opacity: 0;
+  opacity: 1 !important;
   pointer-events: none;
-  transition: opacity var(--sc-motion-fast) ease;
-}
-
-body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:hover .descrip.sc-description-truncated::after,
-body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible .descrip.sc-description-truncated::after {
-  opacity: 1;
+  transition: none !important;
 }
 
 /* Every grid breakpoint reserves exactly two complete 16px description lines
@@ -256,17 +251,5 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
 
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .ref_label {
     font-size: 11px !important;
-  }
-}
-
-@media (hover: none), (pointer: coarse) {
-  body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-    opacity: 1 !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-    transition: none !important;
   }
 }
