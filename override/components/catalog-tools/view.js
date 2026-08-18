@@ -7,6 +7,7 @@ SC.__catalogToolsViewBooted=true;
 
 /* Vista activa, storage y estado de transición. */
 var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null,motionDeps=null;
+var NATIVE_SHAPE_ATTRS=['x','y','width','height','rx','ry'];
 
 /* Resuelve modo y cantidad de columnas por breakpoint. */
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
@@ -26,6 +27,10 @@ function reducedMotion(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.qu
 /* Prepara paths vivos y targets del icono. */
 function livePaths(host){return host?Array.prototype.slice.call(host.querySelectorAll('[data-sc-view-shape]')):[];}
 function targetPaths(host,key){var live=livePaths(host);return live.map(function(_,index){return host.querySelector('[data-sc-view-target="'+key+'-'+index+'"]');});}
+function setNativeShapeState(host,key){
+  var live=livePaths(host),targets=targetPaths(host,key);
+  live.forEach(function(shape,index){var target=targets[index];if(!target)return;NATIVE_SHAPE_ATTRS.forEach(function(attr){var value=target.getAttribute(attr);if(value===null)shape.removeAttribute(attr);else shape.setAttribute(attr,value);});});
+}
 function ensureHostPresentation(host){
   if(!host)return;
   host.style.setProperty('display','block','important');
@@ -63,7 +68,7 @@ function clearViewIconMotion(host){
 function setMorphState(host,key){
   if(!host)return;
   ensureHostPresentation(host);
-  if(!initMorph(host)){host.setAttribute('data-sc-icon-state',key);return;}
+  if(!initMorph(host)){setNativeShapeState(host,key);host.setAttribute('data-sc-icon-state',key);return;}
   clearViewIconMotion(host);
   var live=livePaths(host),targets=targetPaths(host,key);
   live.forEach(function(path,index){var target=targets[index];if(target)path.setAttribute('d',target.getAttribute('d'));});
