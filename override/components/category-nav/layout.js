@@ -1,9 +1,12 @@
+/* Reubica el riel legacy dentro de la barra propia según el breakpoint. Conserva el nodo
+   original para no duplicar listeners y restaura su ubicación exacta al volver a mobile. */
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,N=SC&&SC.categoryNav,T=SC&&SC.templates;if(!SC||!U||!N||!T||SC.__categoryNavLayoutBooted)return;SC.__categoryNavLayoutBooted=true;
 var each=U.each,nav=null,home=null,next=null,toolbar=null,styles=new Map();
 
 function toolbarNode(container){var node=T.clone('category-toolbar');container.insertBefore(node,container.firstChild);return node;}
+/* Quita tamaños inline del legacy mientras el riel está bajo control del override. */
 function normalize(root){
   each(root.querySelectorAll(".nav-top-li > a.anchorLink"),function(link){
     if(!styles.has(link))styles.set(link,link.getAttribute('style'));
@@ -16,6 +19,7 @@ function restoreStyles(){
     value===null?link.removeAttribute('style'):link.setAttribute('style',value);
   });
 }
+/* Monta o desmonta la barra desktop sin recrear la navegación original. */
 function layout(){
   if(N.mq.matches){
     var container=document.querySelector(S.container);if(!container)return;
@@ -35,6 +39,7 @@ function layout(){
   if(N.refreshMetrics)N.refreshMetrics();
   if(N.scheduleRail)N.scheduleRail();
 }
+/* Expone navegación semántica aunque el contenedor provenga del DOM legacy. */
 function semantics(){
   var node=document.querySelector(N.selectors.mobileWrapper);
   if(node){node.setAttribute('role','navigation');node.setAttribute('aria-label','Categorías de la carta');}

@@ -1,9 +1,12 @@
+<!-- Templates del riel de categorías. Se clonan en runtime para montar la barra,
+     los controles de overflow y el indicador sin duplicar markup en JavaScript. -->
 <template data-sc-template="category-toolbar">
   <nav class="sc-catalog-toolbar" aria-label="Categorías de la carta">
     <div class="sc-catalog-categories"></div>
   </nav>
 </template>
 
+<!-- Flecha izquierda; el runtime controla visibilidad, disabled y desplazamiento. -->
 <template data-sc-template="category-arrow-left">
   <button class="sc-rail-arrow sc-rail-arrow--left" type="button" aria-label="Ver categorías anteriores">
     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#666" aria-hidden="true">
@@ -12,6 +15,7 @@
   </button>
 </template>
 
+<!-- Flecha derecha; comparte el mismo SVG y se orienta desde CSS. -->
 <template data-sc-template="category-arrow-right">
   <button class="sc-rail-arrow sc-rail-arrow--right" type="button" aria-label="Ver más categorías">
     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#666" aria-hidden="true">
@@ -20,6 +24,7 @@
   </button>
 </template>
 
+<!-- Línea activa animada; indicator.js escribe únicamente transform y opacidad. -->
 <template data-sc-template="category-indicator">
   <span class="sc-category-indicator" aria-hidden="true"></span>
 </template>

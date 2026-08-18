@@ -1,3 +1,5 @@
+/* Aplica el estado sticky del riel y vuelve a medir offsets solo cuando realmente cambia.
+   Esto evita recalcular navegación en cada frame de scroll sin necesidad. */
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,K=C&&C.classes,N=SC&&SC.categoryNav;if(!SC||!C||!N||SC.__categoryNavStickyStateBooted)return;SC.__categoryNavStickyStateBooted=true;

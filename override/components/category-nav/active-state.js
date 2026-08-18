@@ -1,9 +1,12 @@
+/* Sincroniza la categoría activa entre enlaces, selector e indicador visual. Mantiene un
+   único estado compartido para evitar que desktop y mobile marquen destinos distintos. */
 (function(){
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,N=SC&&SC.categoryNav,I=N&&N.categoryIndicator;
 if(!SC||!U||!N||!I||SC.__categoryNavActiveStateBooted)return;SC.__categoryNavActiveStateBooted=true;
 var each=U.each,active=null;
 function current(){return active;}
+/* Actualiza semántica, selector e indicador en una sola escritura lógica. */
 function setActive(target,animate){
   if(!target)return;var previous=active,changed=target!==previous;active=target;
   N.links().forEach(function(link){
