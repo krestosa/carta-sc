@@ -1,9 +1,3 @@
-@property --sc-section-rule-scale {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 1;
-}
-
 /* Responsive section-title split reveals. Only parent categories own a divider. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
