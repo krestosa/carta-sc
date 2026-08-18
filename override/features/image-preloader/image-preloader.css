@@ -64,7 +64,9 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   z-index: 1;
   opacity: 1 !important;
   visibility: visible !important;
-  transform: none !important;
+  /* The resting image is transform-free, but this must not be !important:
+     GSAP Flip needs to write an inline transform while compact/list geometry changes. */
+  transform: none;
   transition: none !important;
   will-change: auto;
 }
@@ -85,7 +87,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-ready > img {
   opacity: 1 !important;
-  transform: none !important;
+  transform: none;
 }
 
 @keyframes sc-image-preloader-shimmer {
@@ -97,5 +99,10 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
     animation: none;
+  }
+
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img {
+    transform: none !important;
   }
 }
