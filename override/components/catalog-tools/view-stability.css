@@ -14,6 +14,7 @@ body.sushiShop {
 
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
+    --sc-view-list-columns: 1;
     --sc-view-list-image-width: 160px;
     --sc-view-list-column-gap: 14px;
     --sc-view-list-description-max-height: 31px;
