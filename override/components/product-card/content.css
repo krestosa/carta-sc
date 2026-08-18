@@ -214,19 +214,13 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   opacity: 1;
 }
 
-/* Density keeps three complete description lines at every breakpoint. */
+/* Compact view reserves the full canonical box: three complete 16px lines
+   plus the 10px top inset and the hairline rule. Never shrink this per breakpoint,
+   otherwise the final text line is clipped mid-glyph. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
-  min-height: 47px !important;
-  max-height: 47px !important;
-}
-
-@media (min-width: 641px) and (max-width: 992px) {
-  html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
-  html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
-    min-height: 43.5px !important;
-    max-height: 43.5px !important;
-  }
+  min-height: var(--sc-card-description-height) !important;
+  max-height: var(--sc-card-description-height) !important;
 }
 
 @media (max-width: 640px) {
