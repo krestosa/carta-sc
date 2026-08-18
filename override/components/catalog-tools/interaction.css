@@ -18,11 +18,22 @@ body.sushiShop {
   --sc-tools-trait-gap: var(--sc-filter-group-gap);
 }
 
-/* Mantiene los filtros agrupados. */
+/* Mantiene los filtros en una sola fila. Si no entran, conserva su ancho y desplaza la tira horizontalmente. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
   gap: var(--sc-filter-group-gap) !important;
   column-gap: var(--sc-filter-group-gap) !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip::-webkit-scrollbar { display: none; }
 
 /* Target de 48px con círculo visual de 40px. */
 body.sushiShop .sc-theme-toggle,
@@ -124,7 +135,7 @@ body.sushiShop .sc-catalog-view-toggle:active::after {
   opacity: var(--sc-state-pressed-opacity);
 }
 
-/* Filtros compactos: 32px de alto y slot de icono de 18px. */
+/* Filtros compactos: mantienen ancho de contenido para no comprimirse cuando el viewport se reduce. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
   --sc-state-layer-color: var(--sc-color-ink);
   box-sizing: border-box !important;
@@ -132,11 +143,13 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   isolation: isolate;
   overflow: hidden !important;
   display: inline-flex !important;
+  flex: 0 0 auto !important;
   align-items: center !important;
   justify-content: flex-start !important;
   gap: var(--sc-filter-content-gap) !important;
-  width: auto !important;
+  width: max-content !important;
   min-width: max-content !important;
+  max-width: none !important;
   height: var(--sc-filter-height) !important;
   min-height: var(--sc-filter-height) !important;
   max-height: var(--sc-filter-height) !important;
@@ -149,6 +162,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   color: var(--sc-color-heading) !important;
   opacity: 1 !important;
   cursor: pointer !important;
+  white-space: nowrap !important;
   user-select: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -182,10 +196,12 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .ref_label {
   display: block !important;
+  flex: 0 0 auto !important;
   margin: 0 !important;
   padding: 0 !important;
   color: currentColor !important;
   line-height: 16px !important;
+  white-space: nowrap !important;
 }
 
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::before {
