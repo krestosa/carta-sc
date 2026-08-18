@@ -138,13 +138,22 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .descrip,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .descrip {
+  box-sizing: border-box !important;
+  display: block !important;
   position: relative !important;
   grid-column: 2 !important;
   grid-row: 4 !important;
   align-self: end !important;
   min-width: 0 !important;
+  min-height: var(--sc-view-list-description-max-height) !important;
+  height: var(--sc-view-list-description-max-height) !important;
+  max-height: var(--sc-view-list-description-max-height) !important;
   margin: 0 !important;
   padding: var(--sc-view-list-description-padding-top) 0 0 !important;
+  overflow: hidden !important;
+  contain: paint;
+  -webkit-box-orient: initial !important;
+  -webkit-line-clamp: unset !important;
 }
 
 /* Old low-density values may exist for one frame in legacy storage/bootstrap.
@@ -168,18 +177,34 @@ html.sc-catalog-view-switching body.sushiShop {
   scroll-behavior: auto !important;
 }
 
-/* Final description clipping contract. The CSS height is the text content box:
-   exactly two 16px lines. Padding and the separator live outside those 32px,
-   so neither grid nor list can expose any part of a third line. Multiline clamp
-   remains as a second independent guard across engines. */
-body.sushiShop .listadoShop .productoShop .descrip {
-  box-sizing: content-box !important;
-  display: -webkit-box !important;
-  min-height: 32px !important;
-  height: 32px !important;
-  max-height: 32px !important;
+/* The description paragraph owns spacing only. The copy itself lives in a
+   dedicated 32px viewport below, so padding/borders can never create room for
+   a third line. */
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
+html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
+  box-sizing: border-box !important;
+  display: block !important;
+  min-height: 43px !important;
+  height: 43px !important;
+  max-height: 43px !important;
   overflow: hidden !important;
   contain: paint;
+  -webkit-box-orient: initial !important;
+  -webkit-line-clamp: unset !important;
+}
+
+body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
+  box-sizing: border-box !important;
+  display: -webkit-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 32px !important;
+  max-height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  line-height: var(--sc-card-description-line-height) !important;
   -webkit-box-orient: vertical !important;
   -webkit-line-clamp: 2 !important;
 }
