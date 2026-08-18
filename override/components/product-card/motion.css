@@ -3,14 +3,20 @@ body.sushiShop {
   --sc-motion-card: 340ms;
 }
 
+/* La card conserva geometría estable; el reveal mueve top y no transforma imágenes. */
 .sushiShop .listadoShop .productoShop {
-  position: relative;-webkit-transform: none !important;transform: none !important;translate: 0 0;
-  transition: translate var(--sc-motion-card) var(--sc-motion-ease-out) !important;
+  position: relative;
+  top: 0;
+  -webkit-transform: none !important;
+  transform: none !important;
+  translate: 0 0;
 }
-.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {translate: 0 10px;}
 .sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
 .sushiShop .listadoShop .productoShop .imgLiquid,
-.sushiShop .listadoShop .productoShop .imgShop {-webkit-transform: none !important;transform: none !important;}
+.sushiShop .listadoShop .productoShop .imgShop {
+  -webkit-transform: none !important;
+  transform: none !important;
+}
 
 /* Feedback al presionar sin interferir con el reveal. */
 .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
@@ -28,9 +34,9 @@ body.sushiShop {
 }
 .sushiShop .productoShop .sumar:active {-webkit-transform: scale(var(--sc-card-action-active-scale));transform: scale(var(--sc-card-action-active-scale));}
 .sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
-@media (max-width: 992px) {.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {translate: 0 8px;}}
+
 @media (prefers-reduced-motion: reduce) {
-  .sushiShop .listadoShop .productoShop {translate: none !important;-webkit-transition: none !important;transition: none !important;}
+  .sushiShop .listadoShop .productoShop {top: 0 !important;translate: none !important;}
   .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
   .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active {scale: 1 !important;transition: none !important;}
   .sushiShop .productoShop .sumar,.sushiShop .productoShop .sumar:active {-webkit-transform: none !important;transform: none !important;}
