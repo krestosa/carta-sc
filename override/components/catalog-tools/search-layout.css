@@ -1,0 +1,9 @@
+/* Search must preserve the same leading vertical rhythm as the catalogue.
+   The responsive section token is already the source of truth for density/list. */
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
+  margin-top: var(--sc-compact-section-bottom) !important;
+}
+
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) {
+  margin-top: 0 !important;
+}
