@@ -177,9 +177,8 @@ html.sc-catalog-view-switching body.sushiShop {
   scroll-behavior: auto !important;
 }
 
-/* The description paragraph owns spacing only. The copy itself lives in a
-   dedicated 32px viewport below, so padding/borders can never create room for
-   a third line. */
+/* The paragraph owns spacing only. The text itself is clipped by a dedicated
+   32px block: exactly two 16px line boxes, independent of multiline-clamp. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box !important;
@@ -195,7 +194,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
 
 body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   box-sizing: border-box !important;
-  display: -webkit-box !important;
+  display: block !important;
   width: 100% !important;
   min-width: 0 !important;
   min-height: 0 !important;
@@ -204,15 +203,14 @@ body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  line-height: var(--sc-card-description-line-height) !important;
-  -webkit-box-orient: vertical !important;
-  -webkit-line-clamp: 2 !important;
+  white-space: normal !important;
+  line-height: 16px !important;
 }
 
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
   bottom: 0 !important;
-  height: var(--sc-card-description-line-height) !important;
-  line-height: var(--sc-card-description-line-height) !important;
+  height: 16px !important;
+  line-height: 16px !important;
   vertical-align: baseline !important;
   transform: none !important;
 }
