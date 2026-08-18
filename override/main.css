@@ -39,3 +39,4 @@
 @import "./features/image-preloader/image-preloader.css?v=unversioned";
 @import "./components/catalog-tools/icon-visibility.css?v=unversioned";
 @import "./components/catalog-tools/trait-icon-sizing.css?v=unversioned";
+@import "./components/catalog-tools/prepaint-view.css?v=unversioned";
