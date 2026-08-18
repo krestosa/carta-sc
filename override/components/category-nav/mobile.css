@@ -109,7 +109,7 @@
     padding: 0 0 var(--sc-category-link-padding-bottom) !important;
     border: 0 !important;
     background: transparent !important;
-    color: var(--sc-color-muted) !important;
+    color: var(--sc-color-copy) !important;
     box-shadow: none !important;
     font-family: var(--sc-font-primary) !important;
     line-height: var(--sc-category-link-line-height) !important;
