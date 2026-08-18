@@ -1,5 +1,4 @@
-/* Product-card pricing. Shared rules are breakpoint-independent; catalogue view
-   geometry decides where this row is placed. Search never changes that contract. */
+/* Precios de card; cada vista decide la posición de la fila. */
 body.sushiShop .listadoShop .productoShop .priceRow {
   box-sizing: border-box;
   display: flex !important;
@@ -21,6 +20,7 @@ body.sushiShop .listadoShop .productoShop .priceRow {
   font-variant-numeric: tabular-nums;
 }
 
+/* Precio vigente. */
 body.sushiShop .listadoShop .productoShop .price,
 body.sushiShop .listadoShop .productoShop .priceHijass {
   order: 1;
@@ -35,6 +35,7 @@ body.sushiShop .listadoShop .productoShop .priceHijass {
   letter-spacing: var(--sc-card-price-tracking) !important;
 }
 
+/* Precio anterior tachado. */
 body.sushiShop .listadoShop .productoShop .ofertaPrice {
   order: 2;
   float: none !important;
@@ -54,8 +55,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   display: none !important;
 }
 
-/* Both selectable views share the same compact price anatomy. Price values stay
-   grouped on the left; dietary/spice traits occupy the far edge of the row. */
+/* Compacta y lista comparten precio a izquierda y rasgos a derecha. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   display: none !important;
@@ -96,6 +96,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   flex: 0 0 auto !important;
 }
 
+/* Rasgos alineados a baseline y al borde derecho. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
