@@ -1,5 +1,7 @@
+/* Tokens globales del override. Centraliza color, tipografía, accesibilidad, geometría y
+   motion para que los componentes compartan los mismos valores sin duplicar constantes. */
 :root {
-  /* Paleta neutra compartida. */
+  /* Paleta neutra base. Se reutiliza en superficies, texto, bordes y estados secundarios. */
   --sc-color-ink: #0a0a0a;
   --sc-color-heading: #303030;
   --sc-color-copy: #5f5f5f;
@@ -11,12 +13,12 @@
   --sc-color-border: #e3e3de;
   --sc-color-border-strong: #d1d1cb;
 
-  /* Tipografía compartida. */
+  /* Tipografía común del catálogo; cada componente decide tamaño, altura y tracking. */
   --sc-font-primary: 'SC Acumin', Arial, sans-serif;
   --sc-font-weight-regular: 400;
   --sc-font-weight-semibold: 600;
 
-  /* Interacción y accesibilidad. */
+  /* Interacción y accesibilidad. Define targets, foco y capas compartidas por los controles. */
   --sc-border-hairline: 1px;
   --sc-focus-ring-color: var(--sc-color-ink);
   --sc-focus-ring-width: 2px;
@@ -27,13 +29,13 @@
   --sc-z-raised: 1;
   --sc-z-theme-popover: 120;
 
-  /* Geometría compartida del catálogo. */
+  /* Geometría del catálogo. Mantiene alineados contenido, gutters e imágenes entre vistas. */
   --sc-content-max-width: 1240px;
   --sc-catalog-gutter: 32px;
   --sc-catalog-inline-space: 64px;
   --sc-product-image-ratio: 286 / 200;
 
-  /* Motion compartido. */
+  /* Motion común. Los módulos pueden ajustar duración, pero comparten curvas consistentes. */
   --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --sc-motion-fast: 160ms;
   --sc-motion-theme: 560ms;
