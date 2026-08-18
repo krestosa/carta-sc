@@ -5,8 +5,7 @@ var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;
 if(!SC||!CFG||SC.__catalogToolsViewBooted)return;
 SC.__catalogToolsViewBooted=true;
 
-var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null,motionDeps=null,layoutTween=null;
-var VIEWPORT_OVERSCAN=32;
+var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null,motionDeps=null;
 
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
 function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf(mode)>=0?mode:'';}
@@ -114,59 +113,6 @@ function bindViewMicroInteraction(button,host){
   return function(){if(destroyed)return;destroyed=true;button.removeEventListener('pointerenter',enter);button.removeEventListener('pointerleave',leave);button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',leave);button.removeEventListener('focus',focusIn);button.removeEventListener('blur',focusOut);button.removeEventListener('keydown',keyDown);button.removeEventListener('keyup',keyUp);stop();gsap.set(paths,{x:0,y:0,clearProps:'transform,willChange'});};
 }
 
-function isViewportCard(card){
-  if(!card||!card.getClientRects().length)return false;
-  var rect=card.getBoundingClientRect(),w=window.innerWidth||doc.clientWidth,h=window.innerHeight||doc.clientHeight,pad=VIEWPORT_OVERSCAN;
-  return rect.width>0&&rect.height>0&&rect.bottom>-pad&&rect.top<h+pad&&rect.right>-pad&&rect.left<w+pad;
-}
-function addTarget(targets,node){if(node&&node.getClientRects().length&&targets.indexOf(node)<0)targets.push(node);}
-function addTargets(targets,nodes){Array.prototype.forEach.call(nodes||[],function(node){addTarget(targets,node);});}
-function visibleLayoutTargets(){
-  var cards=Array.prototype.filter.call(document.querySelectorAll('.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden])'),function(card){
-    var list=card.closest('.listadoShop');
-    return!!(list&&!list.hidden&&!list.closest('.sc-catalog-search-results')&&isViewportCard(card));
-  }),targets=[];
-  cards.forEach(function(card){
-    var link=card.querySelector('a.fancyboxModalAddProd'),media=card.querySelector('.imgShop'),price=card.querySelector('.priceRow');
-    addTarget(targets,card);
-    addTarget(targets,link);
-    addTarget(targets,media);
-    addTarget(targets,media&&media.querySelector('img'));
-    addTarget(targets,card.querySelector('.title-shop1'));
-    addTarget(targets,price);
-    addTarget(targets,price&&price.querySelector('.price'));
-    addTarget(targets,price&&price.querySelector('.priceHijass'));
-    addTarget(targets,price&&price.querySelector('.ofertaPrice'));
-    addTarget(targets,price&&price.querySelector('.sc-product-price-traits'));
-    addTargets(targets,price&&price.querySelectorAll('.sc-product-price-traits img,.sc-product-price-traits .sc-trait-icon'));
-    addTarget(targets,card.querySelector('.descrip'));
-  });
-  return targets;
-}
-function captureLayoutState(){
-  if(reducedMotion()||!motionDeps||!motionDeps.Flip||!motionDeps.gsap)return null;
-  var targets=visibleLayoutTargets();if(!targets.length)return null;
-  if(layoutTween){try{layoutTween.progress(1);}catch(_){}layoutTween=null;}
-  return{targets:targets,state:motionDeps.Flip.getState(targets,{simple:true})};
-}
-function animateLayoutState(snapshot){
-  if(!snapshot||!motionDeps||!motionDeps.Flip||!motionDeps.gsap||reducedMotion())return false;
-  var targets=snapshot.targets.filter(function(node){return document.documentElement.contains(node)&&node.getClientRects().length;});
-  if(!targets.length)return false;
-  layoutTween=motionDeps.Flip.from(snapshot.state,{
-    targets:targets,
-    duration:.22,
-    ease:'power3.out',
-    nested:true,
-    scale:true,
-    simple:true,
-    zIndex:2,
-    toggleClass:'sc-catalog-layout-flipping',
-    onComplete:function(){layoutTween=null;refreshLayout(true);}
-  });
-  return true;
-}
-
 function refreshMotionNow(){if(SC.motion&&SC.motion.run)SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});}
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode(),false);}
 function refreshLayout(switching){
@@ -178,23 +124,12 @@ function refreshLayout(switching){
       raf=0;
       if(SC.productCardContent&&SC.productCardContent.scheduleDescriptionMeasure)SC.productCardContent.scheduleDescriptionMeasure();
       refreshMotionNow();
-      if(switching){settleTimer=window.setTimeout(function(){settleTimer=0;doc.classList.remove('sc-catalog-view-switching');},64);}
+      if(switching){settleTimer=window.setTimeout(function(){settleTimer=0;doc.classList.remove('sc-catalog-view-switching');},80);}
     });
   });
 }
-function apply(root,mode,persist){
-  mode=normalize(mode)||'compact';
-  var snapshot=persist?captureLayoutState():null;
-  if(persist)doc.classList.add('sc-catalog-view-switching');
-  doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode,persist);if(persist)save(mode);
-  if(persist&&animateLayoutState(snapshot))return;
-  refreshLayout(!!persist);
-}
-function destroy(){
-  var host=document.querySelector('.sc-catalog-view-toggle [data-sc-view-icon]');if(host)clearViewIconMotion(host);
-  if(layoutTween){try{layoutTween.kill();}catch(_){}layoutTween=null;}
-  if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}
-}
+function apply(root,mode,persist){mode=normalize(mode)||'compact';if(persist)doc.classList.add('sc-catalog-view-switching');doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode,persist);if(persist)save(mode);refreshLayout(!!persist);}
+function destroy(){var host=document.querySelector('.sc-catalog-view-toggle [data-sc-view-icon]');if(host)clearViewIconMotion(host);if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
 function install(root){
   destroy();
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]');
@@ -202,7 +137,7 @@ function install(root){
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
   var microCleanup=bindViewMicroInteraction(button,host);
-  function click(){if(layoutTween)return;var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
+  function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(false);}
   button.addEventListener('click',click);
   if(phone.addEventListener)phone.addEventListener('change',breakpoint);else phone.addListener(breakpoint);
