@@ -9,6 +9,7 @@ var each=U.each,text=U.text,S=C.selectors,MS=SC.productModalSelectors=SC.product
 function build(link){
   var card=link.closest(S.productCard);if(!card)return null;
   var cardApi=SC.productCard||{},contentApi=SC.productCardContent||{};
+  if(contentApi.installFlavorRow)contentApi.installFlavorRow(link);
   var name=text(card.querySelector(S.productTitle)),description=text(card.querySelector(S.productDescription));
   var src=cardApi.imageSource?cardApi.imageSource(card):'';
   var titleId="sc-product-modal-title-"+Date.now();
@@ -28,13 +29,14 @@ function build(link){
   title.appendChild(document.createTextNode(name));
   if(description)copy.textContent=description;else copy.remove();
 
-  /* Clona la fila de precio, quita controles legacy y vuelve a insertar los rasgos propios. */
+  /* Conserva tachado y rasgos dentro del mismo bloque secundario también en el modal. */
   var sourcePrice=card.querySelector(".priceRow");
   if(sourcePrice){
     var price=sourcePrice.cloneNode(true);price.className="sc-product-modal__price-row";
     each(price.querySelectorAll(".sumar,input,button,.sc-product-price-traits"),function(node){if(node.parentNode)node.parentNode.removeChild(node);});
+    var secondary=price.querySelector('.sc-product-secondary-meta');
     price.classList.toggle('sc-price-row-has-offer',!!price.querySelector('.ofertaPrice'));
-    if(traits)price.appendChild(traits);
+    if(secondary){secondary.classList.add('sc-product-modal__secondary-meta');if(traits)secondary.appendChild(traits);}else if(traits)price.appendChild(traits);
     priceSlot.replaceWith(price);
   }else{
     priceSlot.remove();
