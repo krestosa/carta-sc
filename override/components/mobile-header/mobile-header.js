@@ -23,9 +23,14 @@ function syncIcon(button,open){
   if(previous&&previous!==state&&SC.motion&&SC.motion.morphIcon)SC.motion.morphIcon(path,shape,{duration:.24});else path.setAttribute('d',shape);
   path.setAttribute('data-sc-icon-state',state);
 }
+function menuOpen(button,nav){
+  if(button.classList.contains('slicknav_open'))return true;
+  if(button.classList.contains('slicknav_collapsed'))return false;
+  return nav.getAttribute('aria-hidden')==='false'||nav.style.display==='block';
+}
 function syncMenuButton(button,nav){
   if(!button||!nav)return;
-  var open=button.classList.contains('slicknav_open')||nav.getAttribute('aria-hidden')==='false'||nav.style.display==='block';
+  var open=menuOpen(button,nav);
   if(!nav.id)nav.id='sc-mobile-primary-menu';
   nav.setAttribute('aria-hidden',open?'false':'true');
   button.setAttribute('aria-controls',nav.id);button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'Cerrar menú de navegación':'Abrir menú de navegación');button.setAttribute('title',open?'Cerrar menú':'Abrir menú');syncIcon(button,open);
@@ -39,7 +44,7 @@ function pluginMenu(){
 function isPluginMenu(menu){var live=pluginMenu();return !!(live&&live===menu);}
 function bindingFor(button){
   for(var i=0;i<bindings.length;i++)if(bindings[i].button===button)return bindings[i];
-  var binding={button:button,nav:null,fallback:null,sync:null};bindings.push(binding);return binding;
+  var binding={button:button,nav:null,fallback:null,sync:null,syncKey:null};bindings.push(binding);return binding;
 }
 
 /* Fallback mínimo si el menú existe sin instancia activa. */
@@ -51,26 +56,27 @@ function installFallbackMenuToggle(menu){
   var binding=bindingFor(button);binding.nav=nav;if(binding.fallback)return;
   binding.fallback=function(e){
     e.preventDefault();var currentNav=binding.nav;if(!currentNav)return;
-    var open=button.classList.contains('slicknav_open')||currentNav.getAttribute('aria-hidden')==='false'||currentNav.style.display==='block',next=!open;
+    var next=!menuOpen(button,currentNav);
     button.classList.toggle('slicknav_open',next);button.classList.toggle('slicknav_collapsed',!next);currentNav.classList.toggle('slicknav_hidden',!next);currentNav.setAttribute('aria-hidden',next?'false':'true');currentNav.style.display=next?'block':'none';syncMenuButton(button,currentNav);
   };
   button.setAttribute('data-sc-fallback-toggle','true');button.addEventListener('click',binding.fallback);
 }
 
-/* Sincroniza ARIA después del click que cambia el estado. */
+/* Sincroniza ARIA después de cada interacción que cambia el estado real del plugin. */
 function installA11ySync(button,nav){
   if(!button||!nav)return;var binding=bindingFor(button);binding.nav=nav;if(binding.sync)return;
   binding.sync=function(){
     var timer=window.setTimeout(function(){syncTimers.delete(timer);if(initialized&&document.documentElement.contains(button))syncMenuButton(button,binding.nav);},0);syncTimers.add(timer);
   };
-  button.setAttribute('data-sc-a11y-sync','true');button.addEventListener('click',binding.sync);
+  binding.syncKey=function(e){var menu=button.closest&&button.closest('.slicknav_menu');if((e.key==='Enter'||e.keyCode===13)&&isPluginMenu(menu))binding.sync();};
+  button.setAttribute('data-sc-a11y-sync','true');button.addEventListener('click',binding.sync);button.addEventListener('keydown',binding.syncKey);
 }
 
 /* Limpia bindings de nodos reemplazados. */
 function unbind(binding){
   if(!binding||!binding.button)return;var button=binding.button;
-  if(binding.fallback)button.removeEventListener('click',binding.fallback);if(binding.sync)button.removeEventListener('click',binding.sync);
-  button.removeAttribute('data-sc-fallback-toggle');button.removeAttribute('data-sc-a11y-sync');binding.fallback=null;binding.sync=null;binding.nav=null;
+  if(binding.fallback)button.removeEventListener('click',binding.fallback);if(binding.sync)button.removeEventListener('click',binding.sync);if(binding.syncKey)button.removeEventListener('keydown',binding.syncKey);
+  button.removeAttribute('data-sc-fallback-toggle');button.removeAttribute('data-sc-a11y-sync');binding.fallback=null;binding.sync=null;binding.syncKey=null;binding.nav=null;
 }
 function pruneBindings(){for(var i=bindings.length-1;i>=0;i--){if(document.documentElement.contains(bindings[i].button))continue;unbind(bindings[i]);bindings.splice(i,1);}}
 function clearSyncTimers(){syncTimers.forEach(function(timer){clearTimeout(timer);});syncTimers.clear();}
