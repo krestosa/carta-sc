@@ -28,9 +28,7 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
   opacity: 1 !important;
   object-fit: contain !important;
   object-position: center !important;
-  /* Keep the resting state transform-free without preventing GSAP Flip from
-     writing an inline transform during a catalogue layout transition. */
-  transform: none;
+  transform: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
