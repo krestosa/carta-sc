@@ -35,5 +35,6 @@
 @import "./components/catalog-tools/search-state.css?v=unversioned";
 @import "./components/catalog-tools/interaction.css?v=unversioned";
 @import "./components/catalog-tools/view-stability.css?v=unversioned";
+@import "./components/catalog-tools/search-layout.css?v=unversioned";
 @import "./features/image-preloader/image-preloader.css?v=unversioned";
 @import "./components/catalog-tools/icon-visibility.css?v=unversioned";
