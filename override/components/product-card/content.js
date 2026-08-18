@@ -7,12 +7,21 @@ function traitKey(label){return(label||'').trim().toLocaleLowerCase('es-AR');}
 function traitSpec(label){var key=traitKey(label);if(key==='poco picante')return{key:'poco picante',label:'Poco Picante',icon:'algo picante'};if(key==='algo picante')return{key:'picante',label:'Picante',icon:'poco picante'};if(key==='picante')return{key:'picante',label:'Picante',icon:'poco picante'};if(key==='muy picante')return{key:'muy picante',label:'Muy Picante',icon:'muy picante'};if(key==='vegetariano')return{key:'vegetariano',label:'Vegetariano',icon:'vegetariano'};return{key:key,label:(label||'').trim(),icon:key};}
 function markTrait(node,key){if(node&&node.setAttribute)node.setAttribute('data-sc-trait',key);return node;}
 function appendTraitVisual(target,source,label){var spec=traitSpec(label),icon=D.createTraitIcon(spec.icon),node;if(icon){markTrait(icon,spec.key);target.appendChild(icon);return icon;}node=D.appendTraitVisual(target,source,label);markTrait(node,spec.key);return node;}
+function descriptionNode(target){if(!target)return null;if(target.matches&&target.matches(S.productDescription))return target;return target.querySelector?target.querySelector(S.productDescription):null;}
+function ensureDescriptionCopy(target){
+  var desc=descriptionNode(target),copy,child;if(!desc)return null;
+  child=desc.firstElementChild;while(child){if(child.classList&&child.classList.contains('sc-description-copy')){copy=child;break;}child=child.nextElementSibling;}
+  if(copy)return copy;
+  copy=document.createElement('span');copy.className='sc-description-copy';
+  while(desc.firstChild)copy.appendChild(desc.firstChild);
+  desc.appendChild(copy);return copy;
+}
 function clearFlavorRows(root){root=root&&root.querySelectorAll?root:document;each(root.querySelectorAll(".sc-product-flavors,.sc-product-price-traits"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});}
 function positionTraitReferences(){var strip=referenceStrip||document.querySelector('.referencias_picor'),tools=document.querySelector('.sc-catalog-tools'),results,spacer;if(!strip)return;referenceStrip=strip;strip.classList.add('sc-trait-reference-strip');spacer=strip.previousElementSibling;if(spacer&&!(spacer.textContent||'').trim()&&spacer.querySelector&&spacer.querySelector('br'))spacer.classList.add('sc-trait-reference-legacy-spacer');if(!tools)return;results=tools.querySelector('.sc-catalog-search-results');if(strip.parentNode!==tools||strip.nextElementSibling!==results)tools.insertBefore(strip,results||null);}
 function installTraitReferences(){each(document.querySelectorAll('.referencias_picor .refBox'),function(box){var labelNode=box.querySelector('.ref_label'),image=box.querySelector('.imgRef img'),host=box.querySelector('.imgRef');var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim(),spec=traitSpec(label),icon;if(D.ignoredTrait(label)){if(box.parentNode)box.parentNode.removeChild(box);return;}if(labelNode)labelNode.textContent=spec.label;if(!host)return;icon=D.createTraitIcon(spec.icon);if(icon){host.textContent='';markTrait(icon,spec.key);host.appendChild(icon);}});positionTraitReferences();}
 function buildTraitRow(className,labels,source){var row=document.createElement('span');row.className=className;var accessible=[];each(labels,function(label){var spec=traitSpec(label);appendTraitVisual(row,source,label);if(accessible.indexOf(spec.label)<0)accessible.push(spec.label);});if(accessible.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+accessible.join(', '));}else row.setAttribute('aria-hidden','true');return row;}
 function installFlavorRow(link){
-  if(!link)return;clearFlavorRows(link);
+  if(!link)return;ensureDescriptionCopy(link);clearFlavorRows(link);
   var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits),priceRow=link.querySelector('.priceRow');if(source)source.setAttribute('aria-hidden','true');var labels=D.traitLabels(source||link),row=buildTraitRow('sc-product-flavors',labels,source||link);link.appendChild(row);if(priceRow){priceRow.classList.toggle('sc-price-row-has-offer',!!priceRow.querySelector('.ofertaPrice'));priceRow.appendChild(buildTraitRow('sc-product-price-traits',labels,source||link));}
 }
 function installFlavorRows(root){root=root&&root.querySelectorAll?root:document;installTraitReferences();each(root.querySelectorAll(S.productCard+' > '+S.productLink),installFlavorRow);}
@@ -35,7 +44,7 @@ function scheduleReadBatch(){if(descriptionIdle||descriptionTimer)return;if(type
 function runReadBatch(deadline){
   descriptionIdle=0;descriptionTimer=0;var start=performance.now(),count=0;
   while(descriptionQueue.length&&count<DESCRIPTION_BATCH&&performance.now()-start<DESCRIPTION_BUDGET_MS&&(!deadline||deadline.didTimeout||deadline.timeRemaining()>2)){
-    var desc=descriptionQueue.shift();if(document.documentElement.contains(desc))descriptionStates.push([desc,desc.scrollHeight>desc.clientHeight+1||desc.scrollWidth>desc.clientWidth+1]);count++;
+    var desc=descriptionQueue.shift(),copy=desc&&desc.querySelector?desc.querySelector('.sc-description-copy'):null;if(document.documentElement.contains(desc)){copy=copy||desc;descriptionStates.push([desc,copy.scrollHeight>copy.clientHeight+1||copy.scrollWidth>copy.clientWidth+1]);}count++;
   }
   if(descriptionQueue.length){scheduleReadBatch();return;}descriptionWriteRaf=requestAnimationFrame(writeBatch);
 }
@@ -44,12 +53,12 @@ function writeBatch(){
   if(descriptionStates.length){descriptionWriteRaf=requestAnimationFrame(writeBatch);return;}
   if(descriptionRerun){descriptionRerun=false;scheduleDescriptionMeasure();}
 }
-function measureDescriptions(){descriptionMeasureRaf=0;pruneDescriptionVisibilityObserver();var descriptions=Array.prototype.slice.call(document.querySelectorAll(S.productCards+' '+S.productDescription));descriptionQueue=[];descriptionStates=[];descriptions.forEach(function(desc){if(!deferSkippedDescription(desc))descriptionQueue.push(desc);});if(descriptionQueue.length)scheduleReadBatch();else if(descriptionRerun){descriptionRerun=false;scheduleDescriptionMeasure();}}
+function measureDescriptions(){descriptionMeasureRaf=0;pruneDescriptionVisibilityObserver();var descriptions=Array.prototype.slice.call(document.querySelectorAll(S.productCards+' '+S.productDescription));descriptionQueue=[];descriptionStates=[];descriptions.forEach(function(desc){ensureDescriptionCopy(desc);if(!deferSkippedDescription(desc))descriptionQueue.push(desc);});if(descriptionQueue.length)scheduleReadBatch();else if(descriptionRerun){descriptionRerun=false;scheduleDescriptionMeasure();}}
 function scheduleDescriptionMeasure(){
   if(measurementActive()){descriptionRerun=true;return;}
   descriptionStartRaf=requestAnimationFrame(function(){descriptionStartRaf=0;descriptionMeasureRaf=requestAnimationFrame(measureDescriptions);});
 }
 function cancelDescriptionMeasure(){if(descriptionStartRaf)cancelAnimationFrame(descriptionStartRaf);if(descriptionMeasureRaf)cancelAnimationFrame(descriptionMeasureRaf);if(descriptionWriteRaf)cancelAnimationFrame(descriptionWriteRaf);if(descriptionIdle&&window.cancelIdleCallback)window.cancelIdleCallback(descriptionIdle);if(descriptionTimer)clearTimeout(descriptionTimer);if(descriptionVisibilityObserver){descriptionVisibilityObserver.disconnect();descriptionVisibilityObserver=null;}descriptionObservedCards.clear();descriptionStartRaf=descriptionMeasureRaf=descriptionWriteRaf=descriptionIdle=descriptionTimer=0;descriptionQueue=[];descriptionStates=[];descriptionRerun=false;}
 
-SC.productCardContent={clearFlavorRows:clearFlavorRows,installTraitReferences:installTraitReferences,installFlavorRow:installFlavorRow,installFlavorRows:installFlavorRows,buildTraitRow:buildTraitRow,positionTraitReferences:positionTraitReferences,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
+SC.productCardContent={clearFlavorRows:clearFlavorRows,installTraitReferences:installTraitReferences,installFlavorRow:installFlavorRow,installFlavorRows:installFlavorRows,buildTraitRow:buildTraitRow,positionTraitReferences:positionTraitReferences,ensureDescriptionCopy:ensureDescriptionCopy,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure};
 })();
