@@ -1,4 +1,4 @@
-/* Product modal text, traits and pricing typography. */
+/* Texto, rasgos y precios del modal. */
 body.sushiShop .sc-product-modal__title {
   margin: 0 !important;
   color: var(--sc-color-ink) !important;
@@ -8,6 +8,8 @@ body.sushiShop .sc-product-modal__title {
   font-weight: var(--sc-font-weight-semibold) !important;
   letter-spacing: -.025em !important;
 }
+
+/* Alinea precio, tachado y rasgos sobre una misma fila. */
 body.sushiShop .sc-product-modal__price-row {
   display: flex !important;
   flex-direction: row !important;
@@ -17,6 +19,7 @@ body.sushiShop .sc-product-modal__price-row {
   column-gap: 6px !important;
   row-gap: 0 !important;
 }
+
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
   order: 3 !important;
@@ -43,6 +46,8 @@ body.sushiShop .sc-product-modal__traits .sc-trait-icon {
   max-height: 13px !important;
   margin: 0 !important;
 }
+
+/* Descripción completa del producto. */
 body.sushiShop .sc-product-modal__description {
   margin: 10px 0 0 !important;
   color: var(--sc-color-copy) !important;
@@ -51,6 +56,8 @@ body.sushiShop .sc-product-modal__description {
   line-height: 1.52 !important;
   font-weight: var(--sc-font-weight-regular) !important;
 }
+
+/* Precio vigente. */
 body.sushiShop .sc-product-modal__price-row .price,
 body.sushiShop .sc-product-modal__price-row .priceHijass {
   order: 1 !important;
@@ -60,6 +67,8 @@ body.sushiShop .sc-product-modal__price-row .priceHijass {
   color: var(--sc-color-ink) !important;
   font: var(--sc-font-weight-semibold) 17px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
 }
+
+/* Precio anterior tachado. */
 body.sushiShop .sc-product-modal__price-row .ofertaPrice {
   order: 2 !important;
   flex: 0 0 auto !important;
