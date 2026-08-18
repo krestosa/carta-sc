@@ -37,7 +37,8 @@ body.sushiShop .listadoShop .productoShop .priceHijass {
 
 /* Precio anterior tachado. */
 body.sushiShop .listadoShop .productoShop .ofertaPrice {
-  order: 2;
+  order: 1;
+  flex: 0 0 auto !important;
   float: none !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -55,7 +56,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   display: none !important;
 }
 
-/* Compacta y lista comparten precio a izquierda y rasgos a derecha. */
+/* Compacta y lista mantienen precio y metadata unidos; el bloque secundario baja completo si no entra. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   display: none !important;
@@ -65,13 +66,14 @@ html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   align-items: baseline !important;
   justify-content: flex-start !important;
   column-gap: 6px !important;
-  row-gap: 0 !important;
+  row-gap: 2px !important;
   width: 100% !important;
   min-width: 0 !important;
+  white-space: normal !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow {
@@ -88,30 +90,42 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
   order: 1 !important;
   flex: 0 0 auto !important;
+  white-space: nowrap !important;
 }
 
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
+/* Tachado e iconos forman una sola unidad visual y nunca se separan entre sí. */
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
   order: 2 !important;
   flex: 0 0 auto !important;
+  align-items: baseline !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
 }
 
-/* Rasgos alineados a baseline y al borde derecho. */
+/* Rasgos alineados a la misma línea tipográfica, sin empujarlos al borde derecho. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
   display: inline-flex !important;
-  order: 3 !important;
+  order: 2 !important;
   flex: 0 0 auto !important;
   align-items: flex-end !important;
   align-self: baseline !important;
-  justify-content: flex-end !important;
+  justify-content: flex-start !important;
   gap: 5px !important;
   width: auto !important;
   height: 13px !important;
   min-height: 13px !important;
   max-height: 13px !important;
-  margin: 0 0 0 auto !important;
+  margin: 0 !important;
   padding: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
