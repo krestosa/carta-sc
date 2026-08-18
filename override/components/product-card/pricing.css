@@ -1,5 +1,5 @@
 /* Product-card pricing. Shared rules are breakpoint-independent; catalogue view
-   geometry decides where this row is placed. */
+   geometry decides where this row is placed. Search never changes that contract. */
 body.sushiShop .listadoShop .productoShop .priceRow {
   box-sizing: border-box;
   display: flex !important;
@@ -54,19 +54,15 @@ body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   display: none !important;
 }
 
-/* Density and list share the same compact price anatomy on every breakpoint:
+/* Both selectable views share the same compact price anatomy:
    discounted price -> struck-through price -> dietary/spice traits. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-flavors,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-flavors {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   display: none !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
@@ -81,36 +77,26 @@ html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .
   min-height: var(--sc-compact-price-line-height) !important;
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   min-height: var(--sc-view-list-price-height, 18px) !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .price,
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .price,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow .price,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow .priceHijass,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .price,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .priceHijass {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .priceHijass {
   order: 1 !important;
   flex: 0 0 auto !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .priceRow .ofertaPrice,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .priceRow .ofertaPrice {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow .ofertaPrice {
   order: 2 !important;
   flex: 0 0 auto !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-price-traits,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
   display: inline-flex !important;
   order: 3 !important;
@@ -130,11 +116,7 @@ html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-price-traits img,
-html body.sushiShop.sc-catalog-searching .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits img,
-html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop .sc-product-price-traits .sc-trait-icon {
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
   align-self: flex-end !important;
