@@ -173,6 +173,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
 body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   box-sizing: border-box !important;
   display: block !important;
+  position: relative !important;
   width: 100% !important;
   min-width: 0 !important;
   min-height: 0 !important;
@@ -192,10 +193,30 @@ body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   }
 }
 
+/* The CTA belongs to the two-line text viewport itself, not to the padded
+   paragraph. This makes its baseline identical to the second description line. */
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-  bottom: 1px !important;
+  content: none !important;
+  display: none !important;
+}
+
+body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated > .sc-description-copy::after {
+  content: 'Ver detalle';
+  display: block !important;
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 0 !important;
   height: 16px !important;
+  padding: 0 0 0 22px !important;
+  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%) !important;
+  color: var(--sc-color-copy) !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
   line-height: 16px !important;
-  vertical-align: baseline !important;
+  font-weight: var(--sc-font-weight-semibold) !important;
+  letter-spacing: inherit !important;
+  white-space: nowrap !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
   transform: none !important;
 }
