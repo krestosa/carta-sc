@@ -2,11 +2,17 @@
 'use strict';
 var SC=window.SCOverride=window.SCOverride||{},C=SC.contentNormalizer=SC.contentNormalizer||{};
 if(SC.__contentNormalizerRulesBooted)return;SC.__contentNormalizerRulesBooted=true;
+
+/* Reglas editoriales para español de Argentina. */
 var LOCALE=C.locale||'es-AR';C.locale=LOCALE;
 var CONNECTORS=new Set(['a','al','ante','bajo','con','contra','de','del','desde','durante','e','el','en','entre','hacia','hasta','la','las','los','mediante','ni','o','para','por','que','según','sin','sobre','su','sus','tras','tu','tus','u','un','una','unos','unas','y']);
 var PROTECTED={'aqa':'AQA','sushiclub':'SushiClub'};
+
+/* Quita puntos decorativos sin romper decimales. */
 function titlePeriodClean(text){return text.replace(/\./g,function(dot,index,source){var before=source.charAt(index-1),after=source.charAt(index+1);return /\d/.test(before)&&/\d/.test(after)?dot:'';});}
 function capitalize(lower){if(PROTECTED[lower])return PROTECTED[lower];return lower.replace(/[a-záéíóúüñ]/i,function(letter){return letter.toLocaleUpperCase(LOCALE);});}
+
+/* Aplica mayúsculas respetando conectores y marcas protegidas. */
 function smartCase(text,state,removePeriods){
   if(removePeriods)text=titlePeriodClean(text);
   var rx=/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+(?:['’][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*/g,out='',last=0,match;
