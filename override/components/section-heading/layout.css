@@ -1,5 +1,4 @@
-/* Section heading geometry. Desktop values are the base contract; responsive.css
-   only changes genuinely breakpoint-specific typography/spacing. */
+/* Geometría base de títulos y subtítulos de sección. */
 body.sushiShop {
   --sc-section-rule-scale: 1;
   --sc-section-title-margin: 6px 0 -3px;
@@ -11,6 +10,7 @@ body.sushiShop {
   --sc-section-subtitle-tracking: -.025em;
 }
 
+/* Título principal de cada grupo. */
 body.sushiShop .listadoShop .titleShopSeccion {
   position: static !important;
   top: auto !important;
@@ -29,6 +29,7 @@ body.sushiShop .listadoShop .titleShopSeccion {
   z-index: var(--sc-z-raised);
 }
 
+/* El wrapper dibuja el divisor inferior. */
 body.sushiShop .listadoShop .titleShopSeccion > div {
   box-sizing: border-box;
   width: 100% !important;
@@ -38,6 +39,7 @@ body.sushiShop .listadoShop .titleShopSeccion > div {
   background: transparent !important;
 }
 
+/* La primera sección elimina espacio superior extra. */
 body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion {
   margin-top: 0 !important;
 }
@@ -47,6 +49,7 @@ body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
   border-top: 0 !important;
 }
 
+/* Subtítulo dentro del grupo. */
 body.sushiShop .listadoShop .subTitleShopSeccion {
   box-sizing: border-box;
   width: 100% !important;
