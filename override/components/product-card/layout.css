@@ -100,18 +100,15 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   outline-offset: 6px;
 }
 
-/* Permanent offscreen rendering containment. Card anatomy is fixed enough to
-   provide stable intrinsic block estimates while the browser skips descendants.
-   Once a card has rendered, `auto` lets the browser remember its real size. */
+/* Permanent offscreen rendering containment. Search is layout-neutral: only
+   the selected catalogue view changes the intrinsic size estimate. */
 @supports (content-visibility: auto) {
   body.sushiShop .listadoShop .productoShop {
     content-visibility: auto;
     contain-intrinsic-block-size: auto 360px;
   }
 
-  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
-  html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
-  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
     contain-intrinsic-block-size: auto 150px;
   }
 
@@ -126,9 +123,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
       contain-intrinsic-block-size: auto 360px;
     }
 
-    html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
-    html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
-    html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+    html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
       contain-intrinsic-block-size: auto 120px;
     }
   }
@@ -140,9 +135,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
       contain-intrinsic-block-size: auto 270px;
     }
 
-    html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
-    html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
-    html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+    html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
       contain-intrinsic-block-size: auto 112px;
     }
   }
