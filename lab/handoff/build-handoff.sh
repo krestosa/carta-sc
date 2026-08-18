@@ -49,14 +49,36 @@ for path in root.rglob('*'):
     text = text.replace('lab/pages', 'tooling')
     text = text.replace('.pages-site', '.build-site')
     text = text.replace('GITHUB_PAGES', 'HANDOFF_BUILD')
+    text = text.replace('_pages', '_build')
+    text = text.replace('sc-pages-', 'sc-build-')
     text = text.replace('Pages', 'Build')
     text = text.replace('pages-', 'build-')
     text = text.replace('-pages', '-build')
     path.write_text(text, encoding='utf-8')
 PY
 
-# Copia la referencia compilada exacta.
+# Copia la referencia compilada y neutraliza nombres internos del paquete.
 rsync -a "$INPUT/" "$OUT/compiled/"
+python3 - "$OUT/compiled" <<'PY'
+from pathlib import Path
+import shutil
+import sys
+root = Path(sys.argv[1])
+legacy = root / '_pages'
+neutral = root / '_build'
+if legacy.exists():
+    if neutral.exists():
+        shutil.rmtree(neutral)
+    legacy.rename(neutral)
+for path in root.rglob('*'):
+    if not path.is_file() or path.suffix.lower() not in {'.html', '.css', '.js', '.json', '.txt', '.svg', '.xml'}:
+        continue
+    text = path.read_text(encoding='utf-8', errors='ignore')
+    text = text.replace('_pages/', '_build/')
+    text = text.replace('sc-pages-', 'sc-build-')
+    text = text.replace('Pages', 'Build')
+    path.write_text(text, encoding='utf-8')
+PY
 printf '%s\n' "$SHA" > "$OUT/BUILD_SHA"
 
 cat > "$OUT/source/tooling/build.py" <<'PY'
@@ -118,14 +140,14 @@ def require_file(relative: str) -> None:
 
 def verify_final() -> None:
     html = (SITE / 'index.html').read_text(encoding='utf-8', errors='ignore')
-    for marker in ('id="sc-pages-critical-css"', 'id="sc-pages-delivery-loader"', 'id="sc-theme-prepaint"'):
+    for marker in ('id="sc-build-critical-css"', 'id="sc-build-delivery-loader"', 'id="sc-theme-prepaint"'):
         if marker not in html:
             raise SystemExit(f'missing build marker: {marker}')
     if 'keepSessionAlive' in html:
         raise SystemExit('legacy session keepalive remains')
     require_file('index.html')
-    require_file('_pages/deferred.css')
-    require_file('_pages/php-guard.js')
+    require_file('_build/deferred.css')
+    require_file('_build/php-guard.js')
     require_file('_critical-media/sushiclub-logo.svg')
     for n in range(1, 5):
         require_file(f'_first-viewport/product-{n}.webp')
@@ -164,8 +186,8 @@ def main() -> None:
         py(name)
 
     node_check('override/main.js')
-    node_check('_pages/legacy.js')
-    node_check('_pages/shop.js')
+    node_check('_build/legacy.js')
+    node_check('_build/shop.js')
     py('validate-build-local-assets.py')
     py('validate-build-html.py')
     py('validate-build-performance-budget.py')
@@ -187,9 +209,9 @@ def main() -> None:
         py('optimize-build-lcp.py')
 
     node_check('override/main.js')
-    node_check('_pages/legacy.js')
-    node_check('_pages/shop.js')
-    node_check('_pages/php-guard.js')
+    node_check('_build/legacy.js')
+    node_check('_build/shop.js')
+    node_check('_build/php-guard.js')
     node_check('_js_dev/main-legacy.js')
     py('validate-build-local-assets.py')
     py('validate-build-html.py')
@@ -329,5 +351,7 @@ test -x "$OUT/serve-local.sh"
 test -s "$OUT/build-local.ps1"
 test -s "$OUT/serve-local.ps1"
 test -s "$OUT/compiled/index.html"
+test ! -e "$OUT/compiled/_pages"
+test -d "$OUT/compiled/_build"
 
 printf 'Handoff ready at %s for %s\n' "$OUT" "$SHA"
