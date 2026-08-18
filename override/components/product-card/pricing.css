@@ -166,3 +166,9 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   transform: translateY(1px) !important;
   transform-origin: 50% 100% !important;
 }
+
+/* view-stability.css se carga después y usa baseline en lista. Esta variante más específica
+   preserva el centrado vertical cuando existe precio anterior sin depender del orden del CSS. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer {
+  align-items: center !important;
+}
