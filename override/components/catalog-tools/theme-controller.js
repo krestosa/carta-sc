@@ -4,9 +4,9 @@ var SC=window.SCOverride,C=SC&&SC.catalogTools,P=C&&C.themePalette;if(!SC||!C||!
 var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),fine=matchMedia('(hover:hover) and (pointer:fine)'),reduced=matchMedia('(prefers-reduced-motion:reduce)'),deps=null,mainTimeline=null,contrastFlip=null,contrastRelease=null,contrastNode=null;
 var NEUTRAL='M12 3.6A8.4 8.4 0 1 1 12 20.4A8.4 8.4 0 1 1 12 3.6Z';
 var SUN='M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z';
-var MOON_FULL=NEUTRAL;
+var MOON_FULL='M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z';
 var AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';
-var MOON_BITE={cx:17.9,cy:6.6,r:8};
+var MOON_BITE={cx:18.3,cy:6.2,r:8.6};
 function norm(m){return MODES.indexOf(m)>=0?m:'';}
 function resolved(m){return m==='system'?(systemDark.matches?'dark':'light'):m;}
 function selected(){return norm(doc.getAttribute('data-sc-theme')||'')||load();}
@@ -42,7 +42,8 @@ function animateGeometry(root,from,to){
     morphCore(mainTimeline,p.core,NEUTRAL,0,.135,shapeEase);
     neutralEnd=.14;mainTimeline.set(p.rays,{opacity:0},neutralEnd);
   }else if(from==='dark'){
-    mainTimeline.to(p.bite,{duration:.11,ease:biteEase,attr:{r:0}},0);neutralEnd=.11;
+    mainTimeline.to(p.bite,{duration:.11,ease:biteEase,attr:{r:0}},0);
+    morphCore(mainTimeline,p.core,NEUTRAL,0,.12,shapeEase);neutralEnd=.12;
   }else{
     morphCore(mainTimeline,p.core,NEUTRAL,0,.12,shapeEase);
     mainTimeline.to(p.ring,{duration:.085,ease:'power2.in',opacity:0},0);neutralEnd=.12;
@@ -53,6 +54,7 @@ function animateGeometry(root,from,to){
     mainTimeline.set(p.rays,{opacity:1},neutralEnd+.02).set(p.lines,{strokeDasharray:1,strokeDashoffset:1},neutralEnd+.02);
     mainTimeline.to(p.lines,{strokeDashoffset:0,duration:.055,ease:'power3.out',stagger:{each:.01,from:'start'}},neutralEnd+.035);
   }else if(to==='dark'){
+    morphCore(mainTimeline,p.core,MOON_FULL,neutralEnd,.12,shapeEase);
     mainTimeline.to(p.bite,{duration:.13,ease:biteEase,attr:{cx:MOON_BITE.cx,cy:MOON_BITE.cy,r:MOON_BITE.r}},neutralEnd);
   }else{
     mainTimeline.set(p.ring,{opacity:0,attr:{r:8.4}},neutralEnd);
