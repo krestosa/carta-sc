@@ -156,7 +156,7 @@ html.sc-catalog-view-switching body.sushiShop {
 }
 
 /* The paragraph owns spacing only. The text itself is clipped by a dedicated
-   32px block: exactly two 16px line boxes, independent of multiline-clamp. */
+   two-line block; 32px remains the fallback for engines without `lh`. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box !important;
@@ -183,6 +183,13 @@ body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   overflow: hidden !important;
   white-space: normal !important;
   line-height: 16px !important;
+}
+
+@supports (height: 2lh) {
+  body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
+    height: 2lh !important;
+    max-height: 2lh !important;
+  }
 }
 
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
