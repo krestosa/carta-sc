@@ -93,14 +93,14 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   white-space: nowrap !important;
 }
 
-/* Tachado e iconos forman una sola unidad visual y nunca se separan entre sí. */
+/* Tachado e iconos forman una unidad; el borde inferior define su referencia común. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
   box-sizing: border-box !important;
   display: inline-flex !important;
   order: 2 !important;
   flex: 0 0 auto !important;
-  align-items: baseline !important;
+  align-items: flex-end !important;
   justify-content: flex-start !important;
   gap: 5px !important;
   width: max-content !important;
@@ -110,7 +110,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   white-space: nowrap !important;
 }
 
-/* Rasgos alineados a la misma línea tipográfica, sin empujarlos al borde derecho. */
+/* Los rasgos suben 1px para coincidir ópticamente con la base visible del tachado. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
@@ -118,14 +118,14 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   order: 2 !important;
   flex: 0 0 auto !important;
   align-items: flex-end !important;
-  align-self: baseline !important;
+  align-self: flex-end !important;
   justify-content: flex-start !important;
   gap: 5px !important;
   width: auto !important;
   height: 13px !important;
   min-height: 13px !important;
   max-height: 13px !important;
-  margin: 0 !important;
+  margin: 0 0 1px !important;
   padding: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
