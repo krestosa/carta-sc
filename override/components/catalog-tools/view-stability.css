@@ -1,6 +1,7 @@
 /* Canonical catalogue list geometry.
    Desktop defines the base contract; narrower breakpoints override tokens only. */
 body.sushiShop {
+  --sc-view-list-columns: 2;
   --sc-view-list-image-width: 210px;
   --sc-view-list-column-gap: 18px;
   --sc-view-list-title-price-gap: 6px;
@@ -22,6 +23,7 @@ body.sushiShop {
 
 @media (max-width: 640px) {
   body.sushiShop {
+    --sc-view-list-columns: 1;
     --sc-view-list-image-width: 150px;
     --sc-view-list-column-gap: 12px;
     --sc-view-list-description-max-height: 31px;
@@ -29,7 +31,11 @@ body.sushiShop {
   }
 }
 
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop,
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop {
+  grid-template-columns: repeat(var(--sc-view-list-columns), minmax(0, 1fr)) !important;
+  row-gap: var(--sc-compact-row-gap) !important;
+}
+
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source,
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid.listadoShop {
   grid-template-columns: minmax(0, 1fr) !important;
