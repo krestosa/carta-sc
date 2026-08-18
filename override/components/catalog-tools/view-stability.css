@@ -94,14 +94,15 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .tit
   -webkit-line-clamp: 2 !important;
 }
 
-/* La fila crece cuando el bloque secundario baja, evitando superposición en anchos chicos. */
+/* La fila crece cuando el bloque secundario baja, evitando superposición en anchos chicos.
+   Precio vigente, tachado y rasgos comparten centro óptico en todos los breakpoints. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   position: static !important;
   inset: auto !important;
   grid-column: 2 !important;
   grid-row: 2 !important;
   align-self: end !important;
-  align-items: baseline !important;
+  align-items: center !important;
   justify-content: flex-start !important;
   min-width: 0 !important;
   min-height: var(--sc-view-list-price-height) !important;
