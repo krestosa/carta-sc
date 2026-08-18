@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
 if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
-var each=U.each,ready=U.ready,mq=N.mq,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
+var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
 var submenuHost=null,submenuParent=null,submenuPinned=false,submenuCloseTimer=0,submenuPositionRaf=0,submenuScroller=null;
 
 function submenuLinks(parent){
@@ -73,14 +73,14 @@ function keydown(event){if(event.key==='Escape'&&submenuParent){event.preventDef
 function destroySubmenu(){closeSubmenu(false);if(submenuHost&&submenuHost.parentNode)submenuHost.parentNode.removeChild(submenuHost);submenuHost=null;}
 N.categorySubmenu={scan:scanSubmenus,has:hasSubmenu,open:function(parent,pin){return openSubmenu(parent,pin!==false);},close:closeSubmenu,position:scheduleSubmenuPosition};
 
-function pruneRailScrollers(){boundScrollers.forEach(function(scroller){if(document.documentElement.contains(scroller))return;scroller.removeEventListener('scroll',N.scheduleRail);boundScrollers.delete(scroller);});}
+function pruneRailScrollers(){boundScrollers.forEach(function(scroller){if(document.documentElement.contains(scroller))return;scroller.removeEventListener('scroll',onRailScroll);boundScrollers.delete(scroller);});}
 function bindRailScrollers(){
   pruneRailScrollers();
   each(document.querySelectorAll(N.selectors.scroller+','+N.selectors.mobileScroller),function(scroller){
-    if(boundScrollers.has(scroller))return;boundScrollers.add(scroller);scroller.addEventListener('scroll',N.scheduleRail,{passive:true});
+    if(boundScrollers.has(scroller))return;boundScrollers.add(scroller);scroller.addEventListener('scroll',onRailScroll,{passive:true});
   });
 }
-function unbindRailScrollers(){boundScrollers.forEach(function(scroller){scroller.removeEventListener('scroll',N.scheduleRail);});boundScrollers.clear();}
+function unbindRailScrollers(){boundScrollers.forEach(function(scroller){scroller.removeEventListener('scroll',onRailScroll);});boundScrollers.clear();}
 function invalidateOffset(){if(N.invalidateOffset)N.invalidateOffset();}
 function runResize(){resizeRaf=0;if(!initialized)return;invalidateOffset();N.refreshMetrics();N.scheduleRail();scheduleSubmenuPosition();}
 function resize(){if(initialized&&!resizeRaf)resizeRaf=requestAnimationFrame(runResize);}
