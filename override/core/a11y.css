@@ -17,7 +17,7 @@
 }
 
 /* Desktop country links are visually tiny flag controls in the legacy header.
-   Give the anchors a WCAG-sized hit area without scaling the artwork itself. */
+   Give the anchors a larger hit area without scaling the artwork itself. */
 @media (min-width: 993px) {
   body.sushiShop .newVer17topBar .top-paises > span > a {
     display: inline-flex !important;
@@ -33,5 +33,45 @@
     width: 15px !important;
     height: 15px !important;
     object-fit: contain;
+  }
+}
+
+@media (prefers-contrast: more) {
+  body.sushiShop {
+    --sc-color-border: var(--sc-color-ink);
+    --sc-color-border-strong: var(--sc-color-ink);
+    --sc-focus-ring-width-subtle: 2px;
+  }
+
+  body.sushiShop .sc-catalog-search,
+  body.sushiShop .sc-catalog-toolbar,
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
+  body.sushiShop .sc-product-modal__footer {
+    border-color: var(--sc-color-ink) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body.sushiShop .sc-theme-menu,
+  body.sushiShop > .sc-category-submenu,
+  body.sushiShop .sc-product-modal__close::before {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--sc-color-surface) !important;
+  }
+}
+
+@media (forced-colors: active) {
+  body.sushiShop .sc-theme-toggle,
+  body.sushiShop .sc-catalog-view-toggle,
+  body.sushiShop .sc-rail-arrow,
+  body.sushiShop .sc-product-modal__close,
+  body.sushiShop .sc-product-modal__cart-button,
+  body.sushiShop .sc-catalog-tools .sc-filter-chip {
+    forced-color-adjust: auto;
+  }
+
+  body.sushiShop .sc-category-indicator {
+    background: CanvasText !important;
   }
 }
