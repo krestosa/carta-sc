@@ -67,7 +67,7 @@ function animateMorph(host,from,to){
   if(!host||from===to){if(host){host.setAttribute('data-sc-icon-state',to);ensureHostPresentation(host);}return;}
   if(!initMorph(host)||!motionDeps||!motionDeps.gsap||!motionDeps.MorphSVGPlugin){setMorphState(host,to);return;}
   clearViewIconMotion(host);
-  var gsap=motionDeps.gsap,live=livePaths(host),targets=targetPaths(host,to),short=reducedMotion(),duration=short?.14:.32,ease=short?'power1.inOut':'power2.inOut',state={timeline:null};
+  var gsap=motionDeps.gsap,live=livePaths(host),targets=targetPaths(host,to),short=reducedMotion(),duration=short?.12:.24,ease=short?'power1.inOut':'power2.inOut',state={timeline:null};
   if(!live.length||targets.some(function(target){return!target;})){setMorphState(host,to);return;}
 
   host.setAttribute('data-sc-icon-state',to);
@@ -75,7 +75,7 @@ function animateMorph(host,from,to){
   host.__scViewIconMotion=state;
   state.timeline=gsap.timeline({onComplete:function(){if(host.__scViewIconMotion!==state)return;host.__scViewIconMotion=null;host.removeAttribute('data-sc-view-icon-animating');ensureHostPresentation(host);}});
   live.forEach(function(path,index){
-    state.timeline.to(path,{duration:duration,ease:ease,morphSVG:{shape:targets[index]},overwrite:'auto'},short?0:Math.floor(index/2)*.018);
+    state.timeline.to(path,{duration:duration,ease:ease,morphSVG:{shape:targets[index]},overwrite:'auto'},short?0:Math.floor(index/2)*.012);
   });
 }
 function sync(root,mode,animate){
@@ -101,7 +101,7 @@ function install(root){
   if(!button||!host)return function(){};
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
-  var microCleanup=SC.motion&&SC.motion.bindMicroInteraction?SC.motion.bindMicroInteraction(button,host,{active:{rotation:-6},press:{rotation:3.5}}):function(){};
+  var microCleanup=SC.motion&&SC.motion.bindMicroInteraction?SC.motion.bindMicroInteraction(button,host,{active:{rotation:-5},press:{rotation:3}}):function(){};
   function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(null);}
   button.addEventListener('click',click);
