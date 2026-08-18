@@ -1,14 +1,18 @@
+/* Gestiona el aislamiento y el foco del modal de producto. Mantiene el diálogo navegable
+   con teclado y evita que el contenido de fondo quede disponible mientras está abierto. */
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,MS=SC&&SC.productModalSelectors;if(!SC||!U||!C||!MS||SC.__productModalA11yBooted)return;SC.__productModalA11yBooted=true;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,MS=SC&&SC.productModalSelectors;if(!SC||!U||!C||!MS||SC.__productModalA11yBooted)return;SC.__productModalA11yBooted=true;
 var each=U.each;
 
+/* Devuelve únicamente controles visibles y realmente alcanzables por teclado. */
 function focusableElements(dialog){
   return Array.prototype.filter.call(
     dialog.querySelectorAll("a[href],button:not([disabled]),input:not([disabled]):not([type=\"hidden\"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex=\"-1\"])"),
     function(el){return el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';}
   );
 }
+/* Aísla los hermanos del modal y conserva su estado previo para restaurarlo al cerrar. */
 function lockBackground(modal){
   var backgroundState=[];
   var inertSupported=typeof HTMLElement!=='undefined'&&'inert' in HTMLElement.prototype;
@@ -31,6 +35,7 @@ function lockBackground(modal){
     backgroundState=[];
   };
 }
+/* Encierra Tab y Shift+Tab dentro del diálogo, incluso si no hay controles interactivos. */
 function trapTab(modal,event){
   var dialog=modal&&modal.querySelector(MS.dialog);if(!dialog)return;
   var items=focusableElements(dialog);
@@ -39,6 +44,7 @@ function trapTab(modal,event){
   if(event.shiftKey&&(current===first||!dialog.contains(current))){event.preventDefault();last.focus();}
   else if(!event.shiftKey&&current===last){event.preventDefault();first.focus();}
 }
+/* Si el foco escapa por una mutación externa, lo devuelve al primer destino válido. */
 function containFocus(modal,event){
   if(!modal||modal.contains(event.target))return;
   var dialog=modal.querySelector(MS.dialog),items=focusableElements(dialog);
