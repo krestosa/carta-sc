@@ -1,12 +1,16 @@
+/* Orquesta el reveal de tarjetas por breakpoint y expone un reflow seguro cuando cambia
+   la geometría. La implementación concreta vive separada en reveal-motion.js. */
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
 var installed=false,reflowRaf=0,PROFILES={mobile:{batchMax:4,start:'clamp(top 93%)'},tablet:{batchMax:6,start:'clamp(top 92%)'},desktop:{batchMax:8,start:'clamp(top 91%)'}};
+/* Espera dos frames antes de rescatar cards visibles y refrescar geometría de motion. */
 function reflow(){
   if(reflowRaf)cancelAnimationFrame(reflowRaf);
   reflowRaf=requestAnimationFrame(function(){reflowRaf=requestAnimationFrame(function(){reflowRaf=0;if(parts.revealViewport)parts.revealViewport();if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);});});
 }
+/* Registra una única instancia responsive y delega su cleanup al contexto de GSAP. */
 function install(){
   if(installed||!SC.motion||typeof SC.motion.whenReady!=='function')return;
   installed=true;
