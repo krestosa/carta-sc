@@ -4,7 +4,7 @@ var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.
 var parts=SC.cartParts=SC.cartParts||{};
 
 parts.setupScroll=function(gsap,ST,profile,reduce){
-  var entries=[],observer,raf=0,settle=0,clamp=gsap.utils.clamp(-profile.maxLag,profile.maxLag);
+  var entries=[],observer,raf=0,settle=0,tracker=null,clamp=gsap.utils.clamp(-profile.maxLag,profile.maxLag);
   function target(wrapper){return wrapper.querySelector(".carritoBox")||wrapper.querySelector(".shop_carrito")||wrapper.firstElementChild||wrapper;}
   function entryFor(wrapper){return entries.find(function(entry){return entry.wrapper===wrapper;});}
   function clearTarget(el){
@@ -15,6 +15,16 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
     if(entry.target&&entry.target!==el)clearTarget(entry.target);
     entry.target=el;entry.move=reduce?null:gsap.quickTo(el,'y',{duration:CFG.scrollQuickDuration,ease:M.easings.strongOut,overwrite:'auto'});
     el.classList.add("sc-cart-scroll-motion");
+  }
+  function move(y){entries.forEach(function(entry){if(entry.move)entry.move(y);});}
+  function stopTracker(){if(settle){clearTimeout(settle);settle=0;}if(tracker){tracker.kill();tracker=null;}}
+  function ensureTracker(){
+    if(reduce||!entries.length){stopTracker();return;}
+    if(tracker)return;
+    tracker=ST.create({start:0,end:'max',onUpdate:function(self){
+      var velocity=self.getVelocity();move(Math.abs(velocity)<CFG.scrollVelocityFloor?0:clamp(velocity*profile.velocityScale));
+      if(settle)clearTimeout(settle);settle=setTimeout(function(){settle=0;move(0);},CFG.scrollSettleDelay);
+    },onRefresh:function(){move(0);}});
   }
   function discover(){
     raf=0;
@@ -28,6 +38,7 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
       if(!entry){entry={wrapper:wrapper,target:null,move:null};entries.push(entry);}
       if(entry.target!==el)configure(entry,el);
     });
+    ensureTracker();
   }
   function affectsCart(mutation){
     var targetNode=mutation.target&&mutation.target.nodeType===1?mutation.target:mutation.target&&mutation.target.parentElement;
@@ -39,7 +50,6 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
     return false;
   }
   function schedule(){if(!raf)raf=requestAnimationFrame(discover);}
-  function move(y){entries.forEach(function(entry){if(entry.move)entry.move(y);});}
   discover();
   if(document.body){
     observer=new MutationObserver(function(mutations){
@@ -47,15 +57,8 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
     });
     observer.observe(document.body,{childList:true,subtree:true});
   }
-  if(reduce)return function(){
-    if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);entries.forEach(function(entry){clearTarget(entry.target);});
-  };
-  var tracker=ST.create({start:0,end:'max',onUpdate:function(self){
-    var velocity=self.getVelocity();move(Math.abs(velocity)<CFG.scrollVelocityFloor?0:clamp(velocity*profile.velocityScale));
-    if(settle)clearTimeout(settle);settle=setTimeout(function(){settle=0;move(0);},CFG.scrollSettleDelay);
-  },onRefresh:function(){move(0);}});
   return function(){
-    if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);if(settle)clearTimeout(settle);tracker.kill();
+    if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);stopTracker();
     entries.forEach(function(entry){clearTarget(entry.target);});
   };
 };
