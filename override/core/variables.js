@@ -20,6 +20,7 @@ config.queries=config.queries||{};
    by motion/main.js and registered before interactive override modules mount. */
 config.urls=merged({
   gsap:GSAP_DIST+'gsap.min.js',
+  flip:GSAP_DIST+'Flip.min.js',
   morphSVG:GSAP_DIST+'MorphSVGPlugin.min.js',
   scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
   splitText:GSAP_DIST+'SplitText.min.js'
