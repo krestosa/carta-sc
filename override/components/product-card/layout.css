@@ -99,3 +99,59 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   outline: var(--sc-focus-ring-width-subtle) solid var(--sc-card-rule);
   outline-offset: 6px;
 }
+
+/* Permanent offscreen rendering containment. Card anatomy is fixed enough to
+   provide stable intrinsic block estimates while the browser skips descendants.
+   Once a card has rendered, `auto` lets the browser remember its real size. */
+@supports (content-visibility: auto) {
+  body.sushiShop .listadoShop .productoShop {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 360px;
+  }
+
+  html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
+  html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
+  html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+    contain-intrinsic-block-size: auto 150px;
+  }
+
+  body.sushiShop .listadoShop .productoShop:focus-within {
+    content-visibility: visible;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 992px) {
+  @supports (content-visibility: auto) {
+    body.sushiShop .listadoShop .productoShop {
+      contain-intrinsic-block-size: auto 360px;
+    }
+
+    html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
+    html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
+    html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+      contain-intrinsic-block-size: auto 120px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  @supports (content-visibility: auto) {
+    body.sushiShop .listadoShop .productoShop {
+      contain-intrinsic-block-size: auto 270px;
+    }
+
+    html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop,
+    html body.sushiShop.sc-catalog-searching .listadoShop .productoShop,
+    html body.sushiShop.sc-catalog-searching .sc-catalog-search-grid .productoShop {
+      contain-intrinsic-block-size: auto 112px;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  @supports (content-visibility: auto) {
+    body.sushiShop .listadoShop .productoShop:hover {
+      content-visibility: visible;
+    }
+  }
+}
