@@ -1,5 +1,3 @@
-/* Punto de entrada de estilos del override. El orden de imports define la cascada:
-   primero bases y geometría; al final estados, compatibilidad y ajustes específicos. */
 @import "./core/variables.css?v=unversioned";
 @import "./core/theme.css?v=unversioned";
 @import "./core/a11y.css?v=unversioned";
