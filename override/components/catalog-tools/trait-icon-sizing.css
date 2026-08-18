@@ -1,4 +1,5 @@
-/* Igual alto óptico por llama en los tres niveles de picante. */
+/* Iguala el alto óptico de cada llama en los tres niveles de picante. El ancho queda libre
+   para conservar la cantidad y proporción original de llamas sin deformar ningún SVG. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='poco picante'] .sc-trait-icon,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='picante'] .sc-trait-icon,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='muy picante'] .sc-trait-icon {
