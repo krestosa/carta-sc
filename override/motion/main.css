@@ -17,12 +17,12 @@ body.sushiShop .listadoShop .productoShop {
   contain-intrinsic-size: none !important;
 }
 
-/* El loader legacy agrega sc-catalog-prepaint antes de cargar este CSS. Así el estado oculto
-   existe desde el primer paint y no aparece el catálogo para volver a ocultarse después. */
+/* El estado temprano ya existe cuando entra este CSS. Se libera cuando GSAP terminó de
+   preparar títulos y cards, evitando el flash visible previo al reveal. */
 @media (prefers-reduced-motion: no-preference) {
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
-  html.sc-catalog-prepaint body.sushiShop .listadoShop .productoShop,
+  html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .titleShopSeccion > div,
+  html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .subTitleShopSeccion,
+  html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .productoShop,
   html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
   html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
   html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .productoShop {
