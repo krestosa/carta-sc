@@ -94,7 +94,7 @@ body.sushiShop {
     padding: 0 0 var(--sc-category-link-padding-bottom) !important;
     border: 0 !important;
     background: transparent !important;
-    color: var(--sc-color-muted) !important;
+    color: var(--sc-color-copy) !important;
     box-shadow: none !important;
     font-family: var(--sc-font-primary) !important;
     font-size: 12px !important;
@@ -173,6 +173,6 @@ body.sushiShop {
 
 @media (min-width: 993px) and (hover: hover) and (pointer: fine) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink:hover:not(.sc-motion-current):not([aria-current='location']) {
-    color: var(--sc-color-copy) !important;
+    color: var(--sc-color-heading) !important;
   }
 }
