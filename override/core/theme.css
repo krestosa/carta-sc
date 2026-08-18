@@ -1,5 +1,4 @@
-/* Global color-mode contract. Manual theme changes interpolate these shared
-   palette tokens with GSAP. System appearance changes remain CSS-driven. */
+/* Contrato global de color; GSAP interpola cambios manuales. */
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;
@@ -9,6 +8,7 @@ html[data-sc-theme-resolved] {
   background-color: var(--sc-color-surface);
 }
 
+/* Paleta oscura resuelta. */
 html[data-sc-theme-resolved='dark'] {
   color-scheme: dark;
   --sc-color-ink: #f3f3f0;
@@ -23,6 +23,7 @@ html[data-sc-theme-resolved='dark'] {
   --sc-color-border-strong: #44443e;
 }
 
+/* Tema automático en sistema claro. */
 @media (prefers-color-scheme: light) {
   html[data-sc-theme='system'] {
     color-scheme: light;
@@ -39,6 +40,7 @@ html[data-sc-theme-resolved='dark'] {
   }
 }
 
+/* Tema automático en sistema oscuro. */
 @media (prefers-color-scheme: dark) {
   html[data-sc-theme='system'] {
     color-scheme: dark;
@@ -55,6 +57,7 @@ html[data-sc-theme-resolved='dark'] {
   }
 }
 
+/* Aplica superficie y tinta al documento. */
 body.sushiShop,
 body.sushiShop .sepFooter {
   background-color: var(--sc-color-surface) !important;
