@@ -41,6 +41,7 @@ python3 "$SCRIPTS/validate-pages-performance-budget.py"
 
 python3 "$SCRIPTS/optimize-pages-delivery.py"
 python3 "$SCRIPTS/optimize-pages-first-paint.py"
+python3 "$SCRIPTS/seed-pages-theme.py"
 python3 "$SCRIPTS/optimize-pages-first-viewport-media.py"
 python3 "$SCRIPTS/optimize-pages-breakpoint-media.py"
 python3 "$SCRIPTS/calibrate-system-logo.py" measure
@@ -60,6 +61,7 @@ python3 "$SCRIPTS/validate-system-load.py"
 # production integration requirements.
 grep -F 'id="sc-pages-critical-css"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-pages-delivery-loader"' "$SITE/index.html" >/dev/null
+grep -F 'id="sc-theme-prepaint"' "$SITE/index.html" >/dev/null
 test -s "$SITE/_pages/deferred.css"
 test -s "$SITE/_critical-media/sushiclub-logo.svg"
 test -s "$SITE/_critical-media/mobile-banner.webp"
