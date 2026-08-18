@@ -1,6 +1,4 @@
-/* Catalogue grid/container layout shared by card and section components.
-   Desktop is the default: 4-column high density. Narrower breakpoints only
-   override the values that are genuinely viewport-dependent. */
+/* Layout de grilla y contenedor del catálogo. */
 body.sushiShop {
   --sc-catalog-base-columns: 4;
   --sc-catalog-grid-row-gap: 36px;
@@ -8,11 +6,13 @@ body.sushiShop {
   --sc-catalog-gutter: 28px;
 }
 
+/* Oculta controles legacy que ya no participan. */
 body.sushiShop .topShop.bottomShop,
 body.sushiShop .productoShop .sumar {
   display: none !important;
 }
 
+/* Grilla base de alta densidad. */
 body.sushiShop .listadoShop {
   display: grid !important;
   grid-template-columns: repeat(var(--sc-catalog-base-columns), minmax(0, 1fr));
@@ -29,6 +29,7 @@ body.sushiShop .listadoShop:empty {
   display: none !important;
 }
 
+/* Títulos y separadores ocupan todas las columnas. */
 body.sushiShop .listadoShop > :not(.productoShop) {
   grid-column: 1 / -1;
   min-width: 0;
@@ -46,6 +47,7 @@ body.sushiShop .listadoShop > br {
   display: none !important;
 }
 
+/* Tablet: tres columnas y gutters menores. */
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
     --sc-catalog-base-columns: 3;
@@ -79,6 +81,7 @@ body.sushiShop .listadoShop > br {
   }
 }
 
+/* Móvil: dos columnas y contenedor más estrecho. */
 @media (max-width: 640px) {
   body.sushiShop {
     --sc-catalog-base-columns: 2;
