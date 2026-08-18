@@ -89,10 +89,6 @@ html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-p
   transform: none !important;
 }
 
-html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait*='picante'] {
-  transform: translateX(.5px) !important;
-}
-
 html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .descrip {
   grid-column: 1 !important;
   grid-row: 4 !important;
