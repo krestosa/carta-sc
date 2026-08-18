@@ -15,7 +15,11 @@ function ensureVisibilityObserver(){
   if(visibilityObserver||!canSuspend()||!window.IntersectionObserver)return!!visibilityObserver;
   visibilityObserver=new IntersectionObserver(function(entries){entries.forEach(observeEntry);},{root:null,rootMargin:'96px 0px 96px 0px',threshold:0});return true;
 }
-function track(node){if(!node||trackedSet.has(node)||!ensureVisibilityObserver())return;trackedSet.add(node);tracked.push(node);visibilityCache.set(node,{outside:false,width:0,height:0});visibilityObserver.observe(node);}
+function track(node){
+  if(!node||trackedSet.has(node)||!ensureVisibilityObserver())return;
+  var isList=!!(node.classList&&node.classList.contains('listadoShop')),list=isList?null:node.closest('.listadoShop');
+  trackedSet.add(node);tracked.push(node);visibilityCache.set(node,{outside:false,width:0,height:0,isList:isList,list:list});visibilityObserver.observe(node);
+}
 function prepareVisibilityCache(){
   prepareScheduled=false;if(!ensureVisibilityObserver()||!document.body)return;
   Array.prototype.forEach.call(document.querySelectorAll('body.sushiShop .listadoShop:not(.sc-catalog-search-grid),body.sushiShop .listadoShop:not(.sc-catalog-search-grid) .productoShop:not([hidden])'),track);
@@ -26,10 +30,12 @@ function scheduleVisibilityCache(){
   var run=prepareVisibilityCache;
   if(window.requestIdleCallback)window.requestIdleCallback(run,{timeout:250});else requestAnimationFrame(run);
 }
+function eligible(node,state){return!!(state&&state.outside&&state.width&&state.height&&!node.hidden&&document.documentElement.contains(node));}
 function remember(node,state,reads){var style=node.style;reads.push({node:node,width:state.width,height:state.height,visibility:{value:style.getPropertyValue('content-visibility'),priority:style.getPropertyPriority('content-visibility')},intrinsic:{value:style.getPropertyValue('contain-intrinsic-size'),priority:style.getPropertyPriority('contain-intrinsic-size')}});}
 function suspendOffscreen(){
-  restoreRendering();if(!canSuspend()||!visibilityObserver)return;flushVisibilityRecords();var reads=[];
-  tracked.forEach(function(node){var state=visibilityCache.get(node);if(!state||!state.outside||!state.width||!state.height||node.hidden||!document.documentElement.contains(node))return;remember(node,state,reads);});
+  restoreRendering();if(!canSuspend()||!visibilityObserver)return;flushVisibilityRecords();var reads=[],outsideLists=new WeakSet();
+  tracked.forEach(function(node){var state=visibilityCache.get(node);if(!state||!state.isList||!eligible(node,state))return;outsideLists.add(node);remember(node,state,reads);});
+  tracked.forEach(function(node){var state=visibilityCache.get(node);if(!state||state.isList||!eligible(node,state)||(state.list&&outsideLists.has(state.list)))return;remember(node,state,reads);});
   reads.forEach(function(item){item.node.style.setProperty('contain-intrinsic-size','auto '+item.width+'px auto '+item.height+'px');item.node.style.setProperty('content-visibility','auto');});suspended=reads;
 }
 function kill(){token++;if(tween){try{tween.kill();}catch(_){}tween=null;}restoreRendering();scheduleVisibilityCache();}
