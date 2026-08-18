@@ -3,11 +3,29 @@
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,CFG={duration:.16,reflowDuration:.14,stableDelta:1.5,stableFrames:1,maxChecks:5,rescueDelay:700};if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
+
+/* La cola pertenece al catálogo, no al orden de carga de headings/cards. En Pages este módulo
+   puede ejecutarse antes de section-heading.js, por lo que debe existir desde aquí también. */
+function ensureQueue(){
+  if(SC.catalogRevealQueue)return SC.catalogRevealQueue;
+  var waiting=[],active=null,states=new WeakMap();
+  function state(node){var value=states.get(node);if(!value){value={queued:false,running:false,done:false};states.set(node,value);}return value;}
+  function before(a,b){if(a===b)return 0;var relation=a.compareDocumentPosition(b);return relation&(window.Node?Node.DOCUMENT_POSITION_FOLLOWING:4)?-1:1;}
+  function sort(){waiting.sort(function(a,b){return before(a.node,b.node);});}
+  function pump(){if(active||!waiting.length)return;sort();var item=waiting.shift(),value=state(item.node);value.queued=false;if(value.done){pump();return;}active=item;value.running=true;var settled=false;function done(){if(settled)return;settled=true;value.running=false;value.done=true;if(active===item)active=null;pump();}try{item.run(done);}catch(error){if(window.console&&console.error)console.error('[SushiClub catalog reveal]',error);done();}}
+  function enqueue(node,run){if(!node||typeof run!=='function')return;var value=state(node);if(value.done||value.queued||value.running)return;value.queued=true;waiting.push({node:node,run:run});pump();}
+  function complete(node){if(!node)return;var value=state(node);value.done=true;value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(active&&active.node===node)active=null;pump();}
+  function cancel(node){if(!node)return;var value=state(node);value.queued=false;value.running=false;waiting=waiting.filter(function(item){return item.node!==node;});if(active&&active.node===node)active=null;pump();}
+  function isDone(node){return!!(node&&state(node).done);}
+  return SC.catalogRevealQueue={enqueue:enqueue,complete:complete,cancel:cancel,isDone:isDone,pump:pump};
+}
+ensureQueue();
+
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 parts.setupReveal=function(gsap,ST,profile,reduce){
   var cards=gsap.utils.toArray(S.productCards),observer=null,mutationObserver=null,pending=new Set(),states=new WeakMap(),triggers=[],timer=0,generation=1,ratio=Math.max(.5,Math.min(1,Number(profile&&profile.triggerRatio)||.9));
   function noop(){}
-  function queue(){return SC.catalogRevealQueue;}
+  function queue(){return ensureQueue();}
   function state(card){var value=states.get(card);if(!value){value={prepared:false,checking:false,trigger:null};states.set(card,value);}return value;}
   function renderable(card){return!!(card&&!card.hidden&&card.offsetParent!==null&&card.getBoundingClientRect().height>0);}
   function nearViewport(card){var rect=card.getBoundingClientRect();return rect.bottom>=0&&rect.top<=innerHeight*ratio;}
