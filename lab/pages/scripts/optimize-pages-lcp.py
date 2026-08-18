@@ -2,13 +2,17 @@
 import os
 import posixpath
 import re
+import time
 from pathlib import Path
+from urllib.parse import urlsplit
+from urllib.request import Request, urlopen
 
 SITE = Path('.pages-site')
 INDEX = SITE / 'index.html'
 DEFERRED = SITE / '_pages/deferred.css'
 SHA = os.environ.get('GITHUB_SHA', '')
 FIRST_VIEWPORT_COUNT = 4
+MAX_FONT_BYTES = 180_000
 
 if not re.fullmatch(r'[0-9a-f]{40}', SHA):
     raise SystemExit('GITHUB_SHA is missing or invalid')
@@ -61,13 +65,68 @@ def promote_first_viewport(html):
 
 def roboto_face_pattern():
     return re.compile(
-        r'@font-face\s*\{(?=[^{}]*\bfont-family\s*:\s*["\']?Roboto["\']?)[^{}]*\}',
+        r'@font-face\s*\{(?P<body>(?=[^{}]*\bfont-family\s*:\s*["\']?Roboto["\']?)[^{}]*)\}',
         re.IGNORECASE,
     )
 
 
-def remove_remote_roboto(deferred, html):
-    deferred, removed = roboto_face_pattern().subn('', deferred)
+def download_font(url, index):
+    error = None
+    for attempt in range(3):
+        try:
+            request = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urlopen(request, timeout=10) as response:
+                data = response.read()
+                ctype = (response.headers.get_content_type() or '').lower()
+            if not data or len(data) > MAX_FONT_BYTES:
+                raise ValueError(f'invalid font byte size: {len(data)}')
+            if not (ctype.startswith('font/') or ctype in {'application/font-sfnt', 'application/octet-stream'}):
+                raise ValueError(f'unexpected font content type: {ctype}')
+            suffix = Path(urlsplit(url).path).suffix.lower()
+            if suffix not in {'.woff2', '.woff', '.ttf', '.otf'}:
+                suffix = '.woff2'
+            out = SITE / '_critical-fonts'
+            out.mkdir(parents=True, exist_ok=True)
+            target = out / f'roboto-{index}{suffix}'
+            target.write_bytes(data)
+            mime = {
+                '.woff2': 'font/woff2', '.woff': 'font/woff',
+                '.ttf': 'font/ttf', '.otf': 'font/otf',
+            }[suffix]
+            return target, mime
+        except Exception as exc:
+            error = exc
+            if attempt < 2:
+                time.sleep(.5 * (attempt + 1))
+    raise SystemExit(f'cannot localize Roboto font {url}: {error}')
+
+
+def localize_roboto(deferred, html):
+    matches = list(roboto_face_pattern().finditer(deferred))
+    replacements = []
+    preloads = []
+    for index, match in enumerate(matches, 1):
+        block = match.group(0)
+        remote = re.search(
+            r'url\(\s*["\']?(?P<url>https://fonts\.gstatic\.com/[^)"\']+)["\']?\s*\)',
+            block,
+            re.IGNORECASE,
+        )
+        if not remote:
+            continue
+        target, mime = download_font(remote.group('url'), index)
+        href = f'_critical-fonts/{target.name}?v={SHA}'
+        css_href = f'../{href}'
+        localized = block[:remote.start('url')] + css_href + block[remote.end('url'):]
+        replacements.append((match.start(), match.end(), localized))
+        preloads.append((href, mime))
+
+    for start, end, replacement in reversed(replacements):
+        deferred = deferred[:start] + replacement + deferred[end:]
+
+    # If fetching the Google stylesheet failed in an earlier stage, its
+    # non-blocking fallback link may still exist. Static Pages must never depend
+    # on that external chain; normal font-family fallbacks remain available.
     html = re.sub(
         r'<link\b(?=[^>]*\bhref=["\']https://fonts\.(?:googleapis|gstatic)\.com/[^"\']*["\'])[^>]*>\s*',
         '',
@@ -80,11 +139,23 @@ def remove_remote_roboto(deferred, html):
         html,
         flags=re.IGNORECASE,
     )
+
     if 'fonts.gstatic.com' in deferred or 'fonts.googleapis.com' in deferred:
         raise SystemExit('remote Google font URL remains in deferred CSS')
     if 'fonts.gstatic.com' in html or 'fonts.googleapis.com' in html:
         raise SystemExit('remote Google font URL remains in final HTML')
-    return deferred, html, removed
+
+    if preloads:
+        head = re.search(r'<head\b[^>]*>', html, re.IGNORECASE)
+        if not head:
+            raise SystemExit('head missing while injecting localized Roboto preloads')
+        links = ''.join(
+            f'\n<link class="sc-roboto-preload" rel="preload" href="{href}" '
+            f'as="font" type="{mime}" crossorigin fetchpriority="high">'
+            for href, mime in preloads
+        )
+        html = html[:head.end()] + links + html[head.end():]
+    return deferred, html, preloads
 
 
 def preload_fontawesome(deferred, html):
@@ -111,7 +182,7 @@ def preload_fontawesome(deferred, html):
     return html, href
 
 
-def verify(html, deferred, promoted, fontawesome_href):
+def verify(html, deferred, promoted, roboto_preloads, fontawesome_href):
     if len(promoted) != FIRST_VIEWPORT_COUNT:
         raise SystemExit('first-viewport LCP promotion count mismatch')
     for index, src in enumerate(promoted, 1):
@@ -131,8 +202,12 @@ def verify(html, deferred, promoted, fontawesome_href):
     preload = re.search(r'<link\b[^>]*id=["\']sc-product-lcp-preload["\'][^>]*>', html, re.IGNORECASE)
     if not preload or promoted[0] not in preload.group(0):
         raise SystemExit('product LCP preload does not target product 1')
-    if roboto_face_pattern().search(deferred):
-        raise SystemExit('remote Roboto @font-face remains in deferred CSS')
+    for href, _ in roboto_preloads:
+        if href not in html:
+            raise SystemExit(f'localized Roboto preload missing: {href}')
+        local = SITE / href.split('?', 1)[0]
+        if not local.is_file() or local.stat().st_size < 1000:
+            raise SystemExit(f'localized Roboto font missing or invalid: {local}')
     if fontawesome_href and html.count('id="sc-fontawesome-preload"') != 1:
         raise SystemExit('Font Awesome preload missing or duplicated')
 
@@ -141,14 +216,14 @@ def main():
     html = INDEX.read_text(encoding='utf-8')
     deferred = DEFERRED.read_text(encoding='utf-8')
     html, promoted = promote_first_viewport(html)
-    deferred, html, roboto_faces = remove_remote_roboto(deferred, html)
+    deferred, html, roboto_preloads = localize_roboto(deferred, html)
     html, fontawesome_href = preload_fontawesome(deferred, html)
-    verify(html, deferred, promoted, fontawesome_href)
+    verify(html, deferred, promoted, roboto_preloads, fontawesome_href)
     INDEX.write_text(html, encoding='utf-8')
     DEFERRED.write_text(deferred, encoding='utf-8')
     print(
         f'Pages LCP optimized: {len(promoted)} first-viewport products are HTML-discoverable/eager/high; '
-        f'product-1 preloaded; removed {roboto_faces} remote Roboto face(s); '
+        f'product-1 preloaded; localized {len(roboto_preloads)} Roboto face(s); '
         + (f'Font Awesome preloaded from {fontawesome_href}.' if fontawesome_href else 'No Font Awesome preload required.')
     )
 
