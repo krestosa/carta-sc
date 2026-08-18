@@ -94,11 +94,17 @@ for stale in (
 # delivery loader owns the exact optimized runtime manifest and creates the tags
 # only after first paint / idle. Audit that real browser load path as well.
 runtime_manifest = (
-    "A=['js/jquery-2.1.0.min.js','_pages/legacy.js?v='+S,"
+    "A=['js/jquery-2.1.0.min.js','_pages/php-guard.js?v='+S,'_pages/legacy.js?v='+S,"
     "'_js_dev/main-legacy.js?v='+S,'override/main.js?v='+S,'_pages/shop.js?v='+S]"
 )
 if html.count(runtime_manifest) != 1:
     issues.append(f'optimized deferred runtime manifest count must be 1, found {html.count(runtime_manifest)}')
+if not (SITE / '_pages/php-guard.js').is_file():
+    issues.append('static Pages PHP transport guard is missing')
+if 'keepSessionAlive' in html or 'keepalive: 1' in html:
+    issues.append('captured PHP session keepalive remains in final Pages HTML')
+if html.count("'_pages/php-guard.js?v='+S") != 1:
+    issues.append('PHP transport guard runtime reference is missing or duplicated')
 if html.count("c.href='_pages/deferred.css?v='+S") != 1:
     issues.append('optimized deferred stylesheet loader is missing or duplicated')
 
