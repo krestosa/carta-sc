@@ -1,0 +1,72 @@
+name: Build Systems handoff
+
+on:
+  push:
+    branches:
+      - ux
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: systems-handoff-ux
+  cancel-in-progress: true
+
+jobs:
+  handoff:
+    if: github.ref == 'refs/heads/ux'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GITHUB_PAGES: 'true'
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Validate sources
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node scripts/validate-overrides.mjs
+          node scripts/validate-production-boundary.mjs
+          node scripts/validate-responsive-contract.mjs
+          python3 -m compileall -q lab/pages/scripts
+          bash -n lab/pages/build.sh
+          bash -n lab/systems/build-handoff.sh
+
+      - name: Install build dependencies
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check --no-input -r lab/pages/requirements.txt
+
+      - name: Build optimized site
+        shell: bash
+        run: bash lab/pages/build.sh
+
+      - name: Build Systems folder
+        shell: bash
+        run: bash lab/systems/build-handoff.sh
+
+      - name: Verify Systems package
+        shell: bash
+        run: |
+          test -s .systems-handoff/README.md
+          test -s .systems-handoff/BUILD_SHA
+          test -s .systems-handoff/compiled/index.html
+          test -d .systems-handoff/source/override
+          test -d .systems-handoff/source/lab/pages/scripts
+          test -x .systems-handoff/build-local.sh
+          test -x .systems-handoff/serve-local.sh
+          test "$(cat .systems-handoff/BUILD_SHA)" = "$GITHUB_SHA"
+
+      - name: Upload Systems handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: sistemas-handoff-${{ github.sha }}
+          path: .systems-handoff
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
