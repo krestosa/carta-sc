@@ -59,12 +59,15 @@ def promote_first_viewport(html):
     return html, promoted
 
 
-def remove_remote_roboto(deferred, html):
-    face = re.compile(
+def roboto_face_pattern():
+    return re.compile(
         r'@font-face\s*\{(?=[^{}]*\bfont-family\s*:\s*["\']?Roboto["\']?)[^{}]*\}',
         re.IGNORECASE,
     )
-    deferred, removed = face.subn('', deferred)
+
+
+def remove_remote_roboto(deferred, html):
+    deferred, removed = roboto_face_pattern().subn('', deferred)
     html = re.sub(
         r'<link\b(?=[^>]*\bhref=["\']https://fonts\.(?:googleapis|gstatic)\.com/[^"\']*["\'])[^>]*>\s*',
         '',
@@ -125,10 +128,11 @@ def verify(html, deferred, promoted, fontawesome_href):
             raise SystemExit(f'first-viewport product {index} is still deferred')
     if html.count('id="sc-product-lcp-preload"') != 1:
         raise SystemExit('product LCP preload missing or duplicated')
-    if promoted[0] not in re.search(r'<link\b[^>]*id=["\']sc-product-lcp-preload["\'][^>]*>', html, re.IGNORECASE).group(0):
+    preload = re.search(r'<link\b[^>]*id=["\']sc-product-lcp-preload["\'][^>]*>', html, re.IGNORECASE)
+    if not preload or promoted[0] not in preload.group(0):
         raise SystemExit('product LCP preload does not target product 1')
-    if re.search(r'font-family\s*:\s*["\']?Roboto["\']?', deferred, re.IGNORECASE):
-        raise SystemExit('Roboto @font-face remains in deferred CSS')
+    if roboto_face_pattern().search(deferred):
+        raise SystemExit('remote Roboto @font-face remains in deferred CSS')
     if fontawesome_href and html.count('id="sc-fontawesome-preload"') != 1:
         raise SystemExit('Font Awesome preload missing or duplicated')
 
