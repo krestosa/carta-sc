@@ -1,6 +1,6 @@
-/* SushiClub catalogue foundation. Shared tokens and container geometry are the
-   desktop-first base; breakpoint files only override viewport-specific values. */
+/* Base del catálogo y contenedor principal. */
 
+/* Fuentes locales usadas por la interfaz. */
 @font-face {
   font-family: 'SC Acumin';
   src: url('../../../_remote-assets/fuentes/AcuminPro-Regular.woff2') format('woff2');
@@ -17,12 +17,14 @@
   font-display: swap;
 }
 
+/* Oculta la búsqueda legacy reemplazada por la actual. */
 body.sushiShop #busquedaJSBox,
 body.sushiShop #busquedaJSBox + div,
 body.sushiShop #busquedaJSBoxResults {
   display: none !important;
 }
 
+/* Centra el catálogo y limita su ancho. */
 body.sushiShop .containerShop {
   box-sizing: border-box;
   width: calc(100% - var(--sc-catalog-inline-space)) !important;
@@ -47,6 +49,7 @@ body.sushiShop .containerShop .col-md-9.normCols {
   padding-left: 0 !important;
 }
 
+/* En desktop el menú móvil vuelve al flujo normal. */
 @media (min-width: 993px) {
   body.sushiShop .fixedTopShop.wtopShopMenuMobile {
     position: static !important;
@@ -63,6 +66,7 @@ body.sushiShop .containerShop .col-md-9.normCols {
   }
 }
 
+/* Reduce gutters en desktop angosto. */
 @media (min-width: 993px) and (max-width: 1120px) {
   body.sushiShop {
     --sc-catalog-gutter: 24px;
