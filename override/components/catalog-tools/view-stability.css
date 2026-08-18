@@ -208,7 +208,7 @@ body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
 }
 
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
-  bottom: 0 !important;
+  bottom: 1px !important;
   height: 16px !important;
   line-height: 16px !important;
   vertical-align: baseline !important;
