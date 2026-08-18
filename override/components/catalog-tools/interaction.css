@@ -1,0 +1,189 @@
+/* Material 3 interaction affordance for catalogue controls.
+   CSS owns containers/state layers only; GSAP continues to own glyph transforms and morphs. */
+body.sushiShop {
+  --sc-m3-state-hover: .08;
+  --sc-m3-state-focus: .10;
+  --sc-m3-state-pressed: .10;
+  --sc-m3-chip-radius: 8px;
+}
+
+/* Outlined icon buttons: persistent container makes clickability visible at rest.
+   The pseudo-element is the M3 state layer and never writes transform. */
+body.sushiShop .sc-theme-toggle,
+body.sushiShop .sc-catalog-view-toggle {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden;
+  border: var(--sc-border-hairline) solid var(--sc-color-border) !important;
+  border-radius: 50% !important;
+  background: var(--sc-color-surface-raised) !important;
+  color: var(--sc-color-ink) !important;
+  cursor: pointer !important;
+  touch-action: manipulation;
+  transition:
+    border-color 120ms var(--sc-motion-ease-out),
+    background-color 120ms var(--sc-motion-ease-out),
+    color 120ms var(--sc-motion-ease-out) !important;
+}
+
+body.sushiShop .sc-theme-toggle::before,
+body.sushiShop .sc-catalog-view-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--sc-color-ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 90ms linear;
+}
+
+body.sushiShop .sc-theme-toggle > *,
+body.sushiShop .sc-catalog-view-toggle > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.sushiShop .sc-theme-toggle:hover,
+body.sushiShop .sc-catalog-view-toggle:hover,
+body.sushiShop .sc-theme-toggle[aria-expanded='true'] {
+  border-color: var(--sc-color-border-strong) !important;
+}
+
+body.sushiShop .sc-theme-toggle:hover::before,
+body.sushiShop .sc-catalog-view-toggle:hover::before,
+body.sushiShop .sc-theme-toggle[aria-expanded='true']::before {
+  opacity: var(--sc-m3-state-hover);
+}
+
+body.sushiShop .sc-theme-toggle:focus-visible,
+body.sushiShop .sc-catalog-view-toggle:focus-visible {
+  outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
+  outline-offset: var(--sc-focus-ring-offset-tight) !important;
+  border-color: var(--sc-color-ink) !important;
+}
+
+body.sushiShop .sc-theme-toggle:focus-visible::before,
+body.sushiShop .sc-catalog-view-toggle:focus-visible::before {
+  opacity: var(--sc-m3-state-focus);
+}
+
+body.sushiShop .sc-theme-toggle:active,
+body.sushiShop .sc-catalog-view-toggle:active {
+  background: var(--sc-color-surface-raised) !important;
+  border-color: var(--sc-color-ink) !important;
+  box-shadow: none !important;
+}
+
+body.sushiShop .sc-theme-toggle:active::before,
+body.sushiShop .sc-catalog-view-toggle:active::before {
+  opacity: var(--sc-m3-state-pressed);
+}
+
+/* Spice/vegetarian controls behave as neutral M3 filter chips.
+   Selected state uses two indicators: filled container + inverted content. */
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
+  --sc-m3-state-layer-color: var(--sc-color-ink);
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  border: var(--sc-border-hairline) solid var(--sc-color-border-strong) !important;
+  border-radius: var(--sc-m3-chip-radius) !important;
+  background: var(--sc-color-surface-raised) !important;
+  color: var(--sc-color-heading) !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  user-select: none;
+  touch-action: manipulation;
+  transition:
+    border-color 120ms var(--sc-motion-ease-out),
+    background-color 120ms var(--sc-motion-ease-out),
+    color 120ms var(--sc-motion-ease-out) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  border-radius: inherit !important;
+  background: var(--sc-m3-state-layer-color) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 90ms linear !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::after {
+  content: none !important;
+  display: none !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:hover,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:focus-visible {
+  border-color: var(--sc-color-ink) !important;
+  color: var(--sc-color-ink) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:hover::before {
+  opacity: var(--sc-m3-state-hover) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:focus-visible {
+  outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
+  outline-offset: var(--sc-focus-ring-offset-tight) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:focus-visible::before {
+  opacity: var(--sc-m3-state-focus) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:active::before {
+  opacity: var(--sc-m3-state-pressed) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.is-active,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip[aria-pressed='true'] {
+  --sc-m3-state-layer-color: var(--sc-color-surface);
+  border-color: var(--sc-color-ink) !important;
+  background: var(--sc-color-ink) !important;
+  color: var(--sc-color-surface) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.is-active .imgRef,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip[aria-pressed='true'] .imgRef,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.is-active .ref_label,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip[aria-pressed='true'] .ref_label {
+  color: var(--sc-color-surface) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:hover .imgRef,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:focus-visible .imgRef {
+  color: currentColor !important;
+}
+
+@media (hover: none), (pointer: coarse) {
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
+    min-height: 36px !important;
+    padding-right: 12px !important;
+    padding-left: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .sc-theme-toggle,
+  body.sushiShop .sc-catalog-view-toggle,
+  body.sushiShop .sc-theme-toggle::before,
+  body.sushiShop .sc-catalog-view-toggle::before,
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip,
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::before {
+    transition: none !important;
+  }
+}
