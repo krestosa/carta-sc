@@ -48,10 +48,12 @@ python3 "$SCRIPTS/calibrate-system-logo.py" measure
 python3 "$SCRIPTS/replace-system-logo.py"
 python3 "$SCRIPTS/calibrate-system-logo.py" apply
 python3 "$SCRIPTS/prune-pages-superseded-media.py"
+python3 "$SCRIPTS/disable-pages-php-runtime.py"
 
 node --check "$SITE/override/main.js"
 node --check "$SITE/_pages/legacy.js"
 node --check "$SITE/_pages/shop.js"
+node --check "$SITE/_pages/php-guard.js"
 node --check "$SITE/_js_dev/main-legacy.js"
 python3 "$SCRIPTS/validate-pages-local-assets.py"
 python3 "$SCRIPTS/validate-pages-html.py"
@@ -62,7 +64,9 @@ python3 "$SCRIPTS/validate-system-load.py"
 grep -F 'id="sc-pages-critical-css"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-pages-delivery-loader"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-theme-prepaint"' "$SITE/index.html" >/dev/null
+grep -F "'_pages/php-guard.js?v='+S" "$SITE/index.html" >/dev/null
 test -s "$SITE/_pages/deferred.css"
+test -s "$SITE/_pages/php-guard.js"
 test -s "$SITE/_critical-media/sushiclub-logo.svg"
 test -s "$SITE/_critical-media/mobile-banner.webp"
 test ! -e "$SITE/_critical-media/mobile-logo.webp"
@@ -78,6 +82,10 @@ done
 grep -F "querySelectorAll('img[data-sc-first-viewport]')" "$SITE/index.html" >/dev/null
 grep -F "querySelectorAll('img[data-sc-desktop-src]')" "$SITE/index.html" >/dev/null
 
+if grep -F 'keepSessionAlive' "$SITE/index.html" >/dev/null; then
+  echo 'Captured PHP session keepalive remains in lab artifact' >&2
+  exit 1
+fi
 if grep -F '_critical-media/mobile-logo.png?v=' "$SITE/index.html" >/dev/null; then
   echo 'Legacy mobile LCP PNG remains in lab artifact' >&2
   exit 1
