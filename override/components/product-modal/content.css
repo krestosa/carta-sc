@@ -24,7 +24,7 @@ body.sushiShop .sc-product-modal__secondary-meta {
   display: inline-flex !important;
   order: 2 !important;
   flex: 0 0 auto !important;
-  align-items: baseline !important;
+  align-items: flex-end !important;
   justify-content: flex-start !important;
   gap: 5px !important;
   width: max-content !important;
@@ -39,10 +39,10 @@ body.sushiShop .sc-product-modal__traits {
   order: 2 !important;
   flex: 0 0 auto !important;
   align-items: flex-end !important;
-  align-self: baseline !important;
+  align-self: flex-end !important;
   gap: 5px !important;
   height: var(--sc-modal-traits-size) !important;
-  margin: 0 !important;
+  margin: 0 0 1px !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
 }
