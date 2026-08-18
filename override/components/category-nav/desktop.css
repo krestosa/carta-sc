@@ -1,5 +1,5 @@
-/* Desktop category rail structure and active state. */
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Estructura y estado activo del riel en desktop. */
+/* Tokens locales del componente. */
 body.sushiShop {
   --sc-z-category-indicator: 9;
   --sc-z-category-overflow: 50;
@@ -21,6 +21,7 @@ body.sushiShop {
   --sc-category-dropdown-offset-y: -6px;
 }
 
+/* Fija el riel y habilita scroll horizontal sin scrollbar. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
     position: -webkit-sticky;
@@ -87,6 +88,7 @@ body.sushiShop {
     border: 0 !important;
   }
 
+  /* Normaliza links y estados de foco/activo. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink {
     display: block !important;
     position: relative !important;
@@ -132,6 +134,7 @@ body.sushiShop {
     display: none !important;
   }
 
+  /* Dibuja la línea base del riel. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop::before {
     content: '';
     position: absolute;
@@ -147,6 +150,7 @@ body.sushiShop {
     z-index: var(--sc-z-raised);
   }
 
+  /* El indicador activo se anima desde JS. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
     bottom: var(--sc-category-rule-offset) !important;
     height: var(--sc-category-indicator-height) !important;
@@ -171,6 +175,7 @@ body.sushiShop {
   }
 }
 
+/* Hover solo para puntero preciso. */
 @media (min-width: 993px) and (hover: hover) and (pointer: fine) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink:hover:not(.sc-motion-current):not([aria-current='location']) {
     color: var(--sc-color-heading) !important;
