@@ -1,8 +1,9 @@
-/* Stateful mobile menu icon and theme-aware logo treatment. */
+/* Icono de menú por estado y logo adaptado al tema. */
 @media (max-width: 992px) {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar,
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar + .slicknav_icon-bar { display: none !important; }
 
+  /* Reemplaza las barras legacy por un SVG único. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .sc-mobile-menu-state-icon {
     display: block !important;
     width: var(--sc-mobile-menu-icon-size) !important;
@@ -13,6 +14,7 @@
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .sc-mobile-menu-state-icon path { fill: currentColor !important; }
 
+  /* Invierte logo y panel en tema oscuro. */
   html[data-sc-theme-resolved='dark'] body.sushiShop .brandOnlyMobile img {
     filter: invert(1) brightness(1.08);
   }
@@ -26,6 +28,7 @@
   }
 }
 
+/* Tema automático con sistema claro. */
 @media (max-width: 992px) and (prefers-color-scheme: light) {
   html[data-sc-theme='system'] body.sushiShop .brandOnlyMobile img { filter: none; }
   html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
@@ -38,6 +41,7 @@
   }
 }
 
+/* Tema automático con sistema oscuro. */
 @media (max-width: 992px) and (prefers-color-scheme: dark) {
   html[data-sc-theme='system'] body.sushiShop .brandOnlyMobile img { filter: invert(1) brightness(1.08); }
   html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
