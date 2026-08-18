@@ -130,3 +130,21 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   object-fit: contain !important;
   transform: none !important;
 }
+
+/* List traits belong to the description divider, not to the price line. The
+   card link is the positioned containing block; row 4 ends at the card bottom,
+   so this keeps the icon group centered on the description border at every
+   list breakpoint while the responsive image/gap tokens determine its x-axis. */
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
+  position: absolute !important;
+  left: calc(var(--sc-view-list-image-width) + var(--sc-view-list-column-gap)) !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: calc(var(--sc-view-list-description-max-height) - 6.5px) !important;
+  z-index: 1 !important;
+  align-self: auto !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  padding: 0 6px 0 0 !important;
+  background: var(--sc-color-surface) !important;
+}
