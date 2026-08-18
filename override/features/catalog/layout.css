@@ -1,8 +1,8 @@
 /* Catalogue grid/container layout shared by card and section components.
-   Desktop is the default: 4-column high density. Narrower breakpoints only
-   override the values that are genuinely viewport-dependent. */
+   High-density grid uses two columns at every breakpoint; narrower breakpoints
+   only override spacing and container geometry. */
 body.sushiShop {
-  --sc-catalog-base-columns: 4;
+  --sc-catalog-base-columns: 2;
   --sc-catalog-grid-row-gap: 36px;
   --sc-catalog-section-bottom: 74px;
 }
@@ -47,7 +47,7 @@ body.sushiShop .listadoShop > br {
 
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
-    --sc-catalog-base-columns: 3;
+    --sc-catalog-base-columns: 2;
     --sc-catalog-grid-row-gap: 34px;
     --sc-catalog-section-bottom: 64px;
   }
