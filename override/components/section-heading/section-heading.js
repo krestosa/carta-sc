@@ -4,7 +4,7 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion;
 if(!SC||!C||!SC.motion||typeof SC.motion.whenReady!=='function'||SC.__sectionHeadingBooted)return;SC.__sectionHeadingBooted=true;
-var initialized=false,motionDeps=null,generation=0,observer=null,mutationObserver=null,pending=null,elements=[],splits=[],tweens=[],triggers=[],headingStates=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={ruleDuration:.40,textDuration:.32,textStagger:.028,triggerStart:'clamp(top 90%)',triggerRatio:.90,lineOffsetPercent:68,stableDelta:1.5,stableFrames:2,maxChecks:8,refreshDelay:60};
+var initialized=false,motionDeps=null,generation=0,observer=null,mutationObserver=null,pending=null,elements=[],splits=[],tweens=[],triggers=[],headingStates=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={ruleDuration:.20,textDuration:.20,textStagger:.018,triggerStart:'clamp(top 90%)',triggerRatio:.90,lineOffsetPercent:64,stableDelta:1.5,stableFrames:1,maxChecks:5,refreshDelay:60};
 
 /* Cola única del catálogo. Sólo contiene unidades ya confirmadas cerca del viewport. */
 var queue=SC.catalogRevealQueue;
