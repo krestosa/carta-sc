@@ -30,12 +30,12 @@ function railState(){
 }
 function scheduleFrame(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
 function scheduleRail(){
-  /* Dirty rail requests follow DOM/style writes, so invalidate cached nodes and
-     defer geometry reads to the existing double-rAF measurement phase. */
+  /* Structural/geometry changes invalidate cached nodes and sticky positions. */
   invalidateNodes();overflowDirty=true;stickyDirty=true;scheduleMeasure();
 }
+function scheduleOverflow(){overflowDirty=true;scheduleFrame();}
 function scheduleSticky(){scheduleFrame();}
 function cancel(){if(railRaf)cancelAnimationFrame(railRaf);if(measureRaf)cancelAnimationFrame(measureRaf);if(measureRaf2)cancelAnimationFrame(measureRaf2);railRaf=measureRaf=measureRaf2=0;invalidateNodes();}
 function requestCenter(previous,target){if(document.body.classList.contains(K.catalogSearching)){scheduleRail();return;}if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleRail();}
-N.scheduleRail=scheduleRail;N.scheduleSticky=scheduleSticky;N.requestCenterActive=requestCenter;N.scheduleRailState=scheduleRail;N.railState=railState;N.cancelRailState=cancel;
+N.scheduleRail=scheduleRail;N.scheduleOverflow=scheduleOverflow;N.scheduleSticky=scheduleSticky;N.requestCenterActive=requestCenter;N.scheduleRailState=scheduleRail;N.railState=railState;N.cancelRailState=cancel;
 })();
