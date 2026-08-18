@@ -1,5 +1,4 @@
-/* Canonical catalogue list geometry.
-   Desktop defines the base contract; narrower breakpoints override tokens only. */
+/* Geometría base de la vista lista; los breakpoints solo ajustan tokens. */
 body.sushiShop {
   --sc-view-list-columns: 2;
   --sc-view-list-image-width: 210px;
@@ -38,8 +37,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop {
   margin-bottom: var(--sc-compact-section-bottom) !important;
 }
 
-/* List geometry is owned only by the selected list view. Search is layout-neutral
-   and therefore inherits whichever view is already active. */
+/* La búsqueda hereda lista sin redefinir su geometría. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
   align-self: start !important;
   height: auto !important;
@@ -134,8 +132,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .des
   -webkit-line-clamp: unset !important;
 }
 
-/* Old low-density values may exist for one frame in legacy storage/bootstrap.
-   Treat them exactly like density until JS migrates them to compact. */
+/* El estado legacy normal se trata como compact hasta migrarlo. */
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop {
   grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
   column-gap: var(--sc-compact-column-gap) !important;
@@ -155,8 +152,7 @@ html.sc-catalog-view-switching body.sushiShop {
   scroll-behavior: auto !important;
 }
 
-/* The paragraph owns spacing only. The text itself is clipped by a dedicated
-   two-line block; 32px remains the fallback for engines without `lh`. */
+/* El párrafo conserva espaciado; el texto se recorta en dos líneas. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box !important;
@@ -193,8 +189,7 @@ body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   }
 }
 
-/* The CTA belongs to the two-line text viewport itself, not to the padded
-   paragraph. This makes its baseline identical to the second description line. */
+/* “Ver detalle” comparte baseline con la segunda línea. */
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
   content: none !important;
   display: none !important;

@@ -1,4 +1,4 @@
-/* Category rail overflow controls and final baseline geometry. */
+/* Controles de overflow y geometría final del riel. */
 body.sushiShop .sc-rail-arrow {
   box-sizing: border-box !important;
   display: flex !important;
@@ -23,7 +23,7 @@ body.sushiShop .sc-rail-arrow {
   touch-action: manipulation;
 }
 
-/* Expand the interactive region without changing the visible arrow geometry. */
+/* Amplía el target sin cambiar la flecha visible. */
 body.sushiShop .sc-rail-arrow::before {
   content: '';
   position: absolute;
@@ -68,9 +68,7 @@ body.sushiShop .sc-rail-arrow:focus-visible {
   outline-offset: var(--sc-focus-ring-offset-tight) !important;
 }
 
-/* A single floating submenu is reused for every category. Keeping it outside
-   the horizontal scroller avoids vertical clipping while preserving the rail's
-   geometry and active indicator. */
+/* Un submenú flotante evita el recorte vertical del scroller. */
 body.sushiShop > .sc-category-submenu {
   box-sizing: border-box;
   position: fixed;
@@ -196,7 +194,7 @@ body.sushiShop .nav-top-li.sc-submenu-open > a.anchorLink .sc-category-submenu-c
     left: auto !important;
   }
 
-  /* Separation appears only once the toolbar is actually floating over content. */
+  /* La sombra aparece solo cuando el riel queda sticky. */
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-is-stuck::after {
     content: '' !important;
     display: block !important;

@@ -1,12 +1,11 @@
-/* Catalog search, high-density grid and tools UI.
-   List geometry is owned exclusively by view-stability.css. */
+/* Búsqueda, vistas y herramientas del catálogo.
+   La vista lista se define en view-stability.css. */
 body.sushiShop {
   --sc-search-icon-size: 20px;
   --sc-view-toggle-size: 44px;
   --sc-view-icon-size: 24px;
 
-  /* High-density grid: desktop is canonical, smaller breakpoints override only
-     responsive sizing values. */
+  /* La grilla densa define la base; los breakpoints solo ajustan medidas. */
   --sc-compact-columns: 4;
   --sc-compact-column-gap: 22px;
   --sc-compact-row-gap: 30px;
@@ -131,8 +130,7 @@ body.sushiShop .sc-catalog-view-icon svg { display: block; width: var(--sc-view-
 body.sushiShop .sc-catalog-view-icon[hidden] { display: none !important; }
 body.sushiShop .sc-catalog-view-icon svg { fill: currentColor; }
 
-/* Empty/result shell only. Product cards stay in their original sections and
-   inherit the currently selected compact/list geometry. */
+/* Contenedor de resultados; las cards mantienen la vista activa. */
 body.sushiShop .sc-catalog-tools .sc-catalog-search-results {
   box-sizing: border-box;
   display: flex;
@@ -189,7 +187,7 @@ body.sushiShop.sc-catalog-searching .sc-category-indicator { opacity: 0 !importa
 body.sushiShop.sc-catalog-searching .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
 body.sushiShop.sc-catalog-searching .wtopShopMenuMobile .nav-top-li > a.anchorLink::after { content: none !important; display: none !important; }
 
-/* High-density grid is the only grid view. */
+/* La única vista de grilla es alta densidad. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop {
   grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
@@ -248,7 +246,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .s
   margin-top: var(--sc-compact-flavors-margin-top) !important;
 }
 
-/* Swiss-grid tools layout. */
+/* Layout de 12 columnas para las herramientas. */
 html body.sushiShop .sc-catalog-tools {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

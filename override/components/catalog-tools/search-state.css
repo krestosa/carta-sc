@@ -1,5 +1,4 @@
-/* Search filters the mounted catalogue in place. The selected compact/list view
-   remains the sole owner of responsive card geometry. */
+/* La búsqueda filtra el catálogo sin cambiar la vista activa. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source {
   display: grid !important;
 }
@@ -10,9 +9,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .produc
   display: none !important;
 }
 
-/* Filtering removes/reorders whole catalogue groups, so preserve the same visual
-   breathing room before the first visible section. Later visible groups keep the
-   canonical section rhythm and must not accumulate this leading offset. */
+/* Conserva el espacio antes de la primera sección visible. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
   margin-top: 18px !important;
 }
@@ -20,11 +17,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidd
   margin-top: 0 !important;
 }
 
-/* Search results must never wait for the normal ScrollTrigger reveal pipeline.
-   Some cards can retain an inline `visibility:hidden` marker after the search
-   makes them visible. product-card/motion.css keys its reveal translate from that
-   marker, so explicitly neutralize translate/transition here to keep every grid
-   item on the exact same row from the first search frame. */
+/* Los resultados visibles no esperan el reveal normal ni conservan offsets viejos. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
   opacity: 1 !important;
   visibility: visible !important;
@@ -49,9 +42,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleS
   --sc-section-rule-scale: 1 !important;
 }
 
-/* Search reveal is deliberately opacity-only. Geometry must stay invariant while
-   results are being hidden/unhidden or reordered, otherwise cards that enter a
-   few milliseconds later appear vertically misaligned. */
+/* El reveal de búsqueda usa solo opacidad para no mover la grilla. */
 @keyframes sc-search-card-reveal {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -76,8 +67,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleS
   transform-origin: 0 50% !important;
 }
 
-/* Explicit reversible search action. The visual glyph stays small while the
-   button exposes a 44px pointer/touch target. */
+/* Limpiar mantiene icono chico y target táctil amplio. */
 body.sushiShop .sc-catalog-search-clear {
   box-sizing: border-box;
   display: grid;
@@ -114,7 +104,7 @@ body.sushiShop .sc-catalog-search-clear:focus-visible {
 }
 body.sushiShop .sc-catalog-search-clear:active svg { transform: scale(.86); }
 
-/* The existing spice/vegetarian legend is the quick-filter row. */
+/* La leyenda de rasgos funciona como fila de filtros rápidos. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
   box-sizing: border-box !important;
   position: relative !important;
