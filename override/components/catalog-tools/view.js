@@ -120,17 +120,25 @@ function isViewportCard(card){
   return rect.width>0&&rect.height>0&&rect.bottom>-pad&&rect.top<h+pad&&rect.right>-pad&&rect.left<w+pad;
 }
 function addTarget(targets,node){if(node&&node.getClientRects().length&&targets.indexOf(node)<0)targets.push(node);}
+function addTargets(targets,nodes){Array.prototype.forEach.call(nodes||[],function(node){addTarget(targets,node);});}
 function visibleLayoutTargets(){
   var cards=Array.prototype.filter.call(document.querySelectorAll('.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden])'),function(card){
     var list=card.closest('.listadoShop');
     return!!(list&&!list.hidden&&!list.closest('.sc-catalog-search-results')&&isViewportCard(card));
   }),targets=[];
   cards.forEach(function(card){
+    var link=card.querySelector('a.fancyboxModalAddProd'),media=card.querySelector('.imgShop'),price=card.querySelector('.priceRow');
     addTarget(targets,card);
-    addTarget(targets,card.querySelector('.imgShop'));
+    addTarget(targets,link);
+    addTarget(targets,media);
+    addTarget(targets,media&&media.querySelector('img'));
     addTarget(targets,card.querySelector('.title-shop1'));
-    addTarget(targets,card.querySelector('.priceRow'));
-    addTarget(targets,card.querySelector('.priceRow .sc-product-price-traits'));
+    addTarget(targets,price);
+    addTarget(targets,price&&price.querySelector('.price'));
+    addTarget(targets,price&&price.querySelector('.priceHijass'));
+    addTarget(targets,price&&price.querySelector('.ofertaPrice'));
+    addTarget(targets,price&&price.querySelector('.sc-product-price-traits'));
+    addTargets(targets,price&&price.querySelectorAll('.sc-product-price-traits img,.sc-product-price-traits .sc-trait-icon'));
     addTarget(targets,card.querySelector('.descrip'));
   });
   return targets;
