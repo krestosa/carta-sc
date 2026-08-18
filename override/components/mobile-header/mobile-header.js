@@ -22,6 +22,7 @@ function syncMenuButton(button,nav){
   if(!button||!nav)return;
   var open=button.classList.contains('slicknav_open')||nav.getAttribute('aria-hidden')==='false'||nav.style.display==='block';
   if(!nav.id)nav.id='sc-mobile-primary-menu';
+  nav.setAttribute('aria-hidden',open?'false':'true');
   button.setAttribute('aria-controls',nav.id);button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'Cerrar menú de navegación':'Abrir menú de navegación');button.setAttribute('title',open?'Cerrar menú':'Abrir menú');syncIcon(button,open);
 }
 function pluginMenu(){
