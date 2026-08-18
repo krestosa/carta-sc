@@ -1,5 +1,5 @@
-/* Catalogue control interaction states.
-   CSS owns containers/state layers only; GSAP continues to own glyph transforms and morphs. */
+/* Estados de interacción de los controles del catálogo.
+   GSAP mantiene las transformaciones de los iconos. */
 body.sushiShop {
   --sc-state-hover-opacity: .08;
   --sc-state-focus-opacity: .10;
@@ -18,14 +18,13 @@ body.sushiShop {
   --sc-tools-trait-gap: var(--sc-filter-group-gap);
 }
 
-/* Keep the filter set visually grouped. */
+/* Mantiene los filtros agrupados. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
   gap: var(--sc-filter-group-gap) !important;
   column-gap: var(--sc-filter-group-gap) !important;
 }
 
-/* Icon controls use a 48px hit target around a 40px visual circle.
-   State layers never write transform, leaving glyph motion to GSAP. */
+/* Target de 48px con círculo visual de 40px. */
 body.sushiShop .sc-theme-toggle,
 body.sushiShop .sc-catalog-view-toggle {
   box-sizing: border-box !important;
@@ -125,7 +124,7 @@ body.sushiShop .sc-catalog-view-toggle:active::after {
   opacity: var(--sc-state-pressed-opacity);
 }
 
-/* Filter controls keep a compact 32px visual height with an 18px icon slot. */
+/* Filtros compactos: 32px de alto y slot de icono de 18px. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
   --sc-state-layer-color: var(--sc-color-ink);
   box-sizing: border-box !important;

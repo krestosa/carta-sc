@@ -1,5 +1,4 @@
-/* Final visibility/size contract for catalog action icons. Geometry and paint
-   remain owned by their component/motion layers. */
+/* Contrato final de tamaño y visibilidad de iconos del catálogo. */
 body.sushiShop .sc-catalog-actions,
 body.sushiShop .sc-theme-control,
 body.sushiShop .sc-theme-toggle,

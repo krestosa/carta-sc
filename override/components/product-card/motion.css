@@ -1,4 +1,4 @@
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Token local del componente. */
 body.sushiShop {
   --sc-motion-card: 340ms;
 }
@@ -12,8 +12,7 @@ body.sushiShop {
 .sushiShop .listadoShop .productoShop .imgLiquid,
 .sushiShop .listadoShop .productoShop .imgShop {-webkit-transform: none !important;transform: none !important;}
 
-/* Direct manipulation feedback starts at pointer-down through :active. `scale`
-   is independent from the transform/translate properties owned by reveal motion. */
+/* Feedback al presionar sin interferir con el reveal. */
 .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   scale: 1;
   transform-origin: 50% 50%;

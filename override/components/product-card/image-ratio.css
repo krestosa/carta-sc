@@ -1,5 +1,4 @@
-/* SushiClub product media. One geometry contract is inherited by every
-   breakpoint; view-specific list sizing is applied later by view-stability.css. */
+/* Unifica la geometría de imágenes; la vista lista ajusta el ancho después. */
 body.sushiShop .listadoShop .productoShop .imgShop {
   box-sizing: border-box;
   width: 100% !important;
@@ -37,4 +36,4 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
   }
 }
 
-/* Deploy marker: native-product-image-v3-shared. */
+/* Marca: native-product-image-v3-shared. */

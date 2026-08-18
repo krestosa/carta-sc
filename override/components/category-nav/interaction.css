@@ -1,12 +1,10 @@
-/* Interaction-only affordances for the category rail. Visual typography and
-   indicator geometry continue to be owned by desktop/mobile layout files. */
+/* Interacción del riel; desktop y mobile conservan la geometría visual. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink {
   touch-action: manipulation;
 }
 
-/* The text remains visually compact while the hit target fills roughly a
-   44px-tall row. Range-based indicator measurement still follows text only. */
+/* Amplía el target sin agrandar el texto. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::before,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
   content: '';

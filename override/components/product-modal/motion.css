@@ -1,4 +1,4 @@
-/* Modal CSS defines state only. GSAP owns open/close interpolation. */
+/* CSS define estados; GSAP interpola apertura y cierre. */
 .sushiShop .sc-product-modal {
   opacity: 0;
   visibility: hidden;

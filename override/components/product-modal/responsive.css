@@ -1,4 +1,4 @@
-/* Product modal compact viewport adjustments. */
+/* Ajustes del modal para pantallas chicas. */
 @media (max-width: 640px) {
   body.sushiShop .sc-product-modal {
     padding: 8px !important;

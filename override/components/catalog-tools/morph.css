@@ -1,5 +1,4 @@
-/* MorphSVG-driven grid/list icon. Geometry is converted to <path> once before
-   interaction; only path data changes during the state transition. */
+/* Icono grilla/lista animado con GSAP MorphSVG; solo cambia el path. */
 body.sushiShop .sc-view-morph-icon {
   display:block;
   flex:0 0 var(--sc-view-icon-size,24px);

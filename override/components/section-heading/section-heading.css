@@ -1,4 +1,4 @@
-/* Responsive section-title split reveals. Only parent categories own a divider. */
+/* Títulos de sección con reveal; solo la categoría padre dibuja divisor. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .subTitleShopSeccion,
@@ -13,7 +13,7 @@ body.sushiShop .listadoShop .subTitleShopSeccion {
   background-image: none !important;
 }
 
-/* Wrappers and subcategories never own rules. */
+/* Wrappers y subcategorías no dibujan líneas. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::before,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion::after,
 body.sushiShop .listadoShop .titleShopSeccion::before,
@@ -30,7 +30,7 @@ body.sushiShop .listadoShop .titleShopSeccion > div {
   padding-bottom: 0 !important;
 }
 
-/* Single 1px divider under parent category title, 12px from the text. */
+/* Divisor de 1px, a 12px del título padre. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
 body.sushiShop .listadoShop .titleShopSeccion > div::after {
   content: '' !important;
@@ -59,4 +59,4 @@ body.sushiShop .sc-section-text-line {
   }
 }
 
-/* Deploy marker: parent-rule-only-v12. */
+/* Marca: parent-rule-only-v12. */
