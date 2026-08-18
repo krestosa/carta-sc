@@ -1,7 +1,8 @@
 /* Product-card title, description and trait content. Shared card rules are
    breakpoint-independent; only genuine compact-width adjustments use media queries. */
 body.sushiShop {
-  --sc-card-description-lines: 3;
+  --sc-card-description-height: 43px;
+  --sc-card-description-lines: 2;
 }
 
 body.sushiShop .listadoShop .productoShop .title-shop1 > .sabores {
@@ -221,8 +222,9 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   opacity: 1;
 }
 
-/* Desktop compact uses exactly three complete text lines. Narrower grid modes
-   reduce this to two lines below; list mode owns its two-line contract separately. */
+/* Every grid breakpoint reserves exactly two complete 16px description lines
+   plus the 10px top inset and hairline rule. List mode owns the same two-line
+   maximum through its dedicated view contract. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   min-height: var(--sc-card-description-height) !important;
