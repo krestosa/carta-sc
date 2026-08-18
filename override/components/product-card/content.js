@@ -23,13 +23,21 @@ function ensureDescriptionCopy(target){
 }
 
 /* Reconstruye rasgos visibles desde una única fuente y elimina filas duplicadas anteriores. */
-function clearFlavorRows(root){root=root&&root.querySelectorAll?root:document;each(root.querySelectorAll(".sc-product-flavors,.sc-product-price-traits"),function(row){if(row.parentNode)row.parentNode.removeChild(row);});}
+function clearFlavorRows(root){
+  root=root&&root.querySelectorAll?root:document;
+  each(root.querySelectorAll('.sc-product-secondary-meta'),function(group){var offer=group.querySelector('.ofertaPrice'),parent=group.parentNode;if(!parent)return;if(offer)parent.insertBefore(offer,group);parent.removeChild(group);});
+  each(root.querySelectorAll('.sc-product-flavors,.sc-product-price-traits'),function(row){if(row.parentNode)row.parentNode.removeChild(row);});
+}
 function positionTraitReferences(){var strip=referenceStrip||document.querySelector('.referencias_picor'),tools=document.querySelector('.sc-catalog-tools'),results,spacer;if(!strip)return;referenceStrip=strip;strip.classList.add('sc-trait-reference-strip');spacer=strip.previousElementSibling;if(spacer&&!(spacer.textContent||'').trim()&&spacer.querySelector&&spacer.querySelector('br'))spacer.classList.add('sc-trait-reference-legacy-spacer');if(!tools)return;results=tools.querySelector('.sc-catalog-search-results');if(strip.parentNode!==tools||strip.nextElementSibling!==results)tools.insertBefore(strip,results||null);}
 function installTraitReferences(){each(document.querySelectorAll('.referencias_picor .refBox'),function(box){var labelNode=box.querySelector('.ref_label'),image=box.querySelector('.imgRef img'),host=box.querySelector('.imgRef');var label=((labelNode&&labelNode.textContent)||(image&&image.getAttribute('data-original-title'))||'').trim(),spec=traitSpec(label),icon;if(D.ignoredTrait(label)){if(box.parentNode)box.parentNode.removeChild(box);return;}if(labelNode)labelNode.textContent=spec.label;if(!host)return;icon=D.createTraitIcon(spec.icon);if(icon){host.textContent='';markTrait(icon,spec.key);host.appendChild(icon);}});positionTraitReferences();}
 function buildTraitRow(className,labels,source){var row=document.createElement('span');row.className=className;var accessible=[];each(labels,function(label){var spec=traitSpec(label);appendTraitVisual(row,source,label);if(accessible.indexOf(spec.label)<0)accessible.push(spec.label);});if(accessible.length){row.setAttribute('role','img');row.setAttribute('aria-label',D.traitsLabelPrefix+accessible.join(', '));}else row.setAttribute('aria-hidden','true');return row;}
 function installFlavorRow(link){
   if(!link)return;ensureDescriptionCopy(link);clearFlavorRows(link);
-  var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits),priceRow=link.querySelector('.priceRow');if(source)source.setAttribute('aria-hidden','true');var labels=D.traitLabels(source||link),row=buildTraitRow('sc-product-flavors',labels,source||link);link.appendChild(row);if(priceRow){priceRow.classList.toggle('sc-price-row-has-offer',!!priceRow.querySelector('.ofertaPrice'));priceRow.appendChild(buildTraitRow('sc-product-price-traits',labels,source||link));}
+  var title=link.querySelector(S.productTitle),source=title&&title.querySelector(S.productTraits),priceRow=link.querySelector('.priceRow');if(source)source.setAttribute('aria-hidden','true');var labels=D.traitLabels(source||link),row=buildTraitRow('sc-product-flavors',labels,source||link);link.appendChild(row);
+  if(priceRow){
+    var offer=priceRow.querySelector('.ofertaPrice'),secondary=document.createElement('span'),priceTraits=buildTraitRow('sc-product-price-traits',labels,source||link);
+    priceRow.classList.toggle('sc-price-row-has-offer',!!offer);secondary.className='sc-product-secondary-meta';if(offer)secondary.appendChild(offer);secondary.appendChild(priceTraits);priceRow.appendChild(secondary);
+  }
 }
 function installFlavorRows(root){root=root&&root.querySelectorAll?root:document;installTraitReferences();each(root.querySelectorAll(S.productCard+' > '+S.productLink),installFlavorRow);}
 
