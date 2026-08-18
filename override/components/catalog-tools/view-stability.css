@@ -48,7 +48,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
 
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important;
-  grid-template-rows: auto auto minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
+  grid-template-rows: auto minmax(var(--sc-view-list-price-track), auto) minmax(var(--sc-view-list-description-gap), 1fr) auto !important;
   column-gap: var(--sc-view-list-column-gap) !important;
   align-content: stretch !important;
   height: auto !important;
