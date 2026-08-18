@@ -69,9 +69,9 @@ for stale_file in (
     if stale_file.exists():
         issues.append(f'superseded logo file remains in artifact: {stale_file.relative_to(SITE)}')
 
-# Trait PNGs are metadata sources only. The visible product/reference traits are
-# generated as inline SVGs, so retaining an <img src> would cause redundant
-# network work even when the legacy node is display:none.
+# Los PNG de rasgos quedan sólo como fuente de metadata. Los rasgos visibles de producto y
+# referencias se generan como SVG inline, así que conservar un <img src> haría trabajo de
+# red redundante incluso con el nodo legacy en display:none.
 trait_tags = re.findall(r'<img\b(?=[^>]*\bdata-original-title=)[^>]*>', html, re.I)
 if not trait_tags:
     issues.append('legacy trait metadata nodes are missing')
@@ -80,8 +80,8 @@ for tag in trait_tags:
         issues.append('legacy trait metadata still has an active img src')
         break
 
-# These raster backgrounds are fully superseded by theme surface tokens and
-# the SVG category rail, so even a CSS url() reference is a regression.
+# Estos fondos raster están totalmente reemplazados por tokens de superficie del tema y
+# por el riel SVG de categorías; incluso una referencia CSS url() sería una regresión.
 for stale in (
     'https://www.sushiclub.com.ar/gfx/back_body_01.png',
     'https://www.sushiclub.com.ar/gfx/back_body_01_white.png',
@@ -90,9 +90,9 @@ for stale in (
     if stale in html:
         issues.append(f'superseded CSS raster remains in final browser graph: {stale}')
 
-# Final Pages delivery intentionally has no eager local runtime tags. Its inline
-# delivery loader owns the exact optimized runtime manifest and creates the tags
-# only after first paint / idle. Audit that real browser load path as well.
+# La entrega final de Pages no tiene tags de runtime local eager. Su loader inline es dueño
+# del manifiesto optimizado exacto y crea los tags recién después del primer paint/idle.
+# También se audita esa ruta real de carga del navegador.
 runtime_manifest = (
     "A=['js/jquery-2.1.0.min.js','_pages/php-guard.js?v='+S,'_pages/legacy.js?v='+S,"
     "'_js_dev/main-legacy.js?v='+S,'override/main.js?v='+S,'_pages/shop.js?v='+S]"
@@ -108,15 +108,15 @@ if html.count("'_pages/php-guard.js?v='+S") != 1:
 if html.count("c.href='_pages/deferred.css?v='+S") != 1:
     issues.append('optimized deferred stylesheet loader is missing or duplicated')
 
-# These two source scripts are superseded by _pages/shop.js. Source files may
-# exist in the artifact for provenance, but no static or dynamic load reference
-# may survive in the built HTML.
+# Estos dos scripts fuente quedan reemplazados por _pages/shop.js. Los archivos fuente pueden
+# existir en el artefacto por procedencia, pero no debe sobrevivir ninguna referencia de carga
+# estática o dinámica en el HTML construido.
 for source in ('js/funcionesShop__q_f352afe3.js', 'js/main_shop__q_a48cd660.js'):
     if source in html:
         issues.append(f'superseded shop script is still referenced by browser load graph: {source}')
 
-# Source stylesheet links are superseded by critical inline CSS + one deferred
-# bundle. Source names inside CSS comments are harmless, so inspect link nodes only.
+# Los links a stylesheets fuente quedan reemplazados por CSS crítico inline y un único bundle
+# diferido. Los nombres de origen dentro de comentarios CSS no afectan; se inspeccionan sólo links.
 active_style_paths = [path_only(v) for v in graph.styles]
 for p in active_style_paths:
     if p.startswith('_css_dev/') or p in {
@@ -130,15 +130,15 @@ for style in sorted(set(active_style_paths)):
 if html.count('id="sc-pages-critical-css"') != 1:
     issues.append('critical inline CSS block missing or duplicated')
 
-# Any eager local script tags that remain must also be unique. The optimized
-# runtime itself is expected to be absent here because it is created dynamically.
+# Cualquier tag de script local eager que quede también debe ser único. El runtime optimizado
+# se espera ausente acá porque se crea dinámicamente.
 active_script_paths = [path_only(v) for v in graph.scripts]
 for script in sorted(set(active_script_paths)):
     if active_script_paths.count(script) > 1:
         issues.append(f'duplicate eager script load ({active_script_paths.count(script)}x): {script}')
 
-# Responsive local banner variants replace the upstream image request. A preload
-# plus its eventual <img> use is intentional and is coalesced by the browser.
+# Las variantes locales responsive del banner reemplazan la petición upstream. Un preload más
+# su uso posterior en <img> es intencional y el navegador los coalesce.
 if 'aniversario_banner_desktop_(1)1782398717_556.webp' in html:
     issues.append('upstream banner remains referenced after responsive localization')
 if f'_critical-media/desktop-banner.webp?v={SHA}' not in html:

@@ -56,6 +56,12 @@ jobs:
           test -s handoff/serve-local.ps1
           test "$(cat handoff/BUILD_SHA)" = "$GITHUB_SHA"
           test -d handoff/compiled/_build
+          test ! -e handoff/source/tooling/validators
+          test ! -e handoff/source/tooling/scripts/validate-snapshot-override-integration.mjs
+          test ! -e handoff/source/tooling/scripts/validate-build-local-assets.py
+          test ! -e handoff/source/tooling/scripts/validate-build-html.py
+          test ! -e handoff/source/tooling/scripts/validate-build-performance-budget.py
+          test ! -e handoff/source/tooling/scripts/validate-system-load.py
 
       - name: Upload handoff
         uses: actions/upload-artifact@v4

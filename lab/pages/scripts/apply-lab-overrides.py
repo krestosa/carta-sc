@@ -31,9 +31,9 @@ if ANCHOR not in manifest:
 manifest = manifest.replace(ANCHOR, ANCHOR + LAB_IMPORTS, 1)
 MAIN_CSS.write_text(manifest, encoding='utf-8')
 
-# Component geometry is now breakpoint-inherited in production source itself.
-# The lab no longer re-creates desktop/mobile selector aliases; doing so would
-# duplicate the frontend contract and make the benchmark diverge from handoff.
+# La geometría de los componentes ya se hereda por breakpoint desde el source de producción.
+# El laboratorio ya no recrea aliases desktop/mobile; hacerlo duplicaría el contrato frontend
+# y haría que la referencia se aparte del handoff.
 for relative in (
     'override/components/product-card/content.css',
     'override/components/product-card/image-ratio.css',

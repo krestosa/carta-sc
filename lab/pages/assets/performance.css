@@ -1,5 +1,5 @@
-/* Mobile critical-path overrides: keep the real LCP logo paintable immediately
-   and avoid non-composited loading sweeps while the runtime settles. */
+/* Ajustes del camino crítico móvil: mantiene el logo LCP real pintable desde el inicio
+   y evita barridos de carga no compuestos mientras se estabiliza el runtime. */
 @media (max-width: 992px) {
   html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
     background-color: transparent !important;

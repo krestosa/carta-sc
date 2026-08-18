@@ -42,9 +42,9 @@ if (!errors.length) {
   if (/\bimport\.meta\b/.test(jsSource)) fail('Override modules must remain compatible with the current classic-script runtime');
   if (fs.existsSync(path.join(overrideDir, 'mutations', 'scroll-restoration.js'))) fail('Manual scroll-restoration mutation must not be reintroduced');
 
-  /* Responsive catalogue invariant: there are exactly two user-selectable
-     layouts everywhere. Desktop owns the structural contract; smaller
-     breakpoints may only adapt responsive values. */
+  /* Invariante responsive del catálogo: existen exactamente dos vistas seleccionables.
+     Desktop define el contrato estructural; los breakpoints menores sólo adaptan
+     valores responsive. */
   const viewModulePath = path.join(overrideDir, 'components', 'catalog-tools', 'view.js');
   const viewStabilityPath = path.join(overrideDir, 'components', 'catalog-tools', 'view-stability.css');
   const pricingPath = path.join(overrideDir, 'components', 'product-card', 'pricing.css');

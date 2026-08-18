@@ -102,9 +102,9 @@ def install_runtime_guard(html):
 
 
 def validate_no_automatic_php_resources(html):
-    # Navigation href/action values may intentionally point back to the live
-    # SushiClub site. Only resources that a browser loads automatically are
-    # prohibited in the static Pages artifact.
+    # Los valores href/action de navegación pueden apuntar intencionalmente al sitio activo
+    # de SushiClub. En el artefacto estático de Pages sólo se prohíben los recursos que el
+    # navegador carga automáticamente.
     active = re.sub(r'<!--[\s\S]*?-->', '', html)
     resource = re.compile(
         r'<(?:script|img|iframe|source|video|audio|embed|object|link)\b[^>]*\b(?:src|data|href)\s*=\s*["\'][^"\']*\.php(?:[?#][^"\']*)?["\'][^>]*>',

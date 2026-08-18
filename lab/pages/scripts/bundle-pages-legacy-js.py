@@ -73,7 +73,7 @@ for position, src in enumerate(LEGACY_SCRIPTS):
     content = source.read_text(encoding='utf-8', errors='strict')
     if re.search(r'\bdocument\.currentScript\b|\bimport\.meta\b', content):
         raise SystemExit(f'Script depends on per-file execution semantics and cannot be bundled: {src}')
-    bundled.append(f'/* source: {src} */\n{content.rstrip()}\n;')
+    bundled.append(f'/* origen: {src} */\n{content.rstrip()}\n;')
 
     replacement = ''
     if position == 0:
@@ -91,7 +91,7 @@ if html.count(f'_pages/legacy.js?v={SHA}') != 1:
 for src in LEGACY_SCRIPTS:
     if script_pattern(src).search(html):
         raise SystemExit(f'Active legacy script tag remains after bundling: {src}')
-if len(re.findall(r'^/\* source:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(LEGACY_SCRIPTS):
+if len(re.findall(r'^/\* origen:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(LEGACY_SCRIPTS):
     raise SystemExit('Legacy JS bundle source count mismatch')
 
 print(f'Bundled {len(LEGACY_SCRIPTS)} legacy scripts into {BUNDLE}')

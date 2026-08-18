@@ -39,7 +39,7 @@ def script_pattern(src):
 
 def source_block_pattern(source):
     return re.compile(
-        rf'/\* source: {re.escape(source)} \*/\n.*?(?=\n\n/\* source:|\Z)',
+        rf'/\* origen: {re.escape(source)} \*/\n.*?(?=\n\n/\* origen:|\Z)',
         re.DOTALL,
     )
 
@@ -48,7 +48,7 @@ def prune_source_block(path, source):
     if not path.is_file():
         raise SystemExit(f'Expected bundle before date-flow pruning: {path}')
     text = path.read_text(encoding='utf-8', errors='strict')
-    replacement = f'/* source: {source} (pruned: inactive date flow) */'
+    replacement = f'/* origen: {source} (omitido: flujo de fecha inactivo) */'
     text, count = source_block_pattern(source).subn(replacement, text, count=1)
     if count != 1:
         raise SystemExit(f'Expected one bundled source block for {source}, found {count}')
@@ -90,7 +90,7 @@ for src in SHOP_SCRIPTS:
             raise SystemExit(f'Expected one unconditional moment.locale(\'es\') call, found {locale_count}')
     if re.search(r'\bdocument\.currentScript\b|\bimport\.meta\b', content):
         raise SystemExit(f'Shop script depends on per-file execution semantics: {src}')
-    bundled.append(f'/* source: {src} */\n{content.rstrip()}\n;')
+    bundled.append(f'/* origen: {src} */\n{content.rstrip()}\n;')
 
 between = html[positions[0][1]:positions[1][0]]
 if re.sub(r'\s+', '', between):
@@ -119,7 +119,7 @@ if html.count(f'_pages/shop.js?v={SHA}') != 1:
 for src in SHOP_SCRIPTS:
     if script_pattern(src).search(html):
         raise SystemExit(f'Original shop script tag remains after bundling: {src}')
-if len(re.findall(r'^/\* source:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(SHOP_SCRIPTS):
+if len(re.findall(r'^/\* origen:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(SHOP_SCRIPTS):
     raise SystemExit('Shop JS bundle source count mismatch')
 
 externalizer = Path(__file__).with_name('externalize-pages-static-assets.py')

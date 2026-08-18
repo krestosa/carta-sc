@@ -5,6 +5,30 @@ OUT="${HANDOFF_DIR:-.handoff}"
 INPUT="${HANDOFF_INPUT_DIR:-.pages-site}"
 SHA="${GITHUB_SHA:-local}"
 
+TOOL_SCRIPTS=(
+  apply-lab-overrides.py
+  compile-pages-templates.py
+  prepare-pages-artifact.py
+  optimize-pages-critical-path.py
+  clean-pages-product-images.py
+  clean-pages-snapshot.py
+  flatten-pages-bootstrap.py
+  bundle-pages-legacy-css.py
+  bundle-pages-legacy-js.py
+  bundle-pages-shop-js.py
+  externalize-pages-static-assets.py
+  optimize-pages-delivery.py
+  optimize-pages-first-paint.py
+  seed-pages-theme.py
+  optimize-pages-first-viewport-media.py
+  optimize-pages-breakpoint-media.py
+  calibrate-system-logo.py
+  replace-system-logo.py
+  prune-pages-superseded-media.py
+  optimize-pages-lcp.py
+  disable-pages-php-runtime.py
+)
+
 test -d "$INPUT"
 rm -rf "$OUT"
 mkdir -p "$OUT/source" "$OUT/compiled"
@@ -21,17 +45,16 @@ rsync -a \
   --exclude='DOCUMENTACION_TECNICA_COMPLETA.md' \
   ./ "$OUT/source/"
 
-mkdir -p "$OUT/source/tooling/scripts" "$OUT/source/tooling/validators" "$OUT/source/tooling/assets"
+mkdir -p "$OUT/source/tooling/scripts" "$OUT/source/tooling/assets"
 rsync -a lab/pages/assets/ "$OUT/source/tooling/assets/"
 cp lab/pages/.nojekyll "$OUT/source/tooling/.nojekyll"
 cp lab/pages/requirements.txt "$OUT/source/tooling/requirements.txt"
-rsync -a scripts/ "$OUT/source/tooling/validators/"
 
-for src in lab/pages/scripts/*; do
-  [ -f "$src" ] || continue
-  name="$(basename "$src")"
-  name="${name//pages/build}"
-  cp "$src" "$OUT/source/tooling/scripts/$name"
+for name in "${TOOL_SCRIPTS[@]}"; do
+  src="lab/pages/scripts/$name"
+  test -f "$src"
+  out_name="${name//pages/build}"
+  cp "$src" "$OUT/source/tooling/scripts/$out_name"
 done
 
 python3 - "$OUT/source/tooling" <<'PY'
@@ -89,7 +112,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TOOLING = ROOT / 'tooling'
 SCRIPTS = TOOLING / 'scripts'
-VALIDATORS = TOOLING / 'validators'
 SITE = ROOT / '.build-site'
 PACKAGE = ROOT.parent
 COMPILED = PACKAGE / 'compiled'
@@ -158,14 +180,9 @@ def publish_compiled() -> None:
 
 def main() -> None:
     os.environ.setdefault('HANDOFF_BUILD', 'true')
-    run('node', str(VALIDATORS / 'validate-overrides.mjs'))
-    run('node', str(VALIDATORS / 'validate-production-boundary.mjs'))
-    run('node', str(VALIDATORS / 'validate-responsive-contract.mjs'))
     run(sys.executable, '-m', 'compileall', '-q', str(SCRIPTS))
-
     copy_tree()
 
-    run('node', str(SCRIPTS / 'validate-snapshot-override-integration.mjs'))
     for name in (
         'apply-lab-overrides.py',
         'compile-build-templates.py',
@@ -183,9 +200,6 @@ def main() -> None:
     node_check('override/main.js')
     node_check('_build/legacy.js')
     node_check('_build/shop.js')
-    py('validate-build-local-assets.py')
-    py('validate-build-html.py')
-    py('validate-build-performance-budget.py')
 
     for name in (
         'optimize-build-delivery.py',
@@ -199,18 +213,14 @@ def main() -> None:
     py('replace-system-logo.py')
     py('calibrate-system-logo.py', 'apply')
     py('prune-build-superseded-media.py')
+    py('optimize-build-lcp.py')
     py('disable-build-php-runtime.py')
-    if (SCRIPTS / 'optimize-build-lcp.py').is_file():
-        py('optimize-build-lcp.py')
 
     node_check('override/main.js')
     node_check('_build/legacy.js')
     node_check('_build/shop.js')
     node_check('_build/php-guard.js')
     node_check('_js_dev/main-legacy.js')
-    py('validate-build-local-assets.py')
-    py('validate-build-html.py')
-    py('validate-system-load.py')
 
     verify_final()
     publish_compiled()
@@ -295,7 +305,7 @@ cat > "$OUT/README.md" <<'EOF'
 Paquete autocontenido con implementación editable, tooling de build y referencia compilada.
 
 - `source/override/`: diseño, UI, UX, motion, accesibilidad y optimizaciones propias.
-- `source/tooling/`: scripts y validaciones necesarios para reconstruir la salida.
+- `source/tooling/`: scripts y assets necesarios para reconstruir la salida.
 - `source/`: snapshot y assets necesarios para reproducir la integración.
 - `compiled/`: referencia final ya construida. No editar a mano.
 - `BUILD_SHA`: versión exacta del handoff.
@@ -348,5 +358,11 @@ test -s "$OUT/serve-local.ps1"
 test -s "$OUT/compiled/index.html"
 test ! -e "$OUT/compiled/_pages"
 test -d "$OUT/compiled/_build"
+test ! -e "$OUT/source/tooling/validators"
+test ! -e "$OUT/source/tooling/scripts/validate-snapshot-override-integration.mjs"
+test ! -e "$OUT/source/tooling/scripts/validate-build-local-assets.py"
+test ! -e "$OUT/source/tooling/scripts/validate-build-html.py"
+test ! -e "$OUT/source/tooling/scripts/validate-build-performance-budget.py"
+test ! -e "$OUT/source/tooling/scripts/validate-system-load.py"
 
 printf 'Handoff ready at %s for %s\n' "$OUT" "$SHA"

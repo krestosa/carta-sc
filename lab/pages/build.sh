@@ -60,8 +60,8 @@ python3 "$SCRIPTS/validate-pages-local-assets.py"
 python3 "$SCRIPTS/validate-pages-html.py"
 python3 "$SCRIPTS/validate-system-load.py"
 
-# Lab invariants. These verify the benchmark artifact only; they are not
-# production integration requirements.
+# Invariantes del laboratorio. Validan sólo el artefacto de referencia;
+# no son requisitos de integración de producción.
 grep -F 'id="sc-pages-critical-css"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-pages-delivery-loader"' "$SITE/index.html" >/dev/null
 grep -F 'id="sc-theme-prepaint"' "$SITE/index.html" >/dev/null

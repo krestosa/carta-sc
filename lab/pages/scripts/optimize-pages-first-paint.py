@@ -27,11 +27,11 @@ def to_pages_urls(s):
 def split_css(html):
     rx=re.compile(r'<style id="sc-pages-critical-css">(?P<css>[\s\S]*?)</style>',re.I);m=rx.search(html)
     if not m: raise SystemExit('current critical CSS block missing')
-    css=m.group('css'); mark=re.compile(r'(?m)^/\* source: (?P<n>.*?) \*/\s*'); ms=list(mark.finditer(css))
+    css=m.group('css'); mark=re.compile(r'(?m)^/\* origen: (?P<n>.*?) \*/\s*'); ms=list(mark.finditer(css))
     if not ms: raise SystemExit('CSS source markers missing')
     critical=[]; deferred=[]
     for i,x in enumerate(ms):
-        end=ms[i+1].start() if i+1<len(ms) else len(css); n=re.sub(r'\s+\(pruned:.*?\)$','',x.group('n')); chunk=css[x.start():end]
+        end=ms[i+1].start() if i+1<len(ms) else len(css); n=re.sub(r'\s+\(omitido:.*?\)$','',x.group('n')); chunk=css[x.start():end]
         (critical if n in LEGACY_CRITICAL or n in OVERRIDE_CRITICAL else deferred).append(chunk if n in LEGACY_CRITICAL or n in OVERRIDE_CRITICAL else to_pages_urls(chunk))
     rob=re.compile(r'<style id="sc-roboto-font-css">(?P<c>[\s\S]*?)</style>\s*',re.I);rm=rob.search(html)
     if rm: deferred.append(rm.group('c'))
@@ -43,8 +43,8 @@ def split_css(html):
     return html,len(c),len(d)
 
 def critical_media(html):
-    # The mobile LCP is the SushiClub logo. Remove any stale remote-logo preload
-    # here; mirror_critical_media() will replace it with a same-origin preload.
+    # El LCP móvil es el logo de SushiClub. Elimina cualquier preload remoto viejo;
+    # mirror_critical_media() lo reemplaza por un preload del mismo origen.
     logo='https://www.sushiclub.com.ar/gfx/web-sushiclub2_black_m2.png'
     html=re.sub(
         r'<link\b(?=[^>]*rel=["\']preload["\'])(?=[^>]*as=["\']image["\'])(?=[^>]*href=["\']'+re.escape(logo)+r'["\'])[^>]*>\s*',

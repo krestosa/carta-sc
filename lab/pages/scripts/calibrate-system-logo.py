@@ -42,9 +42,9 @@ def measure():
             f'source={mobile_size} bbox={mobile_bbox}'
         )
 
-    # Desktop source is rendered at its intrinsic 250px canvas. The SVG has a
-    # tight viewBox, so preserve the raster's visible wordmark width instead of
-    # the obsolete 75px wrapper constraint.
+    # El source desktop se renderiza en su canvas intrínseco de 250px. El SVG tiene un
+    # viewBox ajustado, por eso se conserva el ancho visible del wordmark raster en vez
+    # de la restricción obsoleta del wrapper de 75px.
     desktop_width = desktop_bbox[2] - desktop_bbox[0]
     if not 160 <= desktop_width <= 280:
         raise SystemExit(

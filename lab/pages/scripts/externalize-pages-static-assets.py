@@ -17,8 +17,8 @@ FORBIDDEN_SUFFIXES = {
     '.mp4', '.webm', '.mov', '.m4v', '.avi',
     '.pdf',
 }
-# EOT and SVG remain only as old-browser fallbacks in legacy CSS. The live
-# SushiClub server no longer exposes every historical EOT/SVG file.
+# EOT y SVG quedan sólo como fallbacks para navegadores viejos en el CSS legacy.
+# El servidor activo de SushiClub ya no expone todos los archivos EOT/SVG históricos.
 MIRROR_FONT_SUFFIXES = {'.woff', '.woff2', '.ttf', '.otf'}
 ASSET_SUFFIX_PATTERN = (
     r'png|jpe?g|gif|webp|svg|ico|bmp|avif|'
@@ -35,9 +35,9 @@ REMOTE_IMAGE_PROBES = (
     ORIGIN + 'gfx/web-sushiclub2_black_m2.png',
     ORIGIN + 'gfx/web-sushiclub2_black.png',
 )
-# These cover the typography/icon families that are active in this page. Slick's
-# icon font is intentionally not required: the generated catalogue contains no
-# Slick slider/arrow markup and the live SushiClub server no longer serves it.
+# Estas son las familias tipográficas y de iconos activas en esta página. La fuente de
+# Slick no se exige: el catálogo generado no tiene markup de slider/flechas Slick y el
+# servidor activo de SushiClub ya no la entrega.
 REQUIRED_MIRRORED_FONTS = {
     '_remote-assets/fuentes/AcuminPro-Regular.woff2',
     '_remote-assets/fuentes/AcuminPro-Semibold.woff2',
@@ -58,8 +58,8 @@ USER_AGENT = (
 if not SITE.is_dir():
     raise SystemExit('.pages-site does not exist')
 
-# Repository policy: source control is code-only. Browser assets must never be
-# committed to this branch.
+# Política del repositorio: el control de versiones contiene sólo código. Los assets del
+# navegador nunca deben quedar commiteados en esta rama.
 source_assets = []
 for path in SOURCE.rglob('*'):
     if not path.is_file():
@@ -83,8 +83,8 @@ asset_file_re = re.compile(
     r'(?<![A-Za-z0-9:/])(?:\.\./|\./|/)*favicon\.ico\b',
     re.IGNORECASE,
 )
-# The snapshot downloader encoded query-string variants and duplicate downloads
-# into filenames. Those names do not exist on the canonical SushiClub host.
+# El downloader del snapshot codificó variantes de query string y descargas duplicadas
+# dentro de los nombres de archivo. Esos nombres no existen en el host canónico de SushiClub.
 snapshot_suffix_re = re.compile(
     rf'(?:__q_[0-9a-f]{{8}}|__\d+)(?=\.(?:{ASSET_SUFFIX_PATTERN})\b)',
     re.IGNORECASE,
@@ -129,8 +129,8 @@ if replacements < 1:
 if canonicalized_variants < 1:
     raise SystemExit('Expected captured snapshot asset variants to be canonicalized')
 
-# Images can be consumed cross-origin directly. Validate the two logo paths that
-# were previously broken by snapshot-only filename suffixes.
+# Las imágenes se pueden consumir directamente cross-origin. Valida las dos rutas del logo
+# que antes quedaban rotas por sufijos de nombre exclusivos del snapshot.
 for url in REMOTE_IMAGE_PROBES:
     request = Request(
         url,
@@ -149,10 +149,10 @@ for url in REMOTE_IMAGE_PROBES:
     except (HTTPError, URLError, TimeoutError) as exc:
         raise SystemExit(f'Critical SushiClub image probe failed: {url}: {exc}') from exc
 
-# SushiClub font responses do not include Access-Control-Allow-Origin, so fonts
-# cannot be consumed directly from GitHub Pages. Mirror modern formats into the
-# generated artifact at build time. Nothing is committed to Git; every deploy
-# refreshes the bytes from the original SushiClub host.
+# Las respuestas de fuentes de SushiClub no incluyen Access-Control-Allow-Origin, por lo que
+# no pueden consumirse directamente desde GitHub Pages. Los formatos modernos se espejan
+# dentro del artefacto generado durante el build. Nada se commitea a Git y cada deploy
+# actualiza los bytes desde el host original de SushiClub.
 text_files = [
     path
     for path in SITE.rglob('*')

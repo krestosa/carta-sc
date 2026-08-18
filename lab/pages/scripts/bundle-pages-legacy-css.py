@@ -133,7 +133,7 @@ for position, href in enumerate(LEGACY_STYLES):
     if re.search(r'@import\b', content, re.IGNORECASE):
         raise SystemExit(f'Nested @import found in legacy stylesheet: {href}')
     content = normalize_legacy_fonts(href, content)
-    bundled.append(f'/* source: {href} */\n{rebase_urls(source, content).rstrip()}')
+    bundled.append(f'/* origen: {href} */\n{rebase_urls(source, content).rstrip()}')
 
     replacement = ''
     if position == 0:
@@ -151,7 +151,7 @@ if html.count(f'_pages/legacy.css?v={SHA}') != 1:
 for href in LEGACY_STYLES:
     if link_pattern(href).search(html):
         raise SystemExit(f'Active legacy stylesheet tag remains after bundling: {href}')
-if len(re.findall(r'^/\* source:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(LEGACY_STYLES):
+if len(re.findall(r'^/\* origen:', BUNDLE.read_text(encoding='utf-8'), re.MULTILINE)) != len(LEGACY_STYLES):
     raise SystemExit('Legacy CSS bundle source count mismatch')
 
 bundle_text = BUNDLE.read_text(encoding='utf-8')

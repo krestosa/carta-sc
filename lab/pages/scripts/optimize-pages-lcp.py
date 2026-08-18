@@ -124,9 +124,9 @@ def localize_roboto(deferred, html):
     for start, end, replacement in reversed(replacements):
         deferred = deferred[:start] + replacement + deferred[end:]
 
-    # If fetching the Google stylesheet failed in an earlier stage, its
-    # non-blocking fallback link may still exist. Static Pages must never depend
-    # on that external chain; normal font-family fallbacks remain available.
+    # Si una etapa anterior no pudo traer el stylesheet de Google, puede quedar su link de
+    # fallback no bloqueante. Pages estático no debe depender de esa cadena externa; los
+    # fallbacks normales de font-family siguen disponibles.
     html = re.sub(
         r'<link\b(?=[^>]*\bhref=["\']https://fonts\.(?:googleapis|gstatic)\.com/[^"\']*["\'])[^>]*>\s*',
         '',

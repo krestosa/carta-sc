@@ -163,9 +163,9 @@ def repair_category_anchor_ids(text):
 index_path = SITE / 'index.html'
 html = index_path.read_text(encoding='utf-8')
 
-# Normalize static semantics in the artifact as well as at runtime. This also
-# repairs captured mojibake/replacement characters in category ids by deriving
-# each id from the intact name attribute.
+# Normaliza la semántica estática tanto en el artefacto como en runtime. También repara
+# mojibake/caracteres de reemplazo capturados en IDs de categorías derivando cada ID
+# desde el atributo name que se conserva intacto.
 html, repaired_anchor_count = repair_category_anchor_ids(html)
 html, normalized_cols_count = strip_inline_properties_from_class(html, 'normCols', {'height', 'min-height'})
 html, banner_dimension_count = ensure_image_dimensions(html, r'\bclass=["\'][^"\']*\bimgBannerShop\b', 1500, 157)

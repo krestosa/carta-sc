@@ -20,8 +20,8 @@ if not re.fullmatch(r'[0-9a-f]{40}', SHA) or not INDEX.is_file():
 
 html = INDEX.read_text(encoding='utf-8')
 
-# The mobile logo is the LCP candidate. Keep pixels identical while cutting the
-# transfer from ~11 KiB PNG to ~3.5 KiB lossless WebP.
+# El logo móvil es el candidato LCP. Mantiene los píxeles idénticos y reduce la
+# transferencia de ~11 KiB PNG a ~3.5 KiB WebP lossless.
 logo_png = SITE / '_critical-media/mobile-logo.png'
 if not logo_png.is_file():
     raise SystemExit('mobile LCP PNG missing')
@@ -43,8 +43,8 @@ if html.count(old_logo) < 2:
 html = html.replace(old_logo, new_logo)
 logo_png.unlink()
 
-# The full 1500px desktop banner was being selected on the emulated phone.
-# Add a right-sized candidate; keep the desktop source/preload untouched.
+# En el teléfono emulado se estaba eligiendo el banner desktop completo de 1500px.
+# Agrega un candidato del tamaño correcto y conserva intactos source/preload de desktop.
 desktop_banner = SITE / '_critical-media/desktop-banner.webp'
 if not desktop_banner.is_file():
     raise SystemExit('desktop banner missing')
@@ -74,8 +74,8 @@ tag = (f'{body} srcset="{mobile_url} {MOBILE_BANNER_WIDTH}w, {desktop_url} {bann
        f'sizes="(max-width: 992px) 100vw, 1140px"{close}')
 html = html[:match.start()] + tag + html[match.end():]
 
-# Header chrome fixed for desktop must not consume mobile bandwidth. Preserve
-# intrinsic dimensions and DOM shape; release the real source only at >=993px.
+# El chrome fijo exclusivo de desktop no debe consumir ancho de banda en mobile. Conserva
+# dimensiones intrínsecas y forma del DOM; libera el source real recién desde >=993px.
 for name in DESKTOP_ONLY:
     url = f'_chrome-media/{name}.webp?v={SHA}'
     img_re = re.compile(r'<img\b(?=[^>]*\bsrc=["\']' + re.escape(url) + r'["\'])[^>]*>', re.I)
@@ -91,7 +91,7 @@ for name in DESKTOP_ONLY:
         t = f'{body} data-sc-desktop-src="{url}"{close}'
         html = html[:m.start()] + t + html[m.end():]
 
-# Sponsor marks are below the first viewport and were still competing on Slow 4G.
+# Las marcas sponsor están debajo del primer viewport y seguían compitiendo en Slow 4G.
 sponsor_re = re.compile(r'<img\b(?=[^>]*\bsrc=["\']https://www\.sushiclub\.com\.ar/uploads/marcas/[^"\']+["\'])[^>]*>', re.I)
 def lazy_sponsor(m):
     t = re.sub(r'\s+(?:loading|decoding|fetchpriority)=["\'][^"\']*["\']', '', m.group(0), flags=re.I)
@@ -119,8 +119,8 @@ if not mobile_banner_path.is_file() or mobile_banner_path.stat().st_size > MAX_M
     raise SystemExit('mobile banner verification failed')
 for name in DESKTOP_ONLY:
     url = f'_chrome-media/{name}.webp?v={SHA}'
-    # Require an actual whitespace-delimited src attribute. Do not confuse the
-    # intentionally retained data-sc-desktop-src attribute with an eager src.
+    # Exige un atributo src real delimitado por espacios. No confunde el atributo
+    # data-sc-desktop-src, retenido a propósito, con un src eager.
     if re.search(r'<img\b[^>]*\ssrc=["\']' + re.escape(url) + r'["\'][^>]*>', html, re.I):
         raise SystemExit(f'desktop-only media remains eager on mobile: {name}')
 if "querySelectorAll('img[data-sc-desktop-src]')" not in html:

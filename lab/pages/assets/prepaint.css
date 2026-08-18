@@ -1,6 +1,6 @@
-/* SushiClub full-site pre-paint geometry guard.
-   The first viewport now paints real content immediately. These rules only
-   preserve final geometry until runtime hydration completes. */
+/* Resguardo geométrico previo al primer pintado de SushiClub.
+   El primer viewport ya muestra contenido real desde el inicio. Estas reglas sólo
+   conservan la geometría final hasta que termina la hidratación del runtime. */
 
 html {
   --sc-banner-ratio: 1500 / 157;
@@ -10,10 +10,9 @@ html.sc-catalog-prepaint body.sushiShop {
   overflow-anchor: none;
 }
 
-/* The banner must keep the source 1500:157 ratio after hydration too. Width
-   and height attributes provide intrinsic reservation before the image bytes
-   arrive; persistent height:auto prevents the legacy 157px presentation hint
-   from stretching the image once the pre-paint class is removed. */
+/* El banner debe conservar la proporción original 1500:157 también después de la hidratación.
+   Los atributos width y height reservan el espacio intrínseco antes de que llegue la imagen;
+   mantener height:auto evita que el hint legacy de 157px la estire al quitar prepaint. */
 body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
@@ -29,8 +28,8 @@ body.sushiShop .bannerShop .imgBannerShop {
   object-fit: contain !important;
 }
 
-/* Mobile logo: preserve the parent/header geometry but never hide the actual
-   LCP candidate while runtime modules are still loading. */
+/* Logo móvil: conserva la geometría del padre/header sin ocultar el candidato LCP real
+   mientras todavía están cargando los módulos del runtime. */
 @media (max-width: 992px) {
   html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
     background: transparent !important;
@@ -42,10 +41,9 @@ body.sushiShop .bannerShop .imgBannerShop {
     opacity: 1 !important;
   }
 
-  /* Keep the banner at its natural 1500:157 geometry both before and after
-     hydration. The legacy snapshot otherwise falls back to a fixed 157px
-     height on mobile, stretching the image and moving the catalogue by more
-     than 100px when the runtime settles. */
+  /* Mantiene el banner en su geometría natural 1500:157 antes y después de la hidratación.
+     El snapshot legacy, de otro modo, vuelve a una altura fija de 157px en mobile,
+     estira la imagen y desplaza el catálogo más de 100px cuando se estabiliza el runtime. */
   body.sushiShop .bannerShop .BanContShop,
   body.sushiShop .bannerShop .imgBannerShop {
     width: 100% !important;
@@ -65,9 +63,9 @@ body.sushiShop .bannerShop .imgBannerShop {
     object-fit: contain !important;
   }
 
-  /* SlickNav is created by legacy code before our repair marks the canonical
-     instance. Keep provisional copies completely out of flow so they cannot
-     expand/collapse the document while the header initializes. */
+  /* El código legacy crea SlickNav antes de marcar la instancia canónica. Las copias
+     provisorias quedan completamente fuera del flujo para que no expandan ni contraigan
+     el documento mientras se inicializa el header. */
   html.sc-catalog-prepaint body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     position: absolute !important;
     top: 0 !important;
@@ -82,9 +80,9 @@ body.sushiShop .bannerShop .imgBannerShop {
   }
 }
 
-/* Banner geometry is deterministic from first paint. The image's intrinsic
-   1500:157 ratio is preserved at every breakpoint, so Bootstrap container
-   width changes cannot turn the legacy height attribute into a fixed height. */
+/* La geometría del banner es determinista desde el primer pintado. Se conserva la proporción
+   intrínseca 1500:157 en todos los breakpoints para que los cambios de ancho del contenedor
+   Bootstrap no conviertan el atributo height legacy en una altura fija. */
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
@@ -154,9 +152,9 @@ html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div {
   background-color: transparent !important;
 }
 
-/* The Pages build injects the catalog-tools shell before first paint. The
-   placeholder occupies the eventual trait-reference row so hydration can move
-   the real strip into the toolbar without changing its outer height. */
+/* El build de Pages inyecta el shell de catalog-tools antes del primer pintado. El placeholder
+   ocupa la futura fila de referencias para que la hidratación pueda mover la tira real a la
+   toolbar sin modificar su altura exterior. */
 body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
   display: block;
   grid-column: 1 / -1;
@@ -177,8 +175,8 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     z-index: auto !important;
   }
 
-  /* Prevent the legacy black category surface from flashing. The real rail
-     gets mounted into the reserved slot below without moving the catalogue. */
+  /* Evita el flash de la superficie negra de categorías legacy. El riel real se monta
+     después en el espacio reservado sin desplazar el catálogo. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile > .topShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .topShop.bottomShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .productoShop .sumar {
@@ -209,7 +207,7 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     padding-left: 0 !important;
   }
 
-  /* Same outer geometry as the mounted desktop rail. */
+  /* Misma geometría exterior que el riel desktop ya montado. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop::before {
     content: '';
     display: block;
@@ -224,8 +222,8 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     animation: none;
   }
 
-  /* High density is the default first render. Explicit stored preferences
-     override it before the catalogue modules finish mounting. */
+  /* Alta densidad es el primer render por defecto. Las preferencias guardadas explícitas
+     lo reemplazan antes de que terminen de montarse los módulos del catálogo. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;
     grid-template-columns: repeat(4,minmax(0,1fr));
@@ -288,7 +286,7 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     height: 100%;
   }
 
-  /* Product raster placeholder remains owned by image-preloader.css. */
+  /* El placeholder raster del producto sigue bajo responsabilidad de image-preloader.css. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
     width: 100% !important;

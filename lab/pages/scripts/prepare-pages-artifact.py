@@ -186,7 +186,7 @@ def bundle_css():
         if '@import' in content:
             raise SystemExit(f'Nested CSS import found while bundling: {source}')
         bundled.append(
-            f'/* source: {import_path} */\n'
+            f'/* origen: {import_path} */\n'
             f'{rebase_css_urls(path, source, content).rstrip()}'
         )
 
@@ -231,7 +231,7 @@ def bundle_js():
         if not source.is_file():
             raise SystemExit(f'Missing JS source while bundling: {source}')
         modules.append(
-            f'/* module: {module_path} */\n'
+            f'/* módulo: {module_path} */\n'
             f'{source.read_text(encoding="utf-8").rstrip()}'
         )
 

@@ -42,9 +42,9 @@ if len(trait_urls) != 5:
 if any(TRAIT_SRC_RE.search(tag) for tag in IMG_RE.findall(html)):
     raise SystemExit('legacy trait <img src> remains after pruning')
 
-# Theme surfaces and the custom category rail supersede these legacy raster
-# backgrounds. Remove the declarations from the final CSS so they cannot enter
-# the browser resource graph even on wide desktop or legacy mobile markup.
+# Las superficies del tema y el riel de categorías propio reemplazan estos fondos raster
+# legacy. Se eliminan del CSS final para que no entren al grafo de recursos del navegador,
+# incluso en desktop ancho o markup mobile heredado.
 css_replacements = {
     'https://www.sushiclub.com.ar/gfx/back_body_01.png': 1,
     'https://www.sushiclub.com.ar/gfx/back_body_01_white.png': 1,

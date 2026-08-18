@@ -9,11 +9,11 @@ if not SITE.is_dir():
 index_path = SITE / 'index.html'
 html = index_path.read_text(encoding='utf-8')
 
-# The captured imgLiquid styles contain HTML entities such as &quot;. Splitting on
-# every semicolon corrupts those entities (the old implementation turned the URL
-# into a stray "uploads_shop/...&quot; );" declaration). This tokenizer only treats
-# semicolons as declaration boundaries when they are outside entities, strings,
-# and parentheses.
+# Los estilos imgLiquid capturados contienen entidades HTML como &quot;. Separar por
+# cada punto y coma rompe esas entidades (la implementación anterior convertía la URL
+# en una declaración suelta "uploads_shop/...&quot; );"). Este tokenizador sólo trata
+# los puntos y coma como límites de declaración cuando están fuera de entidades,
+# strings y paréntesis.
 def split_declarations(style):
     chunks = []
     start = 0
@@ -104,7 +104,7 @@ remaining = re.compile(
 if remaining.search(html):
     raise SystemExit('An imgShop inline background style remains after cleanup')
 
-# Regression guard for the exact corruption this script used to create.
+# Guarda de regresión para la corrupción exacta que este script generaba antes.
 malformed_imgshop = re.compile(
     r'<div\b(?=[^>]*\bclass="[^"]*\bimgShop\b[^"]*")[^>]*\bstyle="\s*uploads_shop/',
     re.IGNORECASE,
