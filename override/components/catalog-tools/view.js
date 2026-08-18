@@ -139,7 +139,6 @@ function captureLayoutState(){
   if(reducedMotion()||!motionDeps||!motionDeps.Flip||!motionDeps.gsap)return null;
   var targets=visibleLayoutTargets();if(!targets.length)return null;
   if(layoutTween){try{layoutTween.progress(1);}catch(_){}layoutTween=null;}
-  try{motionDeps.Flip.killFlipsOf(targets,true);}catch(_){}
   return{targets:targets,state:motionDeps.Flip.getState(targets,{simple:true})};
 }
 function animateLayoutState(snapshot){
@@ -152,7 +151,6 @@ function animateLayoutState(snapshot){
     ease:'power3.out',
     nested:true,
     scale:true,
-    prune:true,
     simple:true,
     zIndex:2,
     toggleClass:'sc-catalog-layout-flipping',
