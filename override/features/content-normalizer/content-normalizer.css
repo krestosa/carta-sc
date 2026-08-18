@@ -1,10 +1,10 @@
-/* Dynamic content normalization is viewport-independent. Desktop defines the
-   editorial contract and every smaller breakpoint inherits it unchanged. */
+/* Normaliza el contenido dinámico igual en todos los breakpoints. */
 body.sushiShop .listadoShop .titleShopSeccion,
 body.sushiShop .listadoShop .subTitleShopSeccion {
   text-transform: uppercase !important;
 }
 
+/* Descripciones siempre regulares y sin estilos heredados. */
 body.sushiShop .listadoShop .productoShop .descrip {
   font-weight: var(--sc-font-weight-regular) !important;
   font-style: normal !important;
