@@ -29,6 +29,7 @@ if(!queue){
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
 function targets(){return Array.prototype.filter.call(document.querySelectorAll('.listadoShop .titleShopSeccion > div, .listadoShop .subTitleShopSeccion'),function(el){return(el.textContent||'').replace(/\s+/g,' ').trim().length>0;});}
 function isParentCategory(el){return!!(el.parentElement&&el.parentElement.classList.contains(S.sectionTitle.slice(1)));}
+function headingUnit(node){if(!node||!node.matches)return null;if(node.matches(S.sectionSubtitle))return node;if(node.matches(S.sectionTitle))return node.querySelector(':scope > div');return null;}
 function clearInvalidHostAria(el){if(el&&el.classList&&el.classList.contains('sc-section-rule-host'))el.removeAttribute('aria-label');}
 function refresh(token){if(initialized&&token===generation)SC.motion.refresh(CFG.refreshDelay);}
 function stateFor(el){var value=headingStates.get(el);if(!value){value={split:null,revealed:false};headingStates.set(el,value);}return value;}
@@ -50,6 +51,12 @@ function reveal(gsap,el,done){
   tweens.push(tl);
 }
 function request(gsap,el){if(!pending||!pending.has(el))return;pending.delete(el);if(observer)observer.unobserve(el);queue.enqueue(el,function(done){reveal(gsap,el,done);});}
+/* Si una card llega primero por geometría, encola padre/subtítulo anteriores antes que ella. */
+function requestBefore(node){
+  if(!initialized||!motionDeps||!node)return;var list=node.closest&&node.closest(S.productList),sibling=node.previousElementSibling,headings=[];if(!list)return;
+  while(sibling&&sibling.parentElement===list){var heading=headingUnit(sibling);if(heading){headings.unshift(heading);if(sibling.matches(S.sectionTitle))break;}sibling=sibling.previousElementSibling;}
+  headings.forEach(function(el){request(motionDeps.gsap,el);});
+}
 
 function initMotion(deps,token){
   var SplitText=deps&&deps.SplitText;if(initialized||token!==generation||!SplitText)return;initialized=true;var gsap=deps.gsap,ST=deps.ScrollTrigger,initial=[],deferred=[];elements=targets();splits=[];tweens=[];triggers=[];pending=new Set();
@@ -68,11 +75,11 @@ function initMotion(deps,token){
 }
 function init(){if(initialized||!motionDeps)return;initMotion(motionDeps,++generation);}
 function destroy(){
-  generation++;if(rafA){cancelAnimationFrame(rafA);rafA=0;}if(rafB){cancelAnimationFrame(rafB);rafB=0;}if(observer){observer.disconnect();observer=null;}if(pending){pending.forEach(function(el){queue.cancel(el);});pending.clear();pending=null;}
-  triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});tweens.forEach(function(tween){if(tween&&tween.kill)tween.kill();});
+  generation++;if(rafA){cancelAnimationFrame(rafA);rafA=0;}if(rafB){cancelAnimationFrame(rafB);rafB=0;}if(observer){observer.disconnect();observer=null;}if(pending){pending.clear();pending=null;}
+  elements.forEach(function(el){if(!queue.isDone(el))queue.cancel(el);});triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});tweens.forEach(function(tween){if(tween&&tween.kill)tween.kill();});
   if(motionDeps){var gsap=motionDeps.gsap;elements.forEach(function(el){clearHeading(gsap,el);el.classList.remove('sc-section-rule-host');});splits.forEach(function(split){if(split&&split.revert)split.revert();});}
   initialized=false;elements=[];splits=[];tweens=[];triggers=[];
 }
-SC.sectionHeading={init:init,destroy:destroy,cleanup:destroy,queue:queue};
+SC.sectionHeading={init:init,destroy:destroy,cleanup:destroy,queue:queue,requestBefore:requestBefore};
 SC.motion.whenReady(function(deps){motionDeps=deps;ready(init);});
 })();
