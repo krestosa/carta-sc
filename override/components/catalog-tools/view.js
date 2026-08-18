@@ -5,8 +5,10 @@ var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;
 if(!SC||!CFG||SC.__catalogToolsViewBooted)return;
 SC.__catalogToolsViewBooted=true;
 
+/* Vista activa, storage y estado de transición. */
 var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null,motionDeps=null;
 
+/* Resuelve modo y cantidad de columnas por breakpoint. */
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
 function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf(mode)>=0?mode:'';}
 function selectedMode(){return normalize(doc.getAttribute('data-sc-catalog-view')||'')||'compact';}
@@ -15,10 +17,13 @@ function columns(){var ctx=context();return ctx==='phone'?2:ctx==='tablet'?3:4;}
 function effectiveMode(mode){return normalize(mode)||'compact';}
 function label(mode){var effective=effectiveMode(mode),count;if(effective==='list')return'Vista lista. Cambiar a grilla de alta densidad';count=columns();return'Vista grilla de alta densidad: '+count+' '+(count===1?'columna':'columnas')+'. Cambiar a vista lista';}
 function iconKey(mode){return effectiveMode(mode)==='list'?'list':'grid';}
+
+/* Migra claves viejas y persiste solo la vista actual. */
 function load(){var mode=normalize(doc.getAttribute('data-sc-catalog-view')||''),ctx=context(),legacy='';if(mode)return mode;try{mode=normalize(localStorage.getItem(STORE_KEY)||'');if(!mode){legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacyMode(legacy);if(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){}}}}catch(_){mode='';}return mode||'compact';}
 function save(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
 function reducedMotion(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
 
+/* Prepara paths vivos y targets del icono. */
 function livePaths(host){return host?Array.prototype.slice.call(host.querySelectorAll('[data-sc-view-shape]')):[];}
 function targetPaths(host,key){var live=livePaths(host);return live.map(function(_,index){return host.querySelector('[data-sc-view-target="'+key+'-'+index+'"]');});}
 function ensureHostPresentation(host){
@@ -45,6 +50,8 @@ function initMorph(host){
   ensureHostPresentation(host);
   return true;
 }
+
+/* Cancela un morph anterior antes de retargetear. */
 function clearViewIconMotion(host){
   if(!host)return;
   var state=host.__scViewIconMotion;
@@ -62,6 +69,8 @@ function setMorphState(host,key){
   live.forEach(function(path,index){var target=targets[index];if(target)path.setAttribute('d',target.getAttribute('d'));});
   host.setAttribute('data-sc-icon-state',key);
 }
+
+/* Anima grilla/lista con MorphSVG. */
 function animateMorph(host,from,to){
   if(!host||from===to){if(host){host.setAttribute('data-sc-icon-state',to);ensureHostPresentation(host);}return;}
   if(!initMorph(host)||!motionDeps||!motionDeps.gsap||!motionDeps.MorphSVGPlugin){setMorphState(host,to);return;}
@@ -77,6 +86,8 @@ function animateMorph(host,from,to){
     state.timeline.to(path,{duration:duration,ease:ease,morphSVG:{shape:targets[index]},overwrite:'auto'},short?0:Math.floor(index/2)*.008);
   });
 }
+
+/* Sincroniza label accesible e icono con la vista. */
 function sync(root,mode,animate){
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]'),key=iconKey(mode),text=label(mode),previous=host&&host.getAttribute('data-sc-icon-state');
   if(button){button.setAttribute('aria-label',text);button.setAttribute('title',text);button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');}
@@ -86,6 +97,7 @@ function sync(root,mode,animate){
   if(animate!==false&&previous)animateMorph(host,previous,key);else setMorphState(host,key);
 }
 
+/* Añade respuesta sutil a hover, foco y presión. */
 function bindViewMicroInteraction(button,host){
   if(!button||!host||!motionDeps||!motionDeps.gsap)return function(){};
   var gsap=motionDeps.gsap,paths=livePaths(host),hover=false,focus=false,pressed=false,destroyed=false;
@@ -113,6 +125,7 @@ function bindViewMicroInteraction(button,host){
   return function(){if(destroyed)return;destroyed=true;button.removeEventListener('pointerenter',enter);button.removeEventListener('pointerleave',leave);button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',leave);button.removeEventListener('focus',focusIn);button.removeEventListener('blur',focusOut);button.removeEventListener('keydown',keyDown);button.removeEventListener('keyup',keyUp);stop();gsap.set(paths,{x:0,y:0,clearProps:'transform,willChange'});};
 }
 
+/* Recalcula medidas después del cambio de vista. */
 function refreshMotionNow(){if(SC.motion&&SC.motion.run)SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});}
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode(),false);}
 function refreshLayout(switching){
@@ -128,8 +141,12 @@ function refreshLayout(switching){
     });
   });
 }
+
+/* Aplica y, si corresponde, persiste la vista elegida. */
 function apply(root,mode,persist){mode=normalize(mode)||'compact';if(persist)doc.classList.add('sc-catalog-view-switching');doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode,persist);if(persist)save(mode);refreshLayout(!!persist);}
 function destroy(){var host=document.querySelector('.sc-catalog-view-toggle [data-sc-view-icon]');if(host)clearViewIconMotion(host);if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
+
+/* Instala toggle y escucha cambios de breakpoint. */
 function install(root){
   destroy();
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]');
@@ -146,6 +163,7 @@ function install(root){
   var ownCleanup=cleanup;return function(){if(cleanup===ownCleanup)destroy();};
 }
 
+/* Habilita morph cuando GSAP termina de cargar. */
 if(SC.motion&&typeof SC.motion.whenLoaded==='function')SC.motion.whenLoaded(function(deps){motionDeps=deps;});else if(SC.motion&&typeof SC.motion.whenReady==='function')SC.motion.whenReady(function(deps){motionDeps=deps;});
 C.view={install:install,apply:apply,refreshLayout:refreshLayout,sync:syncMounted,destroy:destroy};
 })();
