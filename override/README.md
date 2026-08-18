@@ -33,10 +33,11 @@ Esos experimentos viven en `lab/pages/` y, cuando correspondan al sitio real, de
 
 1. `_js_dev/main.js` carga la capa frontend de desarrollo.
 2. `override/main.css` mantiene un manifest plano de estilos propiedad de componentes/features.
-3. `override/main.js` carga módulos JavaScript en orden de dependencia.
-4. `templates/registry.js` expone templates HTML propiedad de cada componente.
-5. Los módulos esperan sus dependencias antes de montar UI.
-6. `core/render-lifecycle.js` coordina estabilidad inicial y desbloqueo de motion.
+3. `override/main.js` carga `runtime-main.js`.
+4. `runtime-main.js` monta primero los módulos funcionales locales; la descarga de GSAP/MorphSVG/ScrollTrigger/SplitText ocurre en paralelo y no bloquea búsqueda, vistas, modal, tema, navegación ni header.
+5. `templates/registry.js` expone templates HTML propiedad de cada componente.
+6. Los módulos de motion se registran mediante `whenLoaded`/`whenReady` y actúan como progressive enhancement. Si las dependencias externas no están disponibles, la interfaz conserva su estado estático y su funcionalidad.
+7. `core/render-lifecycle.js` coordina estabilidad inicial y desbloqueo de motion cuando corresponde.
 
 ## Contrato responsive
 
@@ -62,7 +63,9 @@ Densidad por breakpoint:
 - tablet: 3 columnas;
 - phone: 2 columnas.
 
-La lista tiene un único owner estructural: `components/catalog-tools/view-stability.css`. Usa la misma anatomía de dos columnas en todos los breakpoints (`media | contenido`) y sólo varían tokens responsive. El buscador hereda esa misma geometría de lista.
+La lista tiene un único owner estructural: `components/catalog-tools/view-stability.css`. Usa la misma anatomía de dos columnas en todos los breakpoints (`media | contenido`) y sólo varían tokens responsive.
+
+La búsqueda es **layout-neutral**: filtra, oculta y reordena el catálogo montado, pero nunca cambia ni persiste la vista. Si el usuario está en `compact`, los resultados siguen en `compact`; si está en `list`, siguen en `list`. `data-sc-catalog-view` es la única fuente de verdad de geometría de vista.
 
 `components/catalog-tools/catalog-tools.css` es dueño del buscador, controles, filtros y grilla de densidad; no puede definir una geometría paralela de lista.
 
@@ -80,12 +83,12 @@ No son diferencias válidas por sí solas: pricing, orden de traits, normalizaci
 
 - `core/`: configuración, utilities, theme, a11y, performance frontend y lifecycle.
 - `templates/`: registry de templates.
-- `motion/`: infraestructura de motion y efectos globales.
+- `motion/`: infraestructura de motion y efectos globales; nunca puede convertirse en requisito para la funcionalidad base.
 - `mutations/`: adaptaciones controladas al runtime/DOM legacy.
 - `features/catalog/`: layout y comportamiento del catálogo.
 - `features/content-normalizer/`: normalización incremental de contenido.
 - `features/image-preloader/`: coordinación frontend de estados/prioridades de imágenes.
-- `components/category-nav/`: rail, sticky state, indicador, scroll-spy y controles.
+- `components/category-nav/`: rail, sticky state, indicador, scroll-spy, controles e interacción.
 - `components/product-card/`: tarjeta, precio, traits, accesibilidad y motion.
 - `components/product-modal/`: modal, foco, contenido, controles y motion.
 - `components/catalog-tools/`: búsqueda, vistas y theme.
@@ -104,6 +107,8 @@ No son diferencias válidas por sí solas: pricing, orden de traits, normalizaci
 - Los hallazgos de Lighthouse sólo modifican `override/` cuando la causa raíz está en esta capa frontend.
 - No reintroducir una tercera vista de catálogo.
 - No crear implementaciones paralelas de lista por breakpoint.
+- Búsqueda no puede escribir ni inferir una vista distinta de `data-sc-catalog-view`.
+- Las dependencias externas de animación no pueden bloquear el montaje de UI funcional.
 
 ## Validación
 
