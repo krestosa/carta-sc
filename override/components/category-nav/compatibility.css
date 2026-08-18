@@ -49,6 +49,20 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anc
   color: var(--sc-color-muted) !important;
 }
 
+/* Legacy category CSS can paint its own active underline through li/a pseudo-elements.
+   The override indicator is the sole visual owner, so suppress every legacy underline
+   in both resting and sticky rails. */
+body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li::after,
+body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li::after,
+body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 /* The active category may be tracked before the rail sticks, but its indicator is
    intentionally a sticky-only affordance. Keep it hidden in the resting rail and
    reveal it only once the rail host enters sc-is-stuck. */
@@ -92,11 +106,6 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anc
     align-items: center !important;
     min-height: var(--sc-touch-target) !important;
     padding: 0 var(--sc-category-link-padding-bottom) !important;
-  }
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink.sc-motion-current::after,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink[aria-current='location']::after,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink::after {
-    bottom: 0 !important;
   }
 }
 
