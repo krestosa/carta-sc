@@ -11,6 +11,17 @@ body.sushiShop {
 .sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
 .sushiShop .listadoShop .productoShop .imgLiquid,
 .sushiShop .listadoShop .productoShop .imgShop {-webkit-transform: none !important;transform: none !important;}
+
+/* Direct manipulation feedback starts at pointer-down through :active. `scale`
+   is independent from the transform/translate properties owned by reveal motion. */
+.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
+  scale: 1;
+  transform-origin: 50% 50%;
+  transition: scale 100ms var(--sc-motion-ease-out) !important;
+  touch-action: manipulation;
+}
+.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active { scale: .995; }
+
 .sushiShop .productoShop .sumar {
   -webkit-transform-origin: 50% 50%;transform-origin: 50% 50%;touch-action: manipulation;
   -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
@@ -21,5 +32,7 @@ body.sushiShop {
 @media (max-width: 992px) {.sushiShop .listadoShop .productoShop[style*="visibility: hidden"] {translate: 0 8px;}}
 @media (prefers-reduced-motion: reduce) {
   .sushiShop .listadoShop .productoShop {translate: none !important;-webkit-transition: none !important;transition: none !important;}
+  .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
+  .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active {scale: 1 !important;transition: none !important;}
   .sushiShop .productoShop .sumar,.sushiShop .productoShop .sumar:active {-webkit-transform: none !important;transform: none !important;}
 }
