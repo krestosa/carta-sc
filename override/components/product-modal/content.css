@@ -9,23 +9,37 @@ body.sushiShop .sc-product-modal__title {
   letter-spacing: -.025em !important;
 }
 
-/* Alinea precio, tachado y rasgos sobre una misma fila. */
+/* Precio y metadata secundaria comparten línea; el bloque secundario baja completo si falta ancho. */
 body.sushiShop .sc-product-modal__price-row {
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   align-items: baseline !important;
   justify-content: flex-start !important;
   column-gap: 6px !important;
-  row-gap: 0 !important;
+  row-gap: 2px !important;
+}
+
+body.sushiShop .sc-product-modal__secondary-meta {
+  display: inline-flex !important;
+  order: 2 !important;
+  flex: 0 0 auto !important;
+  align-items: baseline !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
 }
 
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
-  order: 3 !important;
+  order: 2 !important;
   flex: 0 0 auto !important;
   align-items: flex-end !important;
-  align-self: center !important;
+  align-self: baseline !important;
   gap: 5px !important;
   height: var(--sc-modal-traits-size) !important;
   margin: 0 !important;
@@ -66,15 +80,17 @@ body.sushiShop .sc-product-modal__price-row .priceHijass {
   margin: 0 !important;
   color: var(--sc-color-ink) !important;
   font: var(--sc-font-weight-semibold) 17px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
+  white-space: nowrap !important;
 }
 
 /* Precio anterior tachado. */
 body.sushiShop .sc-product-modal__price-row .ofertaPrice {
-  order: 2 !important;
+  order: 1 !important;
   flex: 0 0 auto !important;
   justify-self: start !important;
   margin: 0 !important;
   color: var(--sc-color-muted) !important;
   font: var(--sc-font-weight-regular) 12px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
   text-decoration: line-through !important;
+  white-space: nowrap !important;
 }
