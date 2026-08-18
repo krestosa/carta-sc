@@ -4,12 +4,12 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
-/* Perfiles exclusivos: <=640, 641-992 y >=993. triggerRatio replica el punto de entrada
-   de ScrollTrigger y permite confirmar la geometría antes de consumir cada reveal. */
+/* Perfiles exclusivos: <=640, 641-992 y >=993. El recorrido es corto; la cadencia y
+   duración reales se adaptan de forma continua a la velocidad de scroll. */
 var installed=false,reflowRaf=0,PROFILES={
-  mobile:{start:'clamp(top 92%)',triggerRatio:.92,initialY:8,revealY:8},
-  tablet:{start:'clamp(top 91%)',triggerRatio:.91,initialY:9,revealY:10},
-  desktop:{start:'clamp(top 90%)',triggerRatio:.90,initialY:10,revealY:12}
+  mobile:{start:'clamp(top 96%)',triggerRatio:.96,initialY:4,revealY:5},
+  tablet:{start:'clamp(top 95%)',triggerRatio:.95,initialY:5,revealY:6},
+  desktop:{start:'clamp(top 94%)',triggerRatio:.94,initialY:6,revealY:7}
 };
 function ensureGate(){
   if(SC.catalogRevealGate)return SC.catalogRevealGate;
