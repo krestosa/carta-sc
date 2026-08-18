@@ -5,6 +5,14 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* Sólo títulos y cards esperan ocultos hasta que GSAP registra su estado inicial. */
+html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
+html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
+html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .productoShop {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* Al cambiar densidad se reescribe geometría dentro y arriba del viewport. Se desactiva
    el scroll anchoring solo durante ese relayout para evitar una compensación doble. */
 html.sc-catalog-view-switching,
