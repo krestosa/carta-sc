@@ -1,5 +1,5 @@
-/* Product modal shell and geometry. */
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Estructura y geometría del modal de producto. */
+/* Tokens locales del componente. */
 body.sushiShop {
   --sc-modal-dialog-block-space: 16px;
   --sc-modal-title-line-height: 1.2;
@@ -12,9 +12,12 @@ body.sushiShop {
   --sc-z-modal: 9000;
 }
 
+/* Bloquea el scroll de fondo mientras el modal está abierto. */
 body.sushiShop.sc-product-modal-open {
   overflow: hidden !important;
 }
+
+/* Capa de fondo y centrado del diálogo. */
 body.sushiShop .sc-product-modal {
   box-sizing: border-box !important;
   display: flex !important;
@@ -28,6 +31,8 @@ body.sushiShop .sc-product-modal {
   background: rgba(0,0,0,.62) !important;
   z-index: var(--sc-z-modal) !important;
 }
+
+/* El diálogo limita altura y mantiene scroll interno. */
 body.sushiShop .sc-product-modal__dialog {
   box-sizing: border-box !important;
   position: relative !important;
@@ -42,6 +47,8 @@ body.sushiShop .sc-product-modal__dialog {
   box-shadow: 0 18px 55px rgba(0,0,0,.22) !important;
   outline: none !important;
 }
+
+/* Mantiene la imagen completa dentro de su ratio. */
 body.sushiShop .sc-product-modal__image-stage {
   box-sizing: border-box !important;
   display: flex !important;
@@ -59,10 +66,13 @@ body.sushiShop .sc-product-modal__image {
   object-fit: contain !important;
   object-position: center !important;
 }
+
 body.sushiShop .sc-product-modal__content {
   box-sizing: border-box !important;
   padding: clamp(18px,2.25vw,26px) !important;
 }
+
+/* Separa precio y acciones al pie. */
 body.sushiShop .sc-product-modal__footer {
   box-sizing: border-box !important;
   display: flex !important;
@@ -74,6 +84,8 @@ body.sushiShop .sc-product-modal__footer {
   padding: clamp(12px,1.8vh,16px) 0 0 !important;
   border-top: var(--sc-border-hairline) solid var(--sc-color-border) !important;
 }
+
+/* Precio actual y anterior en una grilla compacta. */
 body.sushiShop .sc-product-modal__price-row {
   display: grid !important;
   flex: 1 1 auto !important;
@@ -91,6 +103,7 @@ body.sushiShop .sc-product-modal__price-row {
   font-variant-numeric: tabular-nums !important;
   white-space: nowrap !important;
 }
+
 body.sushiShop .sc-product-modal__actions {
   flex: 0 1 clamp(184px,42%,238px) !important;
   min-width: 170px !important;
