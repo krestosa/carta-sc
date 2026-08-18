@@ -40,13 +40,12 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
     });
     ensureTracker();
   }
+  function containsCart(node){return!!(node&&node.nodeType===1&&(node.matches(".carritoFixed")||(node.querySelector&&node.querySelector(".carritoFixed"))));}
   function affectsCart(mutation){
     var targetNode=mutation.target&&mutation.target.nodeType===1?mutation.target:mutation.target&&mutation.target.parentElement;
     if(targetNode&&targetNode.closest&&targetNode.closest(".carritoFixed"))return true;
-    for(var i=0;i<(mutation.addedNodes||[]).length;i+=1){
-      var node=mutation.addedNodes[i];if(!node||node.nodeType!==1)continue;
-      if(node.matches(".carritoFixed")||(node.querySelector&&node.querySelector(".carritoFixed")))return true;
-    }
+    for(var i=0;i<(mutation.addedNodes||[]).length;i+=1)if(containsCart(mutation.addedNodes[i]))return true;
+    for(var j=0;j<(mutation.removedNodes||[]).length;j+=1)if(containsCart(mutation.removedNodes[j]))return true;
     return false;
   }
   function schedule(){if(!raf)raf=requestAnimationFrame(discover);}
