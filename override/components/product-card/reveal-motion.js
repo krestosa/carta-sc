@@ -7,7 +7,7 @@ if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMoti
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
 parts.setupReveal=function(gsap,ST,profile,reduce){
-  var cards=gsap.utils.toArray(S.productCards),states=new WeakMap(),observer=null,mutationObserver=null,triggers=[],initialRaf=0,destroyed=false;
+  var cards=gsap.utils.toArray(S.productCards),states=new WeakMap(),observer=null,mutationObserver=null,triggers=[];
   function noop(){}
   function state(card){var value=states.get(card);if(!value){value={prepared:false,done:false,started:false,max:0,tween:null,trigger:null};states.set(card,value);}return value;}
   function renderable(card){return!!(card&&!card.hidden&&card.offsetParent!==null&&card.getBoundingClientRect().height>0);}
@@ -39,8 +39,7 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     if(value.max>=.995)finish(card);
   }
   function autoplay(card){
-    var value=state(card);if(value.done||!value.tween)return;value.started=true;
-    var delay=phase(card)*.025;
+    var value=state(card);if(value.done||!value.tween)return;value.started=true;var delay=phase(card)*.025;
     gsap.to(value.tween,{progress:1,duration:CFG.initialDuration,delay:delay,ease:(M.easings&&M.easings.out)||'power2.out',overwrite:true,onComplete:function(){finish(card);}});
   }
   function arm(card,initialPass){
@@ -50,16 +49,7 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     value.tween=gsap.to(card,{autoAlpha:1,top:0,duration:1,ease:(M.easings&&M.easings.out)||'power2.out',paused:true,overwrite:'auto'});
     if(reduce){finish(card);return;}
     if(initialPass&&rect.top<innerHeight&&rect.bottom>0){autoplay(card);return;}
-    value.trigger=ST.create({
-      trigger:card,
-      start:function(){return windowFor(card).start;},
-      end:function(){return windowFor(card).end;},
-      invalidateOnRefresh:true,
-      onUpdate:function(self){advance(card,self.progress,self.direction);},
-      onEnter:function(self){if(self.direction>0)advance(card,self.progress||.001,1);},
-      onLeave:function(self){if(self.direction>0)finish(card);},
-      onLeaveBack:function(){var current=state(card);if(current.started)finish(card);}
-    });
+    value.trigger=ST.create({trigger:card,start:function(){return windowFor(card).start;},end:function(){return windowFor(card).end;},invalidateOnRefresh:true,onUpdate:function(self){advance(card,self.progress,self.direction);},onEnter:function(self){if(self.direction>0)advance(card,self.progress||.001,1);},onLeave:function(self){if(self.direction>0)finish(card);},onLeaveBack:function(){var current=state(card);if(current.started)finish(card);}});
     triggers.push(value.trigger);if(observer)observer.observe(card);
   }
   function armNode(node){if(!node||node.hidden)return;if(node.matches&&node.matches(S.productList)){node.querySelectorAll(S.productCard).forEach(function(card){arm(card,false);});return;}if(node.matches&&node.matches(S.productCard))arm(node,false);}
@@ -67,12 +57,12 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
 
   if(!cards.length){parts.revealViewport=null;return noop;}parts.revealViewport=revealViewport;
   if(window.IntersectionObserver)observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var value=state(entry.target);if(value.done)return;if(programmatic())finish(entry.target);});},{root:null,rootMargin:'0px 0px 12% 0px',threshold:0});
-  initialRaf=requestAnimationFrame(function(){initialRaf=0;cards.forEach(function(card){arm(card,true);});});
+  /* Preparación síncrona: el gate puede liberar el prepaint sin exponer cards sin estado GSAP. */
+  cards.forEach(function(card){arm(card,true);});
   var container=document.querySelector(S.container);if(container&&window.MutationObserver){mutationObserver=new MutationObserver(function(mutations){mutations.forEach(function(mutation){if(mutation.type==='attributes'&&mutation.attributeName==='hidden'&&!mutation.target.hidden)armNode(mutation.target);});});mutationObserver.observe(container,{subtree:true,attributes:true,attributeFilter:['hidden']});}
 
   return function(){
-    destroyed=true;if(parts.revealViewport===revealViewport)parts.revealViewport=null;if(initialRaf)cancelAnimationFrame(initialRaf);if(observer)observer.disconnect();if(mutationObserver)mutationObserver.disconnect();
-    triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});cards.forEach(function(card){var value=state(card);if(value.tween)value.tween.kill();gsap.killTweensOf(card);clear(card);});triggers=[];
+    if(parts.revealViewport===revealViewport)parts.revealViewport=null;if(observer)observer.disconnect();if(mutationObserver)mutationObserver.disconnect();triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});cards.forEach(function(card){var value=state(card);if(value.tween)value.tween.kill();gsap.killTweensOf(card);clear(card);});triggers=[];
   };
 };
 })();
