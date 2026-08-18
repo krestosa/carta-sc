@@ -3,6 +3,16 @@
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,D=SC&&SC.productCardData,A=SC&&SC.productCardA11y,P=SC&&SC.productCardContent;
 if(!SC||!U||!C||!D||!A||!P||SC.__productCardBooted)return;SC.__productCardBooted=true;
 
+/* Da un bleed mínimo al viewBox del fuego porque sus paths llegan exactamente a x=0. */
+var createTraitIcon=D.createTraitIcon;
+function normalizeTraitViewBox(icon,label){
+  if(!icon||!label||String(label).toLocaleLowerCase('es-AR').indexOf('picante')<0)return icon;
+  var box=(icon.getAttribute('viewBox')||'').trim().split(/\s+/),x,w;
+  if(box.length!==4)return icon;x=parseFloat(box[0]);w=parseFloat(box[2]);if(!isFinite(x)||!isFinite(w))return icon;
+  box[0]=String(x-.125);box[2]=String(w+.125);icon.setAttribute('viewBox',box.join(' '));icon.setAttribute('overflow','visible');return icon;
+}
+D.createTraitIcon=function(label){return normalizeTraitViewBox(createTraitIcon(label),label);};
+
 /* Estado de observers y trabajo incremental. */
 var ready=U.ready,S=C.selectors,desktopQuery=C.queries.desktop,resizeObserver=null,cardObserver=null,cardRaf=0,lastWidth=-1,resizeFallback=false,initialized=false,initialQueue=[],initialIdle=0,initialTimer=0,initialDone=false,RESIZE_WIDTH_TOLERANCE=.5,INITIAL_BATCH=1,INITIAL_BUDGET_MS=4,INITIAL_IDLE_TIMEOUT=1500;
 
