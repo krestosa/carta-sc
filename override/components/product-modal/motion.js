@@ -1,8 +1,12 @@
+/* Controla apertura, reapertura y cierre del modal con animaciones interrumpibles. Cada
+   transición usa un token propio para que una interacción nueva invalide la anterior. */
 (function(){
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,MS=SC&&SC.productModalSelectors,M=C&&C.motion,CFG={openOffsetY:10,openScale:.992,closeOffsetY:6,closeScale:.994,openBackdropDuration:.14,openDialogDuration:.20,openDialogDelay:.015,closeDialogDuration:.11,closeBackdropDuration:.13,closeBackdropDelay:.005};if(!SC||!C||!MS||SC.__productModalMotionBooted)return;SC.__productModalMotionBooted=true;
+/* El token evita que callbacks de una transición vieja limpien una animación más reciente. */
 function nextToken(modal){var token=(modal.__scModalMotionToken||0)+1;modal.__scModalMotionToken=token;return token;}
 function current(modal,token){return modal&&modal.__scModalMotionToken===token;}
+/* Calcula el origen desde la card que abrió el modal para que el movimiento tenga continuidad. */
 function origin(dialog,source){
   if(!dialog)return;var value='50% 50%';
   if(source&&document.documentElement.contains(source)){
@@ -10,8 +14,10 @@ function origin(dialog,source){
   }
   dialog.style.transformOrigin=value;
 }
+/* Limpia propiedades temporales para devolver el control del estado final al CSS. */
 function clear(modal,dialog,gsap){if(!modal||!dialog||!gsap)return;gsap.set(modal,{clearProps:'opacity,visibility,willChange'});gsap.set(dialog,{clearProps:'transform,opacity,visibility,willChange'});}
 function cancel(modal){if(!modal)return;nextToken(modal);if(!SC.motion||!SC.motion.runLoaded)return;SC.motion.runLoaded(function(deps){var dialog=modal.querySelector(MS.dialog);deps.gsap.killTweensOf([modal,dialog]);});}
+/* Abre backdrop y diálogo en tiempos separados para evitar una entrada brusca. */
 function open(modal,source){
   if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.run&&SC.motion.run(function(deps){
     var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;gsap.killTweensOf([modal,dialog]);origin(dialog,source);gsap.set(modal,{autoAlpha:0,willChange:'opacity'});gsap.set(dialog,{autoAlpha:0,y:CFG.openOffsetY,scale:CFG.openScale,willChange:'transform,opacity'});
@@ -21,6 +27,7 @@ function open(modal,source){
   });
   if(!ran){var dialog=modal.querySelector(MS.dialog);origin(dialog,source);}
 }
+/* Retargetea un modal ya montado sin volver a ejecutar toda la entrada inicial. */
 function reopen(modal,source){
   if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.runLoaded&&SC.motion.runLoaded(function(deps){
     var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;gsap.killTweensOf([modal,dialog]);origin(dialog,source);gsap.set(modal,{willChange:'opacity'});gsap.set(dialog,{willChange:'transform,opacity'});
@@ -30,6 +37,7 @@ function reopen(modal,source){
   });
   if(!ran){var dialog=modal.querySelector(MS.dialog);origin(dialog,source);modal.style.removeProperty('opacity');modal.style.removeProperty('visibility');}
 }
+/* Cierra primero el diálogo y después el backdrop; reduced motion ejecuta el cierre directo. */
 function close(modal,done){
   if(!modal){if(done)done();return;}var token=nextToken(modal);
   if(SC.motion&&SC.motion.reduced&&SC.motion.reduced()){if(done)done();return;}
