@@ -4,7 +4,8 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
 if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
-var installed=false,reflowRaf=0,PROFILES={mobile:{batchMax:4,start:'clamp(top 93%)'},tablet:{batchMax:6,start:'clamp(top 92%)'},desktop:{batchMax:8,start:'clamp(top 91%)'}};
+/* Anticipa el reveal antes de que la card entre al viewport. Mobile recibe mayor margen para absorber scroll táctil rápido. */
+var installed=false,reflowRaf=0,PROFILES={mobile:{batchMax:4,start:'clamp(top bottom+=96px)',revealAhead:96},tablet:{batchMax:6,start:'clamp(top bottom+=80px)',revealAhead:80},desktop:{batchMax:8,start:'clamp(top bottom+=64px)',revealAhead:64}};
 /* Espera dos frames antes de rescatar cards visibles y refrescar geometría de motion. */
 function reflow(){
   if(reflowRaf)cancelAnimationFrame(reflowRaf);
