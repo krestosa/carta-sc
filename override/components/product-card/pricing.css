@@ -147,3 +147,9 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   overflow: visible !important;
   transform: none !important;
 }
+
+/* Separa medio píxel el fuego del límite izquierdo de su viewport SVG para evitar el recorte óptico. */
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait*='picante'],
+html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait*='picante'] {
+  transform: translateX(.5px) !important;
+}
