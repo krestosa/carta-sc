@@ -7,8 +7,8 @@ if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBo
 /* Recupera el desplazamiento histórico y deja que el título entre antes que las cards. */
 var installed=false,reflowRaf=0,PROFILES={
   mobile:{batchMax:4,start:'clamp(top 92%)',initialY:8,revealY:8,revealAhead:48,nativeRevealGuard:true},
-  tablet:{batchMax:6,start:'clamp(top 91%)',initialY:9,revealY:10,revealAhead:56},
-  desktop:{batchMax:8,start:'clamp(top 90%)',initialY:10,revealY:12,revealAhead:64}
+  tablet:{batchMax:6,start:'clamp(top 91%)',initialY:9,revealY:10,revealAhead:56,nativeRevealGuard:true},
+  desktop:{batchMax:8,start:'clamp(top 90%)',initialY:10,revealY:12,revealAhead:64,nativeRevealGuard:true}
 };
 /* Espera dos frames antes de rescatar cards visibles y refrescar geometría de motion. */
 function reflow(){
