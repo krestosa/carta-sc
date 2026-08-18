@@ -45,9 +45,11 @@ jobs:
           test -s handoff/README.md
           test -s handoff/BUILD_SHA
           test -s handoff/compiled/index.html
+          test -s handoff/compiled/.nojekyll
           test -d handoff/source/override
           test -d handoff/source/tooling/scripts
           test -s handoff/source/tooling/build.py
+          test -s handoff/source/tooling/.nojekyll
           test -x handoff/build-local.sh
           test -x handoff/serve-local.sh
           test -s handoff/build-local.ps1
@@ -61,5 +63,6 @@ jobs:
           name: handoff-${{ github.sha }}
           path: handoff
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
           compression-level: 6
