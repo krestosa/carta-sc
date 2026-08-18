@@ -16,6 +16,7 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   function requestCard(card,duration){
     if(!card)return;if(pending&&!removePending(card))return;
     if(suppressReveal()||reduce||!queue||typeof queue.enqueue!=='function'){showCard(card);return;}
+    if(SC.sectionHeading&&typeof SC.sectionHeading.requestBefore==='function')SC.sectionHeading.requestBefore(card);
     queue.enqueue(card,function(done){animateCard(card,duration,done);});
   }
   function revealViewport(){
@@ -42,8 +43,8 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
     timer=setTimeout(function(){deferred.forEach(function(card){if(!pending||!pending.has(card))return;var rect=card.getBoundingClientRect();if(rect.top>innerHeight+revealAhead||rect.bottom<CFG.rescueBottomOffset)return;var style=getComputedStyle(card);if(style.visibility==='hidden'||parseFloat(style.opacity)<CFG.rescueOpacityThreshold)requestCard(card,CFG.reflowDuration);});},CFG.rescueDelay);
   }
   return function(){
-    if(parts.revealViewport===revealViewport)parts.revealViewport=null;if(initialRafA)cancelAnimationFrame(initialRafA);if(initialRafB)cancelAnimationFrame(initialRafB);if(timer)clearTimeout(timer);if(observer)observer.disconnect();
-    if(pending){pending.forEach(function(card){if(queue&&queue.cancel)queue.cancel(card);});pending.clear();pending=null;}if(initialPending)initialPending.clear();triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});gsap.killTweensOf(cards);cards.forEach(clear);
+    if(parts.revealViewport===revealViewport)parts.revealViewport=null;if(initialRafA)cancelAnimationFrame(initialRafA);if(initialRafB)cancelAnimationFrame(initialRafB);if(timer)clearTimeout(timer);if(observer)observer.disconnect();if(pending){pending.clear();pending=null;}if(initialPending)initialPending.clear();
+    cards.forEach(function(card){if(queue&&queue.isDone&&!queue.isDone(card)&&queue.cancel)queue.cancel(card);});triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});gsap.killTweensOf(cards);cards.forEach(clear);
   };
 };
 })();
