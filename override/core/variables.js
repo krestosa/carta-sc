@@ -10,10 +10,13 @@ config.media=merged({
   compact:'(max-width: 992px)',
   compactWide:'(min-width: 641px) and (max-width: 992px)',
   desktop:'(min-width: 993px)',
-  reducedMotion:'(prefers-reduced-motion: reduce)'
+  reducedMotion:'(prefers-reduced-motion: reduce)',
+  reducedTransparency:'(prefers-reduced-transparency: reduce)',
+  moreContrast:'(prefers-contrast: more)',
+  forcedColors:'(forced-colors: active)'
 },config.media);
 config.queries=config.queries||{};
-['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion'].forEach(function(name){
+['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion','reducedTransparency','moreContrast','forcedColors'].forEach(function(name){
   if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
 });
 /* Application-level GSAP dependency manifest. These files are loaded eagerly
