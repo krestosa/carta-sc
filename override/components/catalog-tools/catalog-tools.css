@@ -90,7 +90,7 @@ body.sushiShop .sc-catalog-search-line {
   background: var(--sc-color-ink);
   transform: scaleX(0);
   transform-origin: 0 50%;
-  transition: transform 380ms cubic-bezier(.22, 1, .36, 1);
+  transition: transform 240ms cubic-bezier(.22, 1, .36, 1);
   pointer-events: none;
 }
 
@@ -131,8 +131,8 @@ body.sushiShop .sc-catalog-view-icon svg { display: block; width: var(--sc-view-
 body.sushiShop .sc-catalog-view-icon[hidden] { display: none !important; }
 body.sushiShop .sc-catalog-view-icon svg { fill: currentColor; }
 
-/* Search-result shell. Result cards themselves intentionally inherit the same
-   canonical list geometry from view-stability.css on every breakpoint. */
+/* Empty/result shell only. Product cards stay in their original sections and
+   inherit the currently selected compact/list geometry. */
 body.sushiShop .sc-catalog-tools .sc-catalog-search-results {
   box-sizing: border-box;
   display: flex;
@@ -185,7 +185,6 @@ body.sushiShop .sc-catalog-search-empty-message {
   font-weight: var(--sc-font-weight-regular);
 }
 body.sushiShop .sc-catalog-search-empty-message[hidden] { display: none !important; }
-body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source { display: none !important; }
 body.sushiShop.sc-catalog-searching .sc-category-indicator { opacity: 0 !important; visibility: hidden !important; }
 body.sushiShop.sc-catalog-searching .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
 body.sushiShop.sc-catalog-searching .wtopShopMenuMobile .nav-top-li > a.anchorLink::after { content: none !important; display: none !important; }
@@ -240,7 +239,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
   padding-top: var(--sc-compact-description-padding-top) !important;
   font-size: var(--sc-compact-description-size) !important;
   line-height: var(--sc-compact-description-line-height) !important;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
