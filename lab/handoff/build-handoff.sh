@@ -5,12 +5,10 @@ OUT="${HANDOFF_DIR:-.handoff}"
 INPUT="${HANDOFF_INPUT_DIR:-.pages-site}"
 SHA="${GITHUB_SHA:-local}"
 
-# Arma el handoff con fuente, tooling y referencia compilada.
 test -d "$INPUT"
 rm -rf "$OUT"
 mkdir -p "$OUT/source" "$OUT/compiled"
 
-# Copia la implementación editable sin metadata del repositorio ni tooling de CI.
 rsync -a \
   --exclude='.git' \
   --exclude='.github' \
@@ -23,7 +21,6 @@ rsync -a \
   --exclude='DOCUMENTACION_TECNICA_COMPLETA.md' \
   ./ "$OUT/source/"
 
-# Copia el pipeline con nombres neutrales para uso local.
 mkdir -p "$OUT/source/tooling/scripts" "$OUT/source/tooling/validators" "$OUT/source/tooling/assets"
 rsync -a lab/pages/assets/ "$OUT/source/tooling/assets/"
 cp lab/pages/.nojekyll "$OUT/source/tooling/.nojekyll"
@@ -37,7 +34,6 @@ for src in lab/pages/scripts/*; do
   cp "$src" "$OUT/source/tooling/scripts/$name"
 done
 
-# Neutraliza nombres heredados dentro de las copias del tooling.
 python3 - "$OUT/source/tooling" <<'PY'
 from pathlib import Path
 import sys
@@ -57,7 +53,6 @@ for path in root.rglob('*'):
     path.write_text(text, encoding='utf-8')
 PY
 
-# Copia la referencia compilada y neutraliza nombres internos del paquete.
 rsync -a "$INPUT/" "$OUT/compiled/"
 python3 - "$OUT/compiled" <<'PY'
 from pathlib import Path
@@ -74,7 +69,7 @@ for path in root.rglob('*'):
     if not path.is_file() or path.suffix.lower() not in {'.html', '.css', '.js', '.json', '.txt', '.svg', '.xml'}:
         continue
     text = path.read_text(encoding='utf-8', errors='ignore')
-    text = text.replace('_pages/', '_build/')
+    text = text.replace('_pages', '_build')
     text = text.replace('sc-pages-', 'sc-build-')
     text = text.replace('Pages', 'Build')
     path.write_text(text, encoding='utf-8')
