@@ -1,4 +1,5 @@
-/* La búsqueda conserva el ritmo vertical del catálogo. */
+/* Conserva durante la búsqueda el mismo ritmo vertical del catálogo normal. Solo la primera
+   sección visible recibe el margen estructural; las siguientes continúan sin espacio duplicado. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
   margin-top: var(--sc-compact-section-bottom) !important;
 }
