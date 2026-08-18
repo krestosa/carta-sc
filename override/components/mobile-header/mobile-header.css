@@ -1,5 +1,5 @@
-/* Mobile header presentation. Owns only the logo/header and SlickNav surface. */
-/* Component-local tokens: intentionally kept out of core/variables.css. */
+/* Presentación del header móvil y su menú. */
+/* Tokens locales del componente. */
 body.sushiShop {
   --sc-radius-control: 4px;
   --sc-mobile-header-height: 100px;
@@ -11,11 +11,13 @@ body.sushiShop {
 }
 
 @media (max-width: 992px) {
+  /* Oculta menús duplicados y conserva solo el principal. */
   body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     visibility: hidden !important;
     pointer-events: none !important;
   }
 
+  /* Centra el logo dentro de una altura fija. */
   body.sushiShop .brandOnlyMobile {
     box-sizing: border-box !important;
     display: block !important;
@@ -62,6 +64,7 @@ body.sushiShop {
     transform: none !important;
   }
 
+  /* Retira barras legacy del flujo móvil. */
   body.sushiShop .topBar.newVer17topBar {
     display: none !important;
     height: 0 !important;
@@ -79,6 +82,7 @@ body.sushiShop {
     padding: 0 !important;
   }
 
+  /* Superpone el menú sin alterar el alto del header. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu {
     box-sizing: border-box !important;
     display: block !important;
@@ -97,6 +101,7 @@ body.sushiShop {
     z-index: var(--sc-z-mobile-menu) !important;
   }
 
+  /* Botón de menú con target táctil amplio. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
     box-sizing: border-box !important;
     display: flex !important;
@@ -162,8 +167,7 @@ body.sushiShop {
     box-shadow: none !important;
   }
 
-  /* SlickNav owns semantic open/closed state; CSS owns the presentation so the
-     panel can reverse immediately instead of waiting for a slideToggle. */
+  /* El estado semántico viene del menú; CSS resuelve la transición del panel. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     box-sizing: border-box !important;
     display: block !important;
@@ -205,6 +209,7 @@ body.sushiShop {
   }
 }
 
+/* Ajustes de ancho en móvil chico. */
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
     width: var(--sc-mobile-logo-width) !important;
@@ -223,12 +228,14 @@ body.sushiShop {
   }
 }
 
+/* El menú móvil no participa en desktop. */
 @media (min-width: 993px) {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu {
     display: none !important;
   }
 }
 
+/* Reduce movimiento del panel y del botón. */
 @media (prefers-reduced-motion: reduce) and (max-width: 992px) {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before { transition: none !important; }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn:active::before { transform: none !important; }
