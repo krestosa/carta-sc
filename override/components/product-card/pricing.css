@@ -54,8 +54,8 @@ body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   display: none !important;
 }
 
-/* Both selectable views share the same compact price anatomy:
-   discounted price -> struck-through price -> dietary/spice traits. */
+/* Both selectable views share the same compact price anatomy. Price values stay
+   grouped on the left; dietary/spice traits occupy the far edge of the row. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   display: none !important;
@@ -70,6 +70,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   justify-content: flex-start !important;
   column-gap: 6px !important;
   row-gap: 0 !important;
+  width: 100% !important;
   min-width: 0 !important;
 }
 
@@ -102,12 +103,14 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   order: 3 !important;
   flex: 0 0 auto !important;
   align-items: flex-end !important;
-  align-self: center !important;
+  align-self: baseline !important;
+  justify-content: flex-end !important;
   gap: 5px !important;
   width: auto !important;
-  height: var(--sc-card-offer-line-height) !important;
-  min-height: 0 !important;
-  margin: 0 !important;
+  height: 13px !important;
+  min-height: 13px !important;
+  max-height: 13px !important;
+  margin: 0 0 0 auto !important;
   padding: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
@@ -125,4 +128,5 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-
   margin: 0 !important;
   padding: 0 !important;
   object-fit: contain !important;
+  transform: none !important;
 }
