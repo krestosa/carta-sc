@@ -44,26 +44,35 @@ function morphIcon(path,shape,options){
 }
 
 function bindMicroInteraction(control,target,options){
-  if(!control||!target)return function(){};var opts=options||{},tween=null,destroyed=false,hover=false,focus=false,pressed=false;
+  if(!control||!target)return function(){};
+  var opts=options||{},tween=null,destroyed=false,hover=false,focus=false,pressed=false;
   function focusVisible(){try{return control.matches(':focus-visible');}catch(_){return document.activeElement===control;}}
   function kill(){if(tween){try{tween.kill();}catch(_){}tween=null;}}
+  function angle(kind){var source=opts[kind],value=source&&Number(source.rotation);if(Number.isFinite(value)&&value)return value;return kind==='press'?-6:12;}
   function clear(){var g=deps&&deps.gsap;if(g)g.set(target,{clearProps:'transform,willChange'});else{target.style.removeProperty('transform');target.style.removeProperty('will-change');}}
-  function activeAngle(){var a=opts.active&&Number(opts.active.rotation);return Number.isFinite(a)&&a?a:(opts.rotation==null?6:Number(opts.rotation)||6);}
-  function pressAngle(){var a=opts.press&&Number(opts.press.rotation);if(Number.isFinite(a)&&a)return a;return-activeAngle()*.58;}
-  function home(duration){if(destroyed)return;kill();var g=deps&&deps.gsap;if(!g||reduced()){clear();return;}g.set(target,{willChange:'transform'});tween=g.to(target,{rotation:0,duration:duration==null?.06:duration,ease:'power3.out',overwrite:'auto',transformOrigin:opts.transformOrigin||'50% 50%',force3D:true,onComplete:function(){tween=null;clear();}});}
-  function pulse(kind){
-    if(destroyed)return;kill();var g=deps&&deps.gsap;if(!g||reduced()){clear();return;}var angle=kind==='press'?pressAngle():activeAngle(),out=kind==='press'?.055:.075,back=kind==='press'?.075:.105;
+  function tweenTo(rotation,duration,ease,clearAtEnd){
+    if(destroyed)return;kill();var g=deps&&deps.gsap;if(!g||reduced()){clear();return;}
     g.set(target,{willChange:'transform',transformOrigin:opts.transformOrigin||'50% 50%'});
-    tween=g.timeline({onComplete:function(){tween=null;clear();}}).to(target,{rotation:angle,duration:out,ease:'power2.out',overwrite:'auto',force3D:true},0).to(target,{rotation:0,duration:back,ease:'power3.out',overwrite:'auto',force3D:true},out);
+    tween=g.to(target,{rotation:rotation,duration:duration,ease:ease,overwrite:'auto',force3D:true,onComplete:function(){tween=null;target.style.removeProperty('will-change');if(clearAtEnd)clear();}});
   }
-  function pointerEnter(event){if(event.pointerType==='touch')return;if(!hover){hover=true;pulse('active');}}
-  function pointerLeave(){hover=false;pressed=false;home(.055);}
-  function pointerDown(){pressed=true;pulse('press');}
-  function pointerUp(){pressed=false;if(!hover&&!focus)home(.05);}
-  function focusIn(){var visible=focusVisible();if(visible&&!focus){focus=true;pulse('active');}}
-  function focusOut(){focus=false;pressed=false;home(.055);}
-  function keyDown(event){if(event.repeat||(event.key!=='Enter'&&event.key!==' '))return;pressed=true;pulse('press');}
-  function keyUp(event){if(event.key!=='Enter'&&event.key!==' ')return;pressed=false;home(.05);}
+  function active(){tweenTo(angle('active'),opts.enterDuration==null?.1:opts.enterDuration,opts.enterEase||'power3.out',false);}
+  function home(){tweenTo(0,opts.exitDuration==null?.14:opts.exitDuration,opts.exitEase||'power3.out',true);}
+  function press(){
+    if(destroyed)return;kill();var g=deps&&deps.gsap;if(!g||reduced()){clear();return;}
+    var returnAngle=(hover||focus)?angle('active'):0;
+    g.set(target,{willChange:'transform',transformOrigin:opts.transformOrigin||'50% 50%'});
+    tween=g.timeline({onComplete:function(){tween=null;target.style.removeProperty('will-change');if(returnAngle===0)clear();}})
+      .to(target,{rotation:angle('press'),duration:opts.pressDuration==null?.055:opts.pressDuration,ease:'power2.out',overwrite:'auto',force3D:true},0)
+      .to(target,{rotation:returnAngle,duration:opts.pressReturnDuration==null?.085:opts.pressReturnDuration,ease:'power3.out',overwrite:'auto',force3D:true});
+  }
+  function pointerEnter(event){if(event.pointerType==='touch')return;if(!hover){hover=true;if(!pressed)active();}}
+  function pointerLeave(){hover=false;pressed=false;if(focus)active();else home();}
+  function pointerDown(){pressed=true;press();}
+  function pointerUp(){pressed=false;if(hover||focus)active();else home();}
+  function focusIn(){var visible=focusVisible();if(visible&&!focus){focus=true;if(!pressed)active();}}
+  function focusOut(){focus=false;pressed=false;if(hover)active();else home();}
+  function keyDown(event){if(event.repeat||(event.key!=='Enter'&&event.key!==' '))return;pressed=true;press();}
+  function keyUp(event){if(event.key!=='Enter'&&event.key!==' ')return;pressed=false;if(hover||focus)active();else home();}
   control.addEventListener('pointerenter',pointerEnter);control.addEventListener('pointerleave',pointerLeave);control.addEventListener('pointerdown',pointerDown);control.addEventListener('pointerup',pointerUp);control.addEventListener('pointercancel',pointerLeave);control.addEventListener('focus',focusIn);control.addEventListener('blur',focusOut);control.addEventListener('keydown',keyDown);control.addEventListener('keyup',keyUp);
   return function(){if(destroyed)return;destroyed=true;control.removeEventListener('pointerenter',pointerEnter);control.removeEventListener('pointerleave',pointerLeave);control.removeEventListener('pointerdown',pointerDown);control.removeEventListener('pointerup',pointerUp);control.removeEventListener('pointercancel',pointerLeave);control.removeEventListener('focus',focusIn);control.removeEventListener('blur',focusOut);control.removeEventListener('keydown',keyDown);control.removeEventListener('keyup',keyUp);kill();clear();};
 }
