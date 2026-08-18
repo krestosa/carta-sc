@@ -35,6 +35,7 @@ body.sushiShop {
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop {
   grid-template-columns: repeat(var(--sc-view-list-columns), minmax(0, 1fr)) !important;
   row-gap: var(--sc-compact-row-gap) !important;
+  margin-bottom: var(--sc-compact-section-bottom) !important;
 }
 
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source,
