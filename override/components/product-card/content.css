@@ -1,5 +1,4 @@
-/* Product-card title, description and trait content. Shared card rules are
-   breakpoint-independent; only genuine compact-width adjustments use media queries. */
+/* Título, descripción y rasgos de las cards. */
 body.sushiShop {
   --sc-card-description-height: 43px;
   --sc-card-description-lines: 2;
@@ -20,7 +19,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
   opacity: 1 !important;
 }
 
-/* Treat every trait SVG as a typographic glyph. */
+/* Trata cada SVG de rasgo como un glifo tipográfico. */
 body.sushiShop .sc-trait-icon {
   transform: translateY(-.8px) !important;
   transform-origin: 50% 50% !important;
@@ -45,6 +44,7 @@ body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
   vertical-align: middle !important;
 }
 
+/* Agrupa iconos múltiples sin alterar su baseline. */
 body.sushiShop .sc-trait-icon-set {
   box-sizing: border-box !important;
   display: inline-flex !important;
@@ -68,6 +68,7 @@ body.sushiShop .sc-trait-reference-legacy-spacer {
   display: none !important;
 }
 
+/* Fila horizontal de referencias y filtros de rasgos. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
   box-sizing: border-box !important;
   display: flex !important;
@@ -151,7 +152,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   white-space: nowrap !important;
 }
 
-/* Canonical card text layout: desktop first, inherited everywhere. */
+/* Layout base del texto de card. */
 body.sushiShop .listadoShop .productoShop .title-shop1 {
   display: -webkit-box !important;
   position: static !important;
@@ -174,6 +175,7 @@ body.sushiShop .listadoShop .productoShop .title-shop1 {
   -webkit-line-clamp: 2;
 }
 
+/* La descripción reserva dos líneas y su divisor. */
 body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box;
   display: -webkit-box !important;
@@ -196,6 +198,7 @@ body.sushiShop .listadoShop .productoShop .descrip {
   -webkit-line-clamp: var(--sc-card-description-lines) !important;
 }
 
+/* Añade “Ver detalle” cuando el texto se recorta. */
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
   content: 'Ver detalle';
   display: block;
@@ -217,9 +220,7 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::aft
   transition: none !important;
 }
 
-/* Every grid breakpoint reserves exactly two complete 16px description lines
-   plus the 10px top inset and hairline rule. List mode owns the same two-line
-   maximum through its dedicated view contract. */
+/* La grilla reserva siempre dos líneas completas de descripción. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   min-height: var(--sc-card-description-height) !important;
@@ -233,6 +234,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
   }
 }
 
+/* Ajustes de rasgos en móvil. */
 @media (max-width: 640px) {
   body.sushiShop {
     --sc-card-description-height: 43px;
