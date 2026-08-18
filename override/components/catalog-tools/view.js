@@ -11,7 +11,7 @@ function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop
 function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf(mode)>=0?mode:'';}
 function selectedMode(){return normalize(doc.getAttribute('data-sc-catalog-view')||'')||'compact';}
 function legacyMode(mode){return mode==='list'?'list':mode?'compact':'';}
-function columns(){var ctx=context();return ctx==='phone'?2:ctx==='tablet'?3:4;}
+function columns(){return 2;}
 function effectiveMode(mode){return document.body.classList.contains(CFG.classes.catalogSearching)?'list':normalize(mode)||'compact';}
 function label(mode){var effective=effectiveMode(mode),count;if(effective==='list')return'Vista lista. Cambiar a grilla de alta densidad';count=columns();return'Vista grilla de alta densidad: '+count+' '+(count===1?'columna':'columnas')+'. Cambiar a vista lista';}
 function iconKey(mode){return effectiveMode(mode)==='list'?'list':'grid';}
