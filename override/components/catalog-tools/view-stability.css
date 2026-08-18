@@ -17,7 +17,7 @@ body.sushiShop {
     --sc-view-list-columns: 1;
     --sc-view-list-image-width: 160px;
     --sc-view-list-column-gap: 14px;
-    --sc-view-list-description-max-height: 31px;
+    --sc-view-list-description-max-height: 37px;
     --sc-view-list-description-padding-top: 4px;
   }
 }
@@ -27,7 +27,7 @@ body.sushiShop {
     --sc-view-list-columns: 1;
     --sc-view-list-image-width: 150px;
     --sc-view-list-column-gap: 12px;
-    --sc-view-list-description-max-height: 31px;
+    --sc-view-list-description-max-height: 37px;
     --sc-view-list-description-padding-top: 4px;
   }
 }
