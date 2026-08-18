@@ -5,7 +5,7 @@ var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;
 if(!SC||!CFG||SC.__catalogToolsViewBooted)return;
 SC.__catalogToolsViewBooted=true;
 
-var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null,motionDeps=null;
+var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup=null,motionDeps=null,layoutTween=null;
 
 function context(){return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
 function normalize(mode){if(mode==='normal')return'compact';return MODES.indexOf(mode)>=0?mode:'';}
@@ -113,6 +113,48 @@ function bindViewMicroInteraction(button,host){
   return function(){if(destroyed)return;destroyed=true;button.removeEventListener('pointerenter',enter);button.removeEventListener('pointerleave',leave);button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',leave);button.removeEventListener('focus',focusIn);button.removeEventListener('blur',focusOut);button.removeEventListener('keydown',keyDown);button.removeEventListener('keyup',keyUp);stop();gsap.set(paths,{x:0,y:0,clearProps:'transform,willChange'});};
 }
 
+function layoutTargets(){
+  var selector=[
+    '.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden])',
+    '.listadoShop:not(.sc-catalog-search-grid) > .titleShopSeccion:not([hidden])',
+    '.listadoShop:not(.sc-catalog-search-grid) > .subTitleShopSeccion:not([hidden])',
+    '.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden]) .imgShop',
+    '.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden]) .title-shop1',
+    '.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden]) .priceRow',
+    '.listadoShop:not(.sc-catalog-search-grid) > .productoShop:not([hidden]) .descrip'
+  ].join(',');
+  return Array.prototype.filter.call(document.querySelectorAll(selector),function(node){
+    if(!node.getClientRects().length)return false;
+    var list=node.closest('.listadoShop');
+    return!!(list&&!list.hidden&&!list.closest('.sc-catalog-search-results'));
+  });
+}
+function captureLayoutState(){
+  if(reducedMotion()||!motionDeps||!motionDeps.Flip||!motionDeps.gsap)return null;
+  var targets=layoutTargets();if(!targets.length)return null;
+  if(layoutTween){try{layoutTween.progress(1);}catch(_){}layoutTween=null;}
+  try{motionDeps.Flip.killFlipsOf(targets,true);}catch(_){}
+  return{targets:targets,state:motionDeps.Flip.getState(targets)};
+}
+function animateLayoutState(snapshot){
+  if(!snapshot||!motionDeps||!motionDeps.Flip||!motionDeps.gsap||reducedMotion())return false;
+  var targets=snapshot.targets.filter(function(node){return document.documentElement.contains(node)&&node.getClientRects().length;});
+  if(!targets.length)return false;
+  layoutTween=motionDeps.Flip.from(snapshot.state,{
+    targets:targets,
+    duration:.3,
+    ease:'power3.inOut',
+    nested:true,
+    scale:true,
+    prune:true,
+    simple:false,
+    zIndex:2,
+    toggleClass:'sc-catalog-layout-flipping',
+    onComplete:function(){layoutTween=null;refreshLayout(true);}
+  });
+  return true;
+}
+
 function refreshMotionNow(){if(SC.motion&&SC.motion.run)SC.motion.run(function(deps){if(deps&&deps.ScrollTrigger)deps.ScrollTrigger.refresh();});}
 function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(root)sync(root,selectedMode(),false);}
 function refreshLayout(switching){
@@ -128,8 +170,19 @@ function refreshLayout(switching){
     });
   });
 }
-function apply(root,mode,persist){mode=normalize(mode)||'compact';if(persist)doc.classList.add('sc-catalog-view-switching');doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode,persist);if(persist)save(mode);refreshLayout(!!persist);}
-function destroy(){var host=document.querySelector('.sc-catalog-view-toggle [data-sc-view-icon]');if(host)clearViewIconMotion(host);if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
+function apply(root,mode,persist){
+  mode=normalize(mode)||'compact';
+  var snapshot=persist?captureLayoutState():null;
+  if(persist)doc.classList.add('sc-catalog-view-switching');
+  doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);sync(root,mode,persist);if(persist)save(mode);
+  if(persist&&animateLayoutState(snapshot))return;
+  refreshLayout(!!persist);
+}
+function destroy(){
+  var host=document.querySelector('.sc-catalog-view-toggle [data-sc-view-icon]');if(host)clearViewIconMotion(host);
+  if(layoutTween){try{layoutTween.kill();}catch(_){}layoutTween=null;}
+  if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}
+}
 function install(root){
   destroy();
   var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]');
@@ -137,7 +190,7 @@ function install(root){
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
   var microCleanup=bindViewMicroInteraction(button,host);
-  function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
+  function click(){if(layoutTween)return;var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(false);}
   button.addEventListener('click',click);
   if(phone.addEventListener)phone.addEventListener('change',breakpoint);else phone.addListener(breakpoint);
