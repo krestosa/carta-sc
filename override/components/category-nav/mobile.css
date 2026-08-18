@@ -1,5 +1,6 @@
-/* Tablet/mobile category rail structure and active state. */
+/* Estructura y estado activo del riel en tablet/móvil. */
 @media (max-width: 992px) {
+  /* Mantiene el riel fijo y ocupa todo el ancho. */
   body.sushiShop .fixedTopShop.wtopShopMenuMobile {
     position: sticky !important;
     top: 0 !important;
@@ -30,6 +31,7 @@
     overflow: hidden !important;
   }
 
+  /* Scroll horizontal sin scrollbar visible. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     box-sizing: border-box;
     width: 100% !important;
@@ -78,6 +80,7 @@
     transform-origin: 0 0 !important;
   }
 
+  /* Línea base compartida por las categorías. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabsTopShop::before {
     content: '';
     position: absolute;
@@ -101,6 +104,7 @@
     background: transparent !important;
   }
 
+  /* Normaliza links y estados de interacción. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink {
     display: block !important;
     position: relative !important;
@@ -146,6 +150,7 @@
     display: none !important;
   }
 
+  /* Indicador activo; su movimiento queda a cargo de JS. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     display: block !important;
     bottom: -12px !important;
@@ -171,6 +176,7 @@
   }
 }
 
+/* Compacta el espacio entre categorías en móvil chico. */
 @media (max-width: 640px) {
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     padding-left: var(--sc-category-mobile-padding-inline) !important;
@@ -182,6 +188,7 @@
   }
 }
 
+/* Respeta reducción de movimiento. */
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink {
     transition: none !important;
