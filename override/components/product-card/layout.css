@@ -1,5 +1,4 @@
-/* Product-card structural layout. Desktop is the base contract; responsive
-   view files only change density/list geometry and breakpoint-specific tokens. */
+/* Estructura base de las cards; cada vista ajusta su geometría. */
 body.sushiShop {
   --sc-card-rule: var(--sc-color-ink);
   --sc-card-subrule: var(--sc-color-border-strong);
@@ -25,6 +24,7 @@ body.sushiShop {
   --sc-card-action-active-scale: .97;
 }
 
+/* La card exterior solo organiza el contenido. */
 body.sushiShop .listadoShop .productoShop,
 body.sushiShop .listadoShop .productoShop.ConCarr {
   box-sizing: border-box;
@@ -38,6 +38,7 @@ body.sushiShop .listadoShop .productoShop.ConCarr {
   vertical-align: top;
 }
 
+/* El enlace interno define la grilla principal. */
 body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   box-sizing: border-box;
   display: grid !important;
@@ -55,6 +56,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   outline: none;
 }
 
+/* Imagen siempre ocupa el ancho de la card. */
 body.sushiShop .listadoShop .productoShop .imgShop {
   box-sizing: border-box;
   grid-column: 1 / -1;
@@ -71,6 +73,7 @@ body.sushiShop .listadoShop .productoShop .imgShop {
   overflow: hidden !important;
 }
 
+/* Reserva una fila estable para rasgos del producto. */
 body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   box-sizing: border-box !important;
   display: flex !important;
@@ -100,8 +103,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   outline-offset: 6px;
 }
 
-/* Permanent offscreen rendering containment. Search is layout-neutral: only
-   the selected catalogue view changes the intrinsic size estimate. */
+/* Evita renderizar cards fuera de pantalla y reserva su alto. */
 @supports (content-visibility: auto) {
   body.sushiShop .listadoShop .productoShop {
     content-visibility: auto;
@@ -117,6 +119,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   }
 }
 
+/* Ajusta la reserva para tablet. */
 @media (min-width: 641px) and (max-width: 992px) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop {
@@ -129,6 +132,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   }
 }
 
+/* Ajusta la reserva para móvil. */
 @media (max-width: 640px) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop {
@@ -141,6 +145,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   }
 }
 
+/* Fuerza render completo al pasar el puntero. */
 @media (hover: hover) and (pointer: fine) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop:hover {
