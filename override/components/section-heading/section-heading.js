@@ -14,7 +14,7 @@ function prepare(gsap,el,p){var vars={autoAlpha:0,y:p.y,force3D:false,willChange
 function showNow(gsap,el){gsap.killTweensOf(el);var vars={autoAlpha:1,y:0,clearProps:'transform,opacity,visibility,willChange'};if(isParentCategory(el))vars[RULE_PROPERTY]=1;gsap.set(el,vars);}
 /* El texto sube primero y la regla acompaña sin modificar la geometría del heading. */
 function reveal(gsap,el,delay){
-  gsap.killTweensOf(el);var parent=isParentCategory(el),tl=gsap.timeline({delay:delay||0,onComplete:function(){gsap.set(el,{clearProps:'transform,opacity,visibility,willChange'});}});
+  gsap.killTweensOf(el);var parent=isParentCategory(el),tl=gsap.timeline({delay:delay||0,onComplete:function(){gsap.set(el,{clearProps:'transform,opacity,visibility,willChange'});if(parent)gsap.set(el,{clearProps:RULE_PROPERTY});}});
   tl.to(el,{autoAlpha:1,y:0,duration:CFG.duration,ease:M.easings.out,force3D:false,overwrite:'auto'},0);
   if(parent)tl.to(el,{[RULE_PROPERTY]:1,duration:CFG.ruleDuration,ease:M.easings.strongOut,overwrite:'auto'},0);
   tweens.push(tl);return tl;
@@ -32,7 +32,7 @@ function init(){if(initialized||!motionDeps)return;initMotion(motionDeps,++gener
 function destroy(){
   generation++;if(rafA){cancelAnimationFrame(rafA);rafA=0;}if(rafB){cancelAnimationFrame(rafB);rafB=0;}
   triggers.forEach(function(trigger){if(trigger&&trigger.kill)trigger.kill();});tweens.forEach(function(tween){if(tween&&tween.kill)tween.kill();});
-  if(motionDeps){var gsap=motionDeps.gsap;elements.forEach(function(el){el.classList.remove('sc-section-rule-host');gsap.set(el,{clearProps:'transform,opacity,visibility,willChange,'+RULE_PROPERTY});});}
+  if(motionDeps){var gsap=motionDeps.gsap;elements.forEach(function(el){el.classList.remove('sc-section-rule-host');gsap.set(el,{clearProps:'transform,opacity,visibility,willChange'});gsap.set(el,{clearProps:RULE_PROPERTY});});}
   initialized=false;elements=[];tweens=[];triggers=[];
 }
 SC.sectionHeading={init:init,destroy:destroy,cleanup:destroy};
