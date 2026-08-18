@@ -16,6 +16,32 @@
   margin: 0 -23px -23px 0;
 }
 
+/* Legacy sponsor marks are visually small, but every linked logo still needs a
+   real touch target. Expand the anchor box while preserving the artwork size. */
+body.sushiShop .logosHome .logos > a {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  margin: 4px !important;
+  padding: 8px !important;
+  vertical-align: middle !important;
+}
+
+body.sushiShop .logosHome .logos > a > p {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.sushiShop .logosHome .logos > a img {
+  flex: 0 0 auto !important;
+}
+
 /* Desktop country links are visually tiny flag controls in the legacy header.
    Give the anchors a larger hit area without scaling the artwork itself. */
 @media (min-width: 993px) {
