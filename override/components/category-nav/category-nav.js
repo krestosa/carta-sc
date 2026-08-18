@@ -37,10 +37,11 @@ function bindSubmenuScroller(parent){
 function positionSubmenu(){
   submenuPositionRaf=0;if(!submenuHost||!submenuParent||!submenuHost.classList.contains('sc-category-submenu-open'))return;
   if(!document.documentElement.contains(submenuParent)){closeSubmenu(false);return;}
-  var rect=submenuParent.getBoundingClientRect(),rail=submenuParent.closest(S.categoryToolbar+','+N.selectors.mobileWrapper),railRect=rail&&rail.getBoundingClientRect(),gap=7,edge=12,width=submenuHost.offsetWidth,height=submenuHost.offsetHeight;
+  var rect=submenuParent.getBoundingClientRect(),rail=submenuParent.closest(S.categoryToolbar+','+N.selectors.mobileWrapper),railRect=rail&&rail.getBoundingClientRect(),gap=7,edge=12,width=submenuHost.offsetWidth,height=submenuHost.offsetHeight,above=false;
   var left=Math.max(edge,Math.min(rect.left,innerWidth-width-edge)),top=(railRect?railRect.bottom:rect.bottom)+gap;
-  if(top+height>innerHeight-edge&&rect.top-height-gap>=edge)top=rect.top-height-gap;
-  submenuHost.style.left=Math.round(left)+'px';submenuHost.style.top=Math.round(Math.max(edge,top))+'px';
+  if(top+height>innerHeight-edge&&rect.top-height-gap>=edge){top=rect.top-height-gap;above=true;}
+  top=Math.max(edge,top);submenuHost.style.left=Math.round(left)+'px';submenuHost.style.top=Math.round(top)+'px';
+  var originX=Math.max(12,Math.min(Math.max(12,width-12),(rect.left+rect.width*.5)-left));submenuHost.style.setProperty('--sc-submenu-origin-x',Math.round(originX)+'px');submenuHost.style.setProperty('--sc-submenu-origin-y',above?Math.round(height)+'px':'0px');
 }
 function scheduleSubmenuPosition(){if(submenuHost&&submenuHost.classList.contains('sc-category-submenu-open')&&!submenuPositionRaf)submenuPositionRaf=requestAnimationFrame(positionSubmenu);}
 function openSubmenu(parent,pin){
