@@ -1,9 +1,10 @@
-/* Visual placeholder for product media while raster assets are loading. */
+/* Placeholder visual mientras cargan las imágenes de producto. */
 html.sc-image-preloader-active {
   --sc-image-preloader-base: #eeeeeb;
   --sc-image-preloader-highlight: #fafaf7;
 }
 
+/* Colores del placeholder en tema oscuro. */
 html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
   --sc-image-preloader-base: #151515;
   --sc-image-preloader-highlight: #292929;
@@ -23,6 +24,7 @@ html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
   }
 }
 
+/* Prepara el contenedor para el shimmer. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop {
   position: relative !important;
@@ -31,8 +33,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   background-color: var(--sc-image-preloader-base) !important;
 }
 
-/* Fail open: media is visible by default. The skeleton only covers an image
-   while JS explicitly owns the stage with .sc-image-loading. */
+/* La imagen queda visible por defecto; JS activa el placeholder solo al cargar. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
   content: '';
@@ -47,17 +48,20 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   transition: none !important;
 }
 
+/* Muestra el placeholder solo durante la carga real. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading::before {
   opacity: 1;
 }
 
+/* Activa shimmer cuando el contenedor entra en trabajo. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active::before {
   will-change: transform;
   animation: sc-image-preloader-shimmer 1.08s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 
+/* Estado base de la imagen. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img {
   position: relative !important;
@@ -75,6 +79,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   transform: none !important;
 }
 
+/* Retira el placeholder al completar la carga. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-ready::before {
   opacity: 0;
@@ -93,6 +98,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   to { transform: translate3d(-115%, 0, 0); }
 }
 
+/* Desactiva shimmer con movimiento reducido. */
 @media (prefers-reduced-motion: reduce) {
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
