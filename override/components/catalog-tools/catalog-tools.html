@@ -1,10 +1,13 @@
 <template data-sc-template="catalog-tools">
   <section class="sc-catalog-tools" aria-label="Herramientas de la carta">
-    <label class="sc-catalog-search">
+    <div class="sc-catalog-search">
       <svg class="sc-catalog-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
       <input class="sc-catalog-search-input" type="search" inputmode="search" autocomplete="off" spellcheck="false" placeholder="Buscar en la carta" aria-label="Buscar productos en la carta">
+      <button class="sc-catalog-search-clear" type="button" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4Z"></path></svg>
+      </button>
       <span class="sc-catalog-search-line" aria-hidden="true"></span>
-    </label>
+    </div>
     <div class="sc-catalog-actions" style="opacity:1;visibility:visible">
       <div class="sc-theme-control" style="opacity:1;visibility:visible">
         <button class="sc-theme-toggle" type="button" aria-label="Tema automático. Elegir tema" title="Elegir tema" aria-haspopup="menu" aria-expanded="false" aria-controls="sc-theme-menu" style="opacity:1;visibility:visible;color:var(--sc-color-ink,#0a0a0a)">
