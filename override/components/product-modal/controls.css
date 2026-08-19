@@ -1,11 +1,10 @@
 /* Controles interactivos del modal. */
-/* Tokens locales del componente. */
 body.sushiShop {
   --sc-modal-action-background: #000;
   --sc-radius-round: 50%;
 }
 
-/* Acción principal del modal. */
+/* Acción principal del modal. La respuesta temporal vive en state-motion. */
 body.sushiShop .sc-product-modal__cart-button {
   box-sizing: border-box !important;
   display: flex !important;
@@ -21,10 +20,8 @@ body.sushiShop .sc-product-modal__cart-button {
   font: var(--sc-font-weight-semibold) 14px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
   text-decoration: none !important;
   text-align: center !important;
-  transform: scale(1);
-  transform-origin: 50% 50%;
-  transition: transform 100ms var(--sc-motion-ease-out),background-color 100ms var(--sc-motion-ease-out),border-color 100ms var(--sc-motion-ease-out) !important;
   touch-action: manipulation;
+  transition: none !important;
 }
 body.sushiShop .sc-product-modal__cart-button:hover,
 body.sushiShop .sc-product-modal__cart-button:focus-visible {
@@ -32,7 +29,6 @@ body.sushiShop .sc-product-modal__cart-button:focus-visible {
   border-color: var(--sc-modal-action-background) !important;
   color: var(--sc-color-surface) !important;
 }
-body.sushiShop .sc-product-modal__cart-button:active { transform: scale(.98); }
 body.sushiShop .sc-product-modal__cart-button:focus-visible {
   outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
   outline-offset: var(--sc-focus-ring-offset) !important;
@@ -73,10 +69,8 @@ body.sushiShop .sc-product-modal__close::before {
   border: var(--sc-border-hairline) solid rgba(0,0,0,.07) !important;
   border-radius: var(--sc-radius-round) !important;
   background: rgba(255,255,255,.86) !important;
-  transform: scale(1);
-  transform-origin: 50% 50%;
-  transition: transform 90ms var(--sc-motion-ease-out),background-color 100ms var(--sc-motion-ease-out),border-color 100ms var(--sc-motion-ease-out) !important;
   z-index: 0 !important;
+  transition: none !important;
 }
 body.sushiShop .sc-product-modal__close svg {
   position: relative !important;
@@ -91,17 +85,13 @@ body.sushiShop .sc-product-modal__close:focus-visible::before {
   border-color: rgba(0,0,0,.16) !important;
   background: rgba(255,255,255,.98) !important;
 }
-body.sushiShop .sc-product-modal__close:active::before { transform: scale(.90); }
 body.sushiShop .sc-product-modal__close:focus-visible {
   outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
   outline-offset: 1px !important;
   color: var(--sc-color-ink) !important;
 }
 
-/* Respeta reducción de movimiento. */
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-product-modal__cart-button,
   body.sushiShop .sc-product-modal__close::before { transition: none !important; }
-  body.sushiShop .sc-product-modal__cart-button:active,
-  body.sushiShop .sc-product-modal__close:active::before { transform: none !important; }
 }
