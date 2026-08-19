@@ -117,21 +117,43 @@ function loadScript(path,id){
   });
 }
 
-function loadGroup(group){return Promise.all(group.map(function(entry){return loadScript(entry[0],entry[1]);}));}
-function loadStages(stages){return stages.reduce(function(chain,group){return chain.then(function(){return loadGroup(group);});},Promise.resolve());}
+function loadGroup(group){
+  return Promise.all(group.map(function(entry){return loadScript(entry[0],entry[1]);}));
+}
+
+function loadStages(stages){
+  return stages.reduce(function(chain,group){
+    return chain.then(function(){return loadGroup(group);});
+  },Promise.resolve());
+}
 
 /* Cards y títulos preparan su estado inicial en DOMContentLoaded; no se revela antes. */
 function waitForDomReady(){
   if(document.readyState!=='loading')return Promise.resolve();
-  return new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});});
+  return new Promise(function(resolve){
+    document.addEventListener('DOMContentLoaded',resolve,{once:true});
+  });
 }
-function releaseReveal(){var root=document.documentElement;if(!root)return;root.setAttribute('data-sc-catalog-reveal-ready','true');root.classList.remove('sc-catalog-reveal-prepaint');}
+
+function releaseReveal(){
+  var root=document.documentElement;
+  if(!root)return;
+  root.setAttribute('data-sc-catalog-reveal-ready','true');
+  root.classList.remove('sc-catalog-reveal-prepaint');
+}
 
 loadStages(foundationStages)
   .then(function(){return loadStages(featureStages);})
-  .then(function(){var templates=window.SCOverride&&window.SCOverride.templates;if(!templates||!templates.ready)throw Error('Template registry unavailable');return templates.ready();})
+  .then(function(){
+    var templates=window.SCOverride&&window.SCOverride.templates;
+    if(!templates||!templates.ready)throw Error('Template registry unavailable');
+    return templates.ready();
+  })
   .then(function(){return loadStages(integrationStages);})
-  .then(function(){var motion=window.SCOverride&&window.SCOverride.motion;return motion&&motion.prepare?motion.prepare():null;})
+  .then(function(){
+    var motion=window.SCOverride&&window.SCOverride.motion;
+    return motion&&motion.prepare?motion.prepare():null;
+  })
   .then(function(){return waitForDomReady();})
   .then(function(){
     var runtime=window.SCOverride,lifecycle=runtime.renderLifecycle,motion=runtime.motion;
@@ -141,6 +163,12 @@ loadStages(foundationStages)
     releaseReveal();
     return lifecycle.waitForStableLayout();
   })
-  .then(function(){var motion=window.SCOverride&&window.SCOverride.motion;if(motion&&motion.refresh)motion.refresh(0);})
-  .catch(function(error){releaseReveal();if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
+  .then(function(){
+    var motion=window.SCOverride&&window.SCOverride.motion;
+    if(motion&&motion.refresh)motion.refresh(0);
+  })
+  .catch(function(error){
+    releaseReveal();
+    if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);
+  });
 })();
