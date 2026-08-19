@@ -71,22 +71,8 @@ if source.count(font_fn) != 1:
     raise SystemExit('production waitForFonts shape changed; review lab patch')
 source = source.replace(font_fn, font_fn + lab_helpers, 1)
 
-base_wait = """function waitForStableLayout(){
-  return whenDomReady().then(function(){
-    var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];
-    if(desktopQuery.matches)waits.push(waitForFonts());
-    return Promise.all(waits);
-  }).then(function(){return new Promise(afterLayoutFrame);});
-}
-"""
-lab_wait = """function waitForStableLayout(){
-  return whenDomReady().then(function(){
-    var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];
-    if(desktopQuery.matches)waits.push(waitForFonts(),waitForCriticalMedia());
-    return Promise.all(waits);
-  }).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);
-}
-"""
+base_wait = "function waitForStableLayout(){return whenDomReady().then(function(){var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];if(desktopQuery.matches)waits.push(waitForFonts());return Promise.all(waits);}).then(function(){return new Promise(afterLayoutFrame);});}\n"
+lab_wait = "function waitForStableLayout(){return whenDomReady().then(function(){var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];if(desktopQuery.matches)waits.push(waitForFonts(),waitForCriticalMedia());return Promise.all(waits);}).then(function(){return new Promise(afterLayoutFrame);}).then(clearPrepaint);}\n"
 if source.count(base_wait) != 1:
     raise SystemExit('production waitForStableLayout shape changed; review lab patch')
 source = source.replace(base_wait, lab_wait, 1)
