@@ -23,6 +23,10 @@ body.sushiShop .sc-theme-toggle.sc-motion-state-host > .sc-motion-focus-ring,
 body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > .sc-motion-focus-ring {
   inset: -1px !important;
 }
+/* Hamburger: target de 44px, superficie visual interna de 36px. */
+body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn.sc-motion-state-host > .sc-motion-focus-ring {
+  inset: -1px !important;
+}
 /* Close: target de 44px, círculo visual de 28px; el ring queda 5px fuera del círculo visual. */
 body.sushiShop .sc-product-modal__close.sc-motion-state-host > .sc-motion-focus-ring {
   inset: 3px !important;
@@ -88,6 +92,10 @@ body.sushiShop .sc-catalog-search-clear.sc-motion-state-host > .sc-motion-state-
 body.sushiShop .sc-product-modal__close.sc-motion-state-host > .sc-motion-state-surface { border-radius: 50% !important; }
 body.sushiShop .sc-theme-toggle.sc-motion-state-host > .sc-motion-state-surface,
 body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > .sc-motion-state-surface { inset: var(--sc-control-visual-inset) !important; }
+body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn.sc-motion-state-host > .sc-motion-state-surface {
+  inset: 4px !important;
+  border-radius: var(--sc-radius-control) !important;
+}
 /* Ripple del close limitado al círculo visual de 28px dentro del target táctil de 44px. */
 body.sushiShop .sc-product-modal__close.sc-motion-state-host > .sc-motion-state-surface { inset: 8px !important; }
 
