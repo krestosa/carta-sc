@@ -51,11 +51,11 @@ for relative in (
 source = LIFECYCLE.read_text(encoding='utf-8')
 base_decl = (
     'var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MOBILE_HEADER_TIMEOUT=500,'
-    'desktopQuery=C.queries.desktop,waitObserver=null,waiters=[],'
+    'desktopQuery=C.queries.desktop,waitObserver=null,waiters=[];'
 )
 lab_decl = (
     'var STABLE_LAYOUT_TIMEOUT=900,FONT_TIMEOUT=1100,MEDIA_TIMEOUT=1200,MOBILE_HEADER_TIMEOUT=500,'
-    'desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[],'
+    'desktopQuery=C.queries.desktop,root=document.documentElement,waitObserver=null,waiters=[];'
 )
 if source.count(base_decl) != 1:
     raise SystemExit('production render-lifecycle declaration shape changed; review lab patch')
