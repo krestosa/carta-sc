@@ -7,3 +7,15 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidd
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) {
   margin-top: 0 !important;
 }
+
+/* El indicador activo ocupa su ancho final y sólo interpola opacidad. */
+body.sushiShop .sc-catalog-search-line {
+  transform: none !important;
+  opacity: 0;
+  transition: opacity 150ms var(--sc-motion-ease-standard) !important;
+}
+body.sushiShop .sc-catalog-search:focus-within .sc-catalog-search-line,
+body.sushiShop .sc-catalog-tools.sc-search-has-value .sc-catalog-search-line {
+  transform: none !important;
+  opacity: 1;
+}
