@@ -11,25 +11,25 @@ body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring {
   box-sizing: border-box !important;
   display: none !important;
   position: absolute !important;
-  inset: -5px !important;
+  inset: -2px !important;
   z-index: 3 !important;
   border-radius: inherit !important;
   outline: 3px solid var(--sc-focus-ring-color);
   color: var(--sc-focus-ring-color) !important;
   pointer-events: none !important;
 }
-/* Estos toggles tienen target táctil de 48px y contenedor visual de 40px: 4px - 5px = -1px. */
+/* Estos toggles tienen target táctil de 48px y contenedor visual de 40px: 4px - 2px = 2px. */
 body.sushiShop .sc-theme-toggle.sc-motion-state-host > .sc-motion-focus-ring,
 body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > .sc-motion-focus-ring {
-  inset: -1px !important;
+  inset: 2px !important;
 }
-/* Hamburger: target de 44px, superficie visual interna de 36px. */
+/* Hamburger: target de 44px, superficie visual interna de 36px; el host del ring suma 2px hacia afuera. */
 body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn.sc-motion-state-host > .sc-motion-focus-ring {
-  inset: -1px !important;
+  inset: 2px !important;
 }
-/* Close: target de 44px, círculo visual de 28px; el ring queda 5px fuera del círculo visual. */
+/* Close: target de 44px, círculo visual de 28px; el host del ring suma 2px hacia afuera. */
 body.sushiShop .sc-product-modal__close.sc-motion-state-host > .sc-motion-focus-ring {
-  inset: 3px !important;
+  inset: 6px !important;
 }
 body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inward] {
   inset: 0 !important;
