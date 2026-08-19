@@ -3,7 +3,7 @@
 var SC=window.SCOverride,U=SC&&SC.utils,CFG=SC&&SC.config,S=CFG&&CFG.selectors,K=CFG&&CFG.classes;if(!SC||!U||!CFG||SC.__catalogToolsSearchBooted)return;SC.__catalogToolsSearchBooted=true;
 
 /* Estado en memoria de búsqueda, grupos y filtros. */
-var C=SC.catalogTools=SC.catalogTools||{},inventory=[],searchable=[],groups=[],hosts=[],visibleItems=[],queryCandidates=[],lastQuery='',lastState='',active=false,installedRoot=null,installedInput=null,searchBox=null,searchHome=null,searchNext=null,clearNode=null,statusNode=null,resultsNode=null,emptyNode=null,onInput=null,onKeyDown=null,onClearClick=null,onRootClick=null,onRootKeyDown=null,onBreakpoint=null,epoch=0,captured=false,activeFilters=new Set();
+var C=SC.catalogTools=SC.catalogTools||{},inventory=[],searchable=[],groups=[],hosts=[],visibleItems=[],queryCandidates=[],lastQuery='',lastState='',active=false,installedRoot=null,installedInput=null,clearNode=null,statusNode=null,resultsNode=null,emptyNode=null,onInput=null,onKeyDown=null,onRootClick=null,onRootKeyDown=null,epoch=0,captured=false,activeFilters=new Set();
 var SPICE_FILTERS=['poco picante','picante','muy picante'];
 var FILTER_LABELS={'poco picante':'Poco Picante','picante':'Picante','muy picante':'Muy Picante','vegetariano':'Vegetariano'};
 var TRAIT_BITS={'poco picante':1,'picante':2,'muy picante':4,'vegetariano':8};
@@ -37,20 +37,6 @@ function capture(root){
   queryCandidates=searchable;captured=true;
 }
 function ensureCaptured(root){if(!captured)capture(root);}
-
-/* La búsqueda sustituye físicamente al riel mientras hay texto o filtros activos. */
-function dockHost(){
-  if(!document.body||!document.body.classList.contains(K.catalogSearching))return null;
-  if(CFG.queries.desktop.matches)return document.querySelector(S.categoryToolbar);
-  return document.querySelector('.fixedTopShop.wtopShopMenuMobile .topShopMenuMobile');
-}
-function dockSearch(){var host=dockHost();if(!searchBox||!host)return;if(searchBox.parentNode!==host)host.appendChild(searchBox);searchBox.classList.add('sc-catalog-search--rail');}
-function restoreSearch(){
-  if(!searchBox)return;searchBox.classList.remove('sc-catalog-search--rail');
-  if(!searchHome||!document.documentElement.contains(searchHome))return;
-  if(searchNext&&searchNext.parentNode===searchHome)searchHome.insertBefore(searchBox,searchNext);else searchHome.insertBefore(searchBox,searchHome.firstChild);
-}
-function scheduleDock(){requestAnimationFrame(function(){requestAnimationFrame(function(){if(active)dockSearch();});});}
 
 /* Evalúa filtros con máscara de bits. */
 function filterMask(){var mask=0;if(activeFilters.has('poco picante'))mask|=1;if(activeFilters.has('picante'))mask|=2;if(activeFilters.has('muy picante'))mask|=4;if(activeFilters.has('vegetariano'))mask|=8;return mask;}
@@ -88,11 +74,11 @@ function reorderHosts(query){
     var signature=(query?'q:':'o:')+ordered.map(function(group){return group.index;}).join(',');if(signature===host.signature)continue;var fragment=document.createDocumentFragment();for(var i=0;i<ordered.length;i++)fragment.appendChild(ordered[i].node);if(host.after&&host.after.parentNode===host.parent)host.parent.insertBefore(fragment,host.after);else host.parent.appendChild(fragment);host.signature=signature;
   }
 }
-function enter(root){if(active)return;active=true;document.body.classList.add(K.catalogSearching);dockSearch();for(var i=0;i<inventory.length;i++)inventory[i].visible=!inventory[i].wasHidden;for(var g=0;g<groups.length;g++)groups[g].visible=!groups[g].wasHidden;visibleItems=searchable.slice();}
+function enter(root){if(active)return;active=true;document.body.classList.add(K.catalogSearching);for(var i=0;i<inventory.length;i++)inventory[i].visible=!inventory[i].wasHidden;for(var g=0;g<groups.length;g++)groups[g].visible=!groups[g].wasHidden;visibleItems=searchable.slice();}
 function apply(root,value){
   var query=normalize(value),mask=filterMask(),hasMode=!!query||mask!==0,key=query+'|'+mask;if(key===lastState)return;
-  if(!hasMode){lastState=key;if(active)restore(root,true);else{root.classList.remove('sc-search-has-value');if(searchBox)searchBox.classList.remove('sc-search-has-value');setEmpty(1);if(statusNode)statusNode.textContent='';}return;}
-  ensureCaptured(root);enter(root);lastState=key;root.classList.toggle('sc-search-has-value',!!query);if(searchBox)searchBox.classList.toggle('sc-search-has-value',!!query);
+  if(!hasMode){lastState=key;if(active)restore(root,true);else{root.classList.remove('sc-search-has-value');setEmpty(1);if(statusNode)statusNode.textContent='';}return;}
+  ensureCaptured(root);enter(root);lastState=key;root.classList.toggle('sc-search-has-value',!!query);
   var candidates=candidatesFor(query),tokens=query?query.split(' '):[],nextVisible=[],cardChanges=[],currentEpoch=++epoch,total=0;
   for(var g=0;g<groups.length;g++){groups[g].count=0;groups[g].bestRank=99;for(var sg=0;sg<groups[g].segments.length;sg++){groups[g].segments[sg].count=0;groups[g].segments[sg].bestRank=99;}}
   for(var i=0;i<candidates.length;i++){
@@ -118,7 +104,7 @@ function restore(root,refresh){
     var group=groups[g],groupShow=!group.wasHidden;if(group.visible!==groupShow)group.node.hidden=group.wasHidden;group.visible=groupShow;group.count=0;group.bestRank=99;if(group.titleNode){group.titleNode.hidden=group.titleWasHidden;group.titleVisible=!group.titleWasHidden;group.titleNode.style.removeProperty('order');}
     for(var s=0;s<group.segments.length;s++){var segment=group.segments[s];segment.count=0;segment.bestRank=99;if(segment.heading){segment.heading.hidden=segment.headingWasHidden;segment.headingVisible=!segment.headingWasHidden;segment.heading.style.removeProperty('order');}}
   }
-  reorderHosts('');active=false;lastState='';lastQuery='';queryCandidates=searchable;visibleItems=searchable.slice();restoreSearch();document.body.classList.remove(K.catalogSearching);if(root)root.classList.remove('sc-search-has-value');if(searchBox)searchBox.classList.remove('sc-search-has-value');setEmpty(1);if(statusNode)statusNode.textContent='';if(refresh)scheduleRestoreRefresh();
+  reorderHosts('');active=false;lastState='';lastQuery='';queryCandidates=searchable;visibleItems=searchable.slice();document.body.classList.remove(K.catalogSearching);if(root)root.classList.remove('sc-search-has-value');setEmpty(1);if(statusNode)statusNode.textContent='';if(refresh)scheduleRestoreRefresh();
 }
 
 /* Control de limpiar y filtros de rasgos. */
@@ -131,20 +117,16 @@ function handleFilter(root,target){var chip=target.closest&&target.closest('[dat
 
 /* Instala listeners; la búsqueda vive solo en memoria. */
 function destroy(){
-  if(installedInput&&onInput)installedInput.removeEventListener('input',onInput);if(installedInput&&onKeyDown)installedInput.removeEventListener('keydown',onKeyDown);if(clearNode&&onClearClick)clearNode.removeEventListener('click',onClearClick);if(installedRoot&&onRootClick)installedRoot.removeEventListener('click',onRootClick);if(installedRoot&&onRootKeyDown)installedRoot.removeEventListener('keydown',onRootKeyDown);
-  if(onBreakpoint){if(CFG.queries.desktop.removeEventListener)CFG.queries.desktop.removeEventListener('change',onBreakpoint);else CFG.queries.desktop.removeListener(onBreakpoint);}
-  if(active)restore(installedRoot,false);else{restoreSearch();document.body&&document.body.classList.remove(K.catalogSearching);}
-  installedRoot=null;installedInput=null;searchBox=null;searchHome=null;searchNext=null;clearNode=null;statusNode=null;resultsNode=null;emptyNode=null;onInput=null;onKeyDown=null;onClearClick=null;onRootClick=null;onRootKeyDown=null;onBreakpoint=null;inventory=[];searchable=[];groups=[];hosts=[];visibleItems=[];queryCandidates=[];lastQuery='';lastState='';captured=false;activeFilters.clear();
+  if(installedInput&&onInput)installedInput.removeEventListener('input',onInput);if(installedInput&&onKeyDown)installedInput.removeEventListener('keydown',onKeyDown);if(installedRoot&&onRootClick)installedRoot.removeEventListener('click',onRootClick);if(installedRoot&&onRootKeyDown)installedRoot.removeEventListener('keydown',onRootKeyDown);if(active)restore(installedRoot,false);else document.body&&document.body.classList.remove(K.catalogSearching);
+  installedRoot=null;installedInput=null;clearNode=null;statusNode=null;resultsNode=null;emptyNode=null;onInput=null;onKeyDown=null;onRootClick=null;onRootKeyDown=null;inventory=[];searchable=[];groups=[];hosts=[];visibleItems=[];queryCandidates=[];lastQuery='';lastState='';captured=false;activeFilters.clear();
 }
 function install(root){
-  destroy();var input=root&&root.querySelector('.sc-catalog-search-input');if(!input)return function(){};installedRoot=root;installedInput=input;searchBox=input.closest('.sc-catalog-search');searchHome=searchBox&&searchBox.parentNode;searchNext=searchBox&&searchBox.nextSibling;clearNode=root.querySelector('.sc-catalog-search-clear');statusNode=root.querySelector('.sc-catalog-search-status');resultsNode=root.querySelector('.sc-catalog-search-results');emptyNode=root.querySelector('.sc-catalog-search-empty-message');U.each(root.querySelectorAll('.sc-sort-control'),function(node){if(node.parentNode)node.parentNode.removeChild(node);});
+  destroy();var input=root&&root.querySelector('.sc-catalog-search-input');if(!input)return function(){};installedRoot=root;installedInput=input;clearNode=root.querySelector('.sc-catalog-search-clear');statusNode=root.querySelector('.sc-catalog-search-status');resultsNode=root.querySelector('.sc-catalog-search-results');emptyNode=root.querySelector('.sc-catalog-search-empty-message');U.each(root.querySelectorAll('.sc-sort-control'),function(node){if(node.parentNode)node.parentNode.removeChild(node);});
   onInput=function(){lastState='';apply(root,input.value);syncClear();};
   onKeyDown=function(event){if(event.key!=='Escape'||!input.value)return;event.preventDefault();clearSearch(root,true);};
-  onClearClick=function(event){event.preventDefault();event.stopPropagation();clearSearch(root,true);};
-  onRootClick=function(event){if(handleFilter(root,event.target))event.preventDefault();};
+  onRootClick=function(event){var clear=event.target&&event.target.closest&&event.target.closest('.sc-catalog-search-clear');if(clear&&root.contains(clear)){event.preventDefault();event.stopPropagation();clearSearch(root,true);return;}if(handleFilter(root,event.target))event.preventDefault();};
   onRootKeyDown=function(event){var chip=event.target&&event.target.closest&&event.target.closest('[data-sc-filter]');if(chip&&(event.key==='Enter'||event.key===' ')){event.preventDefault();handleFilter(root,chip);}};
-  onBreakpoint=function(){if(active)scheduleDock();};
-  input.addEventListener('input',onInput);input.addEventListener('keydown',onKeyDown);if(clearNode)clearNode.addEventListener('click',onClearClick);root.addEventListener('click',onRootClick);root.addEventListener('keydown',onRootKeyDown);if(CFG.queries.desktop.addEventListener)CFG.queries.desktop.addEventListener('change',onBreakpoint);else CFG.queries.desktop.addListener(onBreakpoint);
+  input.addEventListener('input',onInput);input.addEventListener('keydown',onKeyDown);root.addEventListener('click',onRootClick);root.addEventListener('keydown',onRootKeyDown);
   syncClear();requestAnimationFrame(function(){if(installedRoot!==root)return;ensureFilters(root);syncClear();});return function(){if(installedRoot===root)destroy();};
 }
 C.search={install:install,apply:apply,destroy:destroy,getFilters:function(){return Array.from(activeFilters);}};
