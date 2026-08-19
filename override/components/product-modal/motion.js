@@ -114,7 +114,7 @@ function clearShared(p,value,restoreOrigin){
   kill(value);restoreOverflow(value);restoreDialogZ(value);restoreDestinationImage(value);restoreSourceNodes(value);
   if(p){
     clearNode(p.dialog,['transform','transform-origin','clip-path','border-radius','opacity','will-change']);
-    if(p.content)clearNode(p.content,['opacity','will-change']);
+    if(p.content)clearNode(p.content,['opacity','transform','will-change']);
     if(p.close)clearNode(p.close,['opacity','will-change']);
     if(p.scrim)clearNode(p.scrim,['opacity','will-change']);
   }
@@ -134,7 +134,7 @@ function prepare(modal,value,link,gsap){
   if(!p||!source||!p.imageStage)return null;
   value.source=link||value.source;kill(value);clearFallback(p,gsap);value.fallback=false;
   clearNode(p.dialog,['transform','transform-origin','clip-path','border-radius','opacity','will-change']);
-  if(p.content)clearNode(p.content,['opacity','will-change']);
+  if(p.content)clearNode(p.content,['opacity','transform','will-change']);
   if(p.close)clearNode(p.close,['opacity','will-change']);
   var imageEnd=getRect(p.imageStage),dialogEnd=getRect(p.dialog);
   if(!valid(imageEnd)||!valid(dialogEnd))return null;
@@ -150,7 +150,7 @@ function prepare(modal,value,link,gsap){
 }
 function restartPrepare(modal,value,gsap){clearVisual(modal,value,gsap,true);return prepare(modal,value,value.source,gsap);}
 
-/* La imagen viaja centro a centro. El diálogo usa el mismo ancho y se recorta sólo por abajo. */
+/* La imagen viaja centro a centro. El diálogo conserva ancho y sólo crece por su borde inferior. */
 function imageGeometry(c,g){
   var a=center(c.imageStart),b=center(c.imageEnd),width=lerp(c.imageStart.width,c.imageEnd.width,g),scale=width/c.imageStart.width;
   return{
@@ -173,19 +173,23 @@ function applyOverlay(c,geom,radius){
   c.overlay.style.clipPath='inset(0 round '+localRadius+'px)';
 }
 function applyDialog(c,geom,g,radius){
-  var p=c.parts,dialog=c.dialogEnd,image=c.imageEnd,scale=geom.width/image.width;
-  if(!isFinite(scale)||scale<=0)return;
+  var p=c.parts,dialog=c.dialogEnd,image=c.imageEnd;
   var finalCenterX=image.left+image.width/2,dx=geom.cx-finalCenterX,dy=(geom.cy-geom.height/2)-image.top;
-  var visibleHeight=c.imageLocalHeight+(dialog.height-c.imageLocalHeight)*g;
-  var bottom=Math.max(0,dialog.height-visibleHeight),localRadius=Math.max(0,radius/scale);
-  p.dialog.style.transform='translate3d('+dx+'px,'+dy+'px,0) scale('+scale+')';
+  var bodyHeight=Math.max(0,dialog.height-c.imageLocalHeight);
+  var visibleHeight=Math.min(dialog.height,geom.height+bodyHeight*g);
+  var bottom=Math.max(0,dialog.height-visibleHeight);
+  p.dialog.style.transform='translate3d('+dx+'px,'+dy+'px,0)';
   p.dialog.style.transformOrigin='50% 0%';
-  p.dialog.style.clipPath='inset(0 0 '+bottom+'px 0 round '+localRadius+'px)';
-  p.dialog.style.borderRadius=localRadius+'px';
+  p.dialog.style.clipPath='inset(0 0 '+bottom+'px 0 round '+Math.max(0,radius)+'px)';
+  p.dialog.style.borderRadius=Math.max(0,radius)+'px';
   p.dialog.style.opacity='1';
   p.dialog.style.willChange='transform,clip-path,border-radius';
+  if(p.content){
+    p.content.style.transform='translate3d(0,'+(geom.height-c.imageLocalHeight)+'px,0)';
+    p.content.style.willChange='transform,opacity';
+  }
 }
-function setSceneOpacity(node,value){if(!node)return;node.style.opacity=String(clamp(value,0,1));node.style.willChange='opacity';}
+function setSceneOpacity(node,value){if(!node)return;node.style.opacity=String(clamp(value,0,1));if(!node.style.willChange)node.style.willChange='opacity';}
 
 function renderEnter(value,t){
   var c=value.context;if(!c)return;
