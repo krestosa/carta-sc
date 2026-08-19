@@ -6,8 +6,22 @@ var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.
 var each=U.each,nav=null,home=null,next=null,toolbar=null,styles=new Map();
 
 function toolbarNode(container){var node=T.clone('category-toolbar');container.insertBefore(node,container.firstChild);return node;}
+/* Descarta referencias de una estructura legacy reemplazada y adopta el riel vigente. */
+function captureNav(){
+  var candidate=document.querySelector(N.selectors.mobileWrapper+' '+'.wrapp-nav-tabsTopShop');
+  if(candidate&&candidate!==nav){
+    restoreStyles();styles.clear();
+    if(nav&&document.documentElement.contains(nav)&&nav.parentNode)nav.parentNode.removeChild(nav);
+    nav=candidate;home=nav.parentNode;next=nav.nextSibling;return true;
+  }
+  if(nav&&document.documentElement.contains(nav))return true;
+  restoreStyles();styles.clear();nav=candidate||null;home=nav&&nav.parentNode;next=nav&&nav.nextSibling;return!!nav;
+}
+/* Quita referencias a links que ya no pertenecen al DOM activo. */
+function pruneStyles(){styles.forEach(function(_,link){if(!document.documentElement.contains(link))styles.delete(link);});}
 /* Quita tamaños inline del legacy mientras el riel está bajo control del override. */
 function normalize(root){
+  pruneStyles();
   each(root.querySelectorAll(".nav-top-li > a.anchorLink"),function(link){
     if(!styles.has(link))styles.set(link,link.getAttribute('style'));
     link.style.removeProperty('font-size');
@@ -26,14 +40,15 @@ function layout(){
     each(container.querySelectorAll(S.productList+'.'+"sc-first-catalog-section"),function(node){node.classList.remove("sc-first-catalog-section");});
     var first=Array.prototype.find.call(container.querySelectorAll(S.productList),function(node){return!!node.querySelector(S.productCard+','+S.sectionTitle);});
     if(first)first.classList.add("sc-first-catalog-section");
-    if(!nav){nav=document.querySelector(N.selectors.mobileWrapper+' '+".wrapp-nav-tabsTopShop");if(!nav)return;home=nav.parentNode;next=nav.nextSibling;}
+    if(!captureNav())return;
     if(!toolbar||!document.documentElement.contains(toolbar))toolbar=toolbarNode(container);
     var scroller=toolbar.querySelector(N.selectors.scroller);if(nav.parentNode!==scroller)scroller.appendChild(nav);
     normalize(nav);document.body.classList.add(K.catalogLayoutReady);
   }else{
     document.body&&document.body.classList.remove(K.catalogLayoutReady);
     each(document.querySelectorAll(S.productList+'.'+"sc-first-catalog-section"),function(node){node.classList.remove("sc-first-catalog-section");});
-    if(nav&&home){next&&next.parentNode===home?home.insertBefore(nav,next):home.appendChild(nav);}
+    captureNav();
+    if(nav&&home&&document.documentElement.contains(home)){next&&next.parentNode===home?home.insertBefore(nav,next):home.appendChild(nav);}
     restoreStyles();if(toolbar&&toolbar.parentNode)toolbar.parentNode.removeChild(toolbar);toolbar=null;
   }
   if(N.refreshMetrics)N.refreshMetrics();
