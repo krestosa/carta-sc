@@ -27,7 +27,7 @@ function refreshLayout(){syncMounted();if(raf)cancelAnimationFrame(raf);raf=requ
 function writeMode(root,mode,persist){doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);if(persist)save(mode);}
 
 function apply(root,mode,persist){mode=normalize(mode)||'compact';writeMode(root,mode,persist);sync(root,mode);refreshLayout();}
-function destroy(){if(raf){cancelAnimationFrame(raf);raf=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
+function destroy(){if(raf){cancelAnimationFrame(raf);raf=0;}if(cleanup){var fn=cleanup;cleanup=null;fn();}}
 function install(root){
   destroy();var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]');if(!button||!host)return function(){};
   apply(root,load(),false);
