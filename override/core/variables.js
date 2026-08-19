@@ -19,14 +19,10 @@ config.media=merged({
   forcedColors:'(forced-colors: active)'
 },config.media);
 config.queries=config.queries||{};
-['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion','reducedTransparency','moreContrast','forcedColors'].forEach(function(name){
-  if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
-});
+['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion','reducedTransparency','moreContrast','forcedColors'].forEach(function(name){if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);});
 
 /* GSAP core es la única dependencia externa requerida por el motion actual. */
-config.urls=merged({
-  gsap:GSAP_DIST+'gsap.min.js'
-},config.urls);
+config.urls=merged({gsap:GSAP_DIST+'gsap.min.js'},config.urls);
 
 /* Selectores comunes para que los módulos apunten al mismo DOM y al mismo estado legacy. */
 config.selectors=merged({
@@ -45,29 +41,10 @@ config.selectors=merged({
   legacyMobileOpen:'.topShopMenuMobile._open'
 },config.selectors);
 
-/* Clases de estado compartidas entre layout, búsqueda y primer viewport. */
-config.classes=merged({
-  catalogLayoutReady:'sc-catalog-layout-ready',
-  catalogSearching:'sc-catalog-searching',
-  staticInitialSection:'sc-static-initial-section'
-},config.classes);
+config.classes=merged({catalogLayoutReady:'sc-catalog-layout-ready',catalogSearching:'sc-catalog-searching'},config.classes);
 
-/* Tokens semánticos de motion: movimiento espacial y efectos visuales usan física distinta. */
+/* Sólo quedan tokens consumidos por interacciones activas. */
 config.motion=merged({geometryRefreshDelay:180},config.motion);
-config.motion.springs=merged({
-  spatial:{
-    fast:{damping:.9,stiffness:1400},
-    default:{damping:.9,stiffness:700},
-    slow:{damping:.9,stiffness:300}
-  },
-  effects:{
-    fast:{damping:1,stiffness:3800},
-    default:{damping:1,stiffness:1600},
-    slow:{damping:1,stiffness:800}
-  }
-},config.motion.springs);
-config.motion.stagger=merged({fast:.012,default:.016,slow:.020,maxTotal:.12},config.motion.stagger);
-config.motion.distance=merged({fast:28,slow:180},config.motion.distance);
 config.motion.press=merged({grow:.45,minimum:.225,touchDelay:.15,onset:.105,release:.375,originScale:.2,padding:10,softMinimum:75,softRatio:.35},config.motion.press);
 config.motion.curves=merged({
   standard:'cubic-bezier(.2,0,0,1)',
@@ -76,7 +53,6 @@ config.motion.curves=merged({
   emphasized:'cubic-bezier(.3,0,0,1)',
   emphasizedAccelerate:'cubic-bezier(.3,0,.8,.15)',
   emphasizedDecelerate:'cubic-bezier(.05,.7,.1,1)',
-  expand:'cubic-bezier(.3,0,0,1)',
   enter:'cubic-bezier(.05,.7,.1,1)',
   exit:'cubic-bezier(.3,0,.8,.15)',
   accelerate:'cubic-bezier(.3,0,1,1)',
