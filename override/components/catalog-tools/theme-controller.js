@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.catalogTools,P=C&&C.themePalette,T=SC&&SC.transitionPatterns;
-if(!SC||!C||!P||SC.__catalogThemeControllerBooted)return;SC.__catalogThemeControllerBooted=true;
+var SC=window.SCOverride,C=SC&&SC.catalogTools,T=SC&&SC.transitionPatterns;
+if(!SC||!C||SC.__catalogThemeControllerBooted)return;SC.__catalogThemeControllerBooted=true;
 
 var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),reduced=matchMedia('(prefers-reduced-motion:reduce)'),deps=null,menuTimeline=null,partsCache=new WeakMap(),optionsCache=new WeakMap();
 var SUN='M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z';
@@ -27,14 +27,13 @@ function attrs(node,v){Object.keys(v).forEach(function(k){node.setAttribute(k,St
 function applyStatic(root,mode){var p=parts(root),g=gsap();if(!p)return;mode=norm(mode)||'system';p.core.setAttribute('d',mode==='system'?AUTO:(mode==='dark'?MOON_FULL:SUN));attrs(p.bite,{cx:MOON_BITE.cx,cy:MOON_BITE.cy,r:mode==='dark'?MOON_BITE.r:0});attrs(p.ring,{r:8.4});p.ring.style.opacity=mode==='system'?'1':'0';p.lines.forEach(function(line){line.style.strokeDasharray='1';line.style.strokeDashoffset=mode==='light'?'0':'1';});p.rays.style.opacity=mode==='light'?'1':'0';if(g)g.set(p.rotor,{rotation:0,clearProps:'transform,willChange'});else p.rotor.style.removeProperty('transform');p.svg.setAttribute('data-sc-theme-glyph-state',mode);root.setAttribute('data-sc-theme-prepaint-ready','1');root.removeAttribute('data-sc-theme-animating');}
 function seed(root){var mode=load();meta(root,mode);applyStatic(root,mode);return mode;}
 function commit(root,mode,persist){mode=norm(mode)||'system';var prev=selected(),before=doc.getAttribute('data-sc-theme-resolved')||resolved(prev),after=resolved(mode);doc.setAttribute('data-sc-theme',mode);doc.setAttribute('data-sc-theme-resolved',after);window.__scInitialTheme=mode;meta(root,mode);applyStatic(root,mode);if(before!==after)emit(mode,after);if(persist&&prev!==mode)save(mode);}
-function themeTargets(root,includeSurface){var p=parts(root),nodes=[];if(p&&p.svg)nodes.push(p.svg);if(includeSurface){nodes.push(document.querySelector('.containerShop'));nodes.push(document.querySelector('.sc-catalog-toolbar'));nodes.push(document.querySelector('.fixedTopShop.wtopShopMenuMobile'));}return nodes.filter(Boolean);}
+function themeSurface(){return document.querySelector('.containerShop');}
 function transition(root,mode,persist){
-  mode=norm(mode)||'system';var before=doc.getAttribute('data-sc-theme-resolved')||resolved(selected()),after=resolved(mode),targets=themeTargets(root,before!==after);
-  P.kill();
-  if(T&&T.fadeThrough&&!reduced.matches&&targets.length){T.fadeThrough(targets,function(){commit(root,mode,persist);},{duration:.45,scale:false});return;}
+  mode=norm(mode)||'system';var before=doc.getAttribute('data-sc-theme-resolved')||resolved(selected()),after=resolved(mode),surface=before!==after?themeSurface():null;
+  if(T&&T.fadeThrough&&!reduced.matches&&surface){T.fadeThrough(surface,function(){commit(root,mode,persist);},{duration:.45});return;}
   commit(root,mode,persist);
 }
-function apply(root,mode,persist){P.kill();commit(root,norm(mode)||load(),persist);}
+function apply(root,mode,persist){commit(root,norm(mode)||load(),persist);}
 
 /* El menú conserva el frame visible al invertir apertura/cierre para evitar saltos. */
 function stopMenu(root,preserve){
@@ -76,13 +75,13 @@ function install(root){
   function outside(e){if(b.getAttribute('aria-expanded')==='true'&&!ctl.contains(e.target))setOpen(root,false,false);}
   function keys(e){var i=items.indexOf(e.target);if(e.target===b&&(e.key==='ArrowDown'||e.key==='ArrowUp')){e.preventDefault();setOpen(root,true,true);return;}if(b.getAttribute('aria-expanded')!=='true')return;if(e.key==='Escape'){e.preventDefault();setOpen(root,false,false);b.focus();return;}if(i<0)return;if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();items[(i+1)%items.length].focus();}else if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();items[(i-1+items.length)%items.length].focus();}else if(e.key==='Home'){e.preventDefault();items[0].focus();}else if(e.key==='End'){e.preventDefault();items[items.length-1].focus();}}
   b.addEventListener('click',toggle);menu.addEventListener('click',choose);root.addEventListener('keydown',keys);document.addEventListener('pointerdown',outside,true);
-  return function(){stopMenu(root,false);menu.classList.remove('sc-theme-menu-open');menu.setAttribute('aria-hidden','true');b.setAttribute('aria-expanded','false');P.kill();b.removeEventListener('click',toggle);menu.removeEventListener('click',choose);root.removeEventListener('keydown',keys);document.removeEventListener('pointerdown',outside,true);};
+  return function(){stopMenu(root,false);menu.classList.remove('sc-theme-menu-open');menu.setAttribute('aria-hidden','true');b.setAttribute('aria-expanded','false');b.removeEventListener('click',toggle);menu.removeEventListener('click',choose);root.removeEventListener('keydown',keys);document.removeEventListener('pointerdown',outside,true);};
 }
 function systemChanged(){
   if(selected()!=='system')return;var root=document.querySelector('.sc-catalog-tools');if(!root)return;
   var before=doc.getAttribute('data-sc-theme-resolved')||resolved('system'),after=resolved('system');if(before===after)return;
-  P.kill();var targets=themeTargets(root,true),change=function(){doc.setAttribute('data-sc-theme-resolved',after);root.setAttribute('data-sc-theme-actual',after);emit('system',after);};
-  if(T&&T.fadeThrough&&!reduced.matches&&targets.length)T.fadeThrough(targets,change,{duration:.45,scale:false});else change();
+  var surface=themeSurface(),change=function(){doc.setAttribute('data-sc-theme-resolved',after);root.setAttribute('data-sc-theme-actual',after);emit('system',after);applyStatic(root,'system');};
+  if(T&&T.fadeThrough&&!reduced.matches&&surface)T.fadeThrough(surface,change,{duration:.45});else change();
 }
 if(SC.motion&&SC.motion.whenLoaded)SC.motion.whenLoaded(function(x){deps=x;});else if(SC.motion&&SC.motion.whenReady)SC.motion.whenReady(function(x){deps=x;});
 if(systemDark.addEventListener)systemDark.addEventListener('change',systemChanged);else systemDark.addListener(systemChanged);
