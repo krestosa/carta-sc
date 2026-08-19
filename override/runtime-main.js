@@ -43,9 +43,7 @@ var featureStages=[
     ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
     ['components/product-modal/motion.js','sc-product-modal-motion-js'],
     ['components/mobile-header/mobile-header.js','sc-override-mobile-header-js'],
-    ['components/cart/list-motion.js','sc-cart-list-motion-js'],
-    ['components/cart/scroll-motion.js','sc-cart-scroll-motion-js'],
-    ['components/cart/badge-motion.js','sc-cart-badge-motion-js']
+    ['components/cart/list-motion.js','sc-cart-list-motion-js']
   ]
 ];
 
@@ -130,7 +128,7 @@ function loadStages(stages){
   },Promise.resolve());
 }
 
-/* Cards y títulos preparan su estado inicial en DOMContentLoaded; no se revela antes. */
+/* Espera al DOM antes de liberar motion dependiente de mediciones. */
 function waitForDomReady(){
   if(document.readyState!=='loading')return Promise.resolve();
   return new Promise(function(resolve){
