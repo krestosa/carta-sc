@@ -1,13 +1,8 @@
-/* Token local para respuestas visuales muy breves del riel. */
-body.sushiShop {
-  --sc-motion-micro: 100ms;
-}
-
-/* Los cambios de estado usan una curva monotónica y no alteran geometría. */
+/* El riel usa sólo los owners de motion explícitos del runtime. */
 .sushiShop .wrapp-nav-tabsTopShop li a,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
-  -webkit-transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard), background-color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
-  transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard), background-color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
+  -webkit-transition: none !important;
+  transition: none !important;
 }
 
 /* El estado activo no usa subrayado legacy. */
@@ -26,35 +21,61 @@ body.sushiShop {
 }
 
 /* Base geométrica del indicador animado. */
-.sushiShop .sc-category-motion-root {position: relative !important;}
+.sushiShop .sc-category-motion-root { position: relative !important; }
 .sushiShop .sc-category-indicator {
-  display: block;position: absolute;left: 0;bottom: 0;width: var(--sc-border-hairline);height: var(--sc-border-hairline);margin: 0;padding: 0;border: 0;border-radius: 0;
-  background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: 4;
-  -webkit-transform: translate3d(0,0,0) scaleX(1);transform: translate3d(0,0,0) scaleX(1);
-  -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--sc-border-hairline);
+  height: var(--sc-border-hairline);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--sc-color-surface);
+  box-shadow: none;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 4;
+  -webkit-transform: translate3d(0,0,0) scaleX(1);
+  transform: translate3d(0,0,0) scaleX(1);
+  -webkit-transform-origin: 0 50%;
+  transform-origin: 0 50%;
+  -webkit-transition: none !important;
+  transition: none !important;
 }
 
-/* El cierre acelera; la apertura desacelera al llegar a su posición final. */
+/* El dropdown legacy conserva geometría pero no ejecuta una trayectoria propia. */
 .sushiShop .topPullDown {
-  -webkit-transform: translateY(var(--sc-category-dropdown-offset-y));transform: translateY(var(--sc-category-dropdown-offset-y));
-  -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-exit),-webkit-transform var(--sc-motion-micro) var(--sc-motion-ease-exit) !important;
-  transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-exit),transform var(--sc-motion-micro) var(--sc-motion-ease-exit) !important;
-  -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
+  -webkit-transform: translateY(var(--sc-category-dropdown-offset-y));
+  transform: translateY(var(--sc-category-dropdown-offset-y));
+  -webkit-transition: none !important;
+  transition: none !important;
+  -webkit-transition-delay: 0ms !important;
+  transition-delay: 0ms !important;
 }
 .sushiShop .topPullDown.open {
-  -webkit-transform: translateY(0);transform: translateY(0);
-  -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-enter),-webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-enter) !important;
-  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-enter),transform var(--sc-motion-fast) var(--sc-motion-ease-enter) !important;
-  -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
+  -webkit-transition: none !important;
+  transition: none !important;
+  -webkit-transition-delay: 0ms !important;
+  transition-delay: 0ms !important;
 }
 
 .sushiShop .wrapp-nav-tabsTopShop a:focus-visible,
-.sushiShop .wtopShopMenuMobile a:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
+.sushiShop .wtopShopMenuMobile a:focus-visible {
+  outline: var(--sc-focus-ring-width) solid currentColor;
+  outline-offset: var(--sc-focus-ring-offset);
+}
 
-/* Movimiento reducido conserva el cambio de estado sin desplazamiento. */
 @media (prefers-reduced-motion: reduce) {
-  .sushiShop .topPullDown,.sushiShop .topPullDown.open {
-    -webkit-transform: none !important;transform: none !important;
-    -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-standard) !important;transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-standard) !important;
+  .sushiShop .topPullDown,
+  .sushiShop .topPullDown.open {
+    -webkit-transform: none !important;
+    transform: none !important;
+    -webkit-transition: none !important;
+    transition: none !important;
   }
 }
