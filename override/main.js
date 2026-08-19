@@ -30,7 +30,6 @@ var VALIDATION_PATHS=[
   'components/category-nav/core.js',
   'features/content-normalizer/rules.js',
   'components/product-card/data.js',
-  'components/product-card/reveal-motion.js',
   'components/product-modal/view.js',
   'components/product-modal/a11y.js',
   'components/product-modal/motion.js',
@@ -48,7 +47,6 @@ var VALIDATION_PATHS=[
   'components/catalog-tools/state-motion.js',
   'components/product-card/a11y.js',
   'components/product-card/content.js',
-  'components/product-card/motion.js',
   'components/cart/cart.js',
   'components/catalog-tools/theme-controller.js',
   'features/content-normalizer/observer.js',
@@ -59,8 +57,7 @@ var VALIDATION_PATHS=[
   'components/category-nav/category-nav.js',
   'components/product-card/product-card.js',
   'components/product-modal/product-modal.js',
-  'components/catalog-tools/catalog-tools.js',
-  'components/section-heading/section-heading.js'
+  'components/catalog-tools/catalog-tools.js'
 ];
 
 try{theme=localStorage.getItem('scTheme:v1')||'';}catch(_){}
