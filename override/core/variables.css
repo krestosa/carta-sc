@@ -35,15 +35,14 @@
   --sc-catalog-inline-space: 64px;
   --sc-product-image-ratio: 286 / 200;
 
-  /* Curvas de fallback CSS. La física espacial vive en el runtime de motion. */
+  /* Curvas CSS usadas por estados y fallbacks que todavía tienen un caller real. */
   --sc-motion-ease-standard: cubic-bezier(.2,0,0,1);
   --sc-motion-ease-enter: cubic-bezier(.05,.7,.1,1);
   --sc-motion-ease-exit: cubic-bezier(.3,0,.8,.15);
   --sc-motion-ease-out: var(--sc-motion-ease-standard);
   --sc-motion-ease-in: var(--sc-motion-ease-exit);
   --sc-motion-fast: 150ms;
-  --sc-motion-default: 250ms;
-  --sc-motion-slow: 400ms;
+
+  /* Contrato del generador externo; el override neutraliza el tween visual del logo. */
   --sc-motion-theme: 290ms;
-  --sc-motion-icon: 220ms;
 }
