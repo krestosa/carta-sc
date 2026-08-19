@@ -36,6 +36,11 @@ body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inwar
   border: 3px solid var(--sc-focus-ring-color);
   outline: 0;
 }
+/* El tab activo libera el borde inferior para no superponer el indicador de 2px + 1px. */
+body.sushiShop .wrapp-nav-tabsTopShop a.sc-motion-current.sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inward],
+body.sushiShop .wtopShopMenuMobile a.sc-motion-current.sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inward] {
+  bottom: 3px !important;
+}
 body.sushiShop .sc-motion-state-host.sc-motion-focus-visible > .sc-motion-focus-ring {
   display: block !important;
 }
