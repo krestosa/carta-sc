@@ -44,6 +44,6 @@
   --sc-motion-fast: 150ms;
   --sc-motion-default: 250ms;
   --sc-motion-slow: 400ms;
-  --sc-motion-theme: 350ms;
-  --sc-motion-icon: 200ms;
+  --sc-motion-theme: 290ms;
+  --sc-motion-icon: 220ms;
 }
