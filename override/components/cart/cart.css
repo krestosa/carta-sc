@@ -1,8 +1,0 @@
-/* Estado visual mínimo para el desplazamiento reactivo del carrito. GSAP escribe
-   el transform durante el scroll y esta capa solo prepara origen y reduced motion. */
-.sushiShop .sc-cart-scroll-motion {
-  -webkit-transform-origin: 50% 0%;transform-origin: 50% 0%;will-change: transform;
-}
-@media (prefers-reduced-motion: reduce) {
-  .sushiShop .sc-cart-scroll-motion {-webkit-transform: none !important;transform: none !important;will-change: auto;}
-}
