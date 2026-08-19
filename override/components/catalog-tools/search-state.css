@@ -8,6 +8,20 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .produc
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) { margin-top: 18px !important; }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) { margin-top: 0 !important; }
 
+/* El active indicator del field ocupa su ancho final y aparece sólo por foco. */
+body.sushiShop .sc-catalog-search-line {
+  opacity: 0 !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+  transition: opacity 150ms cubic-bezier(.2,0,0,1) !important;
+}
+body.sushiShop .sc-catalog-search:focus-within .sc-catalog-search-line {
+  opacity: 1 !important;
+  transform: none !important;
+}
+/* El leading icon cambia de color como estado; no tiene tween propio. */
+body.sushiShop .sc-catalog-search-icon { transition: none !important; }
+
 /* Los resultados visibles no reciben una entrada decorativa ni conservan offsets previos. */
 html body.sushiShop.sc-catalog-searching .sc-catalog-search-results:not([hidden]) {
   animation: none !important;
