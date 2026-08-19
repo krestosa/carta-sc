@@ -1,4 +1,9 @@
 /* Icono de menú por estado y logo adaptado al tema. */
+/* El build legacy inyecta una transición de filter; el override mantiene el cambio de tema directo. */
+html body.sushiShop .sc-system-brand-logo {
+  transition: none !important;
+}
+
 @media (max-width: 992px) {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar,
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar + .slicknav_icon-bar { display: none !important; }
