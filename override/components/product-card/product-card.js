@@ -13,8 +13,8 @@ function addedNeedsEnhancement(node){if(!node||node.nodeType!==1)return false;if
 /* Observa mutaciones solo después de completar el primer lote. */
 function observeCards(){var root=document.querySelector(S.container)||document.body;if(!initialized||!initialDone||!root||!window.MutationObserver)return;if(!cardObserver)cardObserver=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i++){var mutation=mutations[i],target=mutation.target&&mutation.target.nodeType===1?mutation.target:mutation.target&&mutation.target.parentElement,card=target&&target.closest?target.closest(S.productCard):null;if(needsEnhancement(card)){scheduleCardRefresh();return;}for(var j=0;j<(mutation.addedNodes||[]).length;j++){if(addedNeedsEnhancement(mutation.addedNodes[j])){scheduleCardRefresh();return;}}}});cardObserver.disconnect();cardObserver.observe(root,{childList:true,subtree:true});}
 
-/* Reaplica accesibilidad, rasgos y medición sin duplicar observers. */
-function refreshCards(){if(cardObserver)cardObserver.disconnect();cancelInitialWork();A.enhanceAll();P.installFlavorRows();P.scheduleDescriptionMeasure();initialDone=true;observeCards();installResizeTracking();}
+/* Reaplica accesibilidad, rasgos y medición sin duplicar observers ni refresh pendientes. */
+function refreshCards(){if(cardRaf){cancelAnimationFrame(cardRaf);cardRaf=0;}if(cardObserver)cardObserver.disconnect();cancelInitialWork();A.enhanceAll();P.installFlavorRows();P.scheduleDescriptionMeasure();initialDone=true;observeCards();installResizeTracking();}
 function runCardRefresh(){cardRaf=0;if(initialized)refreshCards();}
 function scheduleCardRefresh(){if(initialized&&!cardRaf)cardRaf=requestAnimationFrame(runCardRefresh);}
 
