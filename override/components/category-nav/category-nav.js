@@ -5,7 +5,8 @@
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
 if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
 var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
-var submenuHost=null,submenuParent=null,submenuPinned=false,submenuCloseTimer=0,submenuPositionRaf=0,submenuScroller=null;
+var submenuHost=null,submenuParent=null,submenuPinned=false,submenuOpenTimer=0,submenuCloseTimer=0,pendingSubmenuParent=null,submenuPositionRaf=0,submenuScroller=null;
+var SUBMENU_HOVER_OPEN_DELAY=400,SUBMENU_HOVER_CLOSE_DELAY=400;
 
 /* Construye el submenú flotante desde la estructura legacy sin mover sus enlaces originales. */
 function submenuLinks(parent){
@@ -13,6 +14,7 @@ function submenuLinks(parent){
   return Array.prototype.filter.call(source.querySelectorAll('a[href^="#"]'),function(link){return!!N.anchor(link.getAttribute('href'));});
 }
 function hasSubmenu(parent){return submenuLinks(parent).length>0;}
+function clearOpenTimer(){if(submenuOpenTimer){clearTimeout(submenuOpenTimer);submenuOpenTimer=0;}pendingSubmenuParent=null;}
 function clearCloseTimer(){if(submenuCloseTimer){clearTimeout(submenuCloseTimer);submenuCloseTimer=0;}}
 function clearPositionRaf(){if(submenuPositionRaf){cancelAnimationFrame(submenuPositionRaf);submenuPositionRaf=0;}}
 function unbindSubmenuScroller(){if(submenuScroller){submenuScroller.removeEventListener('scroll',scheduleSubmenuPosition);submenuScroller=null;}}
@@ -24,8 +26,8 @@ function ensureSubmenu(){
   if(submenuHost&&document.documentElement.contains(submenuHost))return submenuHost;
   submenuHost=document.createElement('div');submenuHost.id='sc-category-submenu';submenuHost.className='sc-category-submenu';submenuHost.setAttribute('role','menu');submenuHost.setAttribute('aria-hidden','true');
   var list=document.createElement('div');list.className='sc-category-submenu-list';submenuHost.appendChild(list);document.body.appendChild(submenuHost);
-  submenuHost.addEventListener('pointerenter',clearCloseTimer);
-  submenuHost.addEventListener('pointerleave',function(){if(!submenuPinned)scheduleSubmenuClose();});
+  submenuHost.addEventListener('mouseenter',function(){clearCloseTimer();});
+  submenuHost.addEventListener('mouseleave',function(){if(!submenuPinned)scheduleSubmenuClose();});
   return submenuHost;
 }
 function renderSubmenu(parent){
@@ -51,15 +53,18 @@ function positionSubmenu(){
 function scheduleSubmenuPosition(){if(submenuHost&&submenuHost.classList.contains('sc-category-submenu-open')&&!submenuPositionRaf)submenuPositionRaf=requestAnimationFrame(positionSubmenu);}
 /* Abrir/cerrar conserva estado ARIA y permite fijar el menú cuando el usuario hace click. */
 function openSubmenu(parent,pin){
-  if(!hasSubmenu(parent))return false;clearCloseTimer();var same=parent===submenuParent;
+  if(!hasSubmenu(parent))return false;clearOpenTimer();clearCloseTimer();var same=parent===submenuParent;
   if(!same&&submenuParent)setParentExpanded(submenuParent,false);
   submenuParent=parent;submenuPinned=!!pin||(same&&submenuPinned);var host=renderSubmenu(parent);setParentExpanded(parent,true);parent.setAttribute('aria-controls',host.id);host.classList.add('sc-category-submenu-open');host.setAttribute('aria-hidden','false');bindSubmenuScroller(parent);scheduleSubmenuPosition();return true;
 }
 function closeSubmenu(restoreFocus){
-  clearCloseTimer();clearPositionRaf();unbindSubmenuScroller();if(submenuHost){submenuHost.classList.remove('sc-category-submenu-open');submenuHost.setAttribute('aria-hidden','true');}
+  clearOpenTimer();clearCloseTimer();clearPositionRaf();unbindSubmenuScroller();if(submenuHost){submenuHost.classList.remove('sc-category-submenu-open');submenuHost.setAttribute('aria-hidden','true');}
   var parent=submenuParent;submenuParent=null;submenuPinned=false;if(parent)setParentExpanded(parent,false);if(restoreFocus&&parent&&document.documentElement.contains(parent))parent.focus();
 }
-function scheduleSubmenuClose(){clearCloseTimer();submenuCloseTimer=setTimeout(function(){submenuCloseTimer=0;if(!submenuPinned)closeSubmenu(false);},110);}
+function scheduleSubmenuOpen(parent){
+  if(!parent||!hasSubmenu(parent))return;clearOpenTimer();clearCloseTimer();pendingSubmenuParent=parent;submenuOpenTimer=setTimeout(function(){var target=pendingSubmenuParent;submenuOpenTimer=0;pendingSubmenuParent=null;if(!target||!document.documentElement.contains(target))return;if(submenuPinned&&submenuParent&&submenuParent!==target)return;openSubmenu(target,false);},SUBMENU_HOVER_OPEN_DELAY);
+}
+function scheduleSubmenuClose(){clearOpenTimer();clearCloseTimer();submenuCloseTimer=setTimeout(function(){submenuCloseTimer=0;if(!submenuPinned)closeSubmenu(false);},SUBMENU_HOVER_CLOSE_DELAY);}
 /* Revisa qué categorías tienen hijos y expone semántica de menú únicamente en ellas. */
 function scanSubmenus(){
   each(document.querySelectorAll('.nav-top-li > a.anchorLink[href^="#"]'),function(link){
@@ -69,16 +74,16 @@ function scanSubmenus(){
   });
   if(submenuParent&&!document.documentElement.contains(submenuParent))closeSubmenu(false);
 }
-/* Eventos de puntero y foco comparten la misma lógica para no bifurcar comportamiento. */
+/* El camino hover usa eventos de mouse; touch no participa en sus retardos. */
 function categoryParentFromEvent(event){var link=event.target&&event.target.closest?event.target.closest('.nav-top-li > a.anchorLink[href^="#"]'):null;return link&&hasSubmenu(link)?link:null;}
-function pointerOver(event){if(event.pointerType==='touch')return;var parent=categoryParentFromEvent(event);if(!parent)return;if(submenuPinned&&submenuParent&&submenuParent!==parent)return;openSubmenu(parent,false);}
-function pointerOut(event){
-  if(event.pointerType==='touch'||submenuPinned)return;var parent=categoryParentFromEvent(event);if(!parent||parent!==submenuParent)return;var next=event.relatedTarget;if(next&&(parent.closest('.nav-top-li').contains(next)||(submenuHost&&submenuHost.contains(next))))return;scheduleSubmenuClose();
+function mouseOver(event){var parent=categoryParentFromEvent(event);if(!parent)return;var from=event.relatedTarget;if(from&&parent.contains(from))return;if(submenuPinned&&submenuParent&&submenuParent!==parent)return;scheduleSubmenuOpen(parent);}
+function mouseOut(event){
+  var parent=categoryParentFromEvent(event);if(!parent||submenuPinned)return;var next=event.relatedTarget;if(next&&(parent.closest('.nav-top-li').contains(next)||(submenuHost&&submenuHost.contains(next))))return;if(parent===pendingSubmenuParent||parent===submenuParent)scheduleSubmenuClose();
 }
 function focusIn(event){var parent=categoryParentFromEvent(event);if(parent&&!submenuPinned)openSubmenu(parent,false);}
 function focusOut(event){if(submenuPinned||!submenuParent)return;var next=event.relatedTarget;if(next&&((submenuHost&&submenuHost.contains(next))||submenuParent.closest('.nav-top-li').contains(next)))return;scheduleSubmenuClose();}
-function outsidePointer(event){if(!submenuParent)return;var target=event.target;if((submenuHost&&submenuHost.contains(target))||submenuParent.closest('.nav-top-li').contains(target))return;closeSubmenu(false);}
-function keydown(event){if(event.key==='Escape'&&submenuParent){event.preventDefault();closeSubmenu(true);}}
+function outsidePointer(event){if(!submenuParent&&!pendingSubmenuParent)return;var target=event.target;if((submenuHost&&submenuHost.contains(target))||(submenuParent&&submenuParent.closest('.nav-top-li').contains(target)))return;closeSubmenu(false);}
+function keydown(event){if(event.key==='Escape'&&(submenuParent||pendingSubmenuParent)){event.preventDefault();closeSubmenu(true);}}
 function destroySubmenu(){closeSubmenu(false);if(submenuHost&&submenuHost.parentNode)submenuHost.parentNode.removeChild(submenuHost);submenuHost=null;}
 N.categorySubmenu={scan:scanSubmenus,has:hasSubmenu,open:function(parent,pin){return openSubmenu(parent,pin!==false);},close:closeSubmenu,position:scheduleSubmenuPosition};
 
@@ -133,14 +138,14 @@ function watchStructure(){
 /* Registra eventos una sola vez y usa listeners pasivos donde no se cancela el evento. */
 function addListeners(){
   document.addEventListener('click',N.onCategory,true);document.addEventListener('change',N.onSelect,true);
-  document.addEventListener('pointerover',pointerOver,true);document.addEventListener('pointerout',pointerOut,true);document.addEventListener('pointerdown',outsidePointer,true);document.addEventListener('focusin',focusIn,true);document.addEventListener('focusout',focusOut,true);document.addEventListener('keydown',keydown,true);
+  document.addEventListener('mouseover',mouseOver,true);document.addEventListener('mouseout',mouseOut,true);document.addEventListener('pointerdown',outsidePointer,true);document.addEventListener('focusin',focusIn,true);document.addEventListener('focusout',focusOut,true);document.addEventListener('keydown',keydown,true);
   window.addEventListener('scroll',windowScroll,{passive:true});window.addEventListener('resize',resize,{passive:true});
   window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});
   if(mq.addEventListener)mq.addEventListener('change',breakpoint);else mq.addListener(breakpoint);
 }
 function removeListeners(){
   document.removeEventListener('click',N.onCategory,true);document.removeEventListener('change',N.onSelect,true);
-  document.removeEventListener('pointerover',pointerOver,true);document.removeEventListener('pointerout',pointerOut,true);document.removeEventListener('pointerdown',outsidePointer,true);document.removeEventListener('focusin',focusIn,true);document.removeEventListener('focusout',focusOut,true);document.removeEventListener('keydown',keydown,true);
+  document.removeEventListener('mouseover',mouseOver,true);document.removeEventListener('mouseout',mouseOut,true);document.removeEventListener('pointerdown',outsidePointer,true);document.removeEventListener('focusin',focusIn,true);document.removeEventListener('focusout',focusOut,true);document.removeEventListener('keydown',keydown,true);
   window.removeEventListener('scroll',windowScroll);window.removeEventListener('resize',resize);window.removeEventListener('wheel',interrupt);window.removeEventListener('touchstart',interrupt);
   if(mq.removeEventListener)mq.removeEventListener('change',breakpoint);else mq.removeListener(breakpoint);
 }
