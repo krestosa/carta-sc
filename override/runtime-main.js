@@ -126,6 +126,14 @@ function loadStages(stages){
   },Promise.resolve());
 }
 
+/* Cards y títulos preparan su estado inicial en DOMContentLoaded; no se revela antes. */
+function waitForDomReady(){
+  if(document.readyState!=='loading')return Promise.resolve();
+  return new Promise(function(resolve){
+    document.addEventListener('DOMContentLoaded',resolve,{once:true});
+  });
+}
+
 function releaseReveal(){
   var root=document.documentElement;
   if(!root)return;
@@ -145,6 +153,7 @@ loadStages(foundationStages)
     var motion=window.SCOverride&&window.SCOverride.motion;
     return motion&&motion.prepare?motion.prepare():null;
   })
+  .then(function(){return waitForDomReady();})
   .then(function(){
     var runtime=window.SCOverride,lifecycle=runtime.renderLifecycle,motion=runtime.motion;
     lifecycle.markInitialViewport();
