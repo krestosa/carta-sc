@@ -1,4 +1,4 @@
-/* Icono grilla/lista animado con GSAP MorphSVG; solo cambia el path. */
+/* Geometrías de estado del icono grilla/lista. */
 body.sushiShop .sc-view-morph-icon {
   display:block;
   flex:0 0 var(--sc-view-icon-size,24px);
