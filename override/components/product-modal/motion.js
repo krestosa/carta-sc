@@ -1,55 +1,75 @@
-/* Controla apertura, reapertura y cierre del modal con animaciones interrumpibles. Cada
-   transición usa un token propio para que una interacción nueva invalide la anterior. */
+/* Coordina apertura, reemplazo y cierre del detalle con capas independientes. */
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,MS=SC&&SC.productModalSelectors,CFG={openOffsetY:12,openScale:.986,closeOffsetY:8,closeScale:.992};
+var SC=window.SCOverride,C=SC&&SC.config,MS=SC&&SC.productModalSelectors;
 if(!SC||!C||!MS||SC.__productModalMotionBooted)return;SC.__productModalMotionBooted=true;
-/* El token evita que callbacks de una transición vieja limpien una animación más reciente. */
+var OPEN=.5,CLOSE=.15,SHIFT=-50,SCRIM=.32;
+
 function nextToken(modal){var token=(modal.__scModalMotionToken||0)+1;modal.__scModalMotionToken=token;return token;}
 function current(modal,token){return modal&&modal.__scModalMotionToken===token;}
-/* Calcula el origen desde la card que abrió el modal para que el movimiento tenga continuidad. */
-function origin(dialog,source){
-  if(!dialog)return;var value='50% 50%';
-  if(source&&document.documentElement.contains(source)){
-    var a=source.getBoundingClientRect(),d=dialog.getBoundingClientRect();if(d.width>0&&d.height>0){var x=((a.left+a.width*.5-d.left)/d.width)*100,y=((a.top+a.height*.5-d.top)/d.height)*100;x=Math.max(12,Math.min(88,x));y=Math.max(10,Math.min(90,y));value=x.toFixed(2)+'% '+y.toFixed(2)+'%';}
-  }
-  dialog.style.transformOrigin=value;
+function nodes(modal){
+  var dialog=modal&&modal.querySelector(MS.dialog),scrim=modal&&modal.querySelector('.sc-product-modal__scrim');
+  if(!dialog)return null;
+  var headline=dialog.querySelector('.sc-product-modal__title');
+  var content=[].slice.call(dialog.querySelectorAll('.sc-product-modal__image-stage,.sc-product-modal__description,.sc-product-modal__price-row,.sc-product-modal__close'));
+  var actions=dialog.querySelector('.sc-product-modal__actions');
+  return{dialog:dialog,scrim:scrim,headline:headline,content:content,actions:actions};
 }
-/* Limpia propiedades temporales para devolver el control del estado final al CSS. */
-function clear(modal,dialog,gsap){if(!modal||!dialog||!gsap)return;gsap.set(modal,{clearProps:'opacity,visibility,willChange'});gsap.set(dialog,{clearProps:'transform,opacity,visibility,willChange'});}
-function cancel(modal){if(!modal)return;nextToken(modal);if(!SC.motion||!SC.motion.runLoaded)return;SC.motion.runLoaded(function(deps){var dialog=modal.querySelector(MS.dialog);deps.gsap.killTweensOf([modal,dialog]);});}
-/* Abre backdrop y diálogo con una respuesta rápida y specs separados para geometría y opacidad. */
-function open(modal,source){
-  if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.run&&SC.motion.run(function(deps){
-    var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;var spatial=SC.motion.springSpec('spatial','fast'),effects=SC.motion.springSpec('effects','fast');gsap.killTweensOf([modal,dialog]);origin(dialog,source);gsap.set(modal,{autoAlpha:0,willChange:'opacity'});gsap.set(dialog,{autoAlpha:0,y:CFG.openOffsetY,scale:CFG.openScale,willChange:'transform,opacity'});
-    gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(!current(modal,token))return;clear(modal,dialog,gsap);}})
-      .to(modal,{autoAlpha:1,duration:effects.duration,ease:effects.ease},0)
-      .to(dialog,{autoAlpha:1,duration:effects.duration,ease:effects.ease},0)
-      .to(dialog,{y:0,scale:1,duration:spatial.duration,ease:spatial.ease,force3D:true},0);
+function targets(parts){return[parts.scrim,parts.dialog,parts.headline,parts.actions].concat(parts.content).filter(Boolean);}
+function clear(parts,gsap){
+  if(!parts||!gsap)return;gsap.set(parts.dialog,{clearProps:'transform,opacity,visibility,willChange,--sc-modal-surface-height,--sc-modal-surface-opacity'});
+  if(parts.scrim)gsap.set(parts.scrim,{clearProps:'opacity,willChange'});
+  if(parts.headline)gsap.set(parts.headline,{clearProps:'opacity,willChange'});
+  if(parts.content.length)gsap.set(parts.content,{clearProps:'opacity,willChange'});
+  if(parts.actions)gsap.set(parts.actions,{clearProps:'opacity,willChange'});
+}
+function cancel(modal){if(!modal)return;nextToken(modal);if(!SC.motion||!SC.motion.runLoaded)return;SC.motion.runLoaded(function(deps){var p=nodes(modal);if(!p)return;deps.gsap.killTweensOf(targets(p));clear(p,deps.gsap);});}
+function staticState(modal){var p=nodes(modal);if(!p)return;p.dialog.style.removeProperty('transform');p.dialog.style.removeProperty('opacity');p.dialog.style.removeProperty('visibility');p.dialog.style.setProperty('--sc-modal-surface-height','100%');p.dialog.style.setProperty('--sc-modal-surface-opacity','1');if(p.scrim)p.scrim.style.opacity=String(SCRIM);if(p.headline)p.headline.style.opacity='1';p.content.forEach(function(node){node.style.opacity='1';});if(p.actions)p.actions.style.opacity='1';}
+
+/* Entrada: desplazamiento global, capa de fondo, superficie y contenido usan fases distintas. */
+function open(modal){
+  if(!modal)return;var token=nextToken(modal);
+  if(SC.motion&&SC.motion.reduced&&SC.motion.reduced()){staticState(modal);return;}
+  var ran=SC.motion&&SC.motion.run&&SC.motion.run(function(deps){
+    var gsap=deps.gsap,p=nodes(modal);if(!p)return;var expand=SC.motion.curve('expand');gsap.killTweensOf(targets(p));
+    gsap.set(p.dialog,{y:SHIFT,autoAlpha:0,'--sc-modal-surface-height':'35%','--sc-modal-surface-opacity':0,willChange:'transform,opacity'});
+    if(p.scrim)gsap.set(p.scrim,{opacity:0,willChange:'opacity'});
+    if(p.headline)gsap.set(p.headline,{opacity:0,willChange:'opacity'});
+    if(p.content.length)gsap.set(p.content,{opacity:0,willChange:'opacity'});
+    if(p.actions)gsap.set(p.actions,{opacity:0,willChange:'opacity'});
+    var tl=gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(current(modal,token))clear(p,gsap);}});
+    tl.to(p.dialog,{y:0,duration:OPEN,ease:expand,force3D:true},0)
+      .to(p.dialog,{autoAlpha:1,duration:.05,ease:'none'},0)
+      .to(p.dialog,{'--sc-modal-surface-height':'100%',duration:OPEN,ease:expand},0)
+      .to(p.dialog,{'--sc-modal-surface-opacity':1,duration:.05,ease:'none'},0);
+    if(p.scrim)tl.to(p.scrim,{opacity:SCRIM,duration:OPEN,ease:'none'},0);
+    if(p.headline)tl.to(p.headline,{opacity:1,duration:.20,ease:'none'},.05);
+    if(p.content.length)tl.to(p.content,{opacity:1,duration:.20,ease:'none'},.05);
+    if(p.actions)tl.to(p.actions,{opacity:1,duration:.15,ease:'none'},.15);
   });
-  if(!ran){var dialog=modal.querySelector(MS.dialog);origin(dialog,source);}
+  if(!ran)staticState(modal);
 }
-/* Retargetea un modal ya montado con una respuesta corta y sin reiniciar su contexto. */
-function reopen(modal,source){
-  if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.runLoaded&&SC.motion.runLoaded(function(deps){
-    var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;var spatial=SC.motion.springSpec('spatial','fast'),effects=SC.motion.springSpec('effects','fast');gsap.killTweensOf([modal,dialog]);origin(dialog,source);gsap.set(modal,{willChange:'opacity'});gsap.set(dialog,{willChange:'transform,opacity'});
-    gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(!current(modal,token))return;clear(modal,dialog,gsap);}})
-      .to(modal,{autoAlpha:1,duration:effects.duration,ease:effects.ease},0)
-      .to(dialog,{autoAlpha:1,duration:effects.duration,ease:effects.ease},0)
-      .to(dialog,{y:0,scale:1,duration:spatial.duration,ease:spatial.ease,force3D:true},0);
-  });
-  if(!ran){var dialog=modal.querySelector(MS.dialog);origin(dialog,source);modal.style.removeProperty('opacity');modal.style.removeProperty('visibility');}
-}
-/* El cierre usa la variante rápida para no bloquear la siguiente acción. */
+
+/* Un reemplazo dentro del diálogo conserva su contexto y evita una segunda entrada completa. */
+function reopen(modal){if(!modal)return;nextToken(modal);if(SC.motion&&SC.motion.runLoaded)SC.motion.runLoaded(function(deps){var p=nodes(modal);if(!p)return;deps.gsap.killTweensOf(targets(p));clear(p,deps.gsap);});staticState(modal);}
+
+/* Salida: contenido primero, luego superficie, scrim y desplazamiento vertical. */
 function close(modal,done){
   if(!modal){if(done)done();return;}var token=nextToken(modal);
   if(SC.motion&&SC.motion.reduced&&SC.motion.reduced()){if(done)done();return;}
   var ran=SC.motion&&SC.motion.runLoaded&&SC.motion.runLoaded(function(deps){
-    var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog){if(done)done();return;}var spatial=SC.motion.springSpec('spatial','fast'),effects=SC.motion.springSpec('effects','fast');gsap.killTweensOf([modal,dialog]);gsap.set(modal,{willChange:'opacity'});gsap.set(dialog,{willChange:'transform,opacity'});
-    gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(!current(modal,token))return;if(done)done();}})
-      .to(dialog,{y:CFG.closeOffsetY,scale:CFG.closeScale,duration:spatial.duration*.72,ease:spatial.ease,force3D:true},0)
-      .to(dialog,{autoAlpha:0,duration:effects.duration,ease:effects.ease},0)
-      .to(modal,{autoAlpha:0,duration:effects.duration,ease:effects.ease},effects.duration*.18);
+    var gsap=deps.gsap,p=nodes(modal);if(!p){if(done)done();return;}var exit=SC.motion.curve('exit');gsap.killTweensOf(targets(p));
+    gsap.set(p.dialog,{'--sc-modal-surface-height':'100%','--sc-modal-surface-opacity':1,willChange:'transform,opacity'});
+    if(p.scrim)gsap.set(p.scrim,{opacity:SCRIM,willChange:'opacity'});
+    var tl=gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(current(modal,token)&&done)done();}});
+    tl.to(p.dialog,{y:SHIFT,duration:CLOSE,ease:exit,force3D:true},0)
+      .to(p.dialog,{'--sc-modal-surface-height':'35%',duration:CLOSE,ease:exit},0)
+      .to(p.dialog,{autoAlpha:0,duration:.05,ease:'none'},.10)
+      .to(p.dialog,{'--sc-modal-surface-opacity':0,duration:.05,ease:'none'},.10);
+    if(p.scrim)tl.to(p.scrim,{opacity:0,duration:CLOSE,ease:'none'},0);
+    if(p.headline)tl.to(p.headline,{opacity:0,duration:.10,ease:'none'},0);
+    if(p.content.length)tl.to(p.content,{opacity:0,duration:.10,ease:'none'},0);
+    if(p.actions)tl.to(p.actions,{opacity:0,duration:.10,ease:'none'},0);
   });
   if(!ran&&done)done();
 }
