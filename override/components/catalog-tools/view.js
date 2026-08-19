@@ -28,7 +28,7 @@ function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(r
 function refreshLayout(){syncMounted();if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){raf=requestAnimationFrame(function(){raf=0;if(SC.productCardContent&&SC.productCardContent.scheduleDescriptionMeasure)SC.productCardContent.scheduleDescriptionMeasure();refreshMotionNow();});});}
 function writeMode(root,mode,persist){doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);if(persist)save(mode);}
 
-function animateIcon(root,mode){var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]'),key=iconKey(mode);syncMeta(root,mode);if(!host)return;if(T&&T.fadeThrough&&!reduced()){T.fadeThrough(host,function(){setIcon(host,key);},{duration:.30});return;}setIcon(host,key);}
+function animateIcon(root,mode){var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]'),key=iconKey(mode);syncMeta(root,mode);if(!host)return;if(T&&T.fadeThrough&&!reduced()){T.fadeThrough(host,function(){setIcon(host,key);},{duration:.45});return;}setIcon(host,key);}
 function apply(root,mode,persist){
   mode=normalize(mode)||'compact';var current=selectedMode();
   if(!persist||current===mode||!T||!T.layoutSwap||reduced()){writeMode(root,mode,persist);sync(root,mode);refreshLayout();return;}
