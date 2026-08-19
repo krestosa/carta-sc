@@ -10,6 +10,10 @@ function afterLayoutFrame(resolve){requestAnimationFrame(function(){requestAnima
 function whenDomReady(){return document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();}
 function withTimeout(promise,ms){return Promise.race([Promise.resolve(promise).catch(function(){}),new Promise(function(resolve){window.setTimeout(resolve,ms);})]);}
 
+/* Compatibilidad con el bundler: el primer viewport ya no necesita preparación de reveal. */
+function markInitialViewport(){}
+function freezeInitialViewport(){}
+
 /* Comparte un solo observer entre esperas de estado DOM. */
 function disconnectWaitObserver(){if(waitObserver){waitObserver.disconnect();waitObserver=null;}}
 function removeWaiter(waiter){var index=waiters.indexOf(waiter);if(index>=0)waiters.splice(index,1);if(!waiters.length)disconnectWaitObserver();}
@@ -23,13 +27,7 @@ function waitForCatalogLayout(){if(!desktopQuery.matches)return Promise.resolve(
 function waitForCatalogTools(){return waitFor(function(){return!!(document.body&&document.body.classList.contains('sc-catalog-tools-ready'));},STABLE_LAYOUT_TIMEOUT);}
 function waitForMobileHeader(){if(desktopQuery.matches)return Promise.resolve();return waitFor(function(){return!!document.querySelector('body > .slicknav_menu.sc-mobile-main-menu');},MOBILE_HEADER_TIMEOUT);}
 function waitForFonts(){if(!document.fonts||!document.fonts.ready)return Promise.resolve();return withTimeout(document.fonts.ready,FONT_TIMEOUT);}
-function waitForStableLayout(){
-  return whenDomReady().then(function(){
-    var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];
-    if(desktopQuery.matches)waits.push(waitForFonts());
-    return Promise.all(waits);
-  }).then(function(){return new Promise(afterLayoutFrame);});
-}
+function waitForStableLayout(){return whenDomReady().then(function(){var waits=[waitForCatalogLayout(),waitForCatalogTools(),waitForMobileHeader()];if(desktopQuery.matches)waits.push(waitForFonts());return Promise.all(waits);}).then(function(){return new Promise(afterLayoutFrame);});}
 
-SC.renderLifecycle={waitForStableLayout:waitForStableLayout};
+SC.renderLifecycle={markInitialViewport:markInitialViewport,freezeInitialViewport:freezeInitialViewport,waitForStableLayout:waitForStableLayout};
 })();
