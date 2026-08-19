@@ -16,6 +16,7 @@ function nodes(){
 function invalidateNodes(){nodeCache=null;}
 function mobileScroller(){return nodes().mobileScroll;}
 function desktopScroller(){return nodes().desktopScroll;}
+function activeScroller(){return N.mq.matches?desktopScroller():mobileScroller();}
 function scrollTop(){return window.pageYOffset||document.documentElement.scrollTop||0;}
 function pageTop(node){var top=0,current=node;while(current){top+=current.offsetTop||0;current=current.offsetParent;}return top;}
 
@@ -58,8 +59,11 @@ function cancel(){if(railRaf)cancelAnimationFrame(railRaf);if(measureRaf)cancelA
    scroll del riel vuelve a calcular overflow mientras la animación horizontal progresa. */
 function requestCenter(previous,target){if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleOverflow();}
 
-/* Durante búsqueda/filtros conserva el flujo normal: activo, indicador y auto-scroll. */
-function visibleLinks(){return N.links().filter(function(link){var item=link.closest('.nav-top-li');return!!(item&&!item.hidden);});}
+/* Durante búsqueda/filtros conserva el flujo normal en el riel montado del breakpoint actual. */
+function visibleLinks(){
+  var scroller=activeScroller();if(!scroller)return[];
+  return N.links(scroller).filter(function(link){var item=link.closest('.nav-top-li');return!!(item&&!item.hidden&&link.getClientRects().length);});
+}
 function syncFilteredActive(){
   if(syncingFilteredActive||!document.body||!document.body.classList.contains(K.catalogSearching))return;
   var links=visibleLinks();if(!links.length)return;
