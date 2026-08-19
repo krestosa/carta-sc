@@ -21,6 +21,9 @@ var foundationStages=[
     ['core/render-lifecycle.js','sc-override-render-lifecycle-js'],
     ['templates/registry.js','sc-override-template-registry-js'],
     ['motion/main.js','sc-override-motion-js']
+  ],
+  [
+    ['motion/transition-patterns.js','sc-transition-patterns-js']
   ]
 ];
 

@@ -76,6 +76,8 @@ config.motion.curves=merged({
   expand:'cubic-bezier(.3,0,0,1)',
   enter:'cubic-bezier(.05,.7,.1,1)',
   exit:'cubic-bezier(.3,0,.8,.15)',
+  accelerate:'cubic-bezier(.4,0,1,1)',
+  decelerate:'cubic-bezier(0,0,.2,1)',
   linear:'linear'
 },config.motion.curves);
 })();

@@ -22,6 +22,7 @@ var VALIDATION_PATHS=[
   'core/render-lifecycle.js',
   'templates/registry.js',
   'motion/main.js',
+  'motion/transition-patterns.js',
   'motion/global-ui.js',
   'mutations/dom-normalization.js',
   'mutations/history.js',
