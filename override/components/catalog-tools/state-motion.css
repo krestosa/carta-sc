@@ -1,7 +1,7 @@
 /* Capas de estado y respuesta de presión compartidas por controles interactivos. */
 body.sushiShop {
   --sc-state-hover-opacity: .08;
-  --sc-state-pressed-opacity: .10;
+  --sc-state-pressed-opacity: .12;
 }
 
 body.sushiShop .sc-motion-state-host { isolation: isolate; }
