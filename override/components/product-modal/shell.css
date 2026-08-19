@@ -36,11 +36,13 @@ body.sushiShop .sc-product-modal__scrim {
   pointer-events: none !important;
 }
 
-/* La superficie puede variar su altura visual sin alterar la geometría del contenido. */
+/* La superficie visual puede variar altura y opacidad sin alterar el layout del contenido. */
 body.sushiShop .sc-product-modal__dialog {
   --sc-modal-surface-height: 100%;
+  --sc-modal-surface-opacity: 1;
   box-sizing: border-box !important;
   position: relative !important;
+  isolation: isolate !important;
   z-index: 1 !important;
   width: min(560px,calc(100vw - 24px)) !important;
   max-height: calc(100vh - var(--sc-modal-dialog-block-space)) !important;
@@ -48,10 +50,23 @@ body.sushiShop .sc-product-modal__dialog {
   overflow-x: hidden !important;
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
-  background: linear-gradient(var(--sc-color-surface),var(--sc-color-surface)) 0 0 / 100% var(--sc-modal-surface-height) no-repeat transparent !important;
+  background: transparent !important;
   border: 0 !important;
   box-shadow: 0 18px 55px rgba(0,0,0,.22) !important;
   outline: none !important;
+}
+body.sushiShop .sc-product-modal__dialog::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: 0 !important;
+  height: var(--sc-modal-surface-height) !important;
+  background: var(--sc-color-surface) !important;
+  opacity: var(--sc-modal-surface-opacity) !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
 }
 
 body.sushiShop .sc-product-modal__image-stage {
