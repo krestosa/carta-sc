@@ -132,12 +132,12 @@ body.sushiShop {
     inset: 4px !important;
     border-radius: var(--sc-radius-control) !important;
     background: var(--sc-color-ink) !important;
-    transform: scale(1);
+    transform: none !important;
     transform-origin: 50% 50%;
-    transition: transform 90ms var(--sc-motion-ease-out) !important;
+    transition: none !important;
     z-index: 0 !important;
   }
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn:active::before { transform: scale(.94); }
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn:active::before { transform: none !important; }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_menutxt {
     display: none !important;
@@ -167,7 +167,7 @@ body.sushiShop {
     box-shadow: none !important;
   }
 
-  /* El estado semántico viene del menú; CSS resuelve la transición del panel. */
+  /* El panel cambia de estado de forma inmediata; el feedback temporal vive en el ripple del botón. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     box-sizing: border-box !important;
     display: block !important;
@@ -187,17 +187,17 @@ body.sushiShop {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    transform: translate3d(0,-8px,0) !important;
+    transform: none !important;
     transform-origin: 50% 0 !important;
-    transition: opacity 150ms var(--sc-motion-ease-out),transform 180ms var(--sc-motion-ease-out),visibility 0s linear 180ms !important;
+    transition: none !important;
     z-index: var(--sc-z-mobile-panel) !important;
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
-    transform: translate3d(0,0,0) !important;
-    transition-delay: 0s !important;
+    transform: none !important;
+    transition: none !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
@@ -235,13 +235,10 @@ body.sushiShop {
   }
 }
 
-/* Reduce movimiento del panel y del botón. */
 @media (prefers-reduced-motion: reduce) and (max-width: 992px) {
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before { transition: none !important; }
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn:active::before { transform: none !important; }
+  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before,
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     transform: none !important;
-    transition: opacity 120ms linear,visibility 0s linear 120ms !important;
+    transition: none !important;
   }
-  body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] { transition-delay: 0s !important; }
 }
