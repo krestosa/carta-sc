@@ -37,8 +37,6 @@ var featureStages=[
     ['components/category-nav/core.js','sc-category-nav-core-js'],
     ['features/content-normalizer/rules.js','sc-content-normalizer-rules-js'],
     ['components/product-card/data.js','sc-product-card-data-js'],
-    ['components/section-heading/section-heading.js','sc-section-lines-motion-js'],
-    ['components/product-card/reveal-motion.js','sc-product-card-reveal-motion-js'],
     ['components/product-modal/view.js','sc-product-modal-view-js'],
     ['components/product-modal/a11y.js','sc-product-modal-a11y-js'],
     ['components/product-modal/motion.js','sc-product-modal-motion-js'],
@@ -62,7 +60,6 @@ var integrationStages=[
     ['components/catalog-tools/state-motion.js','sc-catalog-tools-state-motion-js'],
     ['components/product-card/a11y.js','sc-product-card-a11y-js'],
     ['components/product-card/content.js','sc-product-card-content-js'],
-    ['components/product-card/motion.js','sc-product-card-motion-js'],
     ['components/cart/cart.js','sc-override-cart-js']
   ],
   [
@@ -118,58 +115,18 @@ function loadScript(path,id){
   });
 }
 
-function loadGroup(group){
-  return Promise.all(group.map(function(entry){return loadScript(entry[0],entry[1]);}));
-}
-
-function loadStages(stages){
-  return stages.reduce(function(chain,group){
-    return chain.then(function(){return loadGroup(group);});
-  },Promise.resolve());
-}
-
-/* Espera al DOM antes de liberar motion dependiente de mediciones. */
-function waitForDomReady(){
-  if(document.readyState!=='loading')return Promise.resolve();
-  return new Promise(function(resolve){
-    document.addEventListener('DOMContentLoaded',resolve,{once:true});
-  });
-}
-
-function releaseReveal(){
-  var root=document.documentElement;
-  if(!root)return;
-  root.setAttribute('data-sc-catalog-reveal-ready','true');
-  root.classList.remove('sc-catalog-reveal-prepaint');
-}
+function loadGroup(group){return Promise.all(group.map(function(entry){return loadScript(entry[0],entry[1]);}));}
+function loadStages(stages){return stages.reduce(function(chain,group){return chain.then(function(){return loadGroup(group);});},Promise.resolve());}
+function waitForDomReady(){if(document.readyState!=='loading')return Promise.resolve();return new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});});}
+function releaseReveal(){var root=document.documentElement;if(!root)return;root.setAttribute('data-sc-catalog-reveal-ready','true');root.classList.remove('sc-catalog-reveal-prepaint');}
 
 loadStages(foundationStages)
   .then(function(){return loadStages(featureStages);})
-  .then(function(){
-    var templates=window.SCOverride&&window.SCOverride.templates;
-    if(!templates||!templates.ready)throw Error('Template registry unavailable');
-    return templates.ready();
-  })
+  .then(function(){var templates=window.SCOverride&&window.SCOverride.templates;if(!templates||!templates.ready)throw Error('Template registry unavailable');return templates.ready();})
   .then(function(){return loadStages(integrationStages);})
-  .then(function(){
-    var motion=window.SCOverride&&window.SCOverride.motion;
-    return motion&&motion.prepare?motion.prepare():null;
-  })
+  .then(function(){var motion=window.SCOverride&&window.SCOverride.motion;return motion&&motion.prepare?motion.prepare():null;})
   .then(function(){return waitForDomReady();})
-  .then(function(){
-    var runtime=window.SCOverride,lifecycle=runtime.renderLifecycle,motion=runtime.motion;
-    lifecycle.markInitialViewport();
-    if(lifecycle.freezeInitialViewport)lifecycle.freezeInitialViewport();
-    if(motion)motion.unlock();
-    releaseReveal();
-    return lifecycle.waitForStableLayout();
-  })
-  .then(function(){
-    var motion=window.SCOverride&&window.SCOverride.motion;
-    if(motion&&motion.refresh)motion.refresh(0);
-  })
-  .catch(function(error){
-    releaseReveal();
-    if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);
-  });
+  .then(function(){var runtime=window.SCOverride,lifecycle=runtime.renderLifecycle,motion=runtime.motion;if(motion)motion.unlock();releaseReveal();return lifecycle.waitForStableLayout();})
+  .then(function(){var motion=window.SCOverride&&window.SCOverride.motion;if(motion&&motion.refresh)motion.refresh(0);})
+  .catch(function(error){releaseReveal();if(window.console&&console.error)console.error('[SushiClub override] Error cargando módulos',error);});
 })();
