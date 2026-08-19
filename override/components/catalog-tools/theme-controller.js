@@ -3,7 +3,7 @@
 var SC=window.SCOverride,C=SC&&SC.catalogTools,T=SC&&SC.transitionPatterns;
 if(!SC||!C||SC.__catalogThemeControllerBooted)return;SC.__catalogThemeControllerBooted=true;
 
-var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),reduced=matchMedia('(prefers-reduced-motion:reduce)'),deps=null,menuTimeline=null,partsCache=new WeakMap(),optionsCache=new WeakMap();
+var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),deps=null,menuTimeline=null,partsCache=new WeakMap(),optionsCache=new WeakMap();
 var SUN='M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z';
 var MOON_FULL='M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z';
 var AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';
@@ -34,7 +34,7 @@ function stopMenu(root,preserve){var menu=root&&root.querySelector('.sc-theme-me
 function focusFirst(items){if(items&&items.length&&document.documentElement.contains(items[0]))items[0].focus();}
 function setOpen(root,on,focus){
   var b=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu'),g=gsap();if(!b||!menu)return;on=!!on;b.setAttribute('aria-expanded',on?'true':'false');var items=options(root);
-  if(!g||reduced.matches){stopMenu(root,false);menu.classList.toggle('sc-theme-menu-open',on);menu.setAttribute('aria-hidden',on?'false':'true');if(on&&focus)focusFirst(items);return;}
+  if(!g){stopMenu(root,false);menu.classList.toggle('sc-theme-menu-open',on);menu.setAttribute('aria-hidden',on?'false':'true');if(on&&focus)focusFirst(items);return;}
   var count=Math.max(1,items.length),carry=stopMenu(root,true),openEase=T&&T.easing?T.easing.webEmphasized:(SC.motion&&SC.motion.curve?SC.motion.curve('emphasized'):function(p){return p;}),closeEase=T&&T.easing?T.easing.accelerate:(SC.motion&&SC.motion.curve?SC.motion.curve('emphasizedAccelerate'):function(p){return p;});
   if(on){
     menu.classList.add('sc-theme-menu-open');menu.setAttribute('aria-hidden','false');
