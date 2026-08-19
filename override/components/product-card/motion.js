@@ -1,14 +1,8 @@
-/* Orquesta el reveal in-view de tarjetas por breakpoint. La visibilidad real la decide
-   IntersectionObserver; los perfiles sólo ajustan umbral y recorrido de entrada. */
+/* Orquesta el reveal in-view de tarjetas por breakpoint. */
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;
-if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
-var installed=false,reflowRaf=0,PROFILES={
-  mobile:{threshold:.04,initialY:12,revealY:16},
-  tablet:{threshold:.05,initialY:14,revealY:18},
-  desktop:{threshold:.06,initialY:16,revealY:20}
-};
+var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.productCardMotionParts;if(!SC||!C||!parts||SC.__productCardMotionBooted)return;SC.__productCardMotionBooted=true;
+var installed=false,reflowRaf=0,PROFILES={mobile:{threshold:.04},tablet:{threshold:.05},desktop:{threshold:.06}};
 function ensureGate(){if(SC.catalogRevealGate)return SC.catalogRevealGate;var root=document.documentElement,gate={headings:false,cards:false,released:false};gate.release=function(){if(gate.released)return;gate.released=true;if(root){root.setAttribute('data-sc-catalog-reveal-ready','true');root.classList.remove('sc-catalog-reveal-prepaint');}};gate.mark=function(part){if(part==='headings')gate.headings=true;if(part==='cards')gate.cards=true;if(gate.headings&&gate.cards)gate.release();};return SC.catalogRevealGate=gate;}
 function reflow(){if(reflowRaf)cancelAnimationFrame(reflowRaf);reflowRaf=requestAnimationFrame(function(){reflowRaf=requestAnimationFrame(function(){reflowRaf=0;if(parts.revealViewport)parts.revealViewport();if(SC.motion&&SC.motion.refresh)SC.motion.refresh(0);});});}
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();}
