@@ -84,41 +84,31 @@ function moveOverlay(gsap,node,targetRect,duration,ease){
 }
 function removeOverlay(node){if(node&&node.parentNode)node.parentNode.removeChild(node);}
 
-function killFade(nodes){
+function killFade(nodes,preserve){
+  var seen=new Set();
   nodes.forEach(function(node){
-    var state=node.__scFadeThrough;if(state&&state.tween){try{state.tween.kill();}catch(_){}}
+    var state=node.__scFadeThrough;
+    if(state&&state.timeline&&!seen.has(state)){seen.add(state);try{state.timeline.kill();}catch(_){}}
     node.__scFadeThrough=null;
-    if(SC.motion&&SC.motion.runLoaded)SC.motion.runLoaded(function(deps){deps.gsap.set(node,{clearProps:'opacity,transform,willChange'});});
   });
+  if(!preserve&&SC.motion&&SC.motion.runLoaded)SC.motion.runLoaded(function(deps){deps.gsap.set(nodes,{clearProps:'opacity,transform,transformOrigin,willChange'});});
 }
 function fadeThrough(targets,mutate,options){
-  var nodes=list(targets),opts=options||{},duration=Number(opts.duration)||FADE_TOTAL,changed=false;
-  function change(gsap){
-    if(changed)return;changed=true;if(typeof mutate==='function')mutate();
-    if(gsap)gsap.set(nodes,{opacity:0,scale:SCALE,transformOrigin:'50% 50%'});
-  }
-  if(!nodes.length||reduced()||!(SC.motion&&SC.motion.runLoaded)){if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}
+  var nodes=list(targets),opts=options||{},duration=Number(opts.duration)||FADE_TOTAL,useScale=opts.scale!==false;
+  if(!nodes.length){if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}
+  if(reduced()||!(SC.motion&&SC.motion.runLoaded)){killFade(nodes,false);if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}
   var ran=SC.motion.runLoaded(function(deps){
-    var gsap=deps.gsap,proxy={p:0},state={tween:null};
-    killFade(nodes);gsap.set(nodes,{willChange:'opacity,transform'});
-    nodes.forEach(function(node){node.__scFadeThrough=state;});
-    state.tween=gsap.to(proxy,{p:1,duration:duration,ease:emphasized,overwrite:'auto',
-      onUpdate:function(){
-        var p=proxy.p;
-        if(p<FADE_THRESHOLD){
-          gsap.set(nodes,{opacity:1-p/FADE_THRESHOLD,scale:1});
-        }else{
-          change(gsap);var q=(p-FADE_THRESHOLD)/(1-FADE_THRESHOLD);
-          gsap.set(nodes,{opacity:q,scale:lerp(SCALE,1,q)});
-        }
-      },
-      onComplete:function(){
-        if(!changed)change(gsap);
-        nodes.forEach(function(node){if(node.__scFadeThrough===state)node.__scFadeThrough=null;});
-        gsap.set(nodes,{clearProps:'opacity,transform,willChange'});
-        if(opts.onComplete)opts.onComplete();
-      }
-    });
+    var gsap=deps.gsap,out=duration*FADE_THRESHOLD,inn=duration-out,state={timeline:null,changed:false};
+    function change(){if(state.changed)return;state.changed=true;if(typeof mutate==='function')mutate();if(useScale)gsap.set(nodes,{opacity:0,scale:SCALE,transformOrigin:'50% 50%'});else gsap.set(nodes,{opacity:0});}
+    function complete(){
+      if(!state.changed)change();nodes.forEach(function(node){if(node.__scFadeThrough===state)node.__scFadeThrough=null;});
+      gsap.set(nodes,{clearProps:'opacity,transform,transformOrigin,willChange'});if(opts.onComplete)opts.onComplete();
+    }
+    killFade(nodes,true);gsap.set(nodes,{willChange:useScale?'opacity,transform':'opacity'});nodes.forEach(function(node){node.__scFadeThrough=state;});
+    var tl=gsap.timeline({onComplete:complete});state.timeline=tl;
+    tl.to(nodes,{opacity:0,duration:out,ease:emphasizedAccelerate,overwrite:'auto'},0).call(change,[],out);
+    if(useScale)tl.to(nodes,{opacity:1,scale:1,duration:inn,ease:emphasizedDecelerate,overwrite:'auto'},out);
+    else tl.to(nodes,{opacity:1,duration:inn,ease:emphasizedDecelerate,overwrite:'auto'},out);
   });
   if(!ran){if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}return true;
 }
@@ -141,9 +131,9 @@ function finishLayout(){
   var state=layoutState;layoutState=null;
   if(state.timeline)try{state.timeline.kill();}catch(_){}
   state.records.forEach(function(record){
-    var g=state.gsap;g.killTweensOf(record.card);g.set(record.card,{clearProps:'transform,willChange'});
-    record.morphs.forEach(function(item){g.killTweensOf(item.node);g.set(item.node,{clearProps:'transform,willChange'});});
-    record.fades.forEach(function(item){g.killTweensOf(item.node);g.set(item.node,{clearProps:'opacity,transform,willChange'});});
+    var g=state.gsap;g.killTweensOf(record.card);g.set(record.card,{clearProps:'transform,transformOrigin,willChange'});
+    record.morphs.forEach(function(item){g.killTweensOf(item.node);g.set(item.node,{clearProps:'transform,transformOrigin,willChange'});});
+    record.fades.forEach(function(item){g.killTweensOf(item.node);g.set(item.node,{clearProps:'opacity,transform,transformOrigin,willChange'});});
     if(record.overlay)g.killTweensOf(record.overlay);
     restoreStyle(record.contentVisibility);restoreStyle(record.imageVisibility);removeOverlay(record.overlay);
   });
