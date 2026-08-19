@@ -10,13 +10,6 @@ html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .sc-product-f
   visibility: visible !important;
 }
 
-/* Las secciones del primer viewport no esperan reveal. */
-html.sc-no-loading-state body.sushiShop .sc-static-initial-section,
-html.sc-no-loading-state body.sushiShop .sc-static-initial-section > div {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
 /* Anula skeletons residuales de versiones cacheadas. */
 html.sc-no-loading-state.sc-catalog-skeleton body.sushiShop .bannerShop .BanContShop::after,
 html.sc-no-loading-state.sc-catalog-skeleton-leaving body.sushiShop .bannerShop .BanContShop::after,
