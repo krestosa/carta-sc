@@ -5,8 +5,8 @@ body {
   scroll-behavior: auto !important;
 }
 
-/* Diagnóstico de reveal: desactiva cualquier virtualización/containment heredado sobre las
-   unidades del catálogo para que IntersectionObserver y ScrollTrigger midan geometría real. */
+/* Mantiene geometría medible sin convertir la disponibilidad de GSAP en requisito de
+   visibilidad: el contenido principal permanece renderizable desde el primer paint. */
 body.sushiShop .listadoShop,
 body.sushiShop .listadoShop .titleShopSeccion,
 body.sushiShop .listadoShop .titleShopSeccion > div,
@@ -15,20 +15,6 @@ body.sushiShop .listadoShop .productoShop {
   content-visibility: visible !important;
   contain: none !important;
   contain-intrinsic-size: none !important;
-}
-
-/* El estado temprano ya existe cuando entra este CSS. Se libera cuando GSAP terminó de
-   preparar títulos y cards, evitando el flash visible previo al reveal. */
-@media (prefers-reduced-motion: no-preference) {
-  html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .titleShopSeccion > div,
-  html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .subTitleShopSeccion,
-  html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .productoShop,
-  html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .titleShopSeccion > div,
-  html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .subTitleShopSeccion,
-  html.sc-catalog-reveal-prepaint body.sushiShop .listadoShop .productoShop {
-    opacity: 0 !important;
-    visibility: hidden !important;
-  }
 }
 
 /* Al cambiar densidad se reescribe geometría dentro y arriba del viewport. Se desactiva

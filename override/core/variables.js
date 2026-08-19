@@ -71,13 +71,19 @@ config.motion.springs=merged({
 },config.motion.springs);
 config.motion.stagger=merged({fast:.012,default:.016,slow:.020,maxTotal:.12},config.motion.stagger);
 config.motion.distance=merged({fast:28,slow:180},config.motion.distance);
+config.motion.press=merged({grow:.45,minimum:.225,touchDelay:.15,release:.15,originScale:.2,padding:10,softMinimum:75,softRatio:.35},config.motion.press);
 config.motion.curves=merged({
   standard:'cubic-bezier(.2,0,0,1)',
+  standardAccelerate:'cubic-bezier(.3,0,1,1)',
+  standardDecelerate:'cubic-bezier(0,0,0,1)',
+  emphasized:'cubic-bezier(.3,0,0,1)',
+  emphasizedAccelerate:'cubic-bezier(.3,0,.8,.15)',
+  emphasizedDecelerate:'cubic-bezier(.05,.7,.1,1)',
   expand:'cubic-bezier(.3,0,0,1)',
   enter:'cubic-bezier(.05,.7,.1,1)',
   exit:'cubic-bezier(.3,0,.8,.15)',
-  accelerate:'cubic-bezier(.4,0,1,1)',
-  decelerate:'cubic-bezier(0,0,.2,1)',
+  accelerate:'cubic-bezier(.3,0,1,1)',
+  decelerate:'cubic-bezier(0,0,0,1)',
   linear:'linear'
 },config.motion.curves);
 })();
