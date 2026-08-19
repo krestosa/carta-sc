@@ -150,7 +150,7 @@ function prepare(modal,value,link,gsap){
 }
 function restartPrepare(modal,value,gsap){clearVisual(modal,value,gsap,true);return prepare(modal,value,value.source,gsap);}
 
-/* La imagen viaja centro a centro. El diálogo conserva ancho y sólo crece por su borde inferior. */
+/* La imagen viaja centro a centro; la superficie se revela con ella y el cuerpo crece por abajo. */
 function imageGeometry(c,g){
   var a=center(c.imageStart),b=center(c.imageEnd),width=lerp(c.imageStart.width,c.imageEnd.width,g),scale=width/c.imageStart.width;
   return{
@@ -177,10 +177,10 @@ function applyDialog(c,geom,g,radius){
   var finalCenterX=image.left+image.width/2,dx=geom.cx-finalCenterX,dy=(geom.cy-geom.height/2)-image.top;
   var bodyHeight=Math.max(0,dialog.height-c.imageLocalHeight);
   var visibleHeight=Math.min(dialog.height,geom.height+bodyHeight*g);
-  var bottom=Math.max(0,dialog.height-visibleHeight);
+  var bottom=Math.max(0,dialog.height-visibleHeight),side=Math.max(0,(dialog.width-geom.width)/2);
   p.dialog.style.transform='translate3d('+dx+'px,'+dy+'px,0)';
   p.dialog.style.transformOrigin='50% 0%';
-  p.dialog.style.clipPath='inset(0 0 '+bottom+'px 0 round '+Math.max(0,radius)+'px)';
+  p.dialog.style.clipPath='inset(0 '+side+'px '+bottom+'px '+side+'px round '+Math.max(0,radius)+'px)';
   p.dialog.style.borderRadius=Math.max(0,radius)+'px';
   p.dialog.style.opacity='1';
   p.dialog.style.willChange='transform,clip-path,border-radius';
