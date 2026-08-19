@@ -11,7 +11,6 @@ var foundationStages=[
   [['motion/transition-patterns.js','sc-transition-patterns-js']]
 ];
 var featureStages=[[
-  ['motion/global-ui.js','sc-global-ui-motion-js'],
   ['mutations/dom-normalization.js','sc-override-dom-normalization-js'],
   ['mutations/history.js','sc-override-history-js'],
   ['mutations/legacy-category-hover.js','sc-override-category-hover-js'],
