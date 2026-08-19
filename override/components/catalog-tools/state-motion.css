@@ -1,0 +1,71 @@
+/* Capas de estado y respuesta de presión compartidas por controles interactivos. */
+body.sushiShop {
+  --sc-state-hover-opacity: .08;
+  --sc-state-focus-opacity: .12;
+  --sc-state-pressed-opacity: .12;
+}
+
+body.sushiShop .sc-motion-state-host { isolation: isolate; }
+body.sushiShop .sc-motion-state-host > .sc-motion-state-surface {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+  border-radius: inherit !important;
+  color: currentColor !important;
+  pointer-events: none !important;
+}
+body.sushiShop .sc-motion-state-host > .sc-motion-state-surface > .sc-motion-state-wave {
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+  opacity: 0;
+  pointer-events: none !important;
+  transform-origin: 50% 50%;
+}
+
+body.sushiShop .sc-theme-toggle.sc-motion-state-host > .sc-motion-state-surface,
+body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > .sc-motion-state-surface {
+  inset: var(--sc-control-visual-inset) !important;
+  border-radius: 50% !important;
+}
+body.sushiShop .sc-theme-toggle.sc-motion-state-host > *:not(.sc-motion-state-surface),
+body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > *:not(.sc-motion-state-surface),
+body.sushiShop .sc-theme-option.sc-motion-state-host > *:not(.sc-motion-state-surface),
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.sc-motion-state-host > *:not(.sc-motion-state-surface) {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* El selector deja geometría y opacidad a GSAP; CSS conserva sólo su estado final. */
+body.sushiShop .sc-theme-menu {
+  opacity: 1;
+  visibility: hidden;
+  pointer-events: none;
+  transform: none;
+  transition: none !important;
+}
+body.sushiShop .sc-theme-menu.sc-theme-menu-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+body.sushiShop .sc-theme-option {
+  isolation: isolate;
+  overflow: hidden;
+  transform: none !important;
+  transition:
+    color var(--sc-motion-fast) var(--sc-motion-ease-out),
+    background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+}
+body.sushiShop .sc-theme-option:active { transform: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .sc-motion-state-host > .sc-motion-state-surface > .sc-motion-state-wave { display: none !important; }
+  body.sushiShop .sc-theme-menu { transition: none !important; transform: none !important; }
+}

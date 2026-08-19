@@ -88,9 +88,7 @@ function animateMorph(host,from,to){
   host.setAttribute('data-sc-view-icon-animating','true');
   host.__scViewIconMotion=state;
   state.timeline=gsap.timeline({onComplete:function(){if(host.__scViewIconMotion!==state)return;host.__scViewIconMotion=null;host.removeAttribute('data-sc-view-icon-animating');ensureHostPresentation(host);}});
-  live.forEach(function(path,index){
-    state.timeline.to(path,{duration:spring.duration,ease:spring.ease,morphSVG:{shape:targets[index]},overwrite:'auto'},Math.floor(index/2)*step);
-  });
+  live.forEach(function(path,index){state.timeline.to(path,{duration:spring.duration,ease:spring.ease,morphSVG:{shape:targets[index]},overwrite:'auto'},Math.floor(index/2)*step);});
 }
 
 /* Sincroniza label accesible e icono con la vista. */
@@ -101,34 +99,6 @@ function sync(root,mode,animate){
   ensureHostPresentation(host);
   if(previous===key)return;
   if(animate!==false&&previous)animateMorph(host,previous,key);else setMorphState(host,key);
-}
-
-/* Añade respuesta sutil a hover, foco y presión sin cambiar el tamaño del control. */
-function bindViewMicroInteraction(button,host){
-  if(!button||!host||!motionDeps||!motionDeps.gsap)return function(){};
-  var gsap=motionDeps.gsap,paths=livePaths(host),hover=false,focus=false,pressed=false,destroyed=false,spring=spec();
-  if(paths.length!==6)return function(){};
-  var hoverOffsets=[[.58,.38],[-.58,.38],[.58,0],[-.58,0],[.58,-.38],[-.58,-.38]],pressOffsets=[[.82,.52],[-.82,.52],[.82,0],[-.82,0],[.82,-.52],[-.82,-.52]],homeOffsets=[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]];
-  function focusVisible(){try{return button.matches(':focus-visible');}catch(_){return document.activeElement===button;}}
-  function stop(){gsap.killTweensOf(paths,'x,y');}
-  function apply(offsets,factor){
-    if(destroyed)return;stop();
-    if(reducedMotion()){gsap.set(paths,{x:0,y:0,clearProps:'willChange'});return;}
-    paths.forEach(function(path,index){var o=offsets[index];gsap.to(path,{x:o[0],y:o[1],duration:spring.duration*factor,ease:spring.ease,overwrite:'auto',force3D:true,willChange:'transform',delay:index*SC.motion.stagger('fast',paths.length),onComplete:function(){path.style.removeProperty('will-change');}});});
-  }
-  function active(){apply(hoverOffsets,.72);}
-  function home(){apply(homeOffsets,.72);}
-  function press(){apply(pressOffsets,.55);}
-  function enter(e){if(e.pointerType==='touch')return;hover=true;if(!pressed)active();}
-  function leave(){hover=false;pressed=false;if(focus)active();else home();}
-  function down(){pressed=true;press();}
-  function up(){pressed=false;if(hover||focus)active();else home();}
-  function focusIn(){if(focusVisible()){focus=true;if(!pressed)active();}}
-  function focusOut(){focus=false;pressed=false;if(hover)active();else home();}
-  function keyDown(e){if(e.repeat||(e.key!=='Enter'&&e.key!==' '))return;pressed=true;press();}
-  function keyUp(e){if(e.key!=='Enter'&&e.key!==' ')return;pressed=false;if(hover||focus)active();else home();}
-  button.addEventListener('pointerenter',enter);button.addEventListener('pointerleave',leave);button.addEventListener('pointerdown',down);button.addEventListener('pointerup',up);button.addEventListener('pointercancel',leave);button.addEventListener('focus',focusIn);button.addEventListener('blur',focusOut);button.addEventListener('keydown',keyDown);button.addEventListener('keyup',keyUp);
-  return function(){if(destroyed)return;destroyed=true;button.removeEventListener('pointerenter',enter);button.removeEventListener('pointerleave',leave);button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',leave);button.removeEventListener('focus',focusIn);button.removeEventListener('blur',focusOut);button.removeEventListener('keydown',keyDown);button.removeEventListener('keyup',keyUp);stop();gsap.set(paths,{x:0,y:0,clearProps:'transform,willChange'});};
 }
 
 /* Recalcula medidas después del cambio de vista. */
@@ -159,13 +129,12 @@ function install(root){
   if(!button||!host)return function(){};
   button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');
   ensureHostPresentation(host);initMorph(host);apply(root,load(),false);
-  var microCleanup=bindViewMicroInteraction(button,host);
   function click(){var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}
   function breakpoint(){refreshLayout(false);}
   button.addEventListener('click',click);
   if(phone.addEventListener)phone.addEventListener('change',breakpoint);else phone.addListener(breakpoint);
   if(tablet.addEventListener)tablet.addEventListener('change',breakpoint);else tablet.addListener(breakpoint);
-  cleanup=function(){microCleanup();button.removeEventListener('click',click);if(phone.removeEventListener)phone.removeEventListener('change',breakpoint);else phone.removeListener(breakpoint);if(tablet.removeEventListener)tablet.removeEventListener('change',breakpoint);else tablet.removeListener(breakpoint);};
+  cleanup=function(){button.removeEventListener('click',click);if(phone.removeEventListener)phone.removeEventListener('change',breakpoint);else phone.removeListener(breakpoint);if(tablet.removeEventListener)tablet.removeEventListener('change',breakpoint);else tablet.removeListener(breakpoint);};
   var ownCleanup=cleanup;return function(){if(cleanup===ownCleanup)destroy();};
 }
 

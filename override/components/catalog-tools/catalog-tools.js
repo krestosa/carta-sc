@@ -3,11 +3,11 @@
 var SC=window.SCOverride,U=SC&&SC.utils,CFG=SC&&SC.config,S=CFG&&CFG.selectors,T=SC&&SC.templates,C=SC&&SC.catalogTools;if(!SC||!U||!CFG||!T||!C||SC.__catalogToolsBooted)return;SC.__catalogToolsBooted=true;
 
 /* Estado de montaje y limpieza de las herramientas. */
-var observer=null,repairRaf=0,currentRoot=null,cleanSearch=null,cleanTheme=null,cleanView=null,initialized=false;
+var observer=null,repairRaf=0,currentRoot=null,cleanSearch=null,cleanTheme=null,cleanView=null,cleanState=null,initialized=false;
 
 /* Desmonta listeners antes de reemplazar el root. */
 function cleanupRoot(remove){
-  if(cleanSearch){cleanSearch();cleanSearch=null;}if(cleanTheme){cleanTheme();cleanTheme=null;}if(cleanView){cleanView();cleanView=null;}
+  if(cleanState){cleanState();cleanState=null;}if(cleanSearch){cleanSearch();cleanSearch=null;}if(cleanTheme){cleanTheme();cleanTheme=null;}if(cleanView){cleanView();cleanView=null;}
   if(remove&&currentRoot&&currentRoot.parentNode)currentRoot.parentNode.removeChild(currentRoot);currentRoot=null;
 }
 
@@ -15,7 +15,7 @@ function cleanupRoot(remove){
 function seedTheme(root){if(root&&C.theme&&C.theme.seed)C.theme.seed(root);return root;}
 function install(root){
   currentRoot=root;if(SC.productCardContent&&SC.productCardContent.positionTraitReferences)SC.productCardContent.positionTraitReferences();
-  cleanSearch=C.search&&C.search.install?C.search.install(root):null;cleanTheme=C.theme&&C.theme.install?C.theme.install(root):null;cleanView=C.view&&C.view.install?C.view.install(root):null;
+  cleanSearch=C.search&&C.search.install?C.search.install(root):null;cleanTheme=C.theme&&C.theme.install?C.theme.install(root):null;cleanView=C.view&&C.view.install?C.view.install(root):null;cleanState=C.stateMotion&&C.stateMotion.install?C.stateMotion.install(root):null;
   document.body.classList.add('sc-catalog-tools-ready');return root;
 }
 

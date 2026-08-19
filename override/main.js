@@ -46,6 +46,7 @@ var VALIDATION_PATHS=[
   'components/catalog-tools/search.js',
   'components/catalog-tools/theme-palette.js',
   'components/catalog-tools/view.js',
+  'components/catalog-tools/state-motion.js',
   'components/product-card/a11y.js',
   'components/product-card/content.js',
   'components/product-card/motion.js',
@@ -65,22 +66,15 @@ var VALIDATION_PATHS=[
 
 try{theme=localStorage.getItem('scTheme:v1')||'';}catch(_){}
 if(THEME_MODES.indexOf(theme)<0)theme='system';
-
 var actual=theme==='system'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):theme;
-if(root){
-  root.setAttribute('data-sc-theme',theme);
-  root.setAttribute('data-sc-theme-resolved',actual);
-}
+if(root){root.setAttribute('data-sc-theme',theme);root.setAttribute('data-sc-theme-resolved',actual);}
 
 var script=document.createElement('script');
 script.id='sc-override-runtime-js';
 script.src='override/'+VALIDATION_PATHS[0]+'?v='+version;
 script.async=false;
 script.onerror=function(error){
-  if(root){
-    root.setAttribute('data-sc-catalog-reveal-ready','true');
-    root.classList.remove('sc-catalog-reveal-prepaint');
-  }
+  if(root){root.setAttribute('data-sc-catalog-reveal-ready','true');root.classList.remove('sc-catalog-reveal-prepaint');}
   if(window.console&&console.error)console.error('[SushiClub override] Runtime loader failed',error);
 };
 document.head.appendChild(script);
