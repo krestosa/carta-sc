@@ -317,8 +317,8 @@ def verify():
         raise SystemExit('CSS imports remain in bundled Pages artifact')
     if 'loadStages([' in js:
         raise SystemExit('Development JS loader remains in bundled Pages artifact')
-    if 'components/section-heading/section-heading.js' not in js:
-        raise SystemExit('Section-heading module is missing from JS bundle')
+    if 'components/catalog-tools/catalog-tools.js' not in js:
+        raise SystemExit('Catalog-tools coordinator is missing from JS bundle')
 
 
 stamp_entrypoint()
