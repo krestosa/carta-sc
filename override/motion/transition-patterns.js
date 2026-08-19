@@ -15,19 +15,25 @@ function curve(name,fallback){return SC.motion&&SC.motion.curve?SC.motion.curve(
 function restoreStyle(snapshot){if(!snapshot||!snapshot.node)return;var node=snapshot.node;if(snapshot.value)node.style.setProperty(snapshot.prop,snapshot.value,snapshot.priority);else node.style.removeProperty(snapshot.prop);}
 function holdStyle(node,prop,value,priority){if(!node)return null;var snapshot={node:node,prop:prop,value:node.style.getPropertyValue(prop),priority:node.style.getPropertyPriority(prop)};node.style.setProperty(prop,value,priority||'');return snapshot;}
 
+/* La imagen compartida conserva un único bitmap y mueve su geometría sólo por transform. */
 function imageOverlay(image,sourceRect,zIndex){
   if(!image||!valid(sourceRect))return null;
   var clone=image.cloneNode(false),style=getComputedStyle(image);
   clone.removeAttribute('id');clone.removeAttribute('class');clone.removeAttribute('style');clone.removeAttribute('srcset');clone.removeAttribute('sizes');clone.setAttribute('aria-hidden','true');clone.alt='';
   clone.src=image.currentSrc||image.src;
-  clone.style.cssText='display:block;position:fixed;pointer-events:none;margin:0;padding:0;border:0;max-width:none;max-height:none;transform:none;transform-origin:0 0;will-change:left,top,width,height;z-index:'+(zIndex||80)+';';
+  clone.style.cssText='display:block;position:fixed;pointer-events:none;margin:0;padding:0;border:0;max-width:none;max-height:none;transform:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;z-index:'+(zIndex||80)+';';
   clone.style.left=sourceRect.left+'px';clone.style.top=sourceRect.top+'px';clone.style.width=sourceRect.width+'px';clone.style.height=sourceRect.height+'px';
   clone.style.objectFit=style.objectFit||'contain';clone.style.objectPosition=style.objectPosition||'50% 50%';
   document.body.appendChild(clone);return clone;
 }
 function moveOverlay(gsap,node,targetRect,duration,ease){
   if(!node||!valid(targetRect))return;
-  gsap.to(node,{left:targetRect.left,top:targetRect.top,width:targetRect.width,height:targetRect.height,duration:duration,ease:ease,overwrite:'auto'});
+  var current=rect(node);if(!valid(current))return;
+  gsap.killTweensOf(node);
+  node.style.left=targetRect.left+'px';node.style.top=targetRect.top+'px';node.style.width=targetRect.width+'px';node.style.height=targetRect.height+'px';
+  var inv=fit(current,targetRect);
+  gsap.set(node,{x:inv.x,y:inv.y,scaleX:inv.scaleX,scaleY:inv.scaleY,transformOrigin:'0 0',willChange:'transform'});
+  gsap.to(node,{x:0,y:0,scaleX:1,scaleY:1,duration:duration,ease:ease,overwrite:'auto',force3D:true});
 }
 function removeOverlay(node){if(node&&node.parentNode)node.parentNode.removeChild(node);}
 
@@ -57,7 +63,7 @@ function finishLayout(){
   if(state.timeline)try{state.timeline.kill();}catch(_){}
   state.records.forEach(function(record){
     var g=state.gsap;g.killTweensOf(record.card);g.set(record.card,{clearProps:'transform,willChange'});
-    if(record.contents.length){g.killTweensOf(record.contents);g.set(record.contents,{clearProps:'opacity,willChange'});}
+    if(record.contents.length){g.killTweensOf(record.contents);g.set(record.contents,{clearProps:'opacity,transform,willChange'});}
     if(record.overlay)g.killTweensOf(record.overlay);
     restoreStyle(record.contentVisibility);restoreStyle(record.imageVisibility);removeOverlay(record.overlay);
   });
@@ -92,9 +98,10 @@ function layoutSwap(mutate,options){
       var inv=fit(record.from,to);gsap.set(record.card,{x:inv.x,y:inv.y,scaleX:inv.scaleX,scaleY:inv.scaleY,transformOrigin:'0 0',willChange:'transform'});
       tl.to(record.card,{x:0,y:0,scaleX:1,scaleY:1,duration:TOTAL,ease:standard,overwrite:'auto',force3D:true},0);
       if(record.contents.length){
-        gsap.set(record.contents,{willChange:'opacity'});
+        gsap.set(record.contents,{willChange:'opacity,transform'});
         tl.to(record.contents,{opacity:0,duration:OUT,ease:accelerate,overwrite:'auto'},0)
-          .to(record.contents,{opacity:1,duration:IN,ease:decelerate,overwrite:'auto'},OUT);
+          .set(record.contents,{opacity:0,scale:SCALE,transformOrigin:'50% 50%'},OUT)
+          .to(record.contents,{opacity:1,scale:1,duration:IN,ease:decelerate,overwrite:'auto'},OUT);
       }
       if(record.overlay&&record.image){
         var stage=record.image.parentElement,targetImageRect=rect(stage);moveOverlay(gsap,record.overlay,targetImageRect,TOTAL,standard);
