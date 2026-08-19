@@ -93,22 +93,28 @@ function killFade(nodes,preserve){
   });
   if(!preserve&&SC.motion&&SC.motion.runLoaded)SC.motion.runLoaded(function(deps){deps.gsap.set(nodes,{clearProps:'opacity,transform,transformOrigin,willChange'});});
 }
+/* Un único progreso emphasized gobierna alpha y escala; el cambio ocurre al cruzar 35%. */
 function fadeThrough(targets,mutate,options){
   var nodes=list(targets),opts=options||{},duration=Number(opts.duration)||FADE_TOTAL,useScale=opts.scale!==false;
   if(!nodes.length){if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}
   if(reduced()||!(SC.motion&&SC.motion.runLoaded)){killFade(nodes,false);if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}
   var ran=SC.motion.runLoaded(function(deps){
-    var gsap=deps.gsap,out=duration*FADE_THRESHOLD,inn=duration-out,state={timeline:null,changed:false};
-    function change(){if(state.changed)return;state.changed=true;if(typeof mutate==='function')mutate();if(useScale)gsap.set(nodes,{opacity:0,scale:SCALE,transformOrigin:'50% 50%'});else gsap.set(nodes,{opacity:0});}
+    var gsap=deps.gsap,state={timeline:null,changed:false,progress:0},proxy={p:0};
+    function change(progress){if(state.changed)return;state.changed=true;if(typeof mutate==='function')mutate();if(useScale)gsap.set(nodes,{opacity:0,scale:lerp(SCALE,1,progress),transformOrigin:'50% 50%'});else gsap.set(nodes,{opacity:0});}
+    function render(){
+      var p=clamp(proxy.p,0,1);state.progress=p;
+      if(p<FADE_THRESHOLD){gsap.set(nodes,{opacity:1-range(p,0,FADE_THRESHOLD)});return;}
+      if(!state.changed)change(p);
+      var alpha=range(p,FADE_THRESHOLD,1);
+      if(useScale)gsap.set(nodes,{opacity:alpha,scale:lerp(SCALE,1,p),transformOrigin:'50% 50%'});else gsap.set(nodes,{opacity:alpha});
+    }
     function complete(){
-      if(!state.changed)change();nodes.forEach(function(node){if(node.__scFadeThrough===state)node.__scFadeThrough=null;});
+      if(!state.changed)change(1);nodes.forEach(function(node){if(node.__scFadeThrough===state)node.__scFadeThrough=null;});
       gsap.set(nodes,{clearProps:'opacity,transform,transformOrigin,willChange'});if(opts.onComplete)opts.onComplete();
     }
     killFade(nodes,true);gsap.set(nodes,{willChange:useScale?'opacity,transform':'opacity'});nodes.forEach(function(node){node.__scFadeThrough=state;});
-    var tl=gsap.timeline({onComplete:complete});state.timeline=tl;
-    tl.to(nodes,{opacity:0,duration:out,ease:emphasizedAccelerate,overwrite:'auto'},0).call(change,[],out);
-    if(useScale)tl.to(nodes,{opacity:1,scale:1,duration:inn,ease:emphasizedDecelerate,overwrite:'auto'},out);
-    else tl.to(nodes,{opacity:1,duration:inn,ease:emphasizedDecelerate,overwrite:'auto'},out);
+    state.timeline=gsap.to(proxy,{p:1,duration:duration,ease:emphasized,overwrite:'auto',onUpdate:render,onComplete:complete});
+    render();
   });
   if(!ran){if(typeof mutate==='function')mutate();if(opts.onComplete)opts.onComplete();return false;}return true;
 }
