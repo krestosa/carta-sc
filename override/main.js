@@ -36,8 +36,6 @@ var VALIDATION_PATHS=[
   'components/product-modal/motion.js',
   'components/mobile-header/mobile-header.js',
   'components/cart/list-motion.js',
-  'components/cart/scroll-motion.js',
-  'components/cart/badge-motion.js',
   'features/content-normalizer/dom.js',
   'components/category-nav/layout.js',
   'components/category-nav/rail-controls.js',
