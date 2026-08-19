@@ -1,5 +1,5 @@
-/* Reglas globales de estabilidad durante motion y cambios de vista. El scroll suave se
-   controla desde JS para que navegación y relayout no compitan con el navegador. */
+/* El documento conserva scroll vertical directo. El riel de tabs define su scroll horizontal
+   específico en category-nav/motion.css. */
 html,
 body {
   scroll-behavior: auto !important;
@@ -15,12 +15,4 @@ body.sushiShop .listadoShop .productoShop {
   content-visibility: visible !important;
   contain: none !important;
   contain-intrinsic-size: none !important;
-}
-
-/* Al cambiar densidad se reescribe geometría dentro y arriba del viewport. Se desactiva
-   el scroll anchoring solo durante ese relayout para evitar una compensación doble. */
-html.sc-catalog-view-switching,
-html.sc-catalog-view-switching body,
-html.sc-catalog-view-switching body.sushiShop .containerShop {
-  overflow-anchor: none !important;
 }
