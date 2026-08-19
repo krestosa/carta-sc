@@ -47,7 +47,7 @@ function setOpen(root,on,focus){
     items.forEach(function(item,index){menuTimeline.to(item,{opacity:1,duration:itemDuration,ease:'none',overwrite:'auto'},index*step);});return;
   }
   if(!menu.classList.contains('sc-theme-menu-open')){menu.setAttribute('aria-hidden','true');return;}
-  var current=Math.max(1,menu.getBoundingClientRect().height||menu.offsetHeight||1),target=current*.35,closeDuration=.15,fadeDuration=.05,fadeStart=.10,itemDurationClose=.05,itemInitial=.05,itemStep=(closeDuration-itemInitial-itemDurationClose)/count,closingItems=items.slice().reverse();
+  var current=Math.max(1,menu.offsetHeight),target=current*.35,closeDuration=.15,fadeDuration=.05,fadeStart=.10,itemDurationClose=.05,itemInitial=.05,itemStep=(closeDuration-itemInitial-itemDurationClose)/count,closingItems=items.slice().reverse();
   g.set(menu,{height:current,opacity:1,overflow:'hidden',visibility:'visible',pointerEvents:'none',willChange:'height,opacity'});g.set(items,{opacity:1,willChange:'opacity'});
   menuTimeline=g.timeline({onComplete:function(){menuTimeline=null;menu.classList.remove('sc-theme-menu-open');menu.setAttribute('aria-hidden','true');g.set(menu,{clearProps:'height,opacity,overflow,visibility,pointerEvents,willChange'});g.set(items,{clearProps:'opacity,willChange'});}})
     .to(menu,{height:target,duration:closeDuration,ease:closeEase,overwrite:'auto'},0)
