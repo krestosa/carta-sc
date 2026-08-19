@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools,T=SC&&SC.transitionPatterns;
+var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;
 if(!SC||!CFG||!C||SC.__catalogToolsViewBooted)return;SC.__catalogToolsViewBooted=true;
 
 var MODES=['compact','list'],STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,cleanup=null;
@@ -26,15 +26,8 @@ function syncMounted(){var root=document.querySelector('.sc-catalog-tools');if(r
 function refreshLayout(){syncMounted();if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){raf=requestAnimationFrame(function(){raf=0;if(SC.productCardContent&&SC.productCardContent.scheduleDescriptionMeasure)SC.productCardContent.scheduleDescriptionMeasure();});});}
 function writeMode(root,mode,persist){doc.setAttribute('data-sc-catalog-view',mode);document.body.setAttribute('data-sc-catalog-view',mode);root.setAttribute('data-sc-view',mode);if(persist)save(mode);}
 
-function apply(root,mode,persist){
-  mode=normalize(mode)||'compact';var current=selectedMode();
-  if(!persist||current===mode||!T||!T.layoutSwap){writeMode(root,mode,persist);sync(root,mode);refreshLayout();return;}
-  doc.classList.add('sc-catalog-view-switching');syncMeta(root,mode);
-  T.layoutSwap(function(){writeMode(root,mode,true);sync(root,mode);},{
-    onComplete:function(){doc.classList.remove('sc-catalog-view-switching');refreshLayout();}
-  });
-}
-function destroy(){if(T&&T.finishLayout)T.finishLayout();if(raf){cancelAnimationFrame(raf);raf=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
+function apply(root,mode,persist){mode=normalize(mode)||'compact';writeMode(root,mode,persist);sync(root,mode);refreshLayout();}
+function destroy(){if(raf){cancelAnimationFrame(raf);raf=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
 function install(root){
   destroy();var button=root&&root.querySelector('.sc-catalog-view-toggle'),host=button&&button.querySelector('[data-sc-view-icon]');if(!button||!host)return function(){};
   apply(root,load(),false);
