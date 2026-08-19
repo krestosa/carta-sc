@@ -3,7 +3,8 @@
 var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors;
 if(!SC||!C||SC.__transitionPatternsBooted)return;SC.__transitionPatternsBooted=true;
 
-var TOTAL=.30,OUT_RATIO=.30,OUT=TOTAL*OUT_RATIO,IN=TOTAL-OUT,SCALE=.92,CONTENT='.title-shop1,.priceRow,.descrip,.sc-product-flavors',layoutState=null;
+var TOTAL=.30,OUT_RATIO=.30,OUT=TOTAL*OUT_RATIO,IN=TOTAL-OUT,SCALE=.92;
+var MORPH='.title-shop1,.priceRow,.sc-product-flavors',FADE='.descrip',layoutState=null;
 
 function reduced(){return!!(SC.motion&&SC.motion.reduced&&SC.motion.reduced());}
 function list(value){if(!value)return[];if(value.nodeType===1)return[value];return[].slice.call(value).filter(Boolean);}
@@ -11,29 +12,60 @@ function valid(rect){return!!(rect&&rect.width>.5&&rect.height>.5&&isFinite(rect
 function rect(node){return node&&node.getBoundingClientRect?node.getBoundingClientRect():null;}
 function visibleNear(node){var r=rect(node);return valid(r)&&r.bottom>-120&&r.top<innerHeight+120;}
 function fit(from,to){return{x:from.left-to.left,y:from.top-to.top,scaleX:from.width/to.width,scaleY:from.height/to.height};}
+function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
 function curve(name,fallback){return SC.motion&&SC.motion.curve?SC.motion.curve(name):fallback;}
 function restoreStyle(snapshot){if(!snapshot||!snapshot.node)return;var node=snapshot.node;if(snapshot.value)node.style.setProperty(snapshot.prop,snapshot.value,snapshot.priority);else node.style.removeProperty(snapshot.prop);}
 function holdStyle(node,prop,value,priority){if(!node)return null;var snapshot={node:node,prop:prop,value:node.style.getPropertyValue(prop),priority:node.style.getPropertyPriority(prop)};node.style.setProperty(prop,value,priority||'');return snapshot;}
+function capture(nodes){return list(nodes).map(function(node){return{node:node,rect:rect(node)};}).filter(function(item){return valid(item.rect);});}
 
-/* La imagen compartida conserva un único bitmap y mueve su geometría sólo por transform. */
+/* Mantiene el tamaño visual de cada elemento mientras el contenedor cambia de bounds. */
+function nestedFit(fromChild,toChild,fromParent,toParent){
+  if(!valid(fromChild)||!valid(toChild)||!valid(fromParent)||!valid(toParent))return null;
+  var sx=fromParent.width/toParent.width,sy=fromParent.height/toParent.height;
+  if(!isFinite(sx)||!isFinite(sy)||Math.abs(sx)<.001||Math.abs(sy)<.001)return null;
+  var visualLeft=fromParent.left+(toChild.left-toParent.left)*sx;
+  var visualTop=fromParent.top+(toChild.top-toParent.top)*sy;
+  var visualWidth=toChild.width*sx,visualHeight=toChild.height*sy;
+  return{
+    x:(fromChild.left-visualLeft)/sx,
+    y:(fromChild.top-visualTop)/sy,
+    scaleX:visualWidth>.001?fromChild.width/visualWidth:1,
+    scaleY:visualHeight>.001?fromChild.height/visualHeight:1
+  };
+}
+
+/* El bitmap compartido viaja dentro de una máscara propia; el contenido se desplaza menos que su contenedor. */
 function imageOverlay(image,sourceRect,zIndex){
   if(!image||!valid(sourceRect))return null;
-  var clone=image.cloneNode(false),style=getComputedStyle(image);
-  clone.removeAttribute('id');clone.removeAttribute('class');clone.removeAttribute('style');clone.removeAttribute('srcset');clone.removeAttribute('sizes');clone.setAttribute('aria-hidden','true');clone.alt='';
-  clone.src=image.currentSrc||image.src;
-  clone.style.cssText='display:block;position:fixed;pointer-events:none;margin:0;padding:0;border:0;max-width:none;max-height:none;transform:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;z-index:'+(zIndex||80)+';';
-  clone.style.left=sourceRect.left+'px';clone.style.top=sourceRect.top+'px';clone.style.width=sourceRect.width+'px';clone.style.height=sourceRect.height+'px';
-  clone.style.objectFit=style.objectFit||'contain';clone.style.objectPosition=style.objectPosition||'50% 50%';
-  document.body.appendChild(clone);return clone;
+  var stage=image.parentElement,stageStyle=stage?getComputedStyle(stage):null,imageStyle=getComputedStyle(image);
+  var shell=document.createElement('span'),clone=image.cloneNode(false);
+  clone.removeAttribute('id');clone.removeAttribute('class');clone.removeAttribute('style');clone.removeAttribute('srcset');clone.removeAttribute('sizes');
+  clone.setAttribute('aria-hidden','true');clone.alt='';clone.src=image.currentSrc||image.src;
+  shell.setAttribute('aria-hidden','true');
+  shell.style.cssText='display:block;position:fixed;pointer-events:none;margin:0;padding:0;border:0;overflow:hidden;transform:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;z-index:'+(zIndex||80)+';';
+  shell.style.left=sourceRect.left+'px';shell.style.top=sourceRect.top+'px';shell.style.width=sourceRect.width+'px';shell.style.height=sourceRect.height+'px';
+  shell.style.borderRadius=stageStyle?stageStyle.borderRadius:'0px';
+  clone.style.cssText='display:block;position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;max-width:none;max-height:none;transform:none;transform-origin:50% 50%;will-change:transform;';
+  clone.style.objectFit=imageStyle.objectFit||'contain';clone.style.objectPosition=imageStyle.objectPosition||'50% 50%';
+  shell.appendChild(clone);shell.__scMotionImage=clone;document.body.appendChild(shell);return shell;
 }
 function moveOverlay(gsap,node,targetRect,duration,ease){
   if(!node||!valid(targetRect))return;
   var current=rect(node);if(!valid(current))return;
-  gsap.killTweensOf(node);
+  var inner=node.__scMotionImage,dx=targetRect.left-current.left,dy=targetRect.top-current.top;
+  gsap.killTweensOf(node);if(inner)gsap.killTweensOf(inner);
   node.style.left=targetRect.left+'px';node.style.top=targetRect.top+'px';node.style.width=targetRect.width+'px';node.style.height=targetRect.height+'px';
   var inv=fit(current,targetRect);
   gsap.set(node,{x:inv.x,y:inv.y,scaleX:inv.scaleX,scaleY:inv.scaleY,transformOrigin:'0 0',willChange:'transform'});
   gsap.to(node,{x:0,y:0,scaleX:1,scaleY:1,duration:duration,ease:ease,overwrite:'auto',force3D:true});
+  if(inner){
+    var px=clamp(-dx*.045,-12,12),py=clamp(-dy*.035,-8,8);
+    gsap.set(inner,{x:0,y:0,scale:1,transformOrigin:'50% 50%',willChange:'transform'});
+    gsap.to(inner,{keyframes:[
+      {x:px,y:py,scale:1.025,duration:duration*.45,ease:ease},
+      {x:0,y:0,scale:1,duration:duration*.55,ease:ease}
+    ],overwrite:'auto',force3D:true});
+  }
 }
 function removeOverlay(node){if(node&&node.parentNode)node.parentNode.removeChild(node);}
 
@@ -63,8 +95,9 @@ function finishLayout(){
   if(state.timeline)try{state.timeline.kill();}catch(_){}
   state.records.forEach(function(record){
     var g=state.gsap;g.killTweensOf(record.card);g.set(record.card,{clearProps:'transform,willChange'});
-    if(record.contents.length){g.killTweensOf(record.contents);g.set(record.contents,{clearProps:'opacity,transform,willChange'});}
-    if(record.overlay)g.killTweensOf(record.overlay);
+    record.morphs.forEach(function(item){g.killTweensOf(item.node);g.set(item.node,{clearProps:'transform,willChange'});});
+    record.fades.forEach(function(item){g.killTweensOf(item.node);g.set(item.node,{clearProps:'opacity,transform,willChange'});});
+    if(record.overlay){g.killTweensOf(record.overlay);if(record.overlay.__scMotionImage)g.killTweensOf(record.overlay.__scMotionImage);}
     restoreStyle(record.contentVisibility);restoreStyle(record.imageVisibility);removeOverlay(record.overlay);
   });
 }
@@ -78,8 +111,13 @@ function layoutSwap(mutate,options){
     cards.forEach(function(card){
       var from=rect(card);if(!valid(from))return;
       var image=card.querySelector('.imgShop>img'),imageRect=rect(image&&image.parentElement),overlay=image&&valid(imageRect)?imageOverlay(image,imageRect,80):null;
-      var contents=[].slice.call(card.querySelectorAll(CONTENT));
-      var record={card:card,from:from,image:image,imageFrom:imageRect,overlay:overlay,contents:contents,contentVisibility:holdStyle(card,'content-visibility','visible','important'),imageVisibility:null};
+      var record={
+        card:card,from:from,image:image,overlay:overlay,
+        morphs:capture(card.querySelectorAll(MORPH)),
+        fades:capture(card.querySelectorAll(FADE)),
+        contentVisibility:holdStyle(card,'content-visibility','visible','important'),
+        imageVisibility:null
+      };
       if(image&&overlay)record.imageVisibility=holdStyle(image,'visibility','hidden','important');
       records.push(record);
     });
@@ -95,14 +133,25 @@ function layoutSwap(mutate,options){
     var tl=gsap.timeline({onComplete:function(){if(layoutState!==state)return;state.timeline=null;finishLayout();if(opts.onComplete)opts.onComplete();}});state.timeline=tl;
     records.forEach(function(record){
       var to=rect(record.card);if(!valid(to))return;
-      var inv=fit(record.from,to);gsap.set(record.card,{x:inv.x,y:inv.y,scaleX:inv.scaleX,scaleY:inv.scaleY,transformOrigin:'0 0',willChange:'transform'});
+      var inv=fit(record.from,to);
+      gsap.set(record.card,{x:inv.x,y:inv.y,scaleX:inv.scaleX,scaleY:inv.scaleY,transformOrigin:'0 0',willChange:'transform'});
       tl.to(record.card,{x:0,y:0,scaleX:1,scaleY:1,duration:TOTAL,ease:standard,overwrite:'auto',force3D:true},0);
-      if(record.contents.length){
-        gsap.set(record.contents,{willChange:'opacity,transform'});
-        tl.to(record.contents,{opacity:0,duration:OUT,ease:accelerate,overwrite:'auto'},0)
-          .set(record.contents,{opacity:0,scale:SCALE,transformOrigin:'50% 50%'},OUT)
-          .to(record.contents,{opacity:1,scale:1,duration:IN,ease:decelerate,overwrite:'auto'},OUT);
-      }
+
+      record.morphs.forEach(function(item){
+        var target=rect(item.node),inner=nestedFit(item.rect,target,record.from,to);
+        if(!inner)return;
+        gsap.set(item.node,{x:inner.x,y:inner.y,scaleX:inner.scaleX,scaleY:inner.scaleY,transformOrigin:'0 0',willChange:'transform'});
+        tl.to(item.node,{x:0,y:0,scaleX:1,scaleY:1,duration:TOTAL,ease:standard,overwrite:'auto',force3D:true},0);
+      });
+
+      record.fades.forEach(function(item){
+        if(!valid(rect(item.node)))return;
+        gsap.set(item.node,{willChange:'opacity,transform'});
+        tl.to(item.node,{opacity:0,duration:OUT,ease:accelerate,overwrite:'auto'},0)
+          .set(item.node,{opacity:0,scale:SCALE,transformOrigin:'50% 50%'},OUT)
+          .to(item.node,{opacity:1,scale:1,duration:IN,ease:decelerate,overwrite:'auto'},OUT);
+      });
+
       if(record.overlay&&record.image){
         var stage=record.image.parentElement,targetImageRect=rect(stage);moveOverlay(gsap,record.overlay,targetImageRect,TOTAL,standard);
       }

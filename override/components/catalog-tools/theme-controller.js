@@ -36,11 +36,16 @@ function transition(root,mode,persist){
 }
 function apply(root,mode,persist){P.kill();commit(root,norm(mode)||load(),persist);}
 
-/* El selector se recorta desde el origen y revela opciones después de la superficie. */
+function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
+function menuOrigin(button,menu){
+  var br=button.getBoundingClientRect(),mr=menu.getBoundingClientRect();
+  return{x:clamp(br.left+br.width/2-mr.left,0,mr.width),y:clamp(br.top+br.height/2-mr.top,0,mr.height)};
+}
+/* La superficie del selector nace en el punto de anclaje; el contenido sólo acompaña por opacidad. */
 function stopMenu(root){
   if(menuTimeline){menuTimeline.kill();menuTimeline=null;}
   var menu=root&&root.querySelector('.sc-theme-menu'),g=gsap();
-  if(menu&&g)g.set([menu].concat(options(root)),{clearProps:'clipPath,opacity,transform,visibility,pointerEvents,willChange'});
+  if(menu&&g)g.set([menu].concat(options(root)),{clearProps:'opacity,transform,visibility,pointerEvents,transformOrigin,willChange'});
 }
 function setOpen(root,on,focus){
   var b=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu'),g=gsap();if(!b||!menu)return;on=!!on;b.setAttribute('aria-expanded',on?'true':'false');
@@ -48,19 +53,22 @@ function setOpen(root,on,focus){
   stopMenu(root);var items=options(root),openEase=SC.motion.curve('standard'),closeEase=SC.motion.curve('accelerate');
   if(on){
     menu.classList.add('sc-theme-menu-open');menu.setAttribute('aria-hidden','false');
-    g.set(menu,{visibility:'visible',pointerEvents:'auto',clipPath:'inset(0 0 100% 0)',willChange:'clip-path'});
-    g.set(items,{autoAlpha:0,y:-4,willChange:'opacity,transform'});
-    menuTimeline=g.timeline({onComplete:function(){menuTimeline=null;g.set(menu,{clearProps:'clipPath,visibility,pointerEvents,willChange'});g.set(items,{clearProps:'opacity,transform,visibility,willChange'});}})
-      .to(menu,{clipPath:'inset(0 0 0% 0)',duration:.20,ease:openEase,overwrite:'auto'},0)
-      .to(items,{autoAlpha:1,y:0,duration:.12,ease:SC.motion.curve('decelerate'),stagger:.018,overwrite:'auto'},.07);
+    g.set(menu,{visibility:'visible',pointerEvents:'auto'});var origin=menuOrigin(b,menu);
+    g.set(menu,{opacity:0,scaleX:.82,scaleY:.72,transformOrigin:origin.x+'px '+origin.y+'px',willChange:'transform,opacity'});
+    g.set(items,{autoAlpha:0,willChange:'opacity'});
+    menuTimeline=g.timeline({onComplete:function(){menuTimeline=null;g.set(menu,{clearProps:'opacity,transform,visibility,pointerEvents,transformOrigin,willChange'});g.set(items,{clearProps:'opacity,visibility,willChange'});}})
+      .to(menu,{opacity:1,scaleX:1,scaleY:1,duration:.18,ease:openEase,overwrite:'auto',force3D:true},0)
+      .to(items,{autoAlpha:1,duration:.10,ease:'none',stagger:.012,overwrite:'auto'},.055);
     if(focus){var option=menu.querySelector('[aria-checked="true"]')||menu.querySelector('.sc-theme-option');if(option)option.focus();}
     return;
   }
   if(!menu.classList.contains('sc-theme-menu-open')){menu.setAttribute('aria-hidden','true');return;}
-  g.set(menu,{visibility:'visible',pointerEvents:'none',clipPath:'inset(0 0 0% 0)',willChange:'clip-path'});g.set(items,{autoAlpha:1,y:0,willChange:'opacity,transform'});
-  menuTimeline=g.timeline({onComplete:function(){menuTimeline=null;menu.classList.remove('sc-theme-menu-open');menu.setAttribute('aria-hidden','true');g.set(menu,{clearProps:'clipPath,visibility,pointerEvents,willChange'});g.set(items,{clearProps:'opacity,transform,visibility,willChange'});}})
-    .to(items.slice().reverse(),{autoAlpha:0,y:-3,duration:.075,ease:closeEase,stagger:.01,overwrite:'auto'},0)
-    .to(menu,{clipPath:'inset(0 0 100% 0)',duration:.14,ease:closeEase,overwrite:'auto'},.02);
+  var closeOrigin=menuOrigin(b,menu);
+  g.set(menu,{visibility:'visible',pointerEvents:'none',opacity:1,scaleX:1,scaleY:1,transformOrigin:closeOrigin.x+'px '+closeOrigin.y+'px',willChange:'transform,opacity'});
+  g.set(items,{autoAlpha:1,willChange:'opacity'});
+  menuTimeline=g.timeline({onComplete:function(){menuTimeline=null;menu.classList.remove('sc-theme-menu-open');menu.setAttribute('aria-hidden','true');g.set(menu,{clearProps:'opacity,transform,visibility,pointerEvents,transformOrigin,willChange'});g.set(items,{clearProps:'opacity,visibility,willChange'});}})
+    .to(items.slice().reverse(),{autoAlpha:0,duration:.06,ease:'none',stagger:.006,overwrite:'auto'},0)
+    .to(menu,{opacity:0,scaleX:.86,scaleY:.76,duration:.12,ease:closeEase,overwrite:'auto',force3D:true},.015);
 }
 function install(root){
   var b=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu'),ctl=b&&b.closest('.sc-theme-control');if(!b||!menu||!ctl)return function(){};
