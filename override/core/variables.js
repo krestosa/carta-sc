@@ -55,7 +55,26 @@ config.classes=merged({
   staticInitialSection:'sc-static-initial-section'
 },config.classes);
 
-/* Ajustes de motion realmente globales; cada componente conserva sus propios tiempos. */
+/* Tokens semánticos de motion: movimiento espacial y efectos visuales usan física distinta. */
 config.motion=merged({geometryRefreshDelay:180},config.motion);
-config.motion.easings=merged({out:'power2.out',strongOut:'power3.out',in:'power2.in',inOut:'power2.inOut'},config.motion.easings);
+config.motion.springs=merged({
+  spatial:{
+    fast:{damping:.6,stiffness:800},
+    default:{damping:.8,stiffness:380},
+    slow:{damping:.8,stiffness:200}
+  },
+  effects:{
+    fast:{damping:1,stiffness:3800},
+    default:{damping:1,stiffness:1600},
+    slow:{damping:1,stiffness:800}
+  }
+},config.motion.springs);
+config.motion.stagger=merged({fast:.012,default:.016,slow:.020,maxTotal:.12},config.motion.stagger);
+config.motion.distance=merged({fast:28,slow:180},config.motion.distance);
+config.motion.curves=merged({
+  standard:'cubic-bezier(.2,0,0,1)',
+  enter:'cubic-bezier(.05,.7,.1,1)',
+  exit:'cubic-bezier(.3,0,.8,.15)',
+  linear:'linear'
+},config.motion.curves);
 })();

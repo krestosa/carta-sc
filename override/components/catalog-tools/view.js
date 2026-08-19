@@ -23,6 +23,7 @@ function iconKey(mode){return effectiveMode(mode)==='list'?'list':'grid';}
 function load(){var mode=normalize(doc.getAttribute('data-sc-catalog-view')||''),ctx=context(),legacy='';if(mode)return mode;try{mode=normalize(localStorage.getItem(STORE_KEY)||'');if(!mode){legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacyMode(legacy);if(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){}}}}catch(_){mode='';}return mode||'compact';}
 function save(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
 function reducedMotion(){return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
+function spec(){return SC.motion&&SC.motion.springSpec?SC.motion.springSpec('spatial','fast'):{duration:.18,ease:'power2.out'};}
 
 /* Prepara paths vivos y targets del icono. */
 function livePaths(host){return host?Array.prototype.slice.call(host.querySelectorAll('[data-sc-view-shape]')):[];}
@@ -75,12 +76,12 @@ function setMorphState(host,key){
   host.setAttribute('data-sc-icon-state',key);
 }
 
-/* Anima grilla/lista con MorphSVG. */
+/* Anima grilla/lista con una respuesta espacial breve. */
 function animateMorph(host,from,to){
   if(!host||from===to){if(host){host.setAttribute('data-sc-icon-state',to);ensureHostPresentation(host);}return;}
-  if(!initMorph(host)||!motionDeps||!motionDeps.gsap||!motionDeps.MorphSVGPlugin){setMorphState(host,to);return;}
+  if(!initMorph(host)||!motionDeps||!motionDeps.gsap||!motionDeps.MorphSVGPlugin||reducedMotion()){setMorphState(host,to);return;}
   clearViewIconMotion(host);
-  var gsap=motionDeps.gsap,live=livePaths(host),targets=targetPaths(host,to),short=reducedMotion(),duration=short?.1:.19,ease=short?'power1.inOut':'power2.inOut',state={timeline:null};
+  var gsap=motionDeps.gsap,live=livePaths(host),targets=targetPaths(host,to),spring=spec(),state={timeline:null},step=SC.motion.stagger('fast',live.length);
   if(!live.length||targets.some(function(target){return!target;})){setMorphState(host,to);return;}
 
   host.setAttribute('data-sc-icon-state',to);
@@ -88,7 +89,7 @@ function animateMorph(host,from,to){
   host.__scViewIconMotion=state;
   state.timeline=gsap.timeline({onComplete:function(){if(host.__scViewIconMotion!==state)return;host.__scViewIconMotion=null;host.removeAttribute('data-sc-view-icon-animating');ensureHostPresentation(host);}});
   live.forEach(function(path,index){
-    state.timeline.to(path,{duration:duration,ease:ease,morphSVG:{shape:targets[index]},overwrite:'auto'},short?0:Math.floor(index/2)*.008);
+    state.timeline.to(path,{duration:spring.duration,ease:spring.ease,morphSVG:{shape:targets[index]},overwrite:'auto'},Math.floor(index/2)*step);
   });
 }
 
@@ -102,22 +103,22 @@ function sync(root,mode,animate){
   if(animate!==false&&previous)animateMorph(host,previous,key);else setMorphState(host,key);
 }
 
-/* Añade respuesta sutil a hover, foco y presión. */
+/* Añade respuesta sutil a hover, foco y presión sin cambiar el tamaño del control. */
 function bindViewMicroInteraction(button,host){
   if(!button||!host||!motionDeps||!motionDeps.gsap)return function(){};
-  var gsap=motionDeps.gsap,paths=livePaths(host),hover=false,focus=false,pressed=false,destroyed=false;
+  var gsap=motionDeps.gsap,paths=livePaths(host),hover=false,focus=false,pressed=false,destroyed=false,spring=spec();
   if(paths.length!==6)return function(){};
-  var hoverOffsets=[[.58,.38],[-.58,.38],[.58,0],[-.58,0],[.58,-.38],[-.58,-.38]],pressOffsets=[[.82,.52],[-.82,.52],[.82,0],[-.82,0],[.82,-.52],[-.82,-.52]];
+  var hoverOffsets=[[.58,.38],[-.58,.38],[.58,0],[-.58,0],[.58,-.38],[-.58,-.38]],pressOffsets=[[.82,.52],[-.82,.52],[.82,0],[-.82,0],[.82,-.52],[-.82,-.52]],homeOffsets=[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]];
   function focusVisible(){try{return button.matches(':focus-visible');}catch(_){return document.activeElement===button;}}
   function stop(){gsap.killTweensOf(paths,'x,y');}
-  function apply(offsets,duration,ease){
+  function apply(offsets,factor){
     if(destroyed)return;stop();
     if(reducedMotion()){gsap.set(paths,{x:0,y:0,clearProps:'willChange'});return;}
-    paths.forEach(function(path,index){var o=offsets[index];gsap.to(path,{x:o[0],y:o[1],duration:duration,ease:ease,overwrite:'auto',force3D:true,willChange:'transform',delay:index*.004,onComplete:function(){path.style.removeProperty('will-change');}});});
+    paths.forEach(function(path,index){var o=offsets[index];gsap.to(path,{x:o[0],y:o[1],duration:spring.duration*factor,ease:spring.ease,overwrite:'auto',force3D:true,willChange:'transform',delay:index*SC.motion.stagger('fast',paths.length),onComplete:function(){path.style.removeProperty('will-change');}});});
   }
-  function active(){apply(hoverOffsets,.068,'power3.out');}
-  function home(){apply([[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],.09,'power3.out');}
-  function press(){apply(pressOffsets,.042,'power2.out');}
+  function active(){apply(hoverOffsets,.72);}
+  function home(){apply(homeOffsets,.72);}
+  function press(){apply(pressOffsets,.55);}
   function enter(e){if(e.pointerType==='touch')return;hover=true;if(!pressed)active();}
   function leave(){hover=false;pressed=false;if(focus)active();else home();}
   function down(){pressed=true;press();}

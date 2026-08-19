@@ -1,10 +1,10 @@
 /* SplitText responsive con progreso forward-only. Conserva el patrón autoSplit/onSplit del
-   demo oficial, pero al subir nunca revierte una línea que ya entró al viewport. */
+   texto y al subir nunca revierte una línea que ya entró al viewport. */
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion;
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors;
 if(!SC||!C||!SC.motion||typeof SC.motion.whenLoaded!=='function'||SC.__sectionHeadingBooted)return;SC.__sectionHeadingBooted=true;
-var initialized=false,motionDeps=null,generation=0,mutationObserver=null,elements=[],splits=[],states=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={startPct:99,endPct:86,initialDuration:.30,lineOffsetPercent:30,lineStagger:.045,refreshDelay:60};
+var initialized=false,motionDeps=null,generation=0,mutationObserver=null,elements=[],splits=[],states=new WeakMap(),RULE_PROPERTY='--sc-section-rule-scale',CFG={startPct:99,endPct:86,lineOffsetPercent:26,refreshDelay:60};
 
 function ensureGate(){
   if(SC.catalogRevealGate)return SC.catalogRevealGate;
@@ -33,7 +33,7 @@ function advance(gsap,el,progress,direction){
   var value=state(el);if(value.done||!value.tween)return;if(direction<0){if(value.started||progress>0)finish(gsap,el);return;}if(programmatic()){finish(gsap,el);return;}
   if(progress<=0&&!value.started)return;value.started=true;value.max=Math.max(value.max,progress);value.tween.progress(value.max);if(value.max>=.995)finish(gsap,el);
 }
-function autoplay(gsap,el){var value=state(el);if(value.done||!value.tween)return;value.started=true;value.progressTween=gsap.to(value.tween,{progress:1,duration:CFG.initialDuration,ease:(M.easings&&M.easings.out)||'power2.out',overwrite:true,onComplete:function(){value.progressTween=null;finish(gsap,el);}});}
+function autoplay(gsap,el){var value=state(el);if(value.done||!value.tween)return;var spec=SC.motion.springSpec('spatial','default');value.started=true;value.progressTween=gsap.to(value.tween,{progress:1,duration:spec.duration,ease:spec.ease,overwrite:true,onComplete:function(){value.progressTween=null;finish(gsap,el);}});}
 function armTrigger(gsap,ST,el,initialPass){
   var value=state(el);if(value.done||!value.tween||!renderable(el))return;var target=host(el),rect=target.getBoundingClientRect();killTrigger(value);
   if(rect.bottom<=0){finish(gsap,el);return;}if(initialPass&&rect.top<innerHeight&&rect.bottom>0){autoplay(gsap,el);return;}
@@ -44,8 +44,9 @@ function prepare(gsap,SplitText,ST,el){
   value.split=SplitText.create(el,{type:'lines',mask:'lines',linesClass:'sc-section-text-line',autoSplit:true,aria:'none',onSplit:function(self){
     var first=value.firstSplit;value.firstSplit=false;value.split=self;if(value.progressTween){value.progressTween.kill();value.progressTween=null;}if(value.tween)value.tween.kill();killTrigger(value);
     if(value.done){gsap.set(self.lines,{yPercent:0,autoAlpha:1});if(isParent(el))gsap.set(el,{[RULE_PROPERTY]:1});return;}
+    var step=SC.motion.stagger('default',self.lines.length);
     gsap.set(self.lines,{yPercent:CFG.lineOffsetPercent,autoAlpha:0,willChange:'transform,opacity'});
-    value.tween=gsap.timeline({paused:true}).to(self.lines,{yPercent:0,autoAlpha:1,duration:1,ease:(M.easings&&M.easings.out)||'power2.out',stagger:CFG.lineStagger,overwrite:'auto'},0);
+    value.tween=gsap.timeline({paused:true}).to(self.lines,{yPercent:0,autoAlpha:1,duration:1,ease:'none',stagger:step,overwrite:'auto'},0);
     if(isParent(el))value.tween.to(el,{[RULE_PROPERTY]:1,duration:1,ease:'none',overwrite:'auto'},0);
     value.raf=requestAnimationFrame(function(){value.raf=0;armTrigger(gsap,ST,el,first);});return value.tween;
   }});splits.push(value.split);

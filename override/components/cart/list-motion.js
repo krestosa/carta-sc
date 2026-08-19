@@ -2,7 +2,7 @@
 'use strict';
 /* Revela únicamente filas nuevas del carrito. Un WeakSet evita reanimar filas existentes
    y el observer dispara trabajo solo cuando una mutación realmente afecta la tabla. */
-var SC=window.SCOverride,C=SC&&SC.config,M=C&&C.motion,CFG={listOffsetY:4,listDuration:.18,listReducedDuration:.12,listStagger:.028,listReducedStagger:.018},REFRESH_DELAY=80;if(!SC||!C||SC.__cartListMotionBooted)return;SC.__cartListMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,REFRESH_DELAY=80;if(!SC||!C||SC.__cartListMotionBooted)return;SC.__cartListMotionBooted=true;
 var parts=SC.cartParts=SC.cartParts||{};
 
 parts.setupList=function(gsap,ST,reduce){
@@ -12,7 +12,15 @@ parts.setupList=function(gsap,ST,reduce){
     raf=0;var changed=false;
     gsap.utils.toArray('.carritoTable').forEach(function(table){
       var fresh=rows(table).filter(function(row){return!animatedRows.has(row);});if(!fresh.length)return;fresh.forEach(function(row){animatedRows.add(row);});changed=true;
-      gsap.fromTo(fresh,{autoAlpha:0,y:reduce?0:CFG.listOffsetY},{autoAlpha:1,y:0,duration:reduce?CFG.listReducedDuration:CFG.listDuration,stagger:reduce?CFG.listReducedStagger:CFG.listStagger,ease:M.easings.out,overwrite:'auto',clearProps:'transform,opacity,visibility'});
+      var spatial=SC.motion.springSpec('spatial','fast'),effects=SC.motion.springSpec('effects','fast'),step=SC.motion.stagger('fast',fresh.length);
+      if(reduce){gsap.fromTo(fresh,{autoAlpha:0},{autoAlpha:1,duration:effects.duration,ease:effects.ease,stagger:step,overwrite:'auto',clearProps:'opacity,visibility'});return;}
+      gsap.set(fresh,{autoAlpha:0,y:4,willChange:'transform,opacity'});
+      fresh.forEach(function(row,index){
+        var delay=index*step;
+        gsap.timeline({delay:delay,onComplete:function(){gsap.set(row,{clearProps:'transform,opacity,visibility,willChange'});}})
+          .to(row,{autoAlpha:1,duration:effects.duration,ease:effects.ease,overwrite:'auto'},0)
+          .to(row,{y:0,duration:spatial.duration,ease:spatial.ease,overwrite:'auto',force3D:true},0);
+      });
     });
     if(changed&&SC.motion&&SC.motion.refresh)SC.motion.refresh(REFRESH_DELAY);
   }

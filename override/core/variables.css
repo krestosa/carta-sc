@@ -35,9 +35,15 @@
   --sc-catalog-inline-space: 64px;
   --sc-product-image-ratio: 286 / 200;
 
-  /* Motion común. Los módulos pueden ajustar duración, pero comparten curvas consistentes. */
-  --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --sc-motion-fast: 160ms;
-  --sc-motion-theme: 560ms;
-  --sc-motion-icon: 180ms;
+  /* Curvas de fallback CSS. La física espacial vive en el runtime de motion. */
+  --sc-motion-ease-standard: cubic-bezier(.2,0,0,1);
+  --sc-motion-ease-enter: cubic-bezier(.05,.7,.1,1);
+  --sc-motion-ease-exit: cubic-bezier(.3,0,.8,.15);
+  --sc-motion-ease-out: var(--sc-motion-ease-standard);
+  --sc-motion-ease-in: var(--sc-motion-ease-exit);
+  --sc-motion-fast: 150ms;
+  --sc-motion-default: 250ms;
+  --sc-motion-slow: 400ms;
+  --sc-motion-theme: 350ms;
+  --sc-motion-icon: 200ms;
 }

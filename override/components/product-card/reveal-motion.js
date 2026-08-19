@@ -2,7 +2,7 @@
    una card sólo anima al entrar realmente al viewport bajando; al subir queda visible. */
 (function(){
 'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,CFG={baseDuration:.56,fastDuration:.20,velocityFloor:180,velocityCeil:2800,rowDelay:.045,rowDelayMax:.14};
+var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,CFG={velocityFloor:180,velocityCeil:2800,rowDelayMax:.10};
 if(!SC||!C||SC.__productCardRevealMotionBooted)return;SC.__productCardRevealMotionBooted=true;
 var parts=SC.productCardMotionParts=SC.productCardMotionParts||{};
 
@@ -12,21 +12,21 @@ parts.setupReveal=function(gsap,ST,profile,reduce){
   function state(card){var value=states.get(card);if(!value){value={prepared:false,done:false,started:false,tween:null,observed:false};states.set(card,value);}return value;}
   function renderable(card){return!!(card&&!card.hidden&&card.offsetParent!==null&&card.getBoundingClientRect().height>0);}
   function programmatic(){var scroll=SC.scrollState;return!!(scroll&&(scroll.programmatic||performance.now()<(scroll.suppressRevealUntil||0)));}
-  function clear(card){gsap.set(card,{clearProps:'top,opacity,visibility,willChange'});}
+  function clear(card){gsap.set(card,{clearProps:'transform,opacity,visibility,willChange'});}
   function phase(card){var top=card.offsetTop,count=0,node=card.previousElementSibling;while(node){if(node.matches&&node.matches(S.productCard)){if(Math.abs(node.offsetTop-top)<=3)count++;else break;}node=node.previousElementSibling;}return Math.min(count,5);}
-  function durationFor(speed){var factor=Math.max(0,Math.min(1,(Math.abs(speed)-CFG.velocityFloor)/(CFG.velocityCeil-CFG.velocityFloor)));return CFG.baseDuration+(CFG.fastDuration-CFG.baseDuration)*factor;}
-  function delayFor(card,speed){var factor=Math.max(0,Math.min(1,(Math.abs(speed)-CFG.velocityFloor)/(CFG.velocityCeil-CFG.velocityFloor)));return Math.min(CFG.rowDelayMax,phase(card)*CFG.rowDelay)*(1-.8*factor);}
+  function speedForScroll(speed){var factor=Math.max(0,Math.min(1,(Math.abs(speed)-CFG.velocityFloor)/(CFG.velocityCeil-CFG.velocityFloor)));return factor>.7?'fast':'default';}
+  function delayFor(card,speed){var count=phase(card)+1,step=SC.motion.stagger(speedForScroll(speed),count);return Math.min(CFG.rowDelayMax,phase(card)*step);}
   function syncSkeleton(card){var preloader=SC.imagePreloader;if(preloader&&typeof preloader.scan==='function')preloader.scan(card);}
-  function finish(card){var value=state(card);if(value.done)return;value.done=true;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}if(value.tween){value.tween.progress(1);value.tween.kill();value.tween=null;}gsap.set(card,{opacity:1,visibility:'visible',top:0});clear(card);}
+  function finish(card){var value=state(card);if(value.done)return;value.done=true;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}if(value.tween){value.tween.progress(1);value.tween.kill();value.tween=null;}gsap.set(card,{autoAlpha:1,y:0});clear(card);}
   function reveal(card,speed){
     var value=state(card);if(value.done||value.started)return;value.started=true;if(observer&&value.observed){observer.unobserve(card);value.observed=false;}syncSkeleton(card);
     if(reduce||programmatic()){finish(card);return;}
-    var duration=durationFor(speed),delay=delayFor(card,speed);
+    var motionSpeed=speedForScroll(speed),spatial=SC.motion.springSpec('spatial',motionSpeed),effects=SC.motion.springSpec('effects',motionSpeed),delay=delayFor(card,speed);
     value.tween=gsap.timeline({delay:delay,onComplete:function(){value.tween=null;finish(card);}})
-      .to(card,{opacity:1,duration:duration*.92,ease:'power1.out',overwrite:'auto'},0)
-      .to(card,{top:0,duration:duration,ease:'power3.out',overwrite:'auto'},0);
+      .to(card,{autoAlpha:1,duration:effects.duration,ease:effects.ease,overwrite:'auto'},0)
+      .to(card,{y:0,duration:spatial.duration,ease:spatial.ease,overwrite:'auto',force3D:true},0);
   }
-  function prepare(card){var value=state(card);if(value.prepared||value.done||!renderable(card))return false;var rect=card.getBoundingClientRect();value.prepared=true;if(rect.bottom<=0){finish(card);return false;}gsap.set(card,{opacity:0,visibility:'visible',top:rect.top<innerHeight?(Number(profile.initialY)||14):(Number(profile.revealY)||18),willChange:'top,opacity'});return true;}
+  function prepare(card){var value=state(card);if(value.prepared||value.done||!renderable(card))return false;var rect=card.getBoundingClientRect();value.prepared=true;if(rect.bottom<=0){finish(card);return false;}gsap.set(card,{autoAlpha:0,y:rect.top<innerHeight?(Number(profile.initialY)||12):(Number(profile.revealY)||16),willChange:'transform,opacity'});return true;}
   function arm(card){var value=state(card);if(!prepare(card)||value.done)return;if(reduce){finish(card);return;}if(observer){observer.observe(card);value.observed=true;return;}var trigger=ST.create({trigger:card,start:'top 100%',once:true,onEnter:function(self){if(self.direction>0)reveal(card,self.getVelocity?self.getVelocity():velocity);else finish(card);},onEnterBack:function(){finish(card);}});fallbackTriggers.push(trigger);}
   function armNode(node){if(!node||node.hidden)return;if(node.matches&&node.matches(S.productList)){node.querySelectorAll(S.productCard).forEach(arm);return;}if(node.matches&&node.matches(S.productCard))arm(node);}
   function revealViewport(){cards.forEach(function(card){var value=state(card);if(!value.prepared)arm(card);if(value.done||value.started||!renderable(card))return;var rect=card.getBoundingClientRect();if(rect.bottom<=0)finish(card);});}

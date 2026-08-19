@@ -4,7 +4,6 @@ var SC=window.SCOverride,C=SC&&SC.catalogTools,P=C&&C.themePalette;if(!SC||!C||!
 
 /* Modos, storage y estado de animación. */
 var MODES=['system','light','dark'],KEY='scTheme:v1',doc=document.documentElement,systemDark=matchMedia('(prefers-color-scheme:dark)'),reduced=matchMedia('(prefers-reduced-motion:reduce)'),deps=null,mainTimeline=null,contrastFlip=null,contrastRelease=null,contrastNode=null,partsCache=new WeakMap(),optionsCache=new WeakMap();
-var NEUTRAL='M12 3.6A8.4 8.4 0 1 1 12 20.4A8.4 8.4 0 1 1 12 3.6Z';
 var SUN='M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z';
 var MOON_FULL='M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z';
 var AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';
@@ -15,14 +14,15 @@ function norm(m){return MODES.indexOf(m)>=0?m:'';}
 function resolved(m){return m==='system'?(systemDark.matches?'dark':'light'):m;}
 function selected(){return norm(doc.getAttribute('data-sc-theme')||'')||load();}
 function gsap(){return deps&&deps.gsap;}function morph(){return deps&&deps.MorphSVGPlugin;}
+function spec(kind,speed){return SC.motion&&SC.motion.springSpec?SC.motion.springSpec(kind,speed):{duration:.18,ease:'power2.out'};}
 function memory(){var m=norm(window.__scInitialTheme||'');if(m)return m;try{m=norm(localStorage.getItem(KEY)||'');}catch(_){m='';}return m;}
 function load(){return memory()||norm(doc.getAttribute('data-sc-theme')||'')||'system';}
-function save(m){window.__scInitialTheme=m;try{localStorage.setItem(KEY,m);}catch(_){}}
+function save(m){window.__scInitialTheme=m;try{localStorage.setItem(KEY,m);}catch(_){} }
 
 /* Sincroniza labels, selección y estado visual del control. */
 function options(root){if(!root)return[];var cached=optionsCache.get(root);if(cached)return cached;cached=[].slice.call(root.querySelectorAll('[data-sc-theme-option]'));optionsCache.set(root,cached);return cached;}
 function label(m){return m==='system'?'Tema automático. Elegir tema':m==='dark'?'Tema oscuro. Elegir tema':'Tema claro. Elegir tema';}
-function emit(m,a){try{dispatchEvent(new CustomEvent('sc:themechange',{detail:{mode:m,resolved:a}}));}catch(_){}}
+function emit(m,a){try{dispatchEvent(new CustomEvent('sc:themechange',{detail:{mode:m,resolved:a}}));}catch(_){} }
 function meta(root,m){if(!root)return;var b=root.querySelector('.sc-theme-toggle'),a=resolved(m);root.setAttribute('data-sc-theme-mode',m);root.setAttribute('data-sc-theme-actual',a);if(b){b.setAttribute('aria-label',label(m));b.setAttribute('title',m==='system'?'Tema automático':'Tema '+(m==='dark'?'oscuro':'claro'));}options(root).forEach(function(o){var on=o.getAttribute('data-sc-theme-option')===m;o.setAttribute('aria-checked',on?'true':'false');o.classList.toggle('sc-theme-option-selected',on);});}
 
 /* Cachea las partes del SVG animado. */
@@ -42,26 +42,26 @@ function setStatic(root,mode){stopMain();stopContrast();applyStatic(root,mode);}
 
 /* Aplica el modo al documento y emite cambios resueltos. */
 function commit(root,mode,persist,keepIcon){mode=norm(mode)||'system';var prev=selected(),before=doc.getAttribute('data-sc-theme-resolved')||resolved(prev),after=resolved(mode);doc.setAttribute('data-sc-theme',mode);doc.setAttribute('data-sc-theme-resolved',after);window.__scInitialTheme=mode;meta(root,mode);if(!keepIcon)setStatic(root,mode);if(before!==after)emit(mode,after);if(persist&&prev!==mode)save(mode);}
-function morphCore(tl,core,shape,pos,duration,ease){if(!morph()){tl.call(function(){core.setAttribute('d',shape);},null,pos+duration);return;}tl.to(core,{duration:duration,ease:ease,morphSVG:{shape:shape,map:'size'},overwrite:'auto'},pos);}
+function morphCore(tl,core,shape,pos,spring){if(!morph()){tl.call(function(){core.setAttribute('d',shape);},null,pos+spring.duration);return;}tl.to(core,{duration:spring.duration,ease:spring.ease,morphSVG:{shape:shape,map:'size'},overwrite:'auto'},pos);}
 
-/* Retargetea el icono entre automático, claro y oscuro. */
+/* Retargetea el icono con física espacial y efectos no oscilantes. */
 function animateGeometry(root,from,to){
   var p=parts(root),g=gsap();from=norm(from)||'system';to=norm(to)||'system';if(!p||from===to)return;if(!g||reduced.matches){setStatic(root,to);return;}
   var continuing=root.hasAttribute('data-sc-theme-animating');stopMain();if(!continuing)applyStatic(root,from);
+  var spatial=spec('spatial','fast'),effects=spec('effects','fast'),targetShape=to==='system'?AUTO:(to==='dark'?MOON_FULL:SUN),dir=to==='dark'?-1:1,state={timeline:null},rayStep=SC.motion.stagger('fast',p.lines.length);
   root.setAttribute('data-sc-theme-animating','true');p.svg.setAttribute('data-sc-theme-glyph-state',to);g.set(p.rotor,{willChange:'transform'});
-  var targetShape=to==='system'?AUTO:(to==='dark'?MOON_FULL:SUN),dir=to==='dark'?-1:1,state={timeline:null};
   mainTimeline=g.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(mainTimeline!==state.timeline)return;mainTimeline=null;applyStatic(root,to);}});state.timeline=mainTimeline;
-  morphCore(mainTimeline,p.core,targetShape,0,.18,'power2.inOut');
-  mainTimeline.to(p.bite,{duration:.16,ease:'power2.inOut',attr:{cx:MOON_BITE.cx,cy:MOON_BITE.cy,r:to==='dark'?MOON_BITE.r:0}},0)
-    .to(p.ring,{duration:.14,ease:'power2.out',opacity:to==='system'?1:0,attr:{r:8.4}},0)
-    .to(p.rotor,{rotation:dir*5.5,duration:.075,ease:'power2.out'},0)
-    .to(p.rotor,{rotation:0,duration:.12,ease:'power3.out'},.06);
+  morphCore(mainTimeline,p.core,targetShape,0,spatial);
+  mainTimeline.to(p.bite,{duration:spatial.duration,ease:spatial.ease,attr:{cx:MOON_BITE.cx,cy:MOON_BITE.cy,r:to==='dark'?MOON_BITE.r:0}},0)
+    .to(p.ring,{duration:effects.duration,ease:effects.ease,opacity:to==='system'?1:0,attr:{r:8.4}},0)
+    .to(p.rotor,{rotation:dir*5,duration:spatial.duration*.55,ease:spatial.ease,force3D:true},0)
+    .to(p.rotor,{rotation:0,duration:spatial.duration*.7,ease:spatial.ease,force3D:true},spatial.duration*.18);
   p.lines.forEach(function(line){if(line.getAttribute('pathLength')!=='1')line.setAttribute('pathLength','1');});
   if(to==='light'){
-    mainTimeline.set(p.rays,{opacity:1},0).to(p.lines,{strokeDasharray:1,strokeDashoffset:0,duration:.14,ease:'power3.out',stagger:{each:.006,from:'start'}},.015);
+    mainTimeline.set(p.rays,{opacity:1},0).to(p.lines,{strokeDasharray:1,strokeDashoffset:0,duration:spatial.duration*.72,ease:spatial.ease,stagger:{each:rayStep,from:'start'}},0);
   }else{
-    mainTimeline.to(p.lines,{strokeDasharray:1,strokeDashoffset:1,duration:.09,ease:'power2.in',stagger:{each:.004,from:'end'}},0)
-      .to(p.rays,{opacity:0,duration:.08,ease:'power2.out'},.055);
+    mainTimeline.to(p.lines,{strokeDasharray:1,strokeDashoffset:1,duration:spatial.duration*.58,ease:spatial.ease,stagger:{each:rayStep,from:'end'}},0)
+      .to(p.rays,{opacity:0,duration:effects.duration,ease:effects.ease},effects.duration*.2);
   }
 }
 
@@ -71,7 +71,7 @@ function apply(root,mode,persist){stopContrast();P.kill();commit(root,norm(mode)
 
 /* Abre/cierra el menú y administra teclado/foco. */
 function setOpen(root,on,focus){var b=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu');if(!b||!menu)return;on=!!on;b.setAttribute('aria-expanded',on?'true':'false');menu.setAttribute('aria-hidden',on?'false':'true');menu.classList.toggle('sc-theme-menu-open',on);if(on&&focus){var o=menu.querySelector('[aria-checked="true"]')||menu.querySelector('.sc-theme-option');if(o)o.focus();}}
-function install(root){var b=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu'),ctl=b&&b.closest('.sc-theme-control');if(!b||!menu||!ctl)return function(){};apply(root,load(),false);var items=options(root),p=parts(root),microCleanup=SC.motion&&SC.motion.bindMicroInteraction&&p?SC.motion.bindMicroInteraction(b,p.svg,{active:{rotation:12},press:{rotation:-6},enterDuration:.1,exitDuration:.15}):function(){};
+function install(root){var b=root&&root.querySelector('.sc-theme-toggle'),menu=root&&root.querySelector('.sc-theme-menu'),ctl=b&&b.closest('.sc-theme-control');if(!b||!menu||!ctl)return function(){};apply(root,load(),false);var items=options(root),p=parts(root),microCleanup=SC.motion&&SC.motion.bindMicroInteraction&&p?SC.motion.bindMicroInteraction(b,p.svg,{active:{rotation:8},press:{rotation:-5}}):function(){};
 function toggle(e){e.preventDefault();e.stopPropagation();setOpen(root,b.getAttribute('aria-expanded')!=='true',false);}
 function choose(e){var o=e.target&&e.target.closest?e.target.closest('[data-sc-theme-option]'):null;if(!o||!menu.contains(o))return;e.preventDefault();e.stopPropagation();transition(root,o.getAttribute('data-sc-theme-option'),true);setOpen(root,false,false);b.focus();}
 function outside(e){if(b.getAttribute('aria-expanded')==='true'&&!ctl.contains(e.target))setOpen(root,false,false);}

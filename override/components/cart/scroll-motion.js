@@ -2,49 +2,32 @@
 'use strict';
 /* Añade una respuesta vertical mínima al carrito fijo según la velocidad de scroll.
    El desplazamiento se limita por breakpoint y vuelve a cero apenas el scroll se estabiliza. */
-var SC=window.SCOverride,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,CFG={scrollQuickDuration:.14,scrollVelocityFloor:55,scrollSettleDelay:70};if(!SC||!C||SC.__cartScrollMotionBooted)return;SC.__cartScrollMotionBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,CFG={scrollVelocityFloor:55,scrollSettleDelay:.07};if(!SC||!C||SC.__cartScrollMotionBooted)return;SC.__cartScrollMotionBooted=true;
 var parts=SC.cartParts=SC.cartParts||{};
 
 parts.setupScroll=function(gsap,ST,profile,reduce){
-  var entries=[],observer,raf=0,settleCall=null,tracker=null,clamp=gsap.utils.clamp(-profile.maxLag,profile.maxLag);
+  var entries=[],observer,raf=0,settleCall=null,tracker=null,clamp=gsap.utils.clamp(-profile.maxLag,profile.maxLag),spec=SC.motion.springSpec('spatial','fast');
   function target(wrapper){return wrapper.querySelector('.carritoBox')||wrapper.querySelector('.shop_carrito')||wrapper.firstElementChild||wrapper;}
   function entryFor(wrapper){return entries.find(function(entry){return entry.wrapper===wrapper;});}
-  function clearTarget(el){
-    if(!el)return;
-    gsap.killTweensOf(el);gsap.set(el,{y:0,clearProps:'transform'});el.classList.remove('sc-cart-scroll-motion');
-  }
+  function clearTarget(el){if(!el)return;gsap.killTweensOf(el);gsap.set(el,{y:0,clearProps:'transform,willChange'});el.classList.remove('sc-cart-scroll-motion');}
   function configure(entry,el){
     if(entry.target&&entry.target!==el)clearTarget(entry.target);
-    entry.target=el;entry.move=reduce?null:gsap.quickTo(el,'y',{duration:CFG.scrollQuickDuration,ease:M.easings.strongOut,overwrite:'auto'});
+    entry.target=el;entry.move=reduce?null:gsap.quickTo(el,'y',{duration:spec.duration,ease:spec.ease,overwrite:'auto',onStart:function(){el.style.willChange='transform';},onComplete:function(){el.style.removeProperty('will-change');}});
     el.classList.add('sc-cart-scroll-motion');
   }
   function move(y){entries.forEach(function(entry){if(entry.move)entry.move(y);});}
   function settleNow(){move(0);}
-  function scheduleSettle(){
-    if(!settleCall)settleCall=gsap.delayedCall(CFG.scrollSettleDelay/1000,settleNow).pause();
-    settleCall.restart(true);
-  }
+  function scheduleSettle(){if(!settleCall)settleCall=gsap.delayedCall(CFG.scrollSettleDelay,settleNow).pause();settleCall.restart(true);}
   function stopTracker(){if(settleCall){settleCall.kill();settleCall=null;}if(tracker){tracker.kill();tracker=null;}}
   /* Un único ScrollTrigger calcula velocidad y alimenta todos los carritos fijos encontrados. */
   function ensureTracker(){
-    if(reduce||!entries.length){stopTracker();return;}
-    if(tracker)return;
-    tracker=ST.create({start:0,end:'max',onUpdate:function(self){
-      var velocity=self.getVelocity();move(Math.abs(velocity)<CFG.scrollVelocityFloor?0:clamp(velocity*profile.velocityScale));scheduleSettle();
-    },onRefresh:function(){move(0);}});
+    if(reduce||!entries.length){stopTracker();return;}if(tracker)return;
+    tracker=ST.create({start:0,end:'max',onUpdate:function(self){var velocity=self.getVelocity();move(Math.abs(velocity)<CFG.scrollVelocityFloor?0:clamp(velocity*profile.velocityScale));scheduleSettle();},onRefresh:function(){move(0);}});
   }
   function discover(){
     raf=0;
-    entries=entries.filter(function(entry){
-      if(document.documentElement.contains(entry.wrapper))return true;
-      clearTarget(entry.target);return false;
-    });
-    gsap.utils.toArray('.carritoFixed').forEach(function(wrapper){
-      var el=target(wrapper);if(!el)return;
-      var entry=entryFor(wrapper);
-      if(!entry){entry={wrapper:wrapper,target:null,move:null};entries.push(entry);}
-      if(entry.target!==el)configure(entry,el);
-    });
+    entries=entries.filter(function(entry){if(document.documentElement.contains(entry.wrapper))return true;clearTarget(entry.target);return false;});
+    gsap.utils.toArray('.carritoFixed').forEach(function(wrapper){var el=target(wrapper);if(!el)return;var entry=entryFor(wrapper);if(!entry){entry={wrapper:wrapper,target:null,move:null};entries.push(entry);}if(entry.target!==el)configure(entry,el);});
     ensureTracker();
   }
   function containsCart(node){return!!(node&&node.nodeType===1&&(node.matches('.carritoFixed')||(node.querySelector&&node.querySelector('.carritoFixed'))));}
@@ -57,15 +40,7 @@ parts.setupScroll=function(gsap,ST,profile,reduce){
   }
   function schedule(){if(!raf)raf=requestAnimationFrame(discover);}
   discover();
-  if(document.body){
-    observer=new MutationObserver(function(mutations){
-      for(var i=0;i<mutations.length;i+=1){if(affectsCart(mutations[i])){schedule();break;}}
-    });
-    observer.observe(document.body,{childList:true,subtree:true});
-  }
-  return function(){
-    if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);stopTracker();
-    entries.forEach(function(entry){clearTarget(entry.target);});
-  };
+  if(document.body){observer=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i+=1){if(affectsCart(mutations[i])){schedule();break;}}});observer.observe(document.body,{childList:true,subtree:true});}
+  return function(){if(observer)observer.disconnect();if(raf)cancelAnimationFrame(raf);stopTracker();entries.forEach(function(entry){clearTarget(entry.target);});};
 };
 })();

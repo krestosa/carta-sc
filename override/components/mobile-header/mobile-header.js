@@ -20,7 +20,7 @@ function ensureMenuIcon(button){
 /* Sincroniza menú/cerrar y sus atributos accesibles. */
 function syncIcon(button,open){
   var path=ensureMenuIcon(button),state=open?'close':'menu',shape=open?CLOSE_ICON:MENU_ICON,previous=path&&path.getAttribute('data-sc-icon-state');if(!path)return;
-  if(previous&&previous!==state&&SC.motion&&SC.motion.morphIcon)SC.motion.morphIcon(path,shape,{duration:.24});else path.setAttribute('d',shape);
+  if(previous&&previous!==state&&SC.motion&&SC.motion.morphIcon)SC.motion.morphIcon(path,shape,{speed:'fast'});else path.setAttribute('d',shape);
   path.setAttribute('data-sc-icon-state',state);
 }
 function menuOpen(button,nav){

@@ -21,35 +21,35 @@ function stopActive(){var list=active;active=[];list.forEach(function(a){try{a.k
 function resetOverlay(){if(!overlay)return;overlay.style.opacity='0';overlay.style.backgroundColor='transparent';overlay.style.removeProperty('will-change');}
 function kill(){token++;stopActive();resetOverlay();}
 
-/* Usa WAAPI primero y GSAP como respaldo. */
+/* Usa la física compartida cuando GSAP está listo y conserva WAAPI como fallback. */
 function waapiFade(node,from,to,ms,easing,done,id){
   if(!node.animate)return false;
   var a=node.animate([{opacity:from},{opacity:to}],{duration:ms,easing:easing,fill:'forwards'});active.push(a);
   a.finished.then(function(){if(id!==token)return;node.style.opacity=String(to);done();},function(){});return true;
 }
-function gsapFade(node,to,seconds,ease,done,id){
+function gsapFade(node,to,spec,done,id){
   var g=deps&&deps.gsap;if(!g)return false;
-  var a=g.to(node,{opacity:to,duration:seconds,ease:ease,overwrite:'auto',onComplete:function(){if(id!==token)return;done();}});active.push(a);return true;
+  var a=g.to(node,{opacity:to,duration:spec.duration,ease:spec.ease,overwrite:'auto',onComplete:function(){if(id!==token)return;done();}});active.push(a);return true;
 }
 
-/* Cubre, aplica el tema y revela la nueva paleta. */
+/* Cubre, aplica el tema y revela la nueva paleta con un efecto no oscilante. */
 function animate(before,commit,prepared){
-  var from=capture(),node=ensureOverlay();kill();var id=token,duration=reduce()?.18:.56,half=duration*.5,context={from:from,to:from,duration:duration,token:id,fade:true};
+  var from=capture(),node=ensureOverlay();kill();var id=token,spec=SC.motion&&SC.motion.springSpec?SC.motion.springSpec('effects',reduce()?'fast':'default'):{duration:reduce()?.1:.16,ease:'power2.out'},duration=spec.duration*2,curves=CFG.motion&&CFG.motion.curves||{},context={from:from,to:from,duration:duration,token:id,fade:true};
   if(!node){commit();return context;}
   node.style.backgroundColor=from['--sc-color-surface']||'#000';node.style.opacity='0';node.style.willChange='opacity';
   if(typeof prepared==='function')prepared(context);
   function reveal(){
     if(id!==token)return;requestAnimationFrame(function(){
       if(id!==token)return;
-      if(waapiFade(node,1,0,half*1000,'cubic-bezier(.37,0,.63,1)',finish,id))return;
-      if(gsapFade(node,0,half,'sine.inOut',finish,id))return;
+      if(deps&&gsapFade(node,0,spec,finish,id))return;
+      if(waapiFade(node,1,0,spec.duration*1000,curves.standard||'cubic-bezier(.2,0,0,1)',finish,id))return;
       finish();
     });
   }
   function swap(){if(id!==token)return;commit();reveal();}
   function finish(){if(id!==token)return;stopActive();resetOverlay();}
-  if(waapiFade(node,0,1,half*1000,'cubic-bezier(.37,0,.63,1)',swap,id))return context;
-  if(gsapFade(node,1,half,'sine.inOut',swap,id))return context;
+  if(deps&&gsapFade(node,1,spec,swap,id))return context;
+  if(waapiFade(node,0,1,spec.duration*1000,curves.enter||'cubic-bezier(.05,.7,.1,1)',swap,id))return context;
   commit();resetOverlay();return context;
 }
 

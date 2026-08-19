@@ -1,15 +1,7 @@
-/* Token local del componente. */
-body.sushiShop {
-  --sc-motion-card: 340ms;
-}
-
-/* La card conserva geometría estable; el reveal mueve top y no transforma imágenes. */
+/* El reveal conserva el flujo del documento y anima sólo propiedades compuestas. */
 .sushiShop .listadoShop .productoShop {
   position: relative;
   top: 0;
-  -webkit-transform: none !important;
-  transform: none !important;
-  translate: 0 0;
 }
 .sushiShop .listadoShop .productoShop .imgLiquidNoFillShop,
 .sushiShop .listadoShop .productoShop .imgLiquid,
@@ -18,26 +10,29 @@ body.sushiShop {
   transform: none !important;
 }
 
-/* Feedback al presionar sin interferir con el reveal. */
+/* El enlace completo responde a presión sin alterar tamaño ni distribución. */
 .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
-  scale: 1;
+  transform: translate3d(0,0,0);
   transform-origin: 50% 50%;
-  transition: scale 100ms var(--sc-motion-ease-out) !important;
+  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
   touch-action: manipulation;
 }
-.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active { scale: .995; }
+.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active {
+  transform: translate3d(0,1px,0);
+}
 
 .sushiShop .productoShop .sumar {
   -webkit-transform-origin: 50% 50%;transform-origin: 50% 50%;touch-action: manipulation;
-  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
-  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-standard),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
+  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-standard),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
 }
-.sushiShop .productoShop .sumar:active {-webkit-transform: scale(var(--sc-card-action-active-scale));transform: scale(var(--sc-card-action-active-scale));}
+.sushiShop .productoShop .sumar:active {-webkit-transform: translate3d(0,1px,0);transform: translate3d(0,1px,0);}
 .sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
 
 @media (prefers-reduced-motion: reduce) {
-  .sushiShop .listadoShop .productoShop {top: 0 !important;translate: none !important;}
+  .sushiShop .listadoShop .productoShop {top: 0 !important;-webkit-transform: none !important;transform: none !important;}
   .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
-  .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active {scale: 1 !important;transition: none !important;}
-  .sushiShop .productoShop .sumar,.sushiShop .productoShop .sumar:active {-webkit-transform: none !important;transform: none !important;}
+  .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active,
+  .sushiShop .productoShop .sumar,
+  .sushiShop .productoShop .sumar:active {-webkit-transform: none !important;transform: none !important;transition: none !important;}
 }

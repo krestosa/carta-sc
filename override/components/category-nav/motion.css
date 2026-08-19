@@ -1,13 +1,13 @@
-/* Token local de motion del riel. */
+/* Token local para respuestas visuales muy breves del riel. */
 body.sushiShop {
-  --sc-motion-micro: 120ms;
+  --sc-motion-micro: 100ms;
 }
 
-/* Transiciones de color de las categorías. */
+/* Los cambios de estado usan una curva monotónica y no alteran geometría. */
 .sushiShop .wrapp-nav-tabsTopShop li a,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabs li a {
-  -webkit-transition: color var(--sc-motion-fast) var(--sc-motion-ease-out), background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
-  transition: color var(--sc-motion-fast) var(--sc-motion-ease-out), background-color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  -webkit-transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard), background-color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
+  transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard), background-color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
 }
 
 /* El estado activo no usa subrayado legacy. */
@@ -31,31 +31,30 @@ body.sushiShop {
   display: block;position: absolute;left: 0;bottom: 0;width: var(--sc-border-hairline);height: var(--sc-border-hairline);margin: 0;padding: 0;border: 0;border-radius: 0;
   background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: 4;
   -webkit-transform: translate3d(0,0,0) scaleX(1);transform: translate3d(0,0,0) scaleX(1);
-  -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;will-change: transform;
+  -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;
 }
 
-/* Entrada y salida del desplegable. */
+/* El cierre acelera; la apertura desacelera al llegar a su posición final. */
 .sushiShop .topPullDown {
   -webkit-transform: translateY(var(--sc-category-dropdown-offset-y));transform: translateY(var(--sc-category-dropdown-offset-y));
-  -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
-  transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out),transform var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
+  -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-exit),-webkit-transform var(--sc-motion-micro) var(--sc-motion-ease-exit) !important;
+  transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-exit),transform var(--sc-motion-micro) var(--sc-motion-ease-exit) !important;
   -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
 }
 .sushiShop .topPullDown.open {
   -webkit-transform: translateY(0);transform: translateY(0);
-  -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
-  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),transform var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-enter),-webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-enter) !important;
+  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-enter),transform var(--sc-motion-fast) var(--sc-motion-ease-enter) !important;
   -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
 }
 
 .sushiShop .wrapp-nav-tabsTopShop a:focus-visible,
 .sushiShop .wtopShopMenuMobile a:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
 
-/* Reduce desplazamientos cuando el sistema lo pide. */
+/* Movimiento reducido conserva el cambio de estado sin desplazamiento. */
 @media (prefers-reduced-motion: reduce) {
   .sushiShop .topPullDown,.sushiShop .topPullDown.open {
     -webkit-transform: none !important;transform: none !important;
-    -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out) !important;transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
+    -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-standard) !important;transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-standard) !important;
   }
-  .sushiShop .sc-category-indicator {will-change: auto;}
 }

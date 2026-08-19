@@ -2,7 +2,7 @@
 'use strict';
 /* Coordina las tres capas de motion del carrito: aparición de filas, respuesta al scroll
    y feedback del badge. Selecciona un perfil por breakpoint y comparte un único cleanup. */
-var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.cartParts,PROFILES={mobile:{maxLag:8,velocityScale:.0024},tablet:{maxLag:10,velocityScale:.0028},desktop:{maxLag:14,velocityScale:.0032}};if(!SC||!C||!parts||SC.__cartComponentBooted)return;SC.__cartComponentBooted=true;
+var SC=window.SCOverride,C=SC&&SC.config,parts=SC&&SC.cartParts,PROFILES={mobile:{maxLag:5,velocityScale:.0018},tablet:{maxLag:6,velocityScale:.0021},desktop:{maxLag:7,velocityScale:.0024}};if(!SC||!C||!parts||SC.__cartComponentBooted)return;SC.__cartComponentBooted=true;
 if(!SC.motion||typeof SC.motion.whenReady!=='function')return;
 SC.motion.whenReady(function(deps){
   var gsap=deps.gsap,ST=deps.ScrollTrigger,mm=gsap.matchMedia(),profiles=PROFILES;
