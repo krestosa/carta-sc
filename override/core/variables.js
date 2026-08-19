@@ -59,9 +59,9 @@ config.classes=merged({
 config.motion=merged({geometryRefreshDelay:180},config.motion);
 config.motion.springs=merged({
   spatial:{
-    fast:{damping:.6,stiffness:800},
-    default:{damping:.8,stiffness:380},
-    slow:{damping:.8,stiffness:200}
+    fast:{damping:.9,stiffness:1400},
+    default:{damping:.9,stiffness:700},
+    slow:{damping:.9,stiffness:300}
   },
   effects:{
     fast:{damping:1,stiffness:3800},
