@@ -16,6 +16,27 @@ body.sushiShop .sc-motion-state-host > .sc-motion-state-surface {
   color: currentColor !important;
   pointer-events: none !important;
 }
+body.sushiShop .sc-motion-state-host > .sc-motion-state-surface::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: currentColor !important;
+  opacity: 0;
+  pointer-events: none !important;
+  transition: opacity 15ms linear, background-color 15ms linear !important;
+}
+body.sushiShop .sc-motion-state-host.sc-motion-hovered > .sc-motion-state-surface::before {
+  opacity: var(--sc-state-hover-opacity);
+}
+body.sushiShop .sc-theme-toggle.sc-motion-state-host[aria-expanded='true'] > .sc-motion-state-surface::before {
+  opacity: var(--sc-state-hover-opacity);
+}
+body.sushiShop .sc-theme-toggle.sc-motion-state-host:focus-visible > .sc-motion-state-surface::before,
+body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host:focus-visible > .sc-motion-state-surface::before,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.sc-motion-state-host:focus-visible > .sc-motion-state-surface::before {
+  opacity: var(--sc-state-focus-opacity);
+}
 body.sushiShop .sc-motion-state-host > .sc-motion-state-surface > .sc-motion-state-wave {
   display: block !important;
   position: absolute !important;
@@ -65,6 +86,14 @@ body.sushiShop .wrapp-nav-tabsTopShop a.sc-motion-state-host > *:not(.sc-motion-
 body.sushiShop .wtopShopMenuMobile a.sc-motion-state-host > *:not(.sc-motion-state-surface) {
   position: relative !important;
   z-index: 2 !important;
+}
+
+/* Los overlays previos quedan como fallback hasta que se monta la capa compartida. */
+body.sushiShop .sc-theme-toggle.sc-motion-state-host::after,
+body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host::after,
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.sc-motion-state-host::before {
+  opacity: 0 !important;
+  transition: none !important;
 }
 
 /* El selector deja geometría y opacidad a GSAP; CSS conserva sólo su estado final. */
@@ -128,6 +157,7 @@ body.sushiShop .nav-top-li.sc-has-subcategories > a.anchorLink .sc-category-subm
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body.sushiShop .sc-motion-state-host > .sc-motion-state-surface::before { transition: none !important; }
   body.sushiShop .sc-motion-state-host > .sc-motion-state-surface > .sc-motion-state-wave { display: none !important; }
   body.sushiShop .sc-theme-menu { transition: none !important; transform: none !important; }
 }
