@@ -37,7 +37,7 @@ body.sushiShop .sc-rail-arrow svg {
   height: 24px !important;
   color: inherit !important;
   fill: currentColor !important;
-  transition: transform 100ms var(--sc-motion-ease-out) !important;
+  transition: none !important;
   pointer-events: none !important;
 }
 
@@ -60,15 +60,15 @@ body.sushiShop .sc-rail-arrow:focus-visible svg {
   fill: currentColor !important;
 }
 
-body.sushiShop .sc-rail-arrow:active svg { transform: scale(.88) !important; }
-body.sushiShop .sc-rail-arrow--left:active svg { transform: rotate(180deg) scale(.88) !important; }
+body.sushiShop .sc-rail-arrow:active svg { transform: none !important; }
+body.sushiShop .sc-rail-arrow--left:active svg { transform: rotate(180deg) !important; }
 
 body.sushiShop .sc-rail-arrow:focus-visible {
   outline: var(--sc-focus-ring-width-subtle) solid var(--sc-focus-ring-color) !important;
   outline-offset: var(--sc-focus-ring-offset-tight) !important;
 }
 
-/* Un submenú flotante evita el recorte vertical del scroller. */
+/* El submenú conserva geometría y cambia de estado sin animar la superficie. */
 body.sushiShop > .sc-category-submenu {
   box-sizing: border-box;
   position: fixed;
@@ -83,20 +83,17 @@ body.sushiShop > .sc-category-submenu {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translate3d(0,-4px,0) scale(.99);
+  transform: none;
   transform-origin: var(--sc-submenu-origin-x,24px) var(--sc-submenu-origin-y,0px);
-  transition:
-    opacity 140ms var(--sc-motion-ease-out),
-    transform 180ms var(--sc-motion-ease-out),
-    visibility 0s linear 180ms;
+  transition: none;
 }
 
 body.sushiShop > .sc-category-submenu.sc-category-submenu-open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translate3d(0,0,0) scale(1);
-  transition-delay: 0s;
+  transform: none;
+  transition: none;
 }
 
 body.sushiShop > .sc-category-submenu .sc-category-submenu-list {
@@ -129,7 +126,7 @@ body.sushiShop > .sc-category-submenu .sc-category-submenu-link {
   white-space: normal;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color var(--sc-motion-fast) var(--sc-motion-ease-out), background-color var(--sc-motion-fast) var(--sc-motion-ease-out), transform 100ms var(--sc-motion-ease-out);
+  transition: none;
 }
 
 body.sushiShop > .sc-category-submenu .sc-category-submenu-link:hover,
@@ -138,7 +135,7 @@ body.sushiShop > .sc-category-submenu .sc-category-submenu-link:focus-visible {
   background: var(--sc-color-border);
   color: var(--sc-color-ink);
 }
-body.sushiShop > .sc-category-submenu .sc-category-submenu-link:active { transform: scale(.985); }
+body.sushiShop > .sc-category-submenu .sc-category-submenu-link:active { transform: none; }
 
 body.sushiShop .nav-top-li.sc-has-subcategories > a.anchorLink .sc-category-submenu-caret {
   display: inline-block;
@@ -151,7 +148,7 @@ body.sushiShop .nav-top-li.sc-has-subcategories > a.anchorLink .sc-category-subm
   opacity: .72;
   transform: translateY(-1px) rotate(45deg);
   transform-origin: 55% 55%;
-  transition: transform 180ms var(--sc-motion-ease-out), opacity var(--sc-motion-fast) var(--sc-motion-ease-out);
+  transition: none;
   pointer-events: none;
 }
 
@@ -276,16 +273,16 @@ body.sushiShop .nav-top-li.sc-submenu-open > a.anchorLink .sc-category-submenu-c
 
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-rail-arrow svg,
+  body.sushiShop > .sc-category-submenu,
   body.sushiShop > .sc-category-submenu .sc-category-submenu-link,
   body.sushiShop .nav-top-li.sc-has-subcategories > a.anchorLink .sc-category-submenu-caret {
     transition: none !important;
   }
   body.sushiShop .sc-rail-arrow:active svg,
-  body.sushiShop .sc-rail-arrow--left:active svg,
-  body.sushiShop > .sc-category-submenu .sc-category-submenu-link:active { transform: none !important; }
-  body.sushiShop > .sc-category-submenu {
+  body.sushiShop > .sc-category-submenu,
+  body.sushiShop > .sc-category-submenu.sc-category-submenu-open,
+  body.sushiShop > .sc-category-submenu .sc-category-submenu-link:active {
     transform: none !important;
-    transition: opacity 120ms linear, visibility 0s linear 120ms !important;
   }
-  body.sushiShop > .sc-category-submenu.sc-category-submenu-open { transition-delay: 0s !important; }
+  body.sushiShop .sc-rail-arrow--left:active svg { transform: rotate(180deg) !important; }
 }
