@@ -23,12 +23,9 @@ config.queries=config.queries||{};
   if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
 });
 
-/* Manifiesto de GSAP usado por motion/main.js antes de montar módulos interactivos. */
+/* GSAP core es la única dependencia externa requerida por el motion actual. */
 config.urls=merged({
-  gsap:GSAP_DIST+'gsap.min.js',
-  morphSVG:GSAP_DIST+'MorphSVGPlugin.min.js',
-  scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
-  splitText:GSAP_DIST+'SplitText.min.js'
+  gsap:GSAP_DIST+'gsap.min.js'
 },config.urls);
 
 /* Selectores comunes para que los módulos apunten al mismo DOM y al mismo estado legacy. */
