@@ -2,7 +2,7 @@
 'use strict';
 var SC=window.SCOverride,C=SC&&SC.catalogTools;if(!SC||!C||SC.__catalogStateMotionBooted)return;SC.__catalogStateMotionBooted=true;
 var PRESS_GROW=.45,MIN_PRESS=.225,TOUCH_DELAY=.15,ORIGIN_SCALE=.2,PADDING=10,SOFT_MIN=75,SOFT_RATIO=.35;
-var SELECTOR='.sc-theme-toggle,.sc-catalog-view-toggle,.sc-theme-option,.sc-filter-chip,.sc-catalog-search-clear,.sc-rail-arrow,.sc-category-submenu-link,.slicknav_btn,.sc-product-modal__close,.sc-product-modal__cart-button,.productoShop>a.fancyboxModalAddProd,.productoShop .sumar,.wrapp-nav-tabsTopShop a.anchorLink,.wtopShopMenuMobile a.anchorLink';
+var SELECTOR='.sc-theme-toggle,.sc-catalog-view-toggle,.sc-theme-option,.sc-filter-chip,.sc-catalog-search-clear,.sc-rail-arrow,.sc-category-submenu-link,.slicknav_btn,.sc-product-modal__close,.sc-product-modal__cart-button,.productoShop .sumar,.wrapp-nav-tabsTopShop a.anchorLink,.wtopShopMenuMobile a.anchorLink';
 function disabled(node){return!!(node.disabled||node.getAttribute('aria-disabled')==='true');}
 function bind(control,gsap){if(!control||!gsap||control.__scStateMotionCleanup)return control&&control.__scStateMotionCleanup||function(){};var surface=document.createElement('span'),wave=document.createElement('span'),state='idle',pressEvent=null,touchTimer=0,endTimer=0,grow=null,fade=null,startAt=0,token=0,destroyed=false;surface.className='sc-motion-state-surface';surface.setAttribute('aria-hidden','true');wave.className='sc-motion-state-wave';surface.appendChild(wave);control.insertBefore(surface,control.firstChild);control.classList.add('sc-motion-state-host');
 function clearTimer(){if(touchTimer){clearTimeout(touchTimer);touchTimer=0;}if(endTimer){clearTimeout(endTimer);endTimer=0;}}
