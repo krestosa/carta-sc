@@ -4,7 +4,7 @@
 'use strict';
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
 if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
-var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
+var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,geometryTimer=0,initialized=false;
 var submenuHost=null,submenuParent=null,submenuPinned=false,submenuOpenTimer=0,submenuCloseTimer=0,pendingSubmenuParent=null,submenuPositionRaf=0,submenuScroller=null;
 var SUBMENU_HOVER_OPEN_DELAY=400,SUBMENU_HOVER_CLOSE_DELAY=400;
 
@@ -18,9 +18,7 @@ function clearOpenTimer(){if(submenuOpenTimer){clearTimeout(submenuOpenTimer);su
 function clearCloseTimer(){if(submenuCloseTimer){clearTimeout(submenuCloseTimer);submenuCloseTimer=0;}}
 function clearPositionRaf(){if(submenuPositionRaf){cancelAnimationFrame(submenuPositionRaf);submenuPositionRaf=0;}}
 function unbindSubmenuScroller(){if(submenuScroller){submenuScroller.removeEventListener('scroll',scheduleSubmenuPosition);submenuScroller=null;}}
-function setParentExpanded(parent,on){
-  if(!parent)return;var item=parent.closest('.nav-top-li');if(item)item.classList.toggle('sc-submenu-open',!!on);parent.setAttribute('aria-expanded',on?'true':'false');
-}
+function setParentExpanded(parent,on){if(!parent)return;var item=parent.closest('.nav-top-li');if(item)item.classList.toggle('sc-submenu-open',!!on);parent.setAttribute('aria-expanded',on?'true':'false');}
 /* Crea un único host en body para evitar que el overflow horizontal recorte el menú. */
 function ensureSubmenu(){
   if(submenuHost&&document.documentElement.contains(submenuHost))return submenuHost;
@@ -32,14 +30,10 @@ function ensureSubmenu(){
 }
 function renderSubmenu(parent){
   var host=ensureSubmenu(),list=host.querySelector('.sc-category-submenu-list'),parentHref=parent.getAttribute('href')||'',label=(parent.textContent||'').trim();list.textContent='';
-  submenuLinks(parent).forEach(function(source){
-    var link=document.createElement('a');link.className='sc-category-submenu-link';link.setAttribute('role','menuitem');link.setAttribute('href',source.getAttribute('href'));link.setAttribute('data-sc-parent-href',parentHref);link.textContent=(source.textContent||'').trim();list.appendChild(link);
-  });
+  submenuLinks(parent).forEach(function(source){var link=document.createElement('a');link.className='sc-category-submenu-link';link.setAttribute('role','menuitem');link.setAttribute('href',source.getAttribute('href'));link.setAttribute('data-sc-parent-href',parentHref);link.textContent=(source.textContent||'').trim();list.appendChild(link);});
   host.setAttribute('aria-label','Subcategorías de '+label);return host;
 }
-function bindSubmenuScroller(parent){
-  unbindSubmenuScroller();submenuScroller=parent&&parent.closest(N.selectors.scroller+','+N.selectors.mobileScroller);if(submenuScroller)submenuScroller.addEventListener('scroll',scheduleSubmenuPosition,{passive:true});
-}
+function bindSubmenuScroller(parent){unbindSubmenuScroller();submenuScroller=parent&&parent.closest(N.selectors.scroller+','+N.selectors.mobileScroller);if(submenuScroller)submenuScroller.addEventListener('scroll',scheduleSubmenuPosition,{passive:true});}
 /* Posiciona el menú respecto del trigger y cambia arriba/abajo según espacio disponible. */
 function positionSubmenu(){
   submenuPositionRaf=0;if(!submenuHost||!submenuParent||!submenuHost.classList.contains('sc-category-submenu-open'))return;
@@ -67,21 +61,16 @@ function scheduleSubmenuOpen(parent){
 function scheduleSubmenuClose(){clearOpenTimer();clearCloseTimer();submenuCloseTimer=setTimeout(function(){submenuCloseTimer=0;if(!submenuPinned)closeSubmenu(false);},SUBMENU_HOVER_CLOSE_DELAY);}
 /* Revisa qué categorías tienen hijos y expone semántica de menú únicamente en ellas. */
 function scanSubmenus(){
-  each(document.querySelectorAll('.nav-top-li > a.anchorLink[href^="#"]'),function(link){
-    var item=link.closest('.nav-top-li'),has=hasSubmenu(link);if(item)item.classList.toggle('sc-has-subcategories',has);
-    if(has){link.setAttribute('aria-haspopup','menu');link.setAttribute('aria-controls','sc-category-submenu');if(link!==submenuParent)link.setAttribute('aria-expanded','false');}
-    else{link.removeAttribute('aria-haspopup');link.removeAttribute('aria-controls');link.removeAttribute('aria-expanded');}
-  });
+  each(document.querySelectorAll('.nav-top-li > a.anchorLink[href^="#"]'),function(link){var item=link.closest('.nav-top-li'),has=hasSubmenu(link);if(item)item.classList.toggle('sc-has-subcategories',has);if(has){link.setAttribute('aria-haspopup','menu');link.setAttribute('aria-controls','sc-category-submenu');if(link!==submenuParent)link.setAttribute('aria-expanded','false');}else{link.removeAttribute('aria-haspopup');link.removeAttribute('aria-controls');link.removeAttribute('aria-expanded');}});
   if(submenuParent&&!document.documentElement.contains(submenuParent))closeSubmenu(false);
 }
 /* El camino hover usa eventos de mouse; touch no participa en sus retardos. */
 function categoryParentFromEvent(event){var link=event.target&&event.target.closest?event.target.closest('.nav-top-li > a.anchorLink[href^="#"]'):null;return link&&hasSubmenu(link)?link:null;}
 function mouseOver(event){var parent=categoryParentFromEvent(event);if(!parent)return;var from=event.relatedTarget;if(from&&parent.contains(from))return;if(submenuPinned&&submenuParent&&submenuParent!==parent)return;scheduleSubmenuOpen(parent);}
-function mouseOut(event){
-  var parent=categoryParentFromEvent(event);if(!parent||submenuPinned)return;var next=event.relatedTarget;if(next&&(parent.closest('.nav-top-li').contains(next)||(submenuHost&&submenuHost.contains(next))))return;if(parent===pendingSubmenuParent||parent===submenuParent)scheduleSubmenuClose();
-}
+function mouseOut(event){var parent=categoryParentFromEvent(event);if(!parent||submenuPinned)return;var next=event.relatedTarget;if(next&&(parent.closest('.nav-top-li').contains(next)||(submenuHost&&submenuHost.contains(next))))return;if(parent===pendingSubmenuParent||parent===submenuParent)scheduleSubmenuClose();}
 function focusIn(event){var parent=categoryParentFromEvent(event);if(parent&&!submenuPinned)openSubmenu(parent,false);}
-function focusOut(event){if(submenuPinned||!submenuParent)return;var next=event.relatedTarget;if(next&&((submenuHost&&submenuHost.contains(next))||submenuParent.closest('.nav-top-li').contains(next)))return;scheduleSubmenuClose();}
+/* Los 400ms pertenecen sólo al hover; perder foco cierra inmediatamente. */
+function focusOut(event){if(submenuPinned||!submenuParent)return;var next=event.relatedTarget;if(next&&((submenuHost&&submenuHost.contains(next))||submenuParent.closest('.nav-top-li').contains(next)))return;closeSubmenu(false);}
 function outsidePointer(event){if(!submenuParent&&!pendingSubmenuParent)return;var target=event.target;if((submenuHost&&submenuHost.contains(target))||(submenuParent&&submenuParent.closest('.nav-top-li').contains(target)))return;closeSubmenu(false);}
 function keydown(event){if(event.key==='Escape'&&(submenuParent||pendingSubmenuParent)){event.preventDefault();closeSubmenu(true);}}
 function destroySubmenu(){closeSubmenu(false);if(submenuHost&&submenuHost.parentNode)submenuHost.parentNode.removeChild(submenuHost);submenuHost=null;}
@@ -89,12 +78,7 @@ N.categorySubmenu={scan:scanSubmenus,has:hasSubmenu,open:function(parent,pin){re
 
 /* Mantiene listeners de scroll ligados solo a scrollers que siguen conectados al documento. */
 function pruneRailScrollers(){boundScrollers.forEach(function(scroller){if(document.documentElement.contains(scroller))return;scroller.removeEventListener('scroll',onRailScroll);boundScrollers.delete(scroller);});}
-function bindRailScrollers(){
-  pruneRailScrollers();
-  each(document.querySelectorAll(N.selectors.scroller+','+N.selectors.mobileScroller),function(scroller){
-    if(boundScrollers.has(scroller))return;boundScrollers.add(scroller);scroller.addEventListener('scroll',onRailScroll,{passive:true});
-  });
-}
+function bindRailScrollers(){pruneRailScrollers();each(document.querySelectorAll(N.selectors.scroller+','+N.selectors.mobileScroller),function(scroller){if(boundScrollers.has(scroller))return;boundScrollers.add(scroller);scroller.addEventListener('scroll',onRailScroll,{passive:true});});}
 function unbindRailScrollers(){boundScrollers.forEach(function(scroller){scroller.removeEventListener('scroll',onRailScroll);});boundScrollers.clear();}
 function invalidateOffset(){if(N.invalidateOffset)N.invalidateOffset();}
 function runResize(){resizeRaf=0;if(!initialized)return;invalidateOffset();N.refreshMetrics();N.scheduleRail();scheduleSubmenuPosition();}
@@ -102,45 +86,21 @@ function resize(){if(initialized&&!resizeRaf)resizeRaf=requestAnimationFrame(run
 function windowScroll(){(N.scheduleSticky||N.scheduleRail)();N.scheduleSpy();scheduleSubmenuPosition();}
 function interrupt(){if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.releaseSpyHold)N.releaseSpyHold();}
 function observeStructure(){if(structureObserver&&document.body)structureObserver.observe(document.body,{childList:true,subtree:true});}
-/* Refresca ScrollTrigger fuera del callback del observer y evita observar sus propias mutaciones. */
-function refreshMotionSafely(){
-  if(!initialized||motionRefreshRaf)return;
-  motionRefreshRaf=requestAnimationFrame(function(){
-    motionRefreshRaf=0;if(!initialized||!SC.motion||typeof SC.motion.run!=='function')return;
-    if(structureObserver)structureObserver.disconnect();
-    SC.motion.run(function(deps){
-      if(!deps||!deps.ScrollTrigger)return;
-      try{deps.ScrollTrigger.refresh();}catch(error){if(!(error&&error.name==='SecurityError')&&window.console&&console.error)console.error('[SushiClub motion]',error);}
-    });
-    if(structureObserver){structureObserver.takeRecords();observeStructure();}
-  });
-}
 /* Repara layout, semántica, submenús y métricas después de un cambio estructural real. */
 function syncStructure(){
   if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();
   if(structureObserver)structureObserver.takeRecords();
-  refreshMotionSafely();
 }
 function breakpoint(){closeSubmenu(false);syncStructure();}
 function refreshGeometry(){if(!initialized)return;invalidateOffset();N.refreshMetrics();N.scheduleRail();scheduleSubmenuPosition();}
 function scheduleStructure(){if(initialized&&!structureRaf)structureRaf=requestAnimationFrame(syncStructure);}
-function structural(node){
-  if(!node||node.nodeType!==1)return false;
-  var selector=S.container+', '+S.categoryToolbar+', '+N.selectors.mobileWrapper+', .wrapp-nav-tabsTopShop';
-  if(node.matches&&node.matches(selector))return true;
-  return !!(node.querySelector&&node.querySelector(S.container));
-}
-function watchStructure(){
-  if(structureObserver||!window.MutationObserver||!document.body)return;
-  structureObserver=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i++){var mutation=mutations[i],nodes=Array.prototype.concat.call([],Array.from(mutation.addedNodes||[]),Array.from(mutation.removedNodes||[]));if(nodes.some(structural)){scheduleStructure();return;}}});
-  observeStructure();
-}
+function structural(node){if(!node||node.nodeType!==1)return false;var selector=S.container+', '+S.categoryToolbar+', '+N.selectors.mobileWrapper+', .wrapp-nav-tabsTopShop';if(node.matches&&node.matches(selector))return true;return!!(node.querySelector&&node.querySelector(S.container));}
+function watchStructure(){if(structureObserver||!window.MutationObserver||!document.body)return;structureObserver=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i++){var mutation=mutations[i],nodes=Array.prototype.concat.call([],Array.from(mutation.addedNodes||[]),Array.from(mutation.removedNodes||[]));if(nodes.some(structural)){scheduleStructure();return;}}});observeStructure();}
 /* Registra eventos una sola vez y usa listeners pasivos donde no se cancela el evento. */
 function addListeners(){
   document.addEventListener('click',N.onCategory,true);document.addEventListener('change',N.onSelect,true);
   document.addEventListener('mouseover',mouseOver,true);document.addEventListener('mouseout',mouseOut,true);document.addEventListener('pointerdown',outsidePointer,true);document.addEventListener('focusin',focusIn,true);document.addEventListener('focusout',focusOut,true);document.addEventListener('keydown',keydown,true);
-  window.addEventListener('scroll',windowScroll,{passive:true});window.addEventListener('resize',resize,{passive:true});
-  window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});
+  window.addEventListener('scroll',windowScroll,{passive:true});window.addEventListener('resize',resize,{passive:true});window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});
   if(mq.addEventListener)mq.addEventListener('change',breakpoint);else mq.addListener(breakpoint);
 }
 function removeListeners(){
@@ -159,7 +119,7 @@ function init(){
 function destroy(){
   if(!initialized)return;initialized=false;removeListeners();unbindRailScrollers();destroySubmenu();
   if(structureObserver){structureObserver.disconnect();structureObserver=null;}
-  if(resizeRaf){cancelAnimationFrame(resizeRaf);resizeRaf=0;}if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(motionRefreshRaf){cancelAnimationFrame(motionRefreshRaf);motionRefreshRaf=0;}if(geometryTimer){clearTimeout(geometryTimer);geometryTimer=0;}
+  if(resizeRaf){cancelAnimationFrame(resizeRaf);resizeRaf=0;}if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(geometryTimer){clearTimeout(geometryTimer);geometryTimer=0;}
   if(N.cancelRailState)N.cancelRailState();if(N.stopSpy)N.stopSpy();if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.categoryIndicator&&N.categoryIndicator.pause)N.categoryIndicator.pause();
 }
 
