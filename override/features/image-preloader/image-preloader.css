@@ -42,14 +42,12 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   opacity: 0;
   background: var(--sc-image-preloader-base);
   transform: none;
-  transition: opacity 180ms linear !important;
+  transition: none !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading::before {
   opacity: 1;
-  will-change: filter;
-  animation: sc-skeleton-pulse .9s ease-in-out infinite alternate;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
@@ -59,7 +57,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   opacity: 1 !important;
   visibility: visible !important;
   transform: none !important;
-  transition: opacity 180ms var(--sc-motion-ease-standard) !important;
+  transition: none !important;
   will-change: auto;
 }
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading > img,
@@ -69,8 +67,6 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready::before,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-ready::before {
   opacity: 0;
-  animation: none;
-  will-change: auto;
 }
 
 /* Título, descripción y precio reciben placeholders del mismo tamaño antes de revelar el contenido. */
@@ -89,7 +85,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .priceR
   pointer-events: none;
   opacity: 0;
   border-radius: 4px;
-  transition: opacity 180ms linear !important;
+  transition: none !important;
 }
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .title-shop1::after {
   background:
@@ -114,14 +110,6 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:has(.im
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:has(.imgShop.sc-image-loading,.imgLiquidNoFillShop.sc-image-loading) .descrip::after,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:has(.imgShop.sc-image-loading,.imgLiquidNoFillShop.sc-image-loading) .priceRow::after {
   opacity: 1;
-  will-change: filter;
-  animation: sc-skeleton-pulse .9s ease-in-out infinite alternate;
-}
-
-/* El reemplazo ocurre por grupos según cada imagen completa su carga; no hay shimmer direccional. */
-@keyframes sc-skeleton-pulse {
-  from { filter: brightness(.94); }
-  to { filter: brightness(1.055); }
 }
 
 @media (prefers-reduced-motion: reduce) {
