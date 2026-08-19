@@ -2,15 +2,15 @@
    Los cálculos específicos viven en módulos menores; este archivo conecta sus contratos. */
 (function(){
 'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,M=C&&C.motion,N=SC&&SC.categoryNav;
+var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
 if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
-var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,taxonomyRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false,filteredVisibility=new Map();
+var each=U.each,ready=U.ready,mq=N.mq,onRailScroll=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set(),resizeRaf=0,structureObserver=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
 var submenuHost=null,submenuParent=null,submenuPinned=false,submenuCloseTimer=0,submenuPositionRaf=0,submenuScroller=null;
 
 /* Construye el submenú flotante desde la estructura legacy sin mover sus enlaces originales. */
 function submenuLinks(parent){
   if(!parent)return[];var item=parent.closest('.nav-top-li'),source=item&&item.querySelector('.topPullDown .topPullChild');if(!source)return[];
-  return Array.prototype.filter.call(source.querySelectorAll('a[href^="#"]'),function(link){return!link.hidden&&!!N.anchor(link.getAttribute('href'));});
+  return Array.prototype.filter.call(source.querySelectorAll('a[href^="#"]'),function(link){return!!N.anchor(link.getAttribute('href'));});
 }
 function hasSubmenu(parent){return submenuLinks(parent).length>0;}
 function clearCloseTimer(){if(submenuCloseTimer){clearTimeout(submenuCloseTimer);submenuCloseTimer=0;}}
@@ -82,29 +82,6 @@ function keydown(event){if(event.key==='Escape'&&submenuParent){event.preventDef
 function destroySubmenu(){closeSubmenu(false);if(submenuHost&&submenuHost.parentNode)submenuHost.parentNode.removeChild(submenuHost);submenuHost=null;}
 N.categorySubmenu={scan:scanSubmenus,has:hasSubmenu,open:function(parent,pin){return openSubmenu(parent,pin!==false);},close:closeSubmenu,position:scheduleSubmenuPosition};
 
-/* El rail refleja la taxonomía que sigue visible durante búsqueda y filtros. */
-function rememberVisibility(node){if(node&&!filteredVisibility.has(node))filteredVisibility.set(node,node.hidden);}
-function setFilteredHidden(node,hidden){if(!node)return;rememberVisibility(node);if(node.hidden!==hidden)node.hidden=hidden;}
-function restoreFilteredVisibility(){filteredVisibility.forEach(function(hidden,node){if(document.documentElement.contains(node))node.hidden=hidden;});filteredVisibility.clear();}
-function sectionFor(link){var target=link&&N.anchor(link.getAttribute('href'));return target&&target.closest?target.closest(S.productList):null;}
-function headingForTarget(target){
-  if(!target)return null;if(target.matches&&target.matches(S.sectionTitle+','+S.sectionSubtitle))return target;
-  var section=target.closest&&target.closest(S.productList),node=target.nextElementSibling;if(!section)return null;
-  while(node&&node.parentElement===section){if(node.matches&&node.matches(S.sectionTitle+','+S.sectionSubtitle))return node;if(node.matches&&node.matches(S.productCard))return null;node=node.nextElementSibling;}return null;
-}
-function childHasResults(link){var target=N.anchor(link.getAttribute('href')),section=target&&target.closest?target.closest(S.productList):null;if(!target||!section)return true;if(section.hidden)return false;var heading=headingForTarget(target);return!heading||!heading.hidden;}
-function syncFilteredTaxonomy(){
-  taxonomyRaf=0;if(!initialized)return;closeSubmenu(false);var filtering=document.body&&document.body.classList.contains(K.catalogSearching);
-  if(!filtering)restoreFilteredVisibility();
-  else each(document.querySelectorAll('.nav-top-li > a.anchorLink[href^="#"]'),function(parent){
-    var item=parent.closest('.nav-top-li'),section=sectionFor(parent);if(!item)return;setFilteredHidden(item,!!(section&&section.hidden));
-    var visibleChildren=0;each(item.querySelectorAll('.topPullChild a[href^="#"]'),function(link){var show=childHasResults(link);setFilteredHidden(link,!show);if(show)visibleChildren++;});
-    var pull=item.querySelector(':scope > .topPullDown');if(pull)setFilteredHidden(pull,visibleChildren===0);
-  });
-  scanSubmenus();if(N.categoryIndicator&&N.categoryIndicator.markDirty)N.categoryIndicator.markDirty();N.scheduleRail();
-}
-function scheduleFilteredTaxonomy(){if(initialized&&!taxonomyRaf)taxonomyRaf=requestAnimationFrame(syncFilteredTaxonomy);}
-
 /* Mantiene listeners de scroll ligados solo a scrollers que siguen conectados al documento. */
 function pruneRailScrollers(){boundScrollers.forEach(function(scroller){if(document.documentElement.contains(scroller))return;scroller.removeEventListener('scroll',onRailScroll);boundScrollers.delete(scroller);});}
 function bindRailScrollers(){
@@ -119,7 +96,7 @@ function runResize(){resizeRaf=0;if(!initialized)return;invalidateOffset();N.ref
 function resize(){if(initialized&&!resizeRaf)resizeRaf=requestAnimationFrame(runResize);}
 function windowScroll(){(N.scheduleSticky||N.scheduleRail)();N.scheduleSpy();scheduleSubmenuPosition();}
 function interrupt(){if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.releaseSpyHold)N.releaseSpyHold();}
-function observeStructure(){if(structureObserver&&document.body)structureObserver.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});}
+function observeStructure(){if(structureObserver&&document.body)structureObserver.observe(document.body,{childList:true,subtree:true});}
 /* Refresca ScrollTrigger fuera del callback del observer y evita observar sus propias mutaciones. */
 function refreshMotionSafely(){
   if(!initialized||motionRefreshRaf)return;
@@ -135,7 +112,7 @@ function refreshMotionSafely(){
 }
 /* Repara layout, semántica, submenús y métricas después de un cambio estructural real. */
 function syncStructure(){
-  if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();scheduleFilteredTaxonomy();
+  if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();
   if(structureObserver)structureObserver.takeRecords();
   refreshMotionSafely();
 }
@@ -148,10 +125,9 @@ function structural(node){
   if(node.matches&&node.matches(selector))return true;
   return !!(node.querySelector&&node.querySelector(S.container));
 }
-function taxonomyTarget(node){return!!(node&&node.matches&&(node.matches(S.productList)||node.matches(S.sectionSubtitle)));}
 function watchStructure(){
   if(structureObserver||!window.MutationObserver||!document.body)return;
-  structureObserver=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i++){var mutation=mutations[i];if(mutation.type==='attributes'){if(taxonomyTarget(mutation.target))scheduleFilteredTaxonomy();continue;}var nodes=Array.prototype.concat.call([],Array.from(mutation.addedNodes||[]),Array.from(mutation.removedNodes||[]));if(nodes.some(structural)){scheduleStructure();return;}}});
+  structureObserver=new MutationObserver(function(mutations){for(var i=0;i<mutations.length;i++){var mutation=mutations[i],nodes=Array.prototype.concat.call([],Array.from(mutation.addedNodes||[]),Array.from(mutation.removedNodes||[]));if(nodes.some(structural)){scheduleStructure();return;}}});
   observeStructure();
 }
 /* Registra eventos una sola vez y usa listeners pasivos donde no se cancela el evento. */
@@ -176,12 +152,12 @@ function init(){
 }
 /* Cleanup simétrico: listeners, observers, RAF, timers, scroll automático e indicador. */
 function destroy(){
-  if(!initialized)return;initialized=false;removeListeners();unbindRailScrollers();destroySubmenu();restoreFilteredVisibility();
+  if(!initialized)return;initialized=false;removeListeners();unbindRailScrollers();destroySubmenu();
   if(structureObserver){structureObserver.disconnect();structureObserver=null;}
-  if(resizeRaf){cancelAnimationFrame(resizeRaf);resizeRaf=0;}if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(taxonomyRaf){cancelAnimationFrame(taxonomyRaf);taxonomyRaf=0;}if(motionRefreshRaf){cancelAnimationFrame(motionRefreshRaf);motionRefreshRaf=0;}if(geometryTimer){clearTimeout(geometryTimer);geometryTimer=0;}
+  if(resizeRaf){cancelAnimationFrame(resizeRaf);resizeRaf=0;}if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(motionRefreshRaf){cancelAnimationFrame(motionRefreshRaf);motionRefreshRaf=0;}if(geometryTimer){clearTimeout(geometryTimer);geometryTimer=0;}
   if(N.cancelRailState)N.cancelRailState();if(N.stopSpy)N.stopSpy();if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.categoryIndicator&&N.categoryIndicator.pause)N.categoryIndicator.pause();
 }
 
 ready(init);
-N.syncLayout=N.layout;N.scheduleRailState=N.scheduleRail;N.resolveAnchor=N.anchor;N.refreshSections=N.refreshMetrics;N.repairStructure=scheduleStructure;N.syncFilteredTaxonomy=scheduleFilteredTaxonomy;N.init=init;N.destroy=destroy;
+N.syncLayout=N.layout;N.scheduleRailState=N.scheduleRail;N.resolveAnchor=N.anchor;N.refreshSections=N.refreshMetrics;N.repairStructure=scheduleStructure;N.init=init;N.destroy=destroy;
 })();

@@ -4,7 +4,7 @@
 'use strict';
 var SC=window.SCOverride,Cfg=SC&&SC.config,S=Cfg&&Cfg.selectors,K=Cfg&&Cfg.classes,N=SC&&SC.categoryNav,C=N&&N.railControls,P=N&&N.railPosition,SS=N&&N.stickyState;
 if(!SC||!Cfg||!N||!C||!P||!SS||SC.__categoryNavRailBooted)return;SC.__categoryNavRailBooted=true;
-var railRaf=0,measureRaf=0,measureRaf2=0,filteredActiveRaf=0,syncingFilteredActive=false,overflowDirty=true,stickyDirty=true,mobileInitialized=false,desktopTop=null,mobileTop=null,nodeCache=null,STICKY_TOLERANCE=.5;
+var railRaf=0,measureRaf=0,measureRaf2=0,overflowDirty=true,stickyDirty=true,mobileInitialized=false,desktopTop=null,mobileTop=null,nodeCache=null,STICKY_TOLERANCE=.5;
 
 /* Cachea referencias mientras sigan conectadas para evitar querySelector en cada scroll. */
 function connected(node){return!node||document.documentElement.contains(node);}
@@ -16,7 +16,6 @@ function nodes(){
 function invalidateNodes(){nodeCache=null;}
 function mobileScroller(){return nodes().mobileScroll;}
 function desktopScroller(){return nodes().desktopScroll;}
-function activeScroller(){return N.mq.matches?desktopScroller():mobileScroller();}
 function scrollTop(){return window.pageYOffset||document.documentElement.scrollTop||0;}
 function pageTop(node){var top=0,current=node;while(current){top+=current.offsetTop||0;current=current.offsetParent;}return top;}
 
@@ -49,35 +48,14 @@ function railState(){
 function scheduleFrame(){if(!railRaf)railRaf=requestAnimationFrame(railState);}
 function scheduleRail(){
   /* Cambios estructurales sí invalidan geometría vertical y fuerzan una nueva medición. */
-  invalidateNodes();overflowDirty=true;stickyDirty=true;scheduleMeasure();scheduleFilteredActive();
+  invalidateNodes();overflowDirty=true;stickyDirty=true;scheduleMeasure();
 }
 function scheduleOverflow(){overflowDirty=true;scheduleFrame();}
 function scheduleSticky(){scheduleFrame();}
-function cancel(){if(railRaf)cancelAnimationFrame(railRaf);if(measureRaf)cancelAnimationFrame(measureRaf);if(measureRaf2)cancelAnimationFrame(measureRaf2);if(filteredActiveRaf)cancelAnimationFrame(filteredActiveRaf);railRaf=measureRaf=measureRaf2=filteredActiveRaf=0;invalidateNodes();desktopTop=mobileTop=null;}
+function cancel(){if(railRaf)cancelAnimationFrame(railRaf);if(measureRaf)cancelAnimationFrame(measureRaf);if(measureRaf2)cancelAnimationFrame(measureRaf2);railRaf=measureRaf=measureRaf2=0;invalidateNodes();desktopTop=mobileTop=null;}
 
 /* Reposiciona el activo horizontalmente sin invalidar el umbral sticky vertical. El propio
    scroll del riel vuelve a calcular overflow mientras la animación horizontal progresa. */
-function requestCenter(previous,target){if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleOverflow();}
-
-/* Durante búsqueda/filtros conserva el flujo normal en el riel montado del breakpoint actual. */
-function visibleLinks(){
-  var scroller=activeScroller();if(!scroller)return[];
-  return N.links(scroller).filter(function(link){var item=link.closest('.nav-top-li');return!!(item&&!item.hidden&&link.getClientRects().length);});
-}
-function syncFilteredActive(){
-  if(syncingFilteredActive||!document.body||!document.body.classList.contains(K.catalogSearching))return;
-  var links=visibleLinks();if(!links.length)return;
-  var state=N.categoryActive,current=state&&state.current?state.current():null,currentVisible=links.some(function(link){return N.anchor(link.getAttribute('href'))===current;}),target=currentVisible?current:N.anchor(links[0].getAttribute('href'));
-  if(!target)return;syncingFilteredActive=true;
-  try{
-    if(current!==target&&N.setActive){N.setActive(target,true);if(!current)requestCenter(null,target);}
-    else{if(N.categoryIndicator&&N.categoryIndicator.move)N.categoryIndicator.move(target,false);requestCenter(current,target);}
-  }finally{syncingFilteredActive=false;}
-}
-function scheduleFilteredActive(){
-  if(syncingFilteredActive||filteredActiveRaf||!document.body||!document.body.classList.contains(K.catalogSearching))return;
-  filteredActiveRaf=requestAnimationFrame(function(){filteredActiveRaf=0;syncFilteredActive();});
-}
-
+function requestCenter(previous,target){if(document.body.classList.contains(K.catalogSearching)){scheduleOverflow();return;}if(N.mq.matches){var desktop=desktopScroller();if(desktop&&P.revealActive)P.revealActive(desktop,previous,target);}else{var mobile=mobileScroller();if(mobile)P.centerActive(mobile);}scheduleOverflow();}
 N.scheduleRail=scheduleRail;N.scheduleOverflow=scheduleOverflow;N.scheduleSticky=scheduleSticky;N.requestCenterActive=requestCenter;N.scheduleRailState=scheduleRail;N.railState=railState;N.cancelRailState=cancel;
 })();

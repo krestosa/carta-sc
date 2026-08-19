@@ -1,0 +1,58 @@
+/* Cuando hay búsqueda o filtros activos, la búsqueda ocupa la franja sticky del riel. */
+body.sushiShop .sc-catalog-search.sc-search-has-value {
+  color: var(--sc-color-ink);
+}
+body.sushiShop .sc-catalog-search.sc-search-has-value .sc-catalog-search-line {
+  transform: scaleX(1);
+}
+
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    min-height: var(--sc-category-height) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-toolbar > .sc-catalog-categories,
+  body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow {
+    display: none !important;
+  }
+  body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-toolbar > .sc-catalog-search--rail {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: var(--sc-category-height) !important;
+    margin: 0 !important;
+    padding: 0 0 7px !important;
+  }
+  body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-toolbar::before,
+  body.sushiShop.sc-catalog-searching.sc-catalog-layout-ready .sc-catalog-toolbar::after {
+    content: none !important;
+    display: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile > .topShopMenuMobileScroller,
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile .scrollArrowL,
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile .scrollArrowR,
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile .fadeScroll {
+    display: none !important;
+  }
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile > .sc-catalog-search--rail {
+    box-sizing: border-box !important;
+    display: flex !important;
+    width: calc(100% - (var(--sc-category-mobile-padding-inline) * 2)) !important;
+    max-width: none !important;
+    height: var(--sc-category-height) !important;
+    margin: 0 var(--sc-category-mobile-padding-inline) !important;
+    padding: 0 0 7px !important;
+  }
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile::before,
+  body.sushiShop.sc-catalog-searching .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile::after {
+    content: none !important;
+    display: none !important;
+  }
+}

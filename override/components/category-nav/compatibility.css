@@ -117,13 +117,6 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   }
 }
 
-/* En búsqueda/filtros hidden debe ganar sobre los display !important del legacy en todos los breakpoints. */
-body.sushiShop.sc-catalog-searching .nav-tabsTopShop > .nav-top-li[hidden],
-body.sushiShop.sc-catalog-searching .nav-tabsTopShop .topPullDown[hidden],
-body.sushiShop.sc-catalog-searching .nav-tabsTopShop .topPullChild > a[hidden] {
-  display: none !important;
-}
-
 /* Respeta reducción de movimiento. */
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
