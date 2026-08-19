@@ -1,5 +1,5 @@
 /* El riel usa sólo los owners de motion explícitos del runtime. */
-.sushiShop .listadoShop .sc-catalog-categories,
+.sushiShop .sc-catalog-categories,
 .sushiShop .wtopShopMenuMobile .topShopMenuMobileScroller {
   scroll-behavior: smooth;
 }
@@ -76,10 +76,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sushiShop .listadoShop .sc-catalog-categories,
-  .sushiShop .wtopShopMenuMobile .topShopMenuMobileScroller {
-    scroll-behavior: auto;
-  }
   .sushiShop .topPullDown,
   .sushiShop .topPullDown.open {
     -webkit-transform: none !important;
