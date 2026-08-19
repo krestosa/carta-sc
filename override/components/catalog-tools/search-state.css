@@ -9,6 +9,9 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidd
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) { margin-top: 0 !important; }
 
 /* Los resultados visibles no reciben una entrada decorativa ni conservan offsets previos. */
+html body.sushiShop.sc-catalog-searching .sc-catalog-search-results:not([hidden]) {
+  animation: none !important;
+}
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
   opacity: 1 !important;
   visibility: visible !important;
