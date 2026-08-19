@@ -35,9 +35,9 @@ Esos experimentos viven en `lab/pages/` y, cuando correspondan al sitio real, de
 2. `override/main.css` mantiene el manifest plano de estilos propiedad de componentes/features.
 3. `override/main.js` confirma el tema y carga exclusivamente `runtime-main.js`. Su manifest de rutas es un contrato de validación estática; no define el orden de ejecución.
 4. `runtime-main.js` es el owner del orden de carga. Cada grupo se resuelve en paralelo y los grupos avanzan en secuencia: foundation → features → templates → integrations.
-5. `motion/main.js` inicia la descarga de GSAP/MorphSVG/ScrollTrigger/SplitText sin bloquear la carga de módulos funcionales locales.
+5. `motion/main.js` inicia la descarga de GSAP core sin bloquear la carga de módulos funcionales locales. No carga plugins de motion sin un caller productivo.
 6. `templates/registry.js` resuelve los templates HTML propiedad de cada componente antes de montar coordinadores que los consumen.
-7. `SC.motion.prepare()` espera dependencias de motion; después `core/render-lifecycle.js` captura el viewport inicial, se desbloquea motion, se libera el prepaint y se espera layout estable.
+7. `SC.motion.prepare()` espera GSAP core; después `core/render-lifecycle.js` desbloquea motion, libera el prepaint y espera layout estable.
 8. El refresh final de motion ocurre después de esa estabilización.
 
 No cambiar el orden entre etapas sin demostrar qué dependencia deja de existir o qué invariant requiere el cambio.
@@ -49,18 +49,17 @@ No cambiar el orden entre etapas sin demostrar qué dependencia deja de existir 
 | Bootstrap | `main.js`, `runtime-main.js` | Tema/vista tempranos, carga por etapas y desbloqueo final. |
 | Configuración | `core/variables.js` | Selectores, media queries, URLs y tokens JS compartidos. |
 | Persistencia | `core/storage-policy.js` | Permite sólo estado de tema/vista y purga claves legacy del catálogo. |
-| Estabilidad inicial | `core/render-lifecycle.js` | Viewport inicial y espera de layout estable. |
+| Estabilidad inicial | `core/render-lifecycle.js` | Espera de layout estable y contratos de lifecycle compatibles. |
 | Templates | `templates/registry.js` | Carga/clonado de markup propio de componentes. |
-| Motion base | `motion/main.js` | Dependencias GSAP, gates `whenLoaded`/`whenReady`, refresh y microinteracciones. |
-| Categorías | `components/category-nav/` | Relocalización del rail legacy, sticky, scroll-spy, indicador y navegación programática. |
-| Herramientas de catálogo | `components/catalog-tools/` | Búsqueda, filtros, vista y tema; `catalog-tools.js` coordina montaje/reparación. |
-| Tarjetas | `components/product-card/` | Datos derivados, contenido, a11y, medición y motion de cards. |
+| Motion base | `motion/main.js`, `motion/transition-patterns.js` | GSAP core, gates `whenLoaded`/`whenReady` y primitives temporales compartidos. |
+| Categorías | `components/category-nav/` | Relocalización del rail legacy, sticky, scroll-spy, indicador, scroll de tabs y navegación programática. |
+| Herramientas de catálogo | `components/catalog-tools/` | Búsqueda, filtros, vista, tema y state layers; `catalog-tools.js` coordina montaje/reparación. |
+| Tarjetas | `components/product-card/` | Datos derivados, contenido, a11y y medición de cards. |
 | Modal de producto | `components/product-modal/` | Construcción, foco, aislamiento del fondo y transiciones interrumpibles. |
-| Carrito | `components/cart/` | Motion de filas, scroll y badge. |
 | Header mobile | `components/mobile-header/` | Compatibilidad con SlickNav, ARIA y reparación del menú legacy. |
-| Títulos de sección | `components/section-heading/` | SplitText y reveal forward-only de headings. |
+| Títulos de sección | `components/section-heading/` | Layout, tipografía y divisor de headings; no posee reveal decorativo. |
 | Normalización editorial | `features/content-normalizer/` | Texto/markup editorial incremental y observación de mutaciones. |
-| Imágenes | `features/image-preloader/` | Prioridades, estados visuales, lotes y observación de imágenes. |
+| Imágenes | `features/image-preloader/` | Prioridades, skeleton estático, lotes y observación de imágenes. |
 | Compatibilidad legacy | `mutations/` | Adaptaciones puntuales al DOM, history y handlers heredados. |
 
 Los archivos auxiliares dentro de un componente no son servicios globales: su API existe para el coordinador de ese dominio. Evitar moverlos a `core/` sólo para reutilizar una función pequeña.
@@ -93,11 +92,14 @@ Regla para cualquier mecanismo activo —listener, observer, timer, RAF, tween o
 
 Motion es progressive enhancement. La UI funcional no puede depender de que GSAP cargue correctamente.
 
-- `whenLoaded`: usar cuando un módulo necesita las dependencias cargadas pero todavía no requiere el gate de layout inicial.
+- `whenLoaded`: usar cuando un módulo necesita GSAP cargado pero todavía no requiere el gate de layout inicial.
 - `whenReady`: usar cuando el efecto sólo debe activarse después del unlock global.
-- `SC.motion.reduced()` es la fuente compartida para `prefers-reduced-motion`.
+- `SC.motion.reduced()` es la fuente compartida para `prefers-reduced-motion` cuando el componente de referencia define una variante reducida.
 - Cada componente es dueño de sus tweens/timelines y debe cancelarlos antes de retargetear o desmontar.
-- ScrollTrigger no debe sustituir el estado funcional del componente; sólo deriva motion/posición visual.
+- No agregar un tween porque una interacción “se sienta” similar: un análogo sólo es válido cuando se puede reproducir su trayectoria, timing, easing, thresholds y orden de fases desde una implementación de referencia verificable.
+- Si no existe un análogo uno-a-uno, el estado visual cambia de forma directa salvo que el movimiento sea comportamiento funcional propio del sitio, como navegar el documento hacia una categoría.
+- Los iconos de estado se intercambian directamente cuando el componente de referencia no interpola su geometría.
+- Los skeletons son estáticos: el preloader no introduce pulse, shimmer ni crossfade propios.
 
 La semántica de una animación incluye timing, easing, interrupción, reversión y continuidad. Llegar al mismo estado final no basta para considerar una refactorización equivalente.
 
@@ -145,18 +147,17 @@ No son diferencias válidas por sí solas: pricing, orden de traits, normalizaci
 
 - `core/`: configuración e infraestructura transversal pequeña: variables, storage policy, a11y, theme, utilities y lifecycle.
 - `templates/`: registry de templates.
-- `motion/`: infraestructura de motion y efectos globales; nunca puede convertirse en requisito para la funcionalidad base.
+- `motion/`: infraestructura de motion y primitives compartidos; nunca puede convertirse en requisito para la funcionalidad base.
 - `mutations/`: adaptaciones controladas al runtime/DOM legacy.
 - `features/catalog/`: layout del catálogo compartido.
 - `features/content-normalizer/`: normalización incremental de contenido.
-- `features/image-preloader/`: coordinación frontend de estados/prioridades de imágenes.
+- `features/image-preloader/`: coordinación frontend de estados/prioridades de imágenes y skeleton estático.
 - `components/category-nav/`: rail, sticky state, indicador, scroll-spy, controles e interacción.
-- `components/product-card/`: tarjeta, precio, traits, accesibilidad y motion.
+- `components/product-card/`: tarjeta, precio, traits, accesibilidad y medición.
 - `components/product-modal/`: modal, foco, contenido, controles y motion.
-- `components/catalog-tools/`: búsqueda, vistas y theme.
-- `components/cart/`: comportamiento visual del carrito.
+- `components/catalog-tools/`: búsqueda, vistas, theme y feedback interactivo compartido.
 - `components/mobile-header/`: adaptación del header mobile.
-- `components/section-heading/`: títulos y motion.
+- `components/section-heading/`: títulos, layout y divisor.
 
 ## Dependencias y compatibilidad
 
@@ -186,9 +187,9 @@ No crear `utils`, managers, registries o wrappers adicionales para un solo calle
 - **Falla el bootstrap**: empezar por `main.js` y `runtime-main.js`; el error del loader identifica si falló la carga de un módulo.
 - **Motion no se activa**: revisar en `<html>` `sc-motion-dependencies-loading`, `sc-motion-dependencies-ready` o `sc-motion-dependencies-failed`, y después el owner del efecto.
 - **UI duplicada tras una mutación**: comprobar primero el guard del módulo y el cleanup/reparación del coordinador; no agregar otro observer como parche.
-- **Categoría activa/sticky/indicador**: `components/category-nav/category-nav.js` coordina; `active-state.js`, `scroll-spy.js`, `rail.js` e `indicator.js` contienen las responsabilidades específicas.
+- **Categoría activa/sticky/indicador**: `components/category-nav/category-nav.js` coordina; `active-state.js`, `scroll-spy.js`, `rail.js`, `rail-position.js` e `indicator.js` contienen las responsabilidades específicas.
 - **Vista incorrecta**: verificar `data-sc-catalog-view` y `scCatalogView:v3`; búsqueda no debe modificar ninguno de los dos.
-- **Tema incorrecto**: verificar `data-sc-theme`, `data-sc-theme-resolved` y `scTheme:v1` antes de tocar la animación del icono.
+- **Tema incorrecto**: verificar `data-sc-theme`, `data-sc-theme-resolved` y `scTheme:v1` antes de tocar el estado del icono o el menú.
 - **Búsqueda/filtros**: `search.js` captura y restaura el DOM existente; si aparecen restos después de limpiar, investigar restauración antes de recrear cards.
 - **Modal**: separar problemas de contenido (`view.js`), foco/aislamiento (`a11y.js`) y transición (`motion.js`).
 
@@ -197,7 +198,7 @@ No crear `utils`, managers, registries o wrappers adicionales para un solo calle
 - `main.js` mantiene rutas literales adicionales porque los validadores verifican que todo JS entregable esté declarado. El orden real pertenece únicamente a `runtime-main.js`.
 - `category-nav` mueve el nodo legacy entre superficies en lugar de clonarlo para conservar listeners/estado del runtime original y evitar dos owners funcionales.
 - búsqueda y filtros ocultan/reordenan las cards existentes; no crean un catálogo paralelo.
-- motion externo se carga de forma asíncrona y sólo se convierte en requisito para efectos visuales, nunca para la UI base.
+- GSAP core se carga de forma asíncrona y sólo se convierte en requisito para efectos visuales con análogo verificado, nunca para la UI base.
 
 Estas decisiones sólo deben cambiar con evidencia de que el nuevo diseño elimina una restricción real sin introducir otra fuente de estado o coordinación.
 
@@ -214,6 +215,7 @@ Estas decisiones sólo deben cambiar con evidencia de que el nuevo diseño elimi
 - No crear implementaciones paralelas de lista por breakpoint.
 - Búsqueda no puede escribir ni inferir una vista distinta de `data-sc-catalog-view`.
 - Las dependencias externas de animación no pueden bloquear el montaje de UI funcional.
+- No reintroducir plugins de motion ni efectos decorativos sin un caller productivo y una referencia temporal verificable.
 
 ## Validación
 
