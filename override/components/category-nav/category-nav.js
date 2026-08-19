@@ -112,7 +112,7 @@ function refreshMotionSafely(){
 }
 /* Repara layout, semántica, submenús y métricas después de un cambio estructural real. */
 function syncStructure(){
-  structureRaf=0;if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();
+  if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();
   if(structureObserver)structureObserver.takeRecords();
   refreshMotionSafely();
 }
