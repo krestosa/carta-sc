@@ -29,7 +29,7 @@ body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring {
   inset: -2px !important;
   z-index: 3 !important;
   border-radius: inherit !important;
-  outline: 3px solid var(--sc-focus-ring-color) !important;
+  outline: 3px solid var(--sc-focus-ring-color);
   color: var(--sc-focus-ring-color) !important;
   pointer-events: none !important;
 }
@@ -39,8 +39,8 @@ body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > .sc-motion-focus-r
 }
 body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inward] {
   inset: 0 !important;
-  border: 3px solid var(--sc-focus-ring-color) !important;
-  outline: 0 !important;
+  border: 3px solid var(--sc-focus-ring-color);
+  outline: 0;
 }
 body.sushiShop .sc-motion-state-host.sc-motion-focus-visible > .sc-motion-focus-ring {
   display: block !important;
