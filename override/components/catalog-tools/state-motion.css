@@ -31,9 +31,11 @@ body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn.sc-motion-stat
 body.sushiShop .sc-product-modal__close.sc-motion-state-host > .sc-motion-focus-ring {
   inset: 6px !important;
 }
+/* Tabs y menu-items fuerzan shape de 8px en el primitive oficial. */
 body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inward] {
   inset: 0 !important;
   border: 3px solid var(--sc-focus-ring-color);
+  border-radius: 8px !important;
   outline: 0;
 }
 /* El tab activo libera el borde inferior para no superponer el indicador de 2px + 1px. */
