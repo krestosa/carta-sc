@@ -4,38 +4,24 @@ body.sushiShop {
   --sc-state-pressed-opacity: .12;
 }
 
-@keyframes sc-focus-ring-outward-grow {
-  from { outline-width: 0; }
-  to { outline-width: 8px; }
-}
-@keyframes sc-focus-ring-outward-shrink {
-  from { outline-width: 8px; }
-}
-@keyframes sc-focus-ring-inward-grow {
-  from { border-width: 0; }
-  to { border-width: 8px; }
-}
-@keyframes sc-focus-ring-inward-shrink {
-  from { border-width: 8px; }
-}
-
 body.sushiShop .sc-motion-state-host { position: relative; isolation: isolate; }
 
-/* Focus ring: 600ms total, 150ms grow + 450ms shrink, igual al primitive fuente. */
+/* Focus ring: GSAP interpola 0→8px en 150ms y 8→3px en 450ms. */
 body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring {
   box-sizing: border-box !important;
   display: none !important;
   position: absolute !important;
-  inset: -2px !important;
+  inset: -5px !important;
   z-index: 3 !important;
   border-radius: inherit !important;
   outline: 3px solid var(--sc-focus-ring-color);
   color: var(--sc-focus-ring-color) !important;
   pointer-events: none !important;
 }
+/* Estos toggles tienen target táctil de 48px y contenedor visual de 40px: 4px - (2px + 3px) = -1px. */
 body.sushiShop .sc-theme-toggle.sc-motion-state-host > .sc-motion-focus-ring,
 body.sushiShop .sc-catalog-view-toggle.sc-motion-state-host > .sc-motion-focus-ring {
-  inset: 2px !important;
+  inset: -1px !important;
 }
 body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inward] {
   inset: 0 !important;
@@ -44,13 +30,6 @@ body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring[data-sc-focus-inwar
 }
 body.sushiShop .sc-motion-state-host.sc-motion-focus-visible > .sc-motion-focus-ring {
   display: block !important;
-  animation-delay: 0s, 150ms;
-  animation-duration: 150ms, 450ms;
-  animation-name: sc-focus-ring-outward-grow, sc-focus-ring-outward-shrink;
-  animation-timing-function: cubic-bezier(.2,0,0,1);
-}
-body.sushiShop .sc-motion-state-host.sc-motion-focus-visible > .sc-motion-focus-ring[data-sc-focus-inward] {
-  animation-name: sc-focus-ring-inward-grow, sc-focus-ring-inward-shrink;
 }
 
 /* El ring compartido sustituye los outlines/box-shadows legacy mientras está visible. */
@@ -172,9 +151,7 @@ body.sushiShop > .sc-category-submenu { transform:none!important;transition:none
 body.sushiShop > .sc-category-submenu .sc-category-submenu-link { transform:none!important; }
 body.sushiShop .nav-top-li.sc-has-subcategories > a.anchorLink .sc-category-submenu-caret { transition:none!important; }
 @media (max-width: 992px) { body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav { transform:none!important;transition:none!important; } }
-@media (forced-colors: active) { body.sushiShop .sc-motion-state-host > .sc-motion-state-surface { display:none!important; } }
-@media (prefers-reduced-motion: reduce) {
-  body.sushiShop .sc-motion-state-host.sc-motion-focus-visible > .sc-motion-focus-ring {
-    animation: none !important;
-  }
+@media (forced-colors: active) {
+  body.sushiShop .sc-motion-state-host > .sc-motion-state-surface { display:none!important; }
+  body.sushiShop .sc-motion-state-host > .sc-motion-focus-ring { outline-color:CanvasText!important;border-color:CanvasText!important; }
 }
