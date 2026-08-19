@@ -1,7 +1,7 @@
 /* Estados de interacción de los controles del catálogo. */
 body.sushiShop {
   --sc-state-hover-opacity: .08;
-  --sc-state-pressed-opacity: .10;
+  --sc-state-pressed-opacity: .12;
   --sc-filter-radius: 8px;
   --sc-filter-height: 32px;
   --sc-filter-padding-inline: 8px;
