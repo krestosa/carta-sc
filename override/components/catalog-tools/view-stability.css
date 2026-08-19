@@ -148,12 +148,6 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop > 
   column-gap: 0 !important;
 }
 
-html.sc-catalog-view-switching,
-html.sc-catalog-view-switching body.sushiShop {
-  overflow-anchor: none !important;
-  scroll-behavior: auto !important;
-}
-
 /* El párrafo conserva espaciado; el texto se recorta en dos líneas. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
