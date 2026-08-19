@@ -18,10 +18,10 @@ function origin(dialog,source){
 /* Limpia propiedades temporales para devolver el control del estado final al CSS. */
 function clear(modal,dialog,gsap){if(!modal||!dialog||!gsap)return;gsap.set(modal,{clearProps:'opacity,visibility,willChange'});gsap.set(dialog,{clearProps:'transform,opacity,visibility,willChange'});}
 function cancel(modal){if(!modal)return;nextToken(modal);if(!SC.motion||!SC.motion.runLoaded)return;SC.motion.runLoaded(function(deps){var dialog=modal.querySelector(MS.dialog);deps.gsap.killTweensOf([modal,dialog]);});}
-/* Abre backdrop y diálogo con specs separados para posición y opacidad. */
+/* Abre backdrop y diálogo con una respuesta rápida y specs separados para geometría y opacidad. */
 function open(modal,source){
   if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.run&&SC.motion.run(function(deps){
-    var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;var spatial=SC.motion.springSpec('spatial','default'),effects=SC.motion.springSpec('effects','default');gsap.killTweensOf([modal,dialog]);origin(dialog,source);gsap.set(modal,{autoAlpha:0,willChange:'opacity'});gsap.set(dialog,{autoAlpha:0,y:CFG.openOffsetY,scale:CFG.openScale,willChange:'transform,opacity'});
+    var gsap=deps.gsap,dialog=modal.querySelector(MS.dialog);if(!dialog)return;var spatial=SC.motion.springSpec('spatial','fast'),effects=SC.motion.springSpec('effects','fast');gsap.killTweensOf([modal,dialog]);origin(dialog,source);gsap.set(modal,{autoAlpha:0,willChange:'opacity'});gsap.set(dialog,{autoAlpha:0,y:CFG.openOffsetY,scale:CFG.openScale,willChange:'transform,opacity'});
     gsap.timeline({defaults:{overwrite:'auto'},onComplete:function(){if(!current(modal,token))return;clear(modal,dialog,gsap);}})
       .to(modal,{autoAlpha:1,duration:effects.duration,ease:effects.ease},0)
       .to(dialog,{autoAlpha:1,duration:effects.duration,ease:effects.ease},0)

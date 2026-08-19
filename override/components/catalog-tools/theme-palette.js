@@ -32,9 +32,9 @@ function gsapFade(node,to,spec,done,id){
   var a=g.to(node,{opacity:to,duration:spec.duration,ease:spec.ease,overwrite:'auto',onComplete:function(){if(id!==token)return;done();}});active.push(a);return true;
 }
 
-/* Cubre, aplica el tema y revela la nueva paleta con un efecto no oscilante. */
+/* Cubre, aplica el tema y revela la nueva paleta con una respuesta breve y no oscilante. */
 function animate(before,commit,prepared){
-  var from=capture(),node=ensureOverlay();kill();var id=token,spec=SC.motion&&SC.motion.springSpec?SC.motion.springSpec('effects',reduce()?'fast':'default'):{duration:reduce()?.1:.16,ease:'power2.out'},duration=spec.duration*2,curves=CFG.motion&&CFG.motion.curves||{},context={from:from,to:from,duration:duration,token:id,fade:true};
+  var from=capture(),node=ensureOverlay();kill();var id=token,spec=SC.motion&&SC.motion.springSpec?SC.motion.springSpec('effects','fast'):{duration:reduce()?.1:.15,ease:'power2.out'},duration=spec.duration*2,curves=CFG.motion&&CFG.motion.curves||{},context={from:from,to:from,duration:duration,token:id,fade:true};
   if(!node){commit();return context;}
   node.style.backgroundColor=from['--sc-color-surface']||'#000';node.style.opacity='0';node.style.willChange='opacity';
   if(typeof prepared==='function')prepared(context);
