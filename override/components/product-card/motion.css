@@ -1,4 +1,4 @@
-/* El reveal conserva el flujo del documento y anima sólo propiedades compuestas. */
+/* La card conserva su geometría base; la respuesta temporal vive en state-motion. */
 .sushiShop .listadoShop .productoShop {
   position: relative;
   top: 0;
@@ -9,30 +9,22 @@
   -webkit-transform: none !important;
   transform: none !important;
 }
-
-/* El enlace completo responde a presión sin alterar tamaño ni distribución. */
-.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
-  transform: translate3d(0,0,0);
-  transform-origin: 50% 50%;
-  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
-  touch-action: manipulation;
-}
-.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active {
-  transform: translate3d(0,1px,0);
-}
-
+.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
 .sushiShop .productoShop .sumar {
-  -webkit-transform-origin: 50% 50%;transform-origin: 50% 50%;touch-action: manipulation;
-  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-standard),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
-  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-standard),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
+  touch-action: manipulation;
+  transition: none !important;
 }
-.sushiShop .productoShop .sumar:active {-webkit-transform: translate3d(0,1px,0);transform: translate3d(0,1px,0);}
-.sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}
+.sushiShop .productoShop .sumar:focus-visible {
+  outline: var(--sc-focus-ring-width) solid currentColor;
+  outline-offset: var(--sc-focus-ring-offset);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .sushiShop .listadoShop .productoShop {top: 0 !important;-webkit-transform: none !important;transform: none !important;}
+  .sushiShop .listadoShop .productoShop,
   .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd,
-  .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active,
-  .sushiShop .productoShop .sumar,
-  .sushiShop .productoShop .sumar:active {-webkit-transform: none !important;transform: none !important;transition: none !important;}
+  .sushiShop .productoShop .sumar {
+    -webkit-transform: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
