@@ -31,7 +31,6 @@ var integrationStages=[
     ['components/category-nav/sticky-state.js','sc-category-nav-sticky-state-js'],
     ['components/category-nav/indicator.js','sc-category-nav-indicator-js'],
     ['components/catalog-tools/search.js','sc-catalog-tools-search-js'],
-    ['components/catalog-tools/theme-palette.js','sc-catalog-tools-theme-palette-js'],
     ['components/catalog-tools/view.js','sc-catalog-tools-view-js'],
     ['components/catalog-tools/state-motion.js','sc-catalog-tools-state-motion-js'],
     ['components/product-card/a11y.js','sc-product-card-a11y-js'],
