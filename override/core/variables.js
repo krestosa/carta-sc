@@ -71,7 +71,7 @@ config.motion.springs=merged({
 },config.motion.springs);
 config.motion.stagger=merged({fast:.012,default:.016,slow:.020,maxTotal:.12},config.motion.stagger);
 config.motion.distance=merged({fast:28,slow:180},config.motion.distance);
-config.motion.press=merged({grow:.45,minimum:.225,touchDelay:.15,release:.15,originScale:.2,padding:10,softMinimum:75,softRatio:.35},config.motion.press);
+config.motion.press=merged({grow:.45,minimum:.225,touchDelay:.15,onset:.105,release:.375,originScale:.2,padding:10,softMinimum:75,softRatio:.35},config.motion.press);
 config.motion.curves=merged({
   standard:'cubic-bezier(.2,0,0,1)',
   standardAccelerate:'cubic-bezier(.3,0,1,1)',
