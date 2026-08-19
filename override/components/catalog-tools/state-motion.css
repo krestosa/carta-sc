@@ -116,8 +116,3 @@ body.sushiShop > .sc-category-submenu .sc-category-submenu-link { transform:none
 body.sushiShop .nav-top-li.sc-has-subcategories > a.anchorLink .sc-category-submenu-caret { transition:none!important; }
 @media (max-width: 992px) { body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav { transform:none!important;transition:none!important; } }
 @media (forced-colors: active) { body.sushiShop .sc-motion-state-host > .sc-motion-state-surface { display:none!important; } }
-@media (prefers-reduced-motion: reduce) {
-  body.sushiShop .sc-motion-state-host > .sc-motion-state-surface::before { transition:none!important; }
-  body.sushiShop .sc-motion-state-host > .sc-motion-state-surface > .sc-motion-state-wave { display:none!important; }
-  body.sushiShop .sc-theme-menu { transition:none!important;transform:none!important; }
-}
