@@ -3,9 +3,9 @@
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config;if(!SC||!U||!C||SC.__categoryNavCoreBooted)return;SC.__categoryNavCoreBooted=true;
 
 /* Selectores, offsets y estado del scroll programático. */
-var S=C.selectors,K=C.classes,N=SC.categoryNav=SC.categoryNav||{},each=U.each,offsetCache=null,autoRaf=0,autoToken=0;
+var S=C.selectors,N=SC.categoryNav=SC.categoryNav||{},each=U.each,offsetCache=null,autoRaf=0,autoToken=0;
 N.selectors=N.selectors||{select:'.JSgoMenu',scroller:'.sc-catalog-categories',mobileWrapper:'.fixedTopShop.wtopShopMenuMobile',mobileRail:'.topShopMenuMobile',mobileScroller:'.topShopMenuMobileScroller'};
-var CFG={offsetGap:12,currentMarkOffset:2,programmaticGraceMs:180,scrollMinDuration:.72,scrollMaxDuration:1.36,scrollDistanceScale:2400,scrollDistancePower:.62,settleTolerance:.75};N.currentMarkOffset=CFG.currentMarkOffset;
+var CFG={offsetGap:12,currentMarkOffset:2,programmaticGraceMs:180,settleTolerance:.75};N.currentMarkOffset=CFG.currentMarkOffset;
 var scrollState=SC.scrollState=SC.scrollState||{};scrollState.programmatic=false;scrollState.suppressRevealUntil=0;N.mq=C.queries.desktop;
 
 /* Resuelve anchors y relaciones padre/subcategoría. */
@@ -25,21 +25,18 @@ function offset(){
 function closeLegacy(){if(SC.mutations&&SC.mutations.closeLegacyCategoryMenus)return SC.mutations.closeLegacyCategoryMenus();each(document.querySelectorAll(S.legacyPullDownOpen),function(node){node.classList.remove('open');});each(document.querySelectorAll(S.legacyMobileOpen),function(node){node.classList.remove('_open');});}
 function cleanHash(){if(SC.mutations&&SC.mutations.cleanCategoryHash)return SC.mutations.cleanCategoryHash();if(/^#anchor/i.test(location.hash||''))try{history.replaceState(history.state,document.title,location.pathname+location.search);}catch(_){} }
 
-/* Coordina scroll automático y pausa temporal del scroll-spy. */
+/* Coordina scroll directo y pausa temporal del scroll-spy. */
 function setProgrammatic(on,grace){scrollState.programmatic=!!on;scrollState.suppressRevealUntil=on?Infinity:(grace?performance.now()+CFG.programmaticGraceMs:0);}
 function cancelAutoScroll(userInterrupt){autoToken++;if(autoRaf){cancelAnimationFrame(autoRaf);autoRaf=0;}if(userInterrupt){setProgrammatic(false,false);if(N.releaseSpyHold)N.releaseSpyHold();if(N.scheduleSpy)N.scheduleSpy();}}
-function durationFor(distance){var range=CFG.scrollMaxDuration-CFG.scrollMinDuration;return Math.min(CFG.scrollMaxDuration,Math.max(CFG.scrollMinDuration,CFG.scrollMinDuration+Math.pow(Math.min(1,distance/CFG.scrollDistanceScale),CFG.scrollDistancePower)*range));}
 function targetYFromCurrentOffset(target){var y=target.getBoundingClientRect().top+(pageYOffset||document.documentElement.scrollTop||0)-offset(),max=Math.max(0,document.documentElement.scrollHeight-innerHeight);return Math.max(0,Math.min(max,y));}
 function targetY(target){invalidateOffset();return targetYFromCurrentOffset(target);}
-function scrollPlan(target){var y=targetY(target),startY=pageYOffset||document.documentElement.scrollTop||0,distance=Math.abs(y-startY),instant=C.queries.reducedMotion.matches||distance<CFG.currentMarkOffset;return{y:y,distance:distance,duration:instant?0:durationFor(distance)};}
-function scrollEase(p){return SC.motion&&SC.motion.curve?SC.motion.curve('standard')(p):(1-Math.pow(1-p,4));}
+function scrollPlan(target){return{y:targetY(target)};}
 
-/* Anima scroll y corrige la posición final con el offset actual. */
+/* El componente no define una trayectoria vertical; se posiciona y corrige el offset al estabilizar layout. */
 function finishAutoScroll(token,target){
   if(token!==autoToken)return;autoRaf=requestAnimationFrame(function(){if(token!==autoToken)return;autoRaf=requestAnimationFrame(function(){autoRaf=0;if(token!==autoToken)return;var finalY=targetY(target),currentY=pageYOffset||document.documentElement.scrollTop||0;if(Math.abs(finalY-currentY)>CFG.settleTolerance)scrollTo(0,finalY);if(N.refreshMetrics)N.refreshMetrics();setProgrammatic(false,true);if(N.releaseSpyHold)N.releaseSpyHold();if(N.scheduleSpy)N.scheduleSpy();});});
 }
-function animateScroll(target,token,duration,destination){var startY=pageYOffset||document.documentElement.scrollTop||0,start=performance.now(),ms=duration*1000;function frame(now){if(token!==autoToken)return;if(offsetCache===null)destination=targetYFromCurrentOffset(target);var p=Math.min(1,(now-start)/ms);scrollTo(0,startY+(destination-startY)*scrollEase(p));if(p<1)autoRaf=requestAnimationFrame(frame);else{autoRaf=0;finishAutoScroll(token,target);}}autoRaf=requestAnimationFrame(frame);}
-function scrollToTarget(target,plan){invalidateOffset();plan=plan||scrollPlan(target);cancelAutoScroll(false);var token=++autoToken;setProgrammatic(true,false);if(!plan.duration){scrollTo(0,targetY(target));finishAutoScroll(token,target);return;}animateScroll(target,token,plan.duration,plan.y);}
+function scrollToTarget(target,plan){invalidateOffset();plan=plan||scrollPlan(target);cancelAutoScroll(false);var token=++autoToken;setProgrammatic(true,false);scrollTo(0,plan.y);finishAutoScroll(token,target);}
 function activateAndScroll(target,activeTarget){activeTarget=activeTarget||target;invalidateOffset();var plan=scrollPlan(target);if(N.holdSpy)N.holdSpy(activeTarget);if(N.setActive)N.setActive(activeTarget,true);scrollToTarget(target,plan);}
 
 /* Maneja click/tap de categorías y subcategorías. */
