@@ -3,11 +3,9 @@
 var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,N=SC&&SC.categoryNav,T=SC&&SC.templates;if(!SC||!U||!C||!N||!T||SC.__categoryNavIndicatorBooted)return;SC.__categoryNavIndicatorBooted=true;
 
 /* Un indicador por riel; la geometría visible permite retargetear sin saltos entre selecciones. */
-var CFG={minWidth:6,textInsetMax:1.25,textInsetRatio:.025,duration:.25},entries=[],dirty=true,deps=null;
+var CFG={duration:.25},entries=[],dirty=true,deps=null;
 function reduced(){return SC.motion&&SC.motion.reduced?SC.motion.reduced():C.queries.reducedMotion.matches;}
 function gsap(){return deps&&deps.gsap;}
-function physicalPixel(){return 1/Math.max(1,window.devicePixelRatio||1);}
-function floorPhysical(v){var dpr=Math.max(1,window.devicePixelRatio||1);return Math.floor(v*dpr+1e-6)/dpr;}
 function mount(root){return root.closest(N.selectors.mobileScroller)||root;}
 function visual(link){var fallback=link.getBoundingClientRect();try{var range=document.createRange();range.selectNodeContents(link);var rect=range.getBoundingClientRect();if(rect&&rect.width>1&&rect.height>0)return rect;}catch(_){}return fallback;}
 function sameTarget(link,target){var resolved=N.anchor(link.getAttribute('href'));if(resolved===target)return true;return!!(resolved&&target&&resolved.id&&target.id&&resolved.id===target.id);}
@@ -17,7 +15,7 @@ function kill(item,clear){if(item.tween){item.tween.kill();item.tween=null;}if(i
 function destroy(item){kill(item,true);if(item.line&&item.line.parentNode)item.line.parentNode.removeChild(item.line);}
 function entry(root){var host=mount(root),item=null;for(var i=entries.length-1;i>=0;i--){if(entries[i].root!==root)continue;if(entries[i].host===host){item=entries[i];break;}destroy(entries[i]);entries.splice(i,1);}if(item)return item;var line=T.clone('category-indicator');host.classList.add('sc-category-motion-root');host.appendChild(line);if(host.matches(N.selectors.mobileScroller))line.style.setProperty('bottom','0','important');item={root:root,host:host,line:line,x:0,width:1,init:false,tween:null};entries.push(item);return item;}
 function rootScale(item){var rootRect=item.root.getBoundingClientRect(),scale=item.root.offsetWidth&&rootRect.width?rootRect.width/item.root.offsetWidth:1;return isFinite(scale)&&scale>0?scale:1;}
-function geometry(item,link){var linkRect=visual(link),x,width;if(item.host.matches(N.selectors.mobileScroller)){var hostRect=item.host.getBoundingClientRect();x=item.host.scrollLeft+(linkRect.left-hostRect.left);width=linkRect.width;}else{var rootRect=item.root.getBoundingClientRect(),scale=rootScale(item);x=(linkRect.left-rootRect.left)/scale+(item.root.scrollLeft||0);width=linkRect.width/scale;}var inset=Math.min(CFG.textInsetMax,Math.max(0,width*CFG.textInsetRatio));x+=inset;width=Math.max(CFG.minWidth,width-inset*2);if(item.host.matches(N.selectors.mobileScroller)){var right=floorPhysical(x+width)-physicalPixel();width=Math.max(CFG.minWidth,right-x);}return{x:x,width:width};}
+function geometry(item,link){var linkRect=visual(link),x,width;if(item.host.matches(N.selectors.mobileScroller)){var hostRect=item.host.getBoundingClientRect();x=item.host.scrollLeft+(linkRect.left-hostRect.left);width=linkRect.width;}else{var rootRect=item.root.getBoundingClientRect(),scale=rootScale(item);x=(linkRect.left-rootRect.left)/scale+(item.root.scrollLeft||0);width=linkRect.width/scale;}return{x:x,width:Math.max(0,width)};}
 /* getBoundingClientRect incluye el transform activo, igual que el indicador previo de una tab. */
 function renderedGeometry(item){
   if(!item||!item.init||!item.line)return{x:item.x,width:item.width};var lineRect=item.line.getBoundingClientRect(),x,width;
@@ -27,7 +25,7 @@ function renderedGeometry(item){
   return isFinite(x)&&isFinite(width)&&width>0?{x:x,width:width}:{x:item.x,width:item.width};
 }
 function snap(item,next){kill(item,true);item.x=next.x;item.width=next.width;item.init=true;item.line.style.left=next.x+'px';item.line.style.width=next.width+'px';item.line.style.opacity='1';}
-/* Replica el FLIP del indicador: 250 ms emphasized; reduced motion cambia desplazamiento por fade. */
+/* FLIP de 250 ms emphasized; reduced motion cambia desplazamiento por fade. */
 function animate(item,next){
   var g=gsap();if(!g){snap(item,next);return;}var ease=SC.motion&&SC.motion.curve?SC.motion.curve('emphasized'):function(p){return p;};
   if(reduced()){
