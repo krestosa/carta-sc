@@ -195,19 +195,12 @@ def bundle_css():
 
 def bundle_js():
     path = SITE / 'override/main.js'
-    loader = path.read_text(encoding='utf-8')
-    entry_re = re.compile(r"\['(?P<path>[^']+\.js)','(?P<id>[^']+)'\]")
-    entries = [(m.group('path'), m.group('id')) for m in entry_re.finditer(loader)]
+    runtime_path = SITE / 'override/runtime-main.js'
+    runtime = runtime_path.read_text(encoding='utf-8')
+    entry_re = re.compile(r"\[\s*'(?P<path>[^']+\.js)'\s*,\s*'(?P<id>[^']+)'\s*\]")
+    entries = [(m.group('path'), m.group('id')) for m in entry_re.finditer(runtime)]
     if not entries:
-        raise SystemExit('No override JS module entries were found to bundle')
-
-    section_match = re.search(
-        r"loadScript\('(?P<path>components/section-heading/section-heading\.js)','(?P<id>[^']+)'\)",
-        loader,
-    )
-    if not section_match:
-        raise SystemExit('Could not locate the delayed section-heading module')
-    entries.append((section_match.group('path'), section_match.group('id')))
+        raise SystemExit('No override runtime module entries were found to bundle')
 
     paths = [item[0] for item in entries]
     ids = [item[1] for item in entries]
@@ -216,7 +209,7 @@ def bundle_js():
     if len(ids) != len(set(ids)):
         raise SystemExit('Duplicate JS module ids found while bundling')
 
-    declared_paths = set(re.findall(r"'([^']+\.js)'", loader))
+    declared_paths = set(re.findall(r"'([^']+\.js)'", runtime))
     captured_paths = set(paths)
     if declared_paths != captured_paths:
         missing = sorted(declared_paths - captured_paths)
@@ -237,19 +230,51 @@ def bundle_js():
 
     tail = """
 var SC=window.SCOverride;
+function releaseReveal(){
+  var root=document.documentElement;
+  if(!root)return;
+  root.setAttribute('data-sc-catalog-reveal-ready','true');
+  root.classList.remove('sc-catalog-reveal-prepaint');
+}
+function waitForDomReady(){
+  if(document.readyState!=='loading')return Promise.resolve();
+  return new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});});
+}
 if(!SC||!SC.renderLifecycle)throw new Error('[SushiClub override] Render lifecycle unavailable');
-SC.renderLifecycle.waitForStableLayout().then(function(){
-  SC.renderLifecycle.markInitialViewport();
-  if(SC.motion)SC.motion.unlock();
-}).catch(function(error){
-  if(window.console&&console.error)console.error('[SushiClub override] Error iniciando módulos',error);
-});
+Promise.resolve()
+  .then(function(){
+    var templates=SC.templates;
+    if(!templates||!templates.ready)throw new Error('Template registry unavailable');
+    return templates.ready();
+  })
+  .then(function(){
+    var motion=SC.motion;
+    return motion&&motion.prepare?motion.prepare():null;
+  })
+  .then(waitForDomReady)
+  .then(function(){
+    var lifecycle=SC.renderLifecycle,motion=SC.motion;
+    lifecycle.markInitialViewport();
+    if(lifecycle.freezeInitialViewport)lifecycle.freezeInitialViewport();
+    if(motion)motion.unlock();
+    releaseReveal();
+    return lifecycle.waitForStableLayout();
+  })
+  .then(function(){
+    var motion=SC.motion;
+    if(motion&&motion.refresh)motion.refresh(0);
+  })
+  .catch(function(error){
+    releaseReveal();
+    if(window.console&&console.error)console.error('[SushiClub override] Error iniciando módulos',error);
+  });
 """.strip()
 
     output = [
         '(function(){',
         "'use strict';",
-        'if(window.__scOverrideMainBooted)return;window.__scOverrideMainBooted=true;',
+        'if(window.__scOverrideEntryBooted||window.__scOverrideMainBooted)return;',
+        'window.__scOverrideEntryBooted=true;window.__scOverrideMainBooted=true;',
         '',
         '\n\n'.join(modules),
         '',
