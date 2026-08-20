@@ -1,42 +1,44 @@
-name: Type payload inspect
+name: Apply TypeScript migration batch
 
 on:
   push:
     branches: [type]
     paths:
+      - '.migration/strict-fixes.tgz'
       - '.github/workflows/type-payload-inspect.yml'
-      - '.migration/type-final-payload.b64'
 
 permissions:
   contents: write
 
 jobs:
-  inspect:
+  apply:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: type
-      - name: Decode staged payload
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply exact migration batch
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode .migration/type-final-payload.b64 > /tmp/type-final-payload.gz
-          gzip -t /tmp/type-final-payload.gz
-          gzip -dc /tmp/type-final-payload.gz > /tmp/type-final-payload.decoded
-          file /tmp/type-final-payload.gz /tmp/type-final-payload.decoded | tee .migration/type-final-payload.kind
-          if tar -tzf /tmp/type-final-payload.gz > .migration/type-final-payload.list 2>/tmp/tar-error; then
-            cat .migration/type-final-payload.list
-          else
-            printf '%s\n' 'NOT_A_TAR_ARCHIVE' > .migration/type-final-payload.list
-            cat /tmp/tar-error
-          fi
-      - name: Publish payload manifest
+          tar -xzf .migration/strict-fixes.tgz -C .
+          npm ci
+          npm run typecheck
+          git diff --check
+      - name: Publish validated batch
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .migration/type-final-payload.kind .migration/type-final-payload.list
-          git commit -m 'chore(type): expose staged payload manifest'
+          git add types/browser.d.ts override/core/variables.ts scripts/validate-overrides.ts lab/pages/validators.ts
+          if git diff --cached --quiet; then
+            echo 'No migration changes to publish.'
+            exit 0
+          fi
+          git commit -m 'refactor(type): consolidate strict contracts and Pages validators'
           git push origin HEAD:type
