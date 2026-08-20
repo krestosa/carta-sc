@@ -1,32 +1,40 @@
-name: Type recovery bootstrap
+name: Type lockfile commit
 
 on:
   push:
     branches: [type]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: type-lockfile
+  cancel-in-progress: false
 
 jobs:
-  snapshot:
+  lockfile:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: type
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Generate deterministic lockfile
         run: npm install --package-lock-only --ignore-scripts
-      - name: Package branch snapshot
-        run: tar --exclude=.git -czf /tmp/type-source.tgz .
-      - uses: actions/upload-artifact@v4
-        with:
-          name: type-source-snapshot
-          path: /tmp/type-source.tgz
-          if-no-files-found: error
-          retention-days: 1
+      - name: Commit lockfile when changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            echo "package-lock.json already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- package-lock.json
+          git commit -m "build(type): add deterministic npm lockfile"
+          git push origin HEAD:type
