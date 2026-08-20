@@ -1,24 +1,23 @@
-name: LAB - Deploy ux replica to Pages
+name: LAB - Deploy type replica to Pages
 
 on:
   push:
     branches:
-      - ux
+      - type
   workflow_dispatch:
 
 permissions:
-  actions: write
   contents: read
   pages: write
   id-token: write
 
 concurrency:
-  group: pages-ux-lab
+  group: pages-type-lab
   cancel-in-progress: true
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/ux'
+    if: github.ref == 'refs/heads/type'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
@@ -33,249 +32,83 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
+      - name: Set up Node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Verify checked out SHA
-        shell: bash
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Guard against stale run
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          latest=$(curl -fsSL \
-            -H 'Accept: application/vnd.github+json' \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H 'X-GitHub-Api-Version: 2022-11-28' \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/ux" \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')
-          test "$latest" = "$GITHUB_SHA"
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { data } = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'heads/type'
+            });
+            if (data.object.sha !== context.sha) {
+              core.setFailed(`Refusing stale Pages build: run=${context.sha}, type=${data.object.sha}`);
+            }
 
-      - name: Validate production frontend boundary
-        shell: bash
-        run: |
-          node scripts/validate-overrides.mjs
-          node scripts/validate-production-boundary.mjs
-          node scripts/validate-responsive-contract.mjs
+      - name: Typecheck
+        run: npm run typecheck
 
-      - name: Validate lab tooling syntax
-        shell: bash
-        run: python3 -m compileall -q lab/pages/scripts
+      - name: Validate source and runtime
+        run: npm run validate
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
-      - name: Install lab-only build dependencies
-        shell: bash
-        run: python3 -m pip install --disable-pip-version-check --no-input -r lab/pages/requirements.txt
+      - name: Build isolated Pages artifact
+        run: npm run build:pages
 
-      - name: Build isolated Pages benchmark artifact
-        shell: bash
-        run: bash lab/pages/build.sh
-
-      - name: Upload benchmark artifact
-        id: upload
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
           path: '.pages-site'
           include-hidden-files: true
 
       - name: Guard again before deploy
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          latest=$(curl -fsSL \
-            -H 'Accept: application/vnd.github+json' \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H 'X-GitHub-Api-Version: 2022-11-28' \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/ux" \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')
-          test "$latest" = "$GITHUB_SHA"
-
-      - name: Deploy exact latest artifact with retry
-        id: deployment
         uses: actions/github-script@v9
-        env:
-          PAGES_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
         with:
-          github-token: ${{ github.token }}
           script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const sha = context.sha;
-            const artifactId = Number(process.env.PAGES_ARTIFACT_ID);
-            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-            const transientStatuses = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
-            const temporaryDeploymentStatuses = new Set([
-              'new',
-              'queued',
-              'pending',
-              'in_progress',
-              'unknown_status',
-              'not_found',
-              'deployment_attempt_error'
-            ]);
-            const finalFailureStatuses = new Set([
-              'deployment_failed',
-              'deployment_perms_error',
-              'deployment_content_failed',
-              'deployment_cancelled',
-              'deployment_lost'
-            ]);
-
-            if (!Number.isSafeInteger(artifactId) || artifactId <= 0) {
-              throw new Error(`Invalid Pages artifact id: ${process.env.PAGES_ARTIFACT_ID}`);
+            const { data } = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'heads/type'
+            });
+            if (data.object.sha !== context.sha) {
+              core.setFailed(`Refusing stale Pages deploy: run=${context.sha}, type=${data.object.sha}`);
             }
 
-            async function getLatestSha() {
-              const response = await github.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-                owner,
-                repo,
-                ref: 'heads/ux'
-              });
-              return response.data.object.sha;
-            }
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-            async function assertLatest() {
-              const latest = await getLatestSha();
-              if (latest !== sha) {
-                throw new Error(`Refusing stale Pages deploy: run=${sha}, ux=${latest}`);
-              }
-            }
-
-            async function cancelDeployment(deploymentId) {
-              if (!deploymentId) return;
-              try {
-                await github.request('POST /repos/{owner}/{repo}/pages/deployments/{deployment_id}/cancel', {
-                  owner,
-                  repo,
-                  deployment_id: deploymentId
-                });
-              } catch (error) {
-                core.warning(`Could not cancel stale Pages deployment ${deploymentId}: ${error.message}`);
-              }
-            }
-
-            await assertLatest();
-            const idToken = await core.getIDToken();
-            const createBackoffMs = [0, 5000, 10000, 20000, 40000, 80000, 120000, 180000, 240000];
-            let deployment = null;
-            let lastCreateError = null;
-
-            for (let attempt = 0; attempt < createBackoffMs.length; attempt++) {
-              if (createBackoffMs[attempt]) {
-                core.warning(`Pages create retry ${attempt + 1}/${createBackoffMs.length} in ${createBackoffMs[attempt] / 1000}s`);
-                await sleep(createBackoffMs[attempt]);
-              }
-
-              await assertLatest();
-
-              try {
-                const response = await github.request('POST /repos/{owner}/{repo}/pages/deployments', {
-                  owner,
-                  repo,
-                  artifact_id: artifactId,
-                  pages_build_version: sha,
-                  oidc_token: idToken
-                });
-                deployment = response.data;
-                break;
-              } catch (error) {
-                lastCreateError = error;
-                const status = Number(error.status || error.response?.status || 0);
-                if (!transientStatuses.has(status)) throw error;
-                core.warning(`Transient Pages create failure HTTP ${status}: ${error.message}`);
-              }
-            }
-
-            if (!deployment) {
-              throw lastCreateError || new Error('Pages deployment could not be created after retries');
-            }
-
-            const deploymentId = deployment.id || deployment.status_url?.split('/').pop() || sha;
-            const pageUrl = deployment.page_url || '';
-            core.setOutput('page_url', pageUrl);
-            core.info(`Created Pages deployment ${deploymentId} for ${sha}`);
-
-            const deadline = Date.now() + 10 * 60 * 1000;
-            let pollErrors = 0;
-
-            while (Date.now() < deadline) {
-              await sleep(5000);
-
-              const latest = await getLatestSha();
-              if (latest !== sha) {
-                await cancelDeployment(deploymentId);
-                throw new Error(`Cancelled stale Pages deployment: run=${sha}, ux=${latest}`);
-              }
-
-              try {
-                const response = await github.request('GET /repos/{owner}/{repo}/pages/deployments/{deployment_id}', {
-                  owner,
-                  repo,
-                  deployment_id: deploymentId
-                });
-                const status = response.data.status;
-                core.info(`Pages deployment ${deploymentId}: ${status}`);
-
-                if (status === 'succeed') {
-                  core.setOutput('status', 'succeed');
-                  return;
-                }
-                if (finalFailureStatuses.has(status)) {
-                  throw new Error(`Pages deployment ended with ${status}`);
-                }
-                if (!temporaryDeploymentStatuses.has(status)) {
-                  core.info(`Waiting on unrecognized non-final Pages status: ${status}`);
-                }
-                pollErrors = 0;
-              } catch (error) {
-                const status = Number(error.status || error.response?.status || 0);
-                if (!transientStatuses.has(status)) throw error;
-                pollErrors++;
-                core.warning(`Transient Pages status failure HTTP ${status}: ${error.message}`);
-                if (pollErrors >= 12) throw error;
-              }
-            }
-
-            await cancelDeployment(deploymentId);
-            throw new Error(`Timed out waiting for Pages deployment ${deploymentId}`);
-
-      - name: Verify public Pages serves exact ux HEAD
+      - name: Verify public Pages serves exact type HEAD
         env:
-          GH_TOKEN: ${{ github.token }}
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        shell: bash
         run: |
           set -euo pipefail
           test -n "$PAGE_URL"
-
           for attempt in $(seq 1 30); do
-            latest=$(curl -fsSL \
-              -H 'Accept: application/vnd.github+json' \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H 'X-GitHub-Api-Version: 2022-11-28' \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/ux" \
-              | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')
-
-            if [ "$latest" != "$GITHUB_SHA" ]; then
-              echo "Refusing to validate stale deploy: run=$GITHUB_SHA ux=$latest" >&2
-              exit 1
-            fi
-
             verify_url="${PAGE_URL%/}/?sc-deploy-verify=${GITHUB_SHA}-${attempt}"
             html=$(curl -fsSL --retry 3 --retry-delay 1 \
               -H 'Cache-Control: no-cache, no-store, max-age=0' \
               -H 'Pragma: no-cache' \
               "$verify_url" || true)
-
             if grep -Fq "window.__scCatalogAssetVersion='${GITHUB_SHA}'" <<<"$html"; then
-              echo "Verified public Pages is serving exact ux HEAD $GITHUB_SHA"
+              echo "Verified public Pages is serving exact type HEAD $GITHUB_SHA"
               exit 0
             fi
-
             sleep 3
           done
-
-          echo "Pages deployment completed but public HTML is not serving exact ux HEAD $GITHUB_SHA" >&2
+          echo "Pages deployment completed but public HTML is not serving exact type HEAD $GITHUB_SHA" >&2
           exit 1
