@@ -11,6 +11,32 @@ permissions:
   contents: read
 
 jobs:
+  golden-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: lab/pages/requirements.txt
+      - name: Install baseline dependencies
+        run: python -m pip install --disable-pip-version-check --no-input -r lab/pages/requirements.txt
+      - name: Build baseline Pages artifact
+        env:
+          GITHUB_SHA: cb9160504c18d2b71f5710515d405f9d07321496
+        run: bash lab/pages/build.sh
+      - name: Upload golden Pages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-pages-main
+          path: .pages-site
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
   snapshot:
     runs-on: ubuntu-latest
     steps:
@@ -18,14 +44,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Record environment
-        run: |
-          git status --short
-          git rev-parse HEAD
-          node --version
-          npm --version
-
       - name: Upload repository snapshot
         uses: actions/upload-artifact@v4
         with:
