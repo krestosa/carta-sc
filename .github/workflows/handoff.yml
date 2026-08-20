@@ -1,21 +1,21 @@
-name: Handoff
+name: Handoff TypeScript
 
 on:
   push:
     branches:
-      - ux
+      - type
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: handoff-ux
+  group: handoff-type
   cancel-in-progress: true
 
 jobs:
   handoff:
-    if: github.ref == 'refs/heads/ux'
+    if: github.ref == 'refs/heads/type'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -25,43 +25,43 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
-      - name: Validate source
-        shell: bash
-        run: |
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          node scripts/validate-overrides.mjs
-          node scripts/validate-production-boundary.mjs
-          node scripts/validate-responsive-contract.mjs
-          bash -n lab/handoff/build-current.sh
-          bash -n lab/handoff/build-handoff.sh
+      - name: Set up Node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify checked out SHA
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Validate source and runtime
+        run: npm run validate
 
       - name: Build handoff
-        shell: bash
-        run: bash lab/handoff/build-current.sh
+        run: npm run build:handoff
 
-      - name: Verify handoff
-        shell: bash
+      - name: Validate handoff
+        run: npm run validate:handoff
+
+      - name: Verify handoff contract
         run: |
+          set -euo pipefail
           test -s handoff/README.md
           test -s handoff/BUILD_SHA
           test -s handoff/compiled/index.html
           test -s handoff/compiled/.nojekyll
           test -d handoff/source/override
-          test -d handoff/source/tooling/scripts
-          test -s handoff/source/tooling/build.py
-          test -s handoff/source/tooling/.nojekyll
-          test -x handoff/build-local.sh
-          test -x handoff/serve-local.sh
-          test -s handoff/build-local.ps1
-          test -s handoff/serve-local.ps1
+          test -s handoff/source/lab/pages/build.ts
+          test -s handoff/source/package.json
+          test -s handoff/source/package-lock.json
           test "$(cat handoff/BUILD_SHA)" = "$GITHUB_SHA"
-          test -d handoff/compiled/_build
-          test ! -e handoff/source/tooling/validators
-          test ! -e handoff/source/tooling/scripts/validate-snapshot-override-integration.mjs
-          test ! -e handoff/source/tooling/scripts/validate-build-local-assets.py
-          test ! -e handoff/source/tooling/scripts/validate-build-html.py
-          test ! -e handoff/source/tooling/scripts/validate-build-performance-budget.py
-          test ! -e handoff/source/tooling/scripts/validate-system-load.py
+          ! find handoff/source -type f \( -name '*.py' -o -name '*.mjs' -o -name '*.sh' -o -name 'requirements.txt' \) -print -quit | grep -q .
 
       - name: Upload handoff
         uses: actions/upload-artifact@v7
