@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2018",
+    "module": "None",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "rootDir": ".",
+    "outDir": ".generated/browser",
+    "removeComments": false,
+    "noEmitOnError": true,
+    "types": []
+  },
+  "include": [
+    "types/browser.d.ts",
+    "override/**/*.ts"
+  ],
+  "exclude": [
+    ".generated",
+    ".build",
+    "node_modules"
+  ]
+}
