@@ -1,0 +1,39 @@
+name: Type source snapshot
+
+on:
+  push:
+    branches: [type]
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: type
+          fetch-depth: 0
+      - name: Package source
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git --exclude=node_modules --exclude=.build --exclude=.generated --exclude=.pages-site --exclude=handoff -czf /tmp/type-source.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: type-source-snapshot
+          path: /tmp/type-source.tgz
+          if-no-files-found: error
+          retention-days: 1
+      - name: Record run id
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p .migration
+          printf '%s\n' "$GITHUB_RUN_ID" > .migration/latest-run-id.txt
+          git add -- .migration/latest-run-id.txt
+          git commit -m "chore(type): record source snapshot run"
+          git push origin HEAD:type
