@@ -1,4 +1,4 @@
-name: Type lockfile bootstrap
+name: Type recovery bootstrap
 
 on:
   push:
@@ -11,18 +11,22 @@ permissions:
   contents: read
 
 jobs:
-  lockfile:
+  snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Generate deterministic lockfile
         run: npm install --package-lock-only --ignore-scripts
+      - name: Package branch snapshot
+        run: tar --exclude=.git -czf /tmp/type-source.tgz .
       - uses: actions/upload-artifact@v4
         with:
-          name: type-package-lock
-          path: package-lock.json
+          name: type-source-snapshot
+          path: /tmp/type-source.tgz
           if-no-files-found: error
           retention-days: 1
