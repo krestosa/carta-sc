@@ -1,0 +1,34 @@
+name: Type migration bootstrap
+
+on:
+  push:
+    branches: [type]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact branch commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record environment
+        run: |
+          git status --short
+          git rev-parse HEAD
+          node --version
+          npm --version
+
+      - name: Upload repository snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: type-repository-snapshot
+          path: .
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
