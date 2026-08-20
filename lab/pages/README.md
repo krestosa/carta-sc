@@ -1,74 +1,43 @@
 # GitHub Pages / Lighthouse lab
 
-`lab/pages/` is a benchmark harness for the static GitHub Pages replica. It is not production application code and must not be required by the real SushiClub deployment.
+`lab/pages/` es el harness de benchmark para la réplica estática de GitHub Pages. No es código de aplicación de producción y no puede convertirse en dependencia de `override/`.
 
-## Ownership boundary
+## Ownership
 
-Production-owned frontend lives in `override/`.
+El frontend propio vive en `override/` y su fuente JavaScript fue reemplazada por TypeScript. Los árboles `js/` y `_js_dev/` permanecen legacy/originales y el laboratorio los trata como dependencias inmutables.
 
-This lab may:
+Este lab puede copiar el snapshot a `.pages-site`, reescribir HTML staged, bundlear legacy CSS/JS, generar media WebP, alterar prioridades de carga e inyectar CSS/lifecycle exclusivos del benchmark.
 
-- copy the static snapshot into `.pages-site`;
-- rewrite the staged HTML;
-- bundle legacy CSS/JS for the replica;
-- generate responsive WebP assets for PageSpeed experiments;
-- alter loading priorities in the staged artifact;
-- delay analytics or third-party resources in the replica;
-- inject first-paint CSS and lifecycle behavior used only by the static benchmark;
-- validate the final Pages artifact.
+## Implementación
 
-This lab must not be treated as the implementation contract for the real site. Server rendering, backend behavior, cache headers, CDN configuration, image delivery, compression and production deployment belong to Sistemas.
+- `build.ts`: orquestador único del build de `.pages-site`.
+- `lib/`: utilidades Node para filesystem, red e imágenes.
+- `steps/`: transformaciones TypeScript del pipeline.
+- `validators.ts`: validaciones del artifact.
+- `assets/prepaint.css` y `assets/performance.css`: CSS inyectado sólo en staging.
+- `.nojekyll`: marker del artifact.
 
-## Promotion rule
+No hay Python, `requirements.txt`, MJS ni shell de build en la implementación canónica.
 
-A Lighthouse finding may be promoted from this lab into `override/` only when all of the following are true:
+## Staging de TypeScript
 
-1. the root cause is inside `override/`;
-2. the fix is browser/frontend behavior rather than deployment infrastructure;
-3. the fix remains valid if every file under `lab/pages/` disappears;
-4. it does not require the production server to reproduce a GitHub Pages transformation.
+El build compila `override/**/*.ts` a `.generated/browser/`. Luego copia el snapshot excluyendo los `.ts` y superpone el JavaScript compilado únicamente dentro de `.pages-site/override/`. Por eso el source permanece TypeScript-only mientras las URLs runtime legacy continúan terminando en `.js` dentro del artifact generado.
 
-Otherwise the finding stays here or is documented as a recommendation for Sistemas.
+`apply-lab-overrides.ts` modifica sólo la copia staged de `render-lifecycle.js` y agrega los assets de first paint del lab. El source TypeScript de `override/` no se reescribe.
 
-## Layout
+## Validación
 
-- `scripts/`: replica builders, integration checks and artifact validators.
-- `assets/prepaint.css`: geometry/first-paint rules injected only into `.pages-site`.
-- `assets/performance.css`: mobile critical-path rules injected only into `.pages-site`.
-- `requirements.txt`: deterministic lab-only Python dependencies.
-- `build.sh`: complete `.pages-site` build entrypoint.
-- `.nojekyll`: copied into the generated Pages artifact.
-- `DOCUMENTACION_TECNICA_LAB_LEGACY.md`: pointer to the historical documentation from before production/lab separation.
-
-The GitHub Actions entrypoint is `.github/workflows/lab-pages-replica.yml` because GitHub requires workflows to live under `.github/workflows/`.
-
-## Staging-only lifecycle injection
-
-The source `override/core/render-lifecycle.js` contains only production-valid frontend coordination. It does not know about `sc-catalog-prepaint` or generated critical media.
-
-During the lab build, `scripts/apply-lab-overrides.py` patches only `.pages-site/override/core/render-lifecycle.js` to add the benchmark-specific critical-media wait and prepaint cleanup. It also copies the two lab CSS files into the staging manifest. The source under `override/` remains unchanged.
-
-## Validation split
-
-From the repository root:
+Desde la raíz:
 
 ```bash
-node scripts/validate-overrides.mjs
-node scripts/validate-production-boundary.mjs
-node lab/pages/scripts/validate-snapshot-override-integration.mjs
+npm ci
+npm run typecheck
+npm run validate
+GITHUB_SHA=<sha-git-de-40-caracteres> npm run build:pages
 ```
 
-The first two validate the frontend deliverable. The third validates only the static snapshot harness used by this lab.
+`npm run validate` verifica también el límite de lenguaje: JavaScript versionado sólo puede existir en `js/` y `_js_dev/`.
 
-## Run locally
+## CI
 
-With a 40-character `GITHUB_SHA` exported:
-
-```bash
-python3 -m pip install -r lab/pages/requirements.txt
-node scripts/validate-overrides.mjs
-node scripts/validate-production-boundary.mjs
-bash lab/pages/build.sh
-```
-
-The output is `.pages-site/`. That directory is disposable laboratory output.
+`.github/workflows/lab-pages-replica.yml` ejecuta Node 22, `npm ci`, typecheck, validaciones y el build. La branch `type` construye y valida el artifact sin desplegarlo. Sólo `ux` puede desplegar GitHub Pages, conservando los guards de SHA y los reintentos del deploy.
