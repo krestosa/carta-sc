@@ -14,7 +14,8 @@ function parseAttrs(raw:string):Attrs{
   return attrs;
 }
 function maskRawText(html:string):string{
-  return html.replace(/(<(?<tag>script|style)\b[^>]*>)(?<body>[\s\S]*?)(<\/\k<tag>\s*>)/gi,(_all:string,open:string,_tag:string,_body:string,close:string,...args:unknown[])=>{
+  const withoutComments=html.replace(/<!--[\s\S]*?-->/g,(comment)=>' '.repeat(comment.length));
+  return withoutComments.replace(/(<(?<tag>script|style)\b[^>]*>)(?<body>[\s\S]*?)(<\/\k<tag>\s*>)/gi,(_all:string,open:string,_tag:string,_body:string,close:string,...args:unknown[])=>{
     const groups=args.at(-1) as {body?:string}|undefined;
     return open+' '.repeat((groups?.body??'').length)+close;
   });
