@@ -1,4 +1,4 @@
-name: Type lockfile commit
+name: Type migration bootstrap
 
 on:
   push:
@@ -9,11 +9,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: type-lockfile
+  group: type-migration-bootstrap
   cancel-in-progress: false
 
 jobs:
-  lockfile:
+  snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Generate deterministic lockfile
+      - name: Keep deterministic lockfile current
         run: npm install --package-lock-only --ignore-scripts
       - name: Commit lockfile when changed
         shell: bash
@@ -31,10 +31,42 @@ jobs:
           set -euo pipefail
           if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
             echo "package-lock.json already current"
-            exit 0
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- package-lock.json
+            git commit -m "build(type): refresh deterministic npm lockfile"
+            git push origin HEAD:type
           fi
+      - name: Package branch snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=.build \
+            --exclude=.generated \
+            --exclude=.pages-site \
+            --exclude=handoff \
+            -czf /tmp/type-source.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: type-source-snapshot
+          path: /tmp/type-source.tgz
+          if-no-files-found: error
+          retention-days: 1
+      - name: Record snapshot run id
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- package-lock.json
-          git commit -m "build(type): add deterministic npm lockfile"
+          mkdir -p .migration
+          printf '%s\n' "$GITHUB_RUN_ID" > .migration/latest-run-id.txt
+          git add -- .migration/latest-run-id.txt
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore(type): record migration snapshot run"
           git push origin HEAD:type
