@@ -3,6 +3,8 @@ name: Type migration bootstrap
 on:
   push:
     branches: [type]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
