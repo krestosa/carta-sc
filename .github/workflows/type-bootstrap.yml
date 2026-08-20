@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=0
-          for part in .migration/part-{01..06}.b64; do
+          for part in .migration/part-{01..12}.b64; do
             if [[ ! -s "$part" ]]; then
               echo "missing $part"
               missing=1
@@ -44,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .migration/part-{01..06}.b64 | base64 -d | gzip -d > /tmp/type-migration.patch
+          cat .migration/part-{01..12}.b64 | base64 -d | gzip -d > /tmp/type-migration.patch
           git apply --check /tmp/type-migration.patch
           git apply /tmp/type-migration.patch
           test -z "$(git diff --name-only -- js _js_dev)"
@@ -53,8 +53,6 @@ jobs:
         if: steps.patch.outputs.ready == 'true'
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
 
       - name: Generate lockfile
         if: steps.patch.outputs.ready == 'true'
