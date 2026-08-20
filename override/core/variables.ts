@@ -19,8 +19,10 @@ config.media=merged({
   forcedColors:'(forced-colors: active)'
 },config.media);
 config.queries=config.queries||{};
-['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion','reducedTransparency','moreContrast','forcedColors'].forEach(function(name:string){
-  if(!config.queries[name])config.queries[name]=window.matchMedia(config.media[name]);
+var mediaNames:Array<keyof SCMediaConfig>=['phone','mobile','tablet','compact','compactWide','desktop','reducedMotion','reducedTransparency','moreContrast','forcedColors'];
+mediaNames.forEach(function(name:keyof SCMediaConfig){
+  var queries=config.queries as Partial<SCQueries>;
+  if(!queries[name])queries[name]=window.matchMedia(config.media[name]);
 });
 
 /* Manifiesto de GSAP usado por motion/main.js antes de montar módulos interactivos. */
@@ -56,6 +58,7 @@ config.classes=merged({
 },config.classes);
 
 /* Ajustes de motion realmente globales; cada componente conserva sus propios tiempos. */
-config.motion=merged({geometryRefreshDelay:180},config.motion);
-config.motion.easings=merged({out:'power2.out',strongOut:'power3.out',in:'power2.in',inOut:'power2.inOut'},config.motion.easings);
+var defaultEasings={out:'power2.out',strongOut:'power3.out',in:'power2.in',inOut:'power2.inOut'};
+config.motion=merged({geometryRefreshDelay:180,easings:defaultEasings},config.motion);
+config.motion.easings=merged(defaultEasings,config.motion.easings);
 })();
