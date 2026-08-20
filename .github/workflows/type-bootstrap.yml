@@ -3,52 +3,24 @@ name: Type migration bootstrap
 on:
   push:
     branches: [type]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  golden-pages:
+  lockfile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
+          node-version: 22
+      - name: Generate deterministic lockfile
+        run: npm install --package-lock-only --ignore-scripts
+      - uses: actions/upload-artifact@v7
         with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: lab/pages/requirements.txt
-      - name: Install baseline dependencies
-        run: python -m pip install --disable-pip-version-check --no-input -r lab/pages/requirements.txt
-      - name: Build baseline Pages artifact
-        env:
-          GITHUB_SHA: cb9160504c18d2b71f5710515d405f9d07321496
-        run: bash lab/pages/build.sh
-      - name: Upload golden Pages artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: golden-pages-main
-          path: .pages-site
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 1
-
-  snapshot:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout exact branch commit
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Upload repository snapshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: type-repository-snapshot
-          path: .
-          include-hidden-files: true
+          name: type-package-lock
+          path: package-lock.json
           if-no-files-found: error
           retention-days: 1
