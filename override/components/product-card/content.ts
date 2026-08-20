@@ -133,5 +133,10 @@ function scheduleDescriptionMeasure():void{
   descriptionStartRaf=requestAnimationFrame(function(){descriptionStartRaf=0;if(!descriptionQueue.length)descriptionQueue=Array.from(document.querySelectorAll<HTMLElement>(S.productCards));if(typeof window.requestIdleCallback==='function')descriptionIdle=window.requestIdleCallback(measureDescriptionBatch,{timeout:DESCRIPTION_IDLE_TIMEOUT});else descriptionTimer=window.setTimeout(function(){measureDescriptionBatch(null);},30);});
 }
 
-SC.productCardContent={traitSpec:traitSpec,buildTraitRow:buildTraitRow,installFlavorRow:installFlavorRow,installTraitReferences:installTraitReferences,positionTraitReferences:positionTraitReferences,ensureDescriptionCopy:ensureDescriptionCopy,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure,clearFlavorRows:clearFlavorRows};
+function installFlavorRows(root?:ParentNode):void{
+  var scope=root||document;installTraitReferences();each(scope.querySelectorAll<HTMLElement>(S.productCard+' > '+S.productLink),function(link:HTMLElement){installFlavorRow(link);});
+}
+function measureDescriptions():void{scheduleDescriptionMeasure();}
+
+SC.productCardContent={buildTraitRow:buildTraitRow,installFlavorRow:installFlavorRow,installFlavorRows:installFlavorRows,installTraitReferences:installTraitReferences,positionTraitReferences:positionTraitReferences,ensureDescriptionCopy:ensureDescriptionCopy,measureDescriptions:measureDescriptions,scheduleDescriptionMeasure:scheduleDescriptionMeasure,cancelDescriptionMeasure:cancelDescriptionMeasure,clearFlavorRows:clearFlavorRows};
 })();
