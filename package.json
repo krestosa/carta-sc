@@ -1,0 +1,30 @@
+{
+  "name": "carta-sc-build",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "typecheck:browser": "tsc -p tsconfig.browser.json --noEmit",
+    "typecheck:tooling": "tsc -p tsconfig.tooling.json --noEmit",
+    "typecheck": "npm run typecheck:browser && npm run typecheck:tooling",
+    "compile:tooling": "tsc -p tsconfig.tooling.json",
+    "compile:browser": "tsc -p tsconfig.browser.json",
+    "build:runtime": "npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js",
+    "validate": "npm run build:runtime && node .build/tooling/scripts/validate-overrides.js && node .build/tooling/scripts/validate-production-boundary.js && node .build/tooling/scripts/validate-responsive-contract.js",
+    "build:pages": "npm run build:runtime && node .build/tooling/lab/pages/build.js",
+    "build:handoff": "npm run build:runtime && node .build/tooling/lab/handoff/build-handoff.js",
+    "build": "npm run validate",
+    "handoff:rebuild": "npm run build:runtime && node .build/tooling/lab/handoff/rebuild-handoff.js",
+    "serve:handoff": "npm run compile:tooling && node .build/tooling/lab/handoff/serve.js",
+    "validate:handoff": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff.js handoff",
+    "ci": "npm run typecheck && npm run validate && npm run build:pages && npm run build:handoff"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "sharp": "0.34.3",
+    "typescript": "5.8.3"
+  }
+}
