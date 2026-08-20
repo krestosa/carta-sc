@@ -1,21 +1,24 @@
-name: Handoff TypeScript
+name: TypeScript CI and Handoff
 
 on:
   push:
     branches:
       - type
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: handoff-type
+  group: typescript-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  handoff:
-    if: github.ref == 'refs/heads/type'
+  ci:
+    if: github.ref == 'refs/heads/type' || (github.event_name == 'pull_request' && github.head_ref == 'type')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -37,17 +40,8 @@ jobs:
       - name: Verify checked out SHA
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Validate source and runtime
-        run: npm run validate
-
-      - name: Build handoff
-        run: npm run build:handoff
-
-      - name: Validate handoff
-        run: npm run validate:handoff
+      - name: Run full TypeScript CI
+        run: npm run ci
 
       - name: Verify handoff contract
         run: |
