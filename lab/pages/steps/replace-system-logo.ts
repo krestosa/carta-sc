@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PAGE_ASSETS, SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import { SYSTEM_LOGO_SVG } from './system-logo-source.js';
 
 const CRITICAL_CSS="<style id=\"sc-system-brand-css\">\nbody.sushiShop .sc-system-brand-logo{display:block!important;flex:0 0 auto!important;width:312px!important;max-width:100%!important;height:45px!important;max-height:45px!important;margin:0!important;padding:0!important;opacity:1!important;visibility:visible!important;object-fit:contain!important;object-position:center center!important;filter:invert(1)!important;transform:none!important;transition:filter var(--sc-motion-theme,560ms) cubic-bezier(.45,0,.55,1)!important}\nhtml[data-sc-theme-resolved='dark'] body.sushiShop .sc-system-brand-logo{filter:none!important}\n@media(min-width:993px){body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo){box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:312px!important;max-width:312px!important;height:55px!important;max-height:55px!important;margin:0 auto!important;padding:0!important;line-height:0!important;vertical-align:top!important}body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo)>a{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;line-height:0!important}}\n@media(max-width:992px){body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo){display:flex!important;align-items:center!important;justify-content:center!important}body.sushiShop .brandOnlyMobile:has(.sc-system-brand-logo)>a{display:flex!important;align-items:center!important;justify-content:center!important;width:312px!important;max-width:calc(100vw - 120px)!important;height:var(--sc-mobile-header-height,100px)!important;margin:0!important;padding:0!important;line-height:0!important}body.sushiShop .brandOnlyMobile .sc-system-brand-logo{width:312px!important;max-width:100%!important;height:auto!important;max-height:45px!important;aspect-ratio:312/45!important}}\n</style>";
 
@@ -25,7 +26,7 @@ function normalizeLogoTag(tag:string,newLogo:string,sourceAttr:'src'|'data-sc-de
 export function replaceSystemLogo():void{
   const sha=githubSha(),index=path.join(SITE,'index.html'),target=path.join(SITE,'_critical-media/sushiclub-logo.svg');
   const oldMobile=`_critical-media/mobile-logo.webp?v=${sha}`,oldDesktop=`_chrome-media/desktop-logo.webp?v=${sha}`,newLogo=`_critical-media/sushiclub-logo.svg?v=${sha}`;
-  const svg=read(path.join(PAGE_ASSETS,'sushiclub-logo.svg')).trim();
+  const svg=SYSTEM_LOGO_SVG.trim();
   assert(/<svg\b[^>]*viewBox="0 0 312 45"/i.test(svg),'unexpected SushiClub SVG geometry');assert((svg.match(/<path /g)??[]).length===9,'unexpected SushiClub SVG path count');write(target,svg.replace(/>\s+</g,'><')+'\n');
   let html=read(index);
   const mobileRe=new RegExp(`<img\\b(?=[^>]*\\bdata-sc-lcp-logo=["']1["'])(?=[^>]*\\bsrc=["']${escapeRegExp(oldMobile)}["'])[^>]*>`,'gi');
