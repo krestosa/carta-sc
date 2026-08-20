@@ -1,104 +1,28 @@
-name: Type migration executor
+name: Type lockfile bootstrap
 
 on:
   push:
     branches: [type]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: type-migration-executor
-  cancel-in-progress: true
+  contents: read
 
 jobs:
-  migrate:
+  lockfile:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Wait for complete migration patch
-        id: patch
-        shell: bash
-        run: |
-          set -euo pipefail
-          missing=0
-          for part in .migration/part-{01..12}.b64; do
-            if [[ ! -s "$part" ]]; then
-              echo "missing $part"
-              missing=1
-            fi
-          done
-          if [[ "$missing" == 1 ]]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Apply migration
-        if: steps.patch.outputs.ready == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat .migration/part-{01..12}.b64 | base64 -d | gzip -d > /tmp/type-migration.patch
-          git apply --check /tmp/type-migration.patch
-          git apply /tmp/type-migration.patch
-          test -z "$(git diff --name-only -- js _js_dev)"
-
-      - uses: actions/setup-node@v6
-        if: steps.patch.outputs.ready == 'true'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Generate lockfile
-        if: steps.patch.outputs.ready == 'true'
+      - name: Generate deterministic lockfile
         run: npm install --package-lock-only --ignore-scripts
-
-      - name: Install locked dependencies
-        if: steps.patch.outputs.ready == 'true'
-        run: npm ci
-
-      - name: Typecheck and validate
-        if: steps.patch.outputs.ready == 'true'
-        run: |
-          npm run typecheck
-          npm run validate
-
-      - name: Build Pages
-        if: steps.patch.outputs.ready == 'true'
-        run: npm run build:pages
-
-      - name: Build handoff
-        if: steps.patch.outputs.ready == 'true'
-        run: npm run build:handoff
-
-      - name: Clean-room rebuild handoff
-        if: steps.patch.outputs.ready == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp -a handoff/compiled /tmp/handoff-reference
-          cd handoff/source
-          rm -rf node_modules .build .generated .pages-site
-          npm ci
-          npm run handoff:rebuild
-          cd ../..
-          npm run compile:tooling
-          node .build/tooling/scripts/validate-handoff.js handoff /tmp/handoff-reference
-
-      - name: Commit migration
-        if: steps.patch.outputs.ready == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -z "$(git diff --name-only -- js _js_dev)"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git reset -- .migration .github/workflows/type-bootstrap.yml
-          git commit -m "refactor(type): migrate project-owned runtime and tooling"
-          git push origin HEAD:type
+      - uses: actions/upload-artifact@v4
+        with:
+          name: type-package-lock
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 1
