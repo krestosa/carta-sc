@@ -1,0 +1,35 @@
+(function(){
+'use strict';
+if(window.__scStoragePolicyBooted)return;window.__scStoragePolicyBooted=true;
+
+/* Solo tema y vista pueden persistir en localStorage. */
+var VIEW_KEY='scCatalogView:v3',THEME_KEY='scTheme:v1',nativeSet=window.Storage&&Storage.prototype&&Storage.prototype.setItem,purgeTimer=0;
+function safeStore(name:'localStorage'|'sessionStorage'):Storage|null{try{return window[name];}catch(_){return null;}}
+function owned(key:string):boolean{key=String(key||'');return key.indexOf('scTheme:')===0||key.indexOf('scCatalogView:')===0||key.indexOf('scCatalogSearch:')===0;}
+function allowedLocal(key:string):boolean{return key===THEME_KEY||key===VIEW_KEY;}
+function removeMatching(store:Storage|null,test:(key:string)=>boolean):void{if(!store)return;try{for(var i=store.length-1;i>=0;i--){var key=store.key(i);if(key&&test(key))store.removeItem(key);}}catch(_){} }
+
+/* Bloquea escrituras persistentes fuera de las claves permitidas. */
+function installGuard():void{
+  var proto=window.Storage&&Storage.prototype;if(!proto||!nativeSet||proto.__scPersistenceGuard)return;
+  var guarded=function(this:Storage,key:string,value:string):void{var k=String(key||'');if(owned(k)){if(this===safeStore('localStorage')&&allowedLocal(k)){nativeSet.call(this,k,value);return;}return;}nativeSet.call(this,key,value);};
+  try{Object.defineProperty(proto,'setItem',{configurable:true,writable:true,value:guarded});Object.defineProperty(proto,'__scPersistenceGuard',{configurable:true,value:true});}catch(_){}
+}
+
+/* Limpia estados propios que no deben sobrevivir la sesión. */
+function purgeSession():void{removeMatching(safeStore('sessionStorage'),owned);}
+function purgeLocal():void{
+  var store=safeStore('localStorage');if(!store)return;
+  removeMatching(store,function(key:string):boolean{if(key.indexOf('scCatalogSearch:')===0)return true;if(key.indexOf('scTheme:')===0)return key!==THEME_KEY;return false;});
+  var hasCurrentView=false;try{hasCurrentView=!!store.getItem(VIEW_KEY);}catch(_){}
+  if(hasCurrentView)removeMatching(store,function(key:string):boolean{return key.indexOf('scCatalogView:')===0&&key!==VIEW_KEY;});
+}
+function audit():void{purgeSession();purgeLocal();}
+
+/* Agrupa limpiezas disparadas por escritura en búsqueda. */
+function scheduleAudit():void{if(purgeTimer)clearTimeout(purgeTimer);purgeTimer=window.setTimeout(function(){purgeTimer=0;audit();},220);}
+function onInput(event:Event):void{var node=event.target instanceof Element?event.target:null;if(node&&node.matches('.sc-catalog-search-input'))scheduleAudit();}
+
+installGuard();audit();document.addEventListener('input',onInput,true);window.addEventListener('pagehide',audit);if(document.readyState==='complete')setTimeout(audit,0);else window.addEventListener('load',audit,{once:true});
+window.SCOverride=window.SCOverride||{};window.SCOverride.storagePolicy={allowedLocalStorage:[THEME_KEY,VIEW_KEY],audit:audit};
+})();
