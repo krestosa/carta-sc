@@ -28,14 +28,14 @@ if(!errors.length){
  if(!/VIEW_MODES(?::[^=]+)?=\['compact','list'\]/.test(main))fail('Catalog bootstrap must expose only density and list');
  if(!viewStability.includes('--sc-view-list-image-width: 210px'))fail('Desktop list geometry must remain canonical');
  for(const file of ['components/product-card/pricing.css','components/product-card/layout.css','components/product-card/image-ratio.css'])if(/@media\s*\(min-width\s*:\s*993px\)/.test(read(path.join(overrideDir,file))))fail(`${file} must inherit shared desktop-first structure`);
- const mainRefs=[...main.matchAll(/['"]([^'"]+\.js)['"]/g)].map(match=>match[1]);
+ const mainRefs=[...main.matchAll(/['"]([^'"]+\.js)['"]/g)].map(match=>match[1]).filter((ref):ref is string=>Boolean(ref));
  if(new Set(mainRefs).size!==mainRefs.length)fail('Duplicate JavaScript runtime paths in override/main.ts');
  for(const ref of new Set(mainRefs)){const tsRef=ref.replace(/\.js$/,'.ts');if(!fs.existsSync(path.join(overrideDir,tsRef)))fail(`Loader references missing TypeScript source: override/${tsRef}`);}
  const registry=read(path.join(overrideDir,'templates','registry.ts'));
- const templateRefs=[...registry.matchAll(/['"]([^'"]+\.html)['"]/g)].map(match=>match[1]);
+ const templateRefs=[...registry.matchAll(/['"]([^'"]+\.html)['"]/g)].map(match=>match[1]).filter((ref):ref is string=>Boolean(ref));
  for(const ref of templateRefs)if(!fs.existsSync(path.join(overrideDir,ref)))fail(`Template registry references missing source: override/${ref}`);
- const cssRefs=[...read(path.join(overrideDir,'main.css')).matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;/g)].map(match=>match[1]);
- for(const ref of cssRefs){const [assetPath,query='']=ref.split('?');if(query!=='v=unversioned')fail(`CSS import must use ?v=unversioned: ${ref}`);if(!fs.existsSync(path.resolve(overrideDir,assetPath)))fail(`Missing CSS import target: ${assetPath}`);}
+ const cssRefs=[...read(path.join(overrideDir,'main.css')).matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;/g)].map(match=>match[1]).filter((ref):ref is string=>Boolean(ref));
+ for(const ref of cssRefs){const [assetPath='',query='']=ref.split('?');if(query!=='v=unversioned')fail(`CSS import must use ?v=unversioned: ${ref}`);if(!fs.existsSync(path.resolve(overrideDir,assetPath)))fail(`Missing CSS import target: ${assetPath}`);}
  console.log(`Override validation checked ${tsFiles.length} TypeScript files, ${htmlFiles.length} templates, ${cssFiles.length} CSS files and ${generatedJs.length} generated JS files.`);
 }
 if(errors.length){console.error(`Override validation failed with ${errors.length} error(s):`);for(const error of errors)console.error(`- ${error}`);process.exit(1);} 
