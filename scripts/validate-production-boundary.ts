@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd(),overrideRoot=path.join(root,'override'),errors:string[]=[];
+const runtimeExtensions=new Set(['.ts','.css','.html']);
+const forbidden:[string,RegExp][]=[['GitHub Pages host',/krestosa\.github\.io/i],['Pages environment flag',/\bGITHUB_PAGES\b/],['static Pages runtime branch',/\bSTATIC_PAGES\b/],['Pages staging directory',/\.pages-site/],['Pages runtime marker',/\bsc-pages-/],['critical-media lab path',/_critical-media\//],['first-viewport lab path',/_first-viewport\//],['chrome-media lab path',/_chrome-media\//],['desktop lab source marker',/data-sc-desktop-src/],['first-viewport lab marker',/data-sc-first-viewport/],['static lab shell marker',/data-sc-static-shell/],['lab prepaint state',/\bsc-catalog-prepaint\b/],['lab banner-ready state',/\bsc-banner-media-ready\b/],['lab mobile-logo-ready state',/\bsc-mobile-logo-ready\b/],['lab directory dependency',/(?:^|["'`(\s])lab\/pages\//]];
+function walk(dir:string):string[]{return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry=>{const full=path.join(dir,entry.name);return entry.isDirectory()?walk(full):[full];});}
+if(!fs.existsSync(overrideRoot))errors.push('override/ is missing');
+for(const file of fs.existsSync(overrideRoot)?walk(overrideRoot):[]){if(file.endsWith('.js'))errors.push(`${path.relative(root,file)}: project-owned JavaScript source is forbidden`);if(!runtimeExtensions.has(path.extname(file)))continue;const source=fs.readFileSync(file,'utf8'),rel=path.relative(root,file).replaceAll(path.sep,'/');for(const [label,pattern] of forbidden)if(pattern.test(source))errors.push(`${rel}: contains ${label}`);}
+if(errors.length){console.error(`Production/lab boundary validation failed with ${errors.length} issue(s):`);for(const error of errors)console.error(`- ${error}`);process.exit(1);}console.log('Production/lab boundary validation passed.');

@@ -1,0 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=process.cwd();const errors:string[]=[];const ignored=new Set(['.git','node_modules','.build','.generated','.pages-site','handoff']);
+function walk(dir:string,relative=''):void{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const rel=relative?`${relative}/${entry.name}`:entry.name;if(entry.isDirectory()){if(ignored.has(entry.name))continue;walk(path.join(dir,entry.name),rel);continue;}const ext=path.extname(entry.name);const legacy=rel.startsWith('js/')||rel.startsWith('_js_dev/');if(!legacy&&['.js','.mjs','.py'].includes(ext))errors.push(rel);if(!legacy&&ext==='.sh')errors.push(rel);if(/requirements\.txt$/i.test(rel))errors.push(rel);}}
+walk(root);if(errors.length){console.error('Owned source boundary failed; forbidden source files remain:');for(const error of errors)console.error(`- ${error}`);process.exit(1);}console.log('Owned source boundary passed: JS remains only in legacy directories; no owned MJS/Python/shell build sources remain.');
