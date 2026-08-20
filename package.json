@@ -20,7 +20,7 @@
     "handoff:rebuild": "npm run build:runtime && node .build/tooling/lab/handoff/rebuild-handoff.js",
     "serve:handoff": "npm run compile:tooling && node .build/tooling/lab/handoff/serve.js",
     "validate:handoff": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff.js handoff",
-    "ci": "npm run typecheck && npm run validate && npm run build:pages && npm run build:handoff"
+    "ci": "npm run typecheck && npm run validate && npm run build:pages && npm run build:handoff && npm run validate:handoff"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
