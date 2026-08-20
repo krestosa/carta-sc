@@ -1,0 +1,43 @@
+name: Type payload inspect
+
+on:
+  push:
+    branches: [type]
+    paths:
+      - '.github/workflows/type-payload-inspect.yml'
+      - '.migration/type-final-payload.b64'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode staged payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode .migration/type-final-payload.b64 > /tmp/type-final-payload.gz
+          gzip -t /tmp/type-final-payload.gz
+          gzip -dc /tmp/type-final-payload.gz > /tmp/type-final-payload.decoded
+          file /tmp/type-final-payload.gz /tmp/type-final-payload.decoded
+          echo '--- decoded preview ---'
+          head -c 256 /tmp/type-final-payload.decoded | xxd
+          echo '--- tar listing ---'
+          if tar -tzf /tmp/type-final-payload.gz > /tmp/type-final-payload.list 2>/tmp/tar-error; then
+            cat /tmp/type-final-payload.list
+          else
+            cat /tmp/tar-error
+          fi
+      - name: Upload decoded payload
+        uses: actions/upload-artifact@v4
+        with:
+          name: type-final-payload-decoded
+          path: |
+            /tmp/type-final-payload.gz
+            /tmp/type-final-payload.decoded
+            /tmp/type-final-payload.list
+          if-no-files-found: error
+          retention-days: 1
