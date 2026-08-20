@@ -78,7 +78,7 @@ export function countMatches(text: string, pattern: RegExp): number {
 }
 
 export function nodeCheck(file: string): void {
-  const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['--input-type=commonjs', '--check'], { input: read(file), encoding: 'utf8' });
   if (result.status !== 0) throw new Error(`JavaScript syntax error in ${path.relative(ROOT, file)}: ${(result.stderr || result.stdout || '').trim()}`);
 }
 
