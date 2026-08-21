@@ -4,10 +4,8 @@ import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
 const LIST_MOTION = {
   offsetY: 4,
-  duration: 0.18,
-  reducedDuration: 0.12,
-  stagger: 0.028,
-  reducedStagger: 0.018,
+  stagger: motionTokens.durations.short1 / 2,
+  reducedStagger: motionTokens.durations.short1 / 2,
   refreshDelay: 80,
 } as const;
 
@@ -45,23 +43,27 @@ export function setupCartList(engine: MotionEngine, reduced: boolean): () => voi
 
   const animateRow = (row: HTMLTableRowElement, index: number): void => {
     stop(row);
-    const duration = reduced ? LIST_MOTION.reducedDuration : LIST_MOTION.duration;
     const delay = index * (reduced ? LIST_MOTION.reducedStagger : LIST_MOTION.stagger);
     row.style.opacity = '0';
     row.style.visibility = 'visible';
     if (!reduced) row.style.transform = `translate3d(0,${LIST_MOTION.offsetY}px,0)`;
 
-    const handles: MotionHandle[] = [engine.opacity(row, 1, { duration, delay, ease: motionTokens.easings.out })];
+    const fadeDuration = reduced ? motionTokens.durations.short2 : motionTokens.durations.short4;
+    const handles: MotionHandle[] = [
+      engine.opacity(row, 1, {
+        duration: fadeDuration,
+        delay,
+        ease: motionTokens.easings.decelerate,
+      }),
+    ];
     if (reduced) {
-      handles.push(engine.delay(delay + duration, () => {
+      handles.push(engine.delay(delay + fadeDuration, () => {
         active.delete(row);
         clear(row);
       }));
     } else {
-      handles.push(engine.transform(row, { y: 0 }, {
-        duration,
+      handles.push(engine.springTransform(row, { y: 0 }, motionTokens.springs.spatial.default, {
         delay,
-        ease: motionTokens.easings.out,
         clear: true,
         onComplete: () => {
           active.delete(row);
