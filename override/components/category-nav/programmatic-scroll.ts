@@ -1,4 +1,7 @@
 import { scrollState } from '../../core/state.js';
+import { motionTokens } from '../../core/variables.js';
+import { motion } from '../../motion/main.js';
+import type { MotionHandle } from '../../motion/types.js';
 import { CATEGORY_SCROLL } from './config.js';
 import {
   categoryOffsetIsDirty,
@@ -18,13 +21,10 @@ export interface ProgrammaticScrollCallbacks {
   readonly confirmTarget?: (target: HTMLElement) => void;
 }
 
-function easing(progress: number): number {
-  return progress < 0.5 ? 4 * progress ** 3 : 1 - ((-2 * progress + 2) ** 3) / 2;
-}
-
 export class ProgrammaticCategoryScroll {
   readonly #callbacks: ProgrammaticScrollCallbacks;
   #frame = 0;
+  #move: MotionHandle | null = null;
   #token = 0;
 
   constructor(callbacks: ProgrammaticScrollCallbacks) {
@@ -40,12 +40,12 @@ export class ProgrammaticCategoryScroll {
     this.cancel(false);
     const token = ++this.#token;
     this.#setProgrammatic(true, false);
-    if (plan.duration === 0) {
+    if (plan.instant) {
       window.scrollTo(0, categoryTargetY(target));
       this.#finish(token, target);
       return;
     }
-    this.#animate(target, token, plan.duration, plan.y);
+    this.#animate(target, token, plan.y);
   }
 
   interrupt(): void {
@@ -54,6 +54,8 @@ export class ProgrammaticCategoryScroll {
 
   cancel(userInterrupt: boolean): void {
     this.#token += 1;
+    this.#move?.cancel();
+    this.#move = null;
     if (this.#frame) cancelAnimationFrame(this.#frame);
     this.#frame = 0;
     if (!userInterrupt) return;
@@ -92,24 +94,18 @@ export class ProgrammaticCategoryScroll {
     });
   }
 
-  #animate(target: HTMLElement, token: number, duration: number, destination: number): void {
+  #animate(target: HTMLElement, token: number, destination: number): void {
     const startY = currentPageY();
-    const startTime = performance.now();
-    const durationMs = duration * 1000;
-
-    const frame = (now: number): void => {
+    this.#move = motion.engine.spring(motionTokens.springs.spatial.default, (progress) => {
       if (token !== this.#token) return;
       if (categoryOffsetIsDirty()) destination = targetYFromOffset(target);
-      const progress = Math.min(1, (now - startTime) / durationMs);
-      window.scrollTo(0, startY + (destination - startY) * easing(progress));
-      if (progress < 1) {
-        this.#frame = requestAnimationFrame(frame);
-      } else {
-        this.#frame = 0;
+      window.scrollTo(0, startY + (destination - startY) * progress);
+    }, {
+      onComplete: () => {
+        if (token !== this.#token) return;
+        this.#move = null;
         this.#finish(token, target);
-      }
-    };
-
-    this.#frame = requestAnimationFrame(frame);
+      },
+    });
   }
 }
