@@ -45,8 +45,8 @@ function releasePrepaint(error: unknown): void {
 }
 
 async function startRuntime(): Promise<void> {
-  const version = runtimeAssetVersion();
-  await import(`./runtime-main.js?v=${encodeURIComponent(version)}`);
+  const assetVersion = runtimeAssetVersion();
+  await import(`./runtime-main.js?v=${encodeURIComponent(assetVersion)}`);
 }
 
 applyInitialTheme();
