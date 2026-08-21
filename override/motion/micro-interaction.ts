@@ -1,4 +1,5 @@
 import type { Cleanup } from '../core/types.js';
+import { motionTokens } from '../core/variables.js';
 import type { MicroInteractionOptions, MotionEngine, MotionHandle } from './types.js';
 
 export function bindMicroInteraction(
@@ -37,7 +38,7 @@ export function bindMicroInteraction(
     target.style.removeProperty('will-change');
   };
 
-  const move = (rotation: number, duration: number, easing: string, clearAtEnd: boolean): void => {
+  const move = (rotation: number, clearAtEnd: boolean): void => {
     if (destroyed) return;
     stopTween();
     if (reducedMotion()) {
@@ -46,9 +47,7 @@ export function bindMicroInteraction(
     }
 
     target.style.transformOrigin = options.transformOrigin ?? '50% 50%';
-    activeTween = engine.transform(target, { rotation }, {
-      duration,
-      ease: easing,
+    activeTween = engine.springTransform(target, { rotation }, motionTokens.springs.spatial.fast, {
       onComplete: () => {
         activeTween = null;
         if (clearAtEnd) clearTransform();
@@ -56,13 +55,8 @@ export function bindMicroInteraction(
     });
   };
 
-  const moveActive = (): void => move(
-    rotationFor('active'),
-    options.enterDuration ?? 0.1,
-    options.enterEase ?? 'quart.out',
-    false,
-  );
-  const moveHome = (): void => move(0, options.exitDuration ?? 0.14, options.exitEase ?? 'quart.out', true);
+  const moveActive = (): void => move(rotationFor('active'), false);
+  const moveHome = (): void => move(0, true);
 
   const pulsePress = (): void => {
     if (destroyed) return;
@@ -73,13 +67,9 @@ export function bindMicroInteraction(
     }
 
     const returnAngle = hovered || focused ? rotationFor('active') : 0;
-    activeTween = engine.transform(target, { rotation: rotationFor('press') }, {
-      duration: options.pressDuration ?? 0.055,
-      ease: 'cubic.out',
+    activeTween = engine.springTransform(target, { rotation: rotationFor('press') }, motionTokens.springs.spatial.fast, {
       onComplete: () => {
-        activeTween = engine.transform(target, { rotation: returnAngle }, {
-          duration: options.pressReturnDuration ?? 0.085,
-          ease: 'quart.out',
+        activeTween = engine.springTransform(target, { rotation: returnAngle }, motionTokens.springs.spatial.fast, {
           onComplete: () => {
             activeTween = null;
             if (returnAngle === 0) clearTransform();
