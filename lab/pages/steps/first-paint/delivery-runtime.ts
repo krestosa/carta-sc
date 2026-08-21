@@ -12,21 +12,9 @@ interface DeliveryWindow extends Window {
   dataLayer?: AnalyticsEvent[];
 }
 
-interface FirstViewportEntry {
-  readonly image: HTMLImageElement;
-  readonly stage: HTMLElement;
-  readonly card: HTMLElement;
-  readonly top: number;
-  readonly left: number;
-}
-
 const VERSION = '__SC_VERSION__';
 const documentRoot = document;
 const browser: DeliveryWindow = window;
-const FIRST_VIEWPORT_PULSE_MS = 1500;
-const FIRST_VIEWPORT_ROW_DELAY_MS = 200;
-const FIRST_VIEWPORT_COLUMN_DELAY_MS = 100;
-const FIRST_VIEWPORT_ROW_TOLERANCE_PX = 4;
 const runtimeSources: RuntimeSource[] = [
   { src: 'js/jquery-2.1.0.min.js', kind: 'classic' },
   /*__SC_PHP_GUARD__*/
@@ -73,12 +61,38 @@ class DeliveryRuntimeController {
     this.#installRecaptchaActivation();
   }
 
+  #primeProductSkeleton(image: HTMLImageElement): void {
+    const stage = image.closest<HTMLElement>('.imgShop,.imgLiquidNoFillShop');
+    const card = image.closest<HTMLElement>('.productoShop');
+    if (!stage || !card) return;
+
+    documentRoot.documentElement.classList.add('sc-image-preloader-active');
+    stage.classList.remove('sc-image-ready', 'sc-image-revealing', 'sc-image-transitioning');
+    stage.classList.add('sc-image-loading', 'sc-image-active');
+    card.classList.remove(
+      'sc-card-placeholder-ready',
+      'sc-card-placeholder-revealing',
+      'sc-card-placeholder-transitioning',
+    );
+    card.classList.add('sc-card-placeholder-loading', 'sc-card-placeholder-active');
+  }
+
   #activateImage(image: HTMLImageElement | null): void {
     const source = image?.getAttribute('data-sc-src');
     if (!source || !image) return;
+
     image.removeAttribute('data-sc-src');
-    try { image.fetchPriority = 'auto'; } catch { /* Compatibilidad de navegador. */ }
-    image.src = source;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    try { image.fetchPriority = 'low'; } catch { /* Compatibilidad de navegador. */ }
+    this.#primeProductSkeleton(image);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!image.isConnected || image.getAttribute('src')) return;
+        image.src = source;
+      });
+    });
   }
 
   #isInViewport(element: Element): boolean {
@@ -89,57 +103,6 @@ class DeliveryRuntimeController {
       && rect.top < browser.innerHeight
       && rect.right > 0
       && rect.left < browser.innerWidth;
-  }
-
-  #firstViewportEntries(images: readonly HTMLImageElement[]): FirstViewportEntry[] {
-    const entries: FirstViewportEntry[] = [];
-    for (const image of images) {
-      const stage = image.closest<HTMLElement>('.imgShop,.imgLiquidNoFillShop');
-      const card = image.closest<HTMLElement>('.productoShop');
-      if (!stage || !card || !this.#isInViewport(card)) continue;
-      const rect = card.getBoundingClientRect();
-      entries.push({ image, stage, card, top: rect.top, left: rect.left });
-    }
-    return entries.sort((left, right) => (
-      Math.abs(left.top - right.top) > FIRST_VIEWPORT_ROW_TOLERANCE_PX
-        ? left.top - right.top
-        : left.left - right.left
-    ));
-  }
-
-  #primeFirstViewportSkeletons(entries: readonly FirstViewportEntry[]): void {
-    if (!entries.length) return;
-    documentRoot.documentElement.classList.add('sc-image-preloader-active');
-
-    let row = -1;
-    let rowTop = Number.NEGATIVE_INFINITY;
-    let column = 0;
-    const clock = performance.now() % FIRST_VIEWPORT_PULSE_MS;
-
-    for (const entry of entries) {
-      if (row < 0 || Math.abs(entry.top - rowTop) > FIRST_VIEWPORT_ROW_TOLERANCE_PX) {
-        row += 1;
-        rowTop = entry.top;
-        column = 0;
-      }
-
-      const delay = row * FIRST_VIEWPORT_ROW_DELAY_MS + column * FIRST_VIEWPORT_COLUMN_DELAY_MS;
-      const phase = `${-clock + delay}ms`;
-      entry.stage.classList.add('sc-image-loading', 'sc-image-active');
-      entry.card.classList.add('sc-card-placeholder-loading', 'sc-card-placeholder-active');
-      entry.stage.style.setProperty('--sc-image-preloader-phase', phase);
-      entry.card.style.setProperty('--sc-image-preloader-phase', phase);
-      column += 1;
-    }
-  }
-
-  #activateFirstViewportImages(): void {
-    const images = Array.from(
-      documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-first-viewport][data-sc-src]'),
-    );
-    const entries = this.#firstViewportEntries(images);
-    this.#primeFirstViewportSkeletons(entries);
-    entries.forEach(({ image }) => this.#activateImage(image));
   }
 
   #activateDeferredImages = (): void => {
@@ -284,7 +247,6 @@ class DeliveryRuntimeController {
     const ready = (): void => {
       if (settled) return;
       settled = true;
-      this.#activateFirstViewportImages();
       this.#activateDeferredImages();
       this.#scheduleDesktopImages();
       this.#scheduleRuntime();
