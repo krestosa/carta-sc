@@ -7,8 +7,6 @@ import {
   MAX_BANNER_BYTES,
   MAX_CHROME_BYTES,
   MAX_DOWNLOAD_BYTES,
-  MAX_PRODUCT_BYTES,
-  PRODUCT_ENCODINGS,
   type EncodedImageAsset,
   type ImageSize,
 } from './config.js';
@@ -51,7 +49,7 @@ export async function downloadImage(url: string): Promise<Buffer> {
     }
   }
 
-  throw new Error(`first-viewport image download failed: ${url}: ${errorMessage(lastError)}`);
+  throw new Error(`Pages image download failed: ${url}: ${errorMessage(lastError)}`);
 }
 
 export async function imageSize(data: Buffer, name: string): Promise<ImageSize> {
@@ -68,34 +66,6 @@ export async function imageSize(data: Buffer, name: string): Promise<ImageSize> 
   } catch (error: unknown) {
     throw new Error(`cannot decode Pages image ${name}: ${errorMessage(error)}`);
   }
-}
-
-export async function encodeProductImage(data: Buffer, name: string): Promise<EncodedImageAsset> {
-  for (const encoding of PRODUCT_ENCODINGS) {
-    const result = await sharp(data, { failOn: 'error' })
-      .rotate()
-      .resize({
-        width: encoding.dimension,
-        height: encoding.dimension,
-        fit: 'inside',
-        withoutEnlargement: true,
-        kernel: sharp.kernel.lanczos3,
-      })
-      .webp({ quality: encoding.quality, effort: 6 })
-      .toBuffer({ resolveWithObject: true });
-
-    if (result.data.length > MAX_PRODUCT_BYTES) continue;
-
-    const relativePath = `_first-viewport/${name}.webp`;
-    write(path.join(SITE, relativePath), result.data);
-    return {
-      url: `${relativePath}?v=${githubSha()}`,
-      bytes: result.data.length,
-      size: [result.info.width, result.info.height],
-    };
-  }
-
-  throw new Error(`first-viewport WebP budget exceeded for ${name}`);
 }
 
 export async function encodeChromeImage(data: Buffer, name: string): Promise<EncodedImageAsset> {
