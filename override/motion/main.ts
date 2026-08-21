@@ -5,6 +5,7 @@ import { animatePath } from './path.js';
 import {
   animateAttributes,
   animateOpacity,
+  animateSpringAttributes,
   animateSpringOpacity,
   animateSpringTransform,
   animateTransform,
@@ -35,6 +36,7 @@ export const motionEngine: MotionEngine = Object.freeze({
   opacity: animateOpacity,
   springOpacity: animateSpringOpacity,
   attributes: animateAttributes,
+  springAttributes: animateSpringAttributes,
   path: animatePath,
   currentTransform,
   ease: easeValue,
