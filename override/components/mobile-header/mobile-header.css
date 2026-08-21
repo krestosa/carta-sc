@@ -38,7 +38,7 @@ body.sushiShop {
     top: 50% !important;
     left: 50% !important;
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100vw - 72px) !important;
+    max-width: calc(100% - 72px) !important;
     height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -206,7 +206,7 @@ body.sushiShop {
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100vw - 64px) !important;
+    max-width: calc(100% - 64px) !important;
   }
 
   body.sushiShop .brandOnlyMobile img {
