@@ -96,7 +96,7 @@ function onCategory(event: MouseEvent): void {
 }
 
 function onSelect(event: Event): void {
-  const select = event.target instanceof HTMlSelectElement ? event.target : null;
+  const select = event.target instanceof HTMLSelectElement ? event.target : null;
   if (!select?.matches(CATEGORY_SELECTORS.select)) return;
   const target = anchorForHref(select.value);
   if (!target) return;
