@@ -16,6 +16,7 @@ class ResponsiveContractValidator {
     this.#validateDensityGrid();
     this.#validateListGeometry();
     this.#validateNoDesktopStructuralForks();
+    this.#validateViewportWidthSafety();
     this.#validation.finish('Responsive contract validation failed', 'Responsive contract validation passed.');
   }
 
@@ -96,6 +97,50 @@ class ResponsiveContractValidator {
         `${file} contains a desktop-only structural fork`,
       );
     }
+  }
+
+  #validateViewportWidthSafety(): void {
+    const mainCss = readProjectFile('override/main.css').trimEnd();
+    this.#validation.check(
+      mainCss.endsWith('@import "./core/viewport-boundary.css?v=unversioned";'),
+      'viewport-boundary.css must be the final override stylesheet',
+    );
+
+    const viewportBoundFiles = [
+      'override/components/category-nav/controls.css',
+      'override/components/mobile-header/mobile-header.css',
+      'override/components/product-modal/shell.css',
+      'override/components/product-modal/responsive.css',
+      'lab/pages/steps/system-logo-style.ts',
+    ] as const;
+
+    for (const file of viewportBoundFiles) {
+      this.#validation.check(
+        !readProjectFile(file).includes('100vw'),
+        `${file} must resolve inline width from its containing block instead of 100vw`,
+      );
+    }
+
+    const categoryControls = readProjectFile('override/components/category-nav/controls.css');
+    this.#validation.check(
+      categoryControls.includes('inset: -6px 0;'),
+      'desktop category control hit area must not extend horizontally beyond its gutter',
+    );
+
+    const boundary = readProjectFile('override/core/viewport-boundary.css');
+    for (const selector of [
+      '.listadoShop .carritoFixed',
+      '.carritoFixedContent .carritoFixed',
+      '.noMargMobileRow',
+      '.colPart.colPartL',
+      '.noMargMobile',
+    ]) {
+      this.#validation.check(boundary.includes(selector), `viewport boundary must neutralize legacy over-width selector ${selector}`);
+    }
+    this.#validation.check(
+      !/overflow-x\s*:\s*(?:hidden|clip)/.test(boundary),
+      'viewport boundary must prevent over-width geometry instead of hiding horizontal overflow',
+    );
   }
 }
 
