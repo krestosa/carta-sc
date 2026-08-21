@@ -112,7 +112,7 @@ function imageEntrance(dialog: HTMLElement): CancelableMotion[] {
         { clipPath: 'inset(0 18% 0 18% round 28px)' },
         { clipPath: 'inset(0 0 0 0 round 28px)' },
       ],
-      { duration: 500, easing: EASING.open },
+      { duration: 476, easing: EASING.open },
     ),
     motion.engine.springTransform(
       image,
@@ -129,16 +129,16 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
   dialog.style.visibility = 'visible';
 
   const handles: CancelableMotion[] = [
-    animate(modal, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: EASING.linear }),
+    animate(modal, [{ opacity: 0 }, { opacity: 1 }], { duration: 476, easing: EASING.linear }),
     animate(dialog, [{ transform: 'translateY(-50px)' }, { transform: 'translateY(0)' }], {
-      duration: 500,
+      duration: 476,
       easing: EASING.open,
     }),
     animate(dialog, [{ clipPath: 'inset(0 0 65% 0 round 28px)' }, { clipPath: 'inset(0 0 0 0 round 28px)' }], {
-      duration: 500,
+      duration: 476,
       easing: EASING.open,
     }),
-    animate(dialog, [{ opacity: 0 }, { opacity: 1 }], { duration: 50, easing: EASING.linear }),
+    animate(dialog, [{ opacity: 0 }, { opacity: 1 }], { duration: 48, easing: EASING.linear }),
   ];
 
   for (const node of visualParts(dialog)) {
@@ -146,7 +146,7 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
       { opacity: 0 },
       { opacity: 0, offset: 0.2 },
       { opacity: 1 },
-    ], { duration: 250, easing: EASING.linear }));
+    ], { duration: 238, easing: EASING.linear }));
   }
 
   const actions = actionPart(dialog);
@@ -155,7 +155,7 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
       { opacity: 0 },
       { opacity: 0, offset: 0.5 },
       { opacity: 1 },
-    ], { duration: 300, easing: EASING.linear }));
+    ], { duration: 286, easing: EASING.linear }));
   }
 
   handles.push(...imageEntrance(dialog));
@@ -222,25 +222,25 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
 
   stop(modal);
   const handles: CancelableMotion[] = [
-    animate(modal, [{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: EASING.linear }),
+    animate(modal, [{ opacity: 1 }, { opacity: 0 }], { duration: 143, easing: EASING.linear }),
     animate(dialog, [{ transform: 'translateY(0)' }, { transform: 'translateY(-50px)' }], {
-      duration: 150,
+      duration: 143,
       easing: EASING.close,
     }),
     animate(dialog, [{ clipPath: 'inset(0 0 0 0 round 28px)' }, { clipPath: 'inset(0 0 65% 0 round 28px)' }], {
-      duration: 150,
+      duration: 143,
       easing: EASING.close,
     }),
     animate(dialog, [{ opacity: 1 }, { opacity: 0 }], {
-      delay: 100,
-      duration: 50,
+      delay: 95,
+      duration: 48,
       easing: EASING.linear,
     }),
   ];
 
   for (const node of visualParts(dialog)) {
     handles.push(animate(node, [{ opacity: 1 }, { opacity: 0 }], {
-      duration: 100,
+      duration: 95,
       easing: EASING.linear,
     }));
   }
@@ -248,7 +248,7 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
   const actions = actionPart(dialog);
   if (actions) {
     handles.push(animate(actions, [{ opacity: 1 }, { opacity: 0 }], {
-      duration: 100,
+      duration: 95,
       easing: EASING.linear,
     }));
   }
