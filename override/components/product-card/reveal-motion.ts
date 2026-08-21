@@ -2,7 +2,7 @@ import { scrollState } from '../../core/state.js';
 import type { Cleanup } from '../../core/types.js';
 import { motionTokens, selectors } from '../../core/variables.js';
 import { imagePreloader } from '../../features/image-preloader/image-preloader.js';
-import type { MotionEngine, MotionHandle, MotionSpringSpec } from '../../motion/types.js';
+import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
 export interface RevealProfile {
   initialY?: number;
@@ -19,10 +19,9 @@ interface RevealState {
 }
 
 const MOTION = {
-  velocityFloor: 180,
-  velocityCeil: 2800,
-  rowDelay: motionTokens.durations.short1,
-  rowDelayMax: motionTokens.durations.short3,
+  columnDelay: motionTokens.durations.short2,
+  columnDelayMax: motionTokens.durations.medium1,
+  revealDuration: motionTokens.durations.medium4,
 } as const;
 
 class ProductCardRevealController {
@@ -35,8 +34,6 @@ class ProductCardRevealController {
   #observer: IntersectionObserver | null = null;
   #mutationObserver: MutationObserver | null = null;
   #lastY = window.scrollY || window.pageYOffset || 0;
-  #lastTime = performance.now();
-  #velocity = 0;
   #direction = 1;
   #scrollFrame = 0;
 
@@ -83,7 +80,7 @@ class ProductCardRevealController {
         this.#finish(card);
       } else if (!this.#observer && rect.top < innerHeight) {
         if (this.#direction < 0 || this.#programmatic()) this.#finish(card);
-        else this.#reveal(card, this.#velocity);
+        else this.#reveal(card);
       }
     }
   };
@@ -110,6 +107,16 @@ class ProductCardRevealController {
     return scrollState.programmatic || performance.now() < scrollState.suppressRevealUntil;
   }
 
+  #hasPendingMedia(card: HTMLElement): boolean {
+    if (card.classList.contains('sc-card-placeholder-loading')) return true;
+    const image = card.querySelector<HTMLImageElement>('.imgShop img,.imgLiquidNoFillShop img');
+    if (!image) return false;
+    const source = image.getAttribute('src')?.trim() ?? '';
+    const deferred = image.getAttribute('data-sc-src')?.trim() ?? '';
+    if (deferred && !source) return true;
+    return !image.complete || image.naturalWidth <= 0;
+  }
+
   #stop(card: HTMLElement): void {
     const state = this.#stateFor(card);
     for (const handle of state.handles) handle.cancel();
@@ -117,12 +124,12 @@ class ProductCardRevealController {
   }
 
   #clear(card: HTMLElement): void {
-    for (const property of ['top', 'opacity', 'visibility', 'will-change']) {
+    for (const property of ['opacity', 'visibility', 'will-change']) {
       card.style.removeProperty(property);
     }
   }
 
-  #rowPhase(card: HTMLElement): number {
+  #columnPhase(card: HTMLElement): number {
     const top = card.offsetTop;
     let count = 0;
     let node = card.previousElementSibling;
@@ -137,31 +144,8 @@ class ProductCardRevealController {
     return Math.min(count, 5);
   }
 
-  #velocityFactor(speed: number): number {
-    return Math.max(
-      0,
-      Math.min(
-        1,
-        (Math.abs(speed) - MOTION.velocityFloor) / (MOTION.velocityCeil - MOTION.velocityFloor),
-      ),
-    );
-  }
-
-  #spatialSpring(speed: number): MotionSpringSpec {
-    return this.#velocityFactor(speed) >= 0.5
-      ? motionTokens.springs.spatial.fast
-      : motionTokens.springs.spatial.default;
-  }
-
-  #effectsSpring(speed: number): MotionSpringSpec {
-    return this.#velocityFactor(speed) >= 0.5
-      ? motionTokens.springs.effects.fast
-      : motionTokens.springs.effects.default;
-  }
-
-  #delayFor(card: HTMLElement, speed: number): number {
-    return Math.min(MOTION.rowDelayMax, this.#rowPhase(card) * MOTION.rowDelay)
-      * (1 - 0.8 * this.#velocityFactor(speed));
+  #delayFor(card: HTMLElement): number {
+    return Math.min(MOTION.columnDelayMax, this.#columnPhase(card) * MOTION.columnDelay);
   }
 
   #finish(card: HTMLElement): void {
@@ -176,11 +160,10 @@ class ProductCardRevealController {
     this.#stop(card);
     card.style.opacity = '1';
     card.style.visibility = 'visible';
-    card.style.top = '0px';
     this.#clear(card);
   }
 
-  #reveal(card: HTMLElement, speed: number): void {
+  #reveal(card: HTMLElement): void {
     const state = this.#stateFor(card);
     if (state.done || state.started) return;
     state.started = true;
@@ -190,20 +173,18 @@ class ProductCardRevealController {
     }
 
     imagePreloader.scan(card);
-    if (this.#reduce || this.#programmatic()) {
+    if (this.#reduce || this.#programmatic() || this.#hasPendingMedia(card)) {
       this.#finish(card);
       return;
     }
 
-    const delay = this.#delayFor(card, speed);
-    const startTop = Number.parseFloat(card.style.top) || 0;
     this.#stop(card);
     state.handles = [
-      this.#engine.springOpacity(card, 1, this.#effectsSpring(speed), { delay }),
-      this.#engine.spring(this.#spatialSpring(speed), (progress) => {
-        card.style.top = `${startTop * (1 - progress)}px`;
-      }, {
-        delay,
+      this.#engine.opacity(card, 1, {
+        duration: MOTION.revealDuration,
+        delay: this.#delayFor(card),
+        ease: motionTokens.easings.standard,
+        clear: true,
         onComplete: () => {
           state.handles = [];
           this.#finish(card);
@@ -218,15 +199,18 @@ class ProductCardRevealController {
 
     const rect = card.getBoundingClientRect();
     state.prepared = true;
-    if (rect.bottom <= 0) {
-      this.#finish(card);
+    if (rect.bottom <= 0 || this.#hasPendingMedia(card)) {
+      state.done = true;
+      state.started = true;
+      card.style.opacity = '1';
+      card.style.visibility = 'visible';
+      this.#clear(card);
       return false;
     }
 
     card.style.opacity = '0';
     card.style.visibility = 'visible';
-    card.style.top = `${rect.top < innerHeight ? this.#profile.initialY ?? 14 : this.#profile.revealY ?? 18}px`;
-    card.style.willChange = 'top,opacity';
+    card.style.willChange = 'opacity';
     return true;
   }
 
@@ -253,16 +237,11 @@ class ProductCardRevealController {
   }
 
   #trackScroll = (): void => {
-    const now = performance.now();
     const y = window.scrollY || window.pageYOffset || 0;
-    const elapsed = Math.max(16, now - this.#lastTime);
-    const delta = y - this.#lastY;
-    if (Math.abs(delta) > 0.5) this.#direction = delta > 0 ? 1 : -1;
-    this.#velocity = Math.abs(delta) * 1000 / elapsed;
+    if (Math.abs(y - this.#lastY) > 0.5) this.#direction = y > this.#lastY ? 1 : -1;
     this.#lastY = y;
-    this.#lastTime = now;
 
-    if (this.#scrollFrame) cancelAnimationFrame(this.#scrollFrame);
+    if (this.#scrollFrame) return;
     this.#scrollFrame = requestAnimationFrame(() => {
       this.#scrollFrame = 0;
       this.revealVisibleCards();
@@ -283,7 +262,7 @@ class ProductCardRevealController {
           continue;
         }
         if (entry.intersectionRatio + 1e-4 < threshold) continue;
-        this.#reveal(card, this.#velocity);
+        this.#reveal(card);
       }
     }, { root: null, rootMargin: '0px', threshold: [0, threshold] });
   }
