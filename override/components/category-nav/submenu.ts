@@ -1,4 +1,5 @@
 import { selectors } from '../../core/variables.js';
+import { anchoredPopoverMotion } from '../../motion/popover-motion.js';
 import { anchorForHref, CATEGORY_SELECTORS } from './core.js';
 
 export class CategorySubmenu {
@@ -52,7 +53,8 @@ export class CategorySubmenu {
     host.classList.add('sc-category-submenu-open');
     host.setAttribute('aria-hidden', 'false');
     this.#bindScroller(parent);
-    this.schedulePosition();
+    this.#position();
+    anchoredPopoverMotion.open(host, parent);
     return true;
   }
 
@@ -60,20 +62,32 @@ export class CategorySubmenu {
     this.#clearCloseTimer();
     this.#clearPositionFrame();
     this.#unbindScroller();
-    this.#host?.classList.remove('sc-category-submenu-open');
-    this.#host?.setAttribute('aria-hidden', 'true');
 
+    const host = this.#host;
     const parent = this.#parent;
     this.#parent = null;
     this.#pinned = false;
     if (parent) this.#setExpanded(parent, false);
+    host?.setAttribute('aria-hidden', 'true');
+
+    if (host && parent && host.classList.contains('sc-category-submenu-open')) {
+      anchoredPopoverMotion.close(host, parent, () => host.classList.remove('sc-category-submenu-open'));
+    } else {
+      host?.classList.remove('sc-category-submenu-open');
+    }
     if (restoreFocus && parent && document.documentElement.contains(parent)) parent.focus();
   }
 
   destroy(): void {
-    this.close(false);
+    this.#clearCloseTimer();
+    this.#clearPositionFrame();
+    this.#unbindScroller();
+    if (this.#parent) this.#setExpanded(this.#parent, false);
+    if (this.#host) anchoredPopoverMotion.cancel(this.#host);
     this.#host?.remove();
     this.#host = null;
+    this.#parent = null;
+    this.#pinned = false;
   }
 
   schedulePosition = (): void => {
