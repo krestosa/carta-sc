@@ -50,7 +50,7 @@ function activateFirstViewportImages(): void {
 function activateDeferredImages(): void {
   if (imagesActivated) return;
   imagesActivated = true;
-  const images = [...documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-src]')];
+  const images = Array.from(documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-src]'));
   if (!('IntersectionObserver' in browser)) {
     images.forEach(activateImage);
     return;
@@ -67,12 +67,12 @@ function activateDeferredImages(): void {
 }
 
 function activateDesktopImages(): void {
-  for (const image of documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-desktop-src]')) {
+  documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-desktop-src]').forEach((image) => {
     const source = image.getAttribute('data-sc-desktop-src');
-    if (!source) continue;
+    if (!source) return;
     image.removeAttribute('data-sc-desktop-src');
     image.src = source;
-  }
+  });
 }
 
 function scheduleDesktopImages(): void {
