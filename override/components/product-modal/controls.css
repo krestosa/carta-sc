@@ -12,10 +12,13 @@ body.sushiShop .sc-product-modal__cart-button {
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
-  min-height: 46px !important;
-  padding: 12px 18px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 22px !important;
   border: var(--sc-border-hairline) solid var(--sc-color-ink) !important;
-  border-radius: 999px !important;
+  border-radius: 24px !important;
+  clip-path: inset(0 round 24px) !important;
+  overflow: hidden !important;
   background: var(--sc-color-ink) !important;
   color: var(--sc-color-surface) !important;
   font: var(--sc-font-weight-semibold) 14px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
