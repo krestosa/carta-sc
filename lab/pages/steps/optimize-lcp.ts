@@ -7,7 +7,6 @@ import {
   removeRemoteGoogleFontBootstrap,
   verifyLocalizedFonts,
 } from './optimize-lcp/fonts.js';
-import { injectProductPreload, promoteFirstViewportProducts } from './optimize-lcp/products.js';
 
 interface LcpPaths {
   readonly index: string;
@@ -25,15 +24,8 @@ class LcpOptimizer {
   #deferredCss = read(this.#paths.deferredCss);
 
   async run(): Promise<void> {
-    this.#promoteProducts();
     await this.#localizeFonts();
-    this.#verify();
     this.#write();
-  }
-
-  #promoteProducts(): void {
-    const promoted = promoteFirstViewportProducts(this.#html, this.#sha);
-    this.#html = injectProductPreload(promoted.html, promoted.sources[0] ?? '');
   }
 
   async #localizeFonts(): Promise<void> {
@@ -47,13 +39,6 @@ class LcpOptimizer {
     this.#html = injectFontPreloads(this.#html, roboto.preloads);
     this.#html = injectFontAwesomePreload(this.#html, this.#deferredCss);
     verifyLocalizedFonts(roboto.preloads);
-  }
-
-  #verify(): void {
-    assert(
-      this.#html.split('id="sc-product-lcp-preload"').length - 1 === 1,
-      'product LCP preload missing or duplicated',
-    );
   }
 
   #write(): void {
