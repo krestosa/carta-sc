@@ -1,9 +1,45 @@
 import fs from 'node:fs';
 import path from 'node:path';
-const root=process.cwd(),overrideRoot=path.join(root,'override'),errors:string[]=[];
-const runtimeExtensions=new Set(['.ts','.css','.html']);
-const forbidden:[string,RegExp][]=[['GitHub Pages host',/krestosa\.github\.io/i],['Pages environment flag',/\bGITHUB_PAGES\b/],['static Pages runtime branch',/\bSTATIC_PAGES\b/],['Pages staging directory',/\.pages-site/],['Pages runtime marker',/\bsc-pages-/],['critical-media lab path',/_critical-media\//],['first-viewport lab path',/_first-viewport\//],['chrome-media lab path',/_chrome-media\//],['desktop lab source marker',/data-sc-desktop-src/],['first-viewport lab marker',/data-sc-first-viewport/],['static lab shell marker',/data-sc-static-shell/],['lab prepaint state',/\bsc-catalog-prepaint\b/],['lab banner-ready state',/\bsc-banner-media-ready\b/],['lab mobile-logo-ready state',/\bsc-mobile-logo-ready\b/],['lab directory dependency',/(?:^|["'`(\s])lab\/pages\//]];
-function walk(dir:string):string[]{return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry=>{const full=path.join(dir,entry.name);return entry.isDirectory()?walk(full):[full];});}
-if(!fs.existsSync(overrideRoot))errors.push('override/ is missing');
-for(const file of fs.existsSync(overrideRoot)?walk(overrideRoot):[]){if(file.endsWith('.js'))errors.push(`${path.relative(root,file)}: project-owned JavaScript source is forbidden`);if(!runtimeExtensions.has(path.extname(file)))continue;const source=fs.readFileSync(file,'utf8'),rel=path.relative(root,file).replaceAll(path.sep,'/');for(const [label,pattern] of forbidden)if(pattern.test(source))errors.push(`${rel}: contains ${label}`);}
-if(errors.length){console.error(`Production/lab boundary validation failed with ${errors.length} issue(s):`);for(const error of errors)console.error(`- ${error}`);process.exit(1);}console.log('Production/lab boundary validation passed.');
+import { ROOT, readText, relativeTo, walkFiles } from './lib/files.js';
+import { createValidationReporter } from './lib/validation.js';
+
+interface BoundaryRule {
+  readonly label: string;
+  readonly pattern: RegExp;
+}
+
+const OVERRIDE_ROOT = path.join(ROOT, 'override');
+const RUNTIME_EXTENSIONS = new Set(['.ts', '.css', '.html']);
+const RULES: readonly BoundaryRule[] = [
+  { label: 'GitHub Pages host', pattern: /krestosa\.github\.io/i },
+  { label: 'Pages environment flag', pattern: /\bGITHUB_PAGES\b/ },
+  { label: 'static Pages runtime branch', pattern: /\bSTATIC_PAGES\b/ },
+  { label: 'Pages staging directory', pattern: /\.pages-site/ },
+  { label: 'Pages runtime marker', pattern: /\bsc-pages-/ },
+  { label: 'critical-media lab path', pattern: /_critical-media\// },
+  { label: 'first-viewport lab path', pattern: /_first-viewport\// },
+  { label: 'chrome-media lab path', pattern: /_chrome-media\// },
+  { label: 'desktop lab source marker', pattern: /data-sc-desktop-src/ },
+  { label: 'first-viewport lab marker', pattern: /data-sc-first-viewport/ },
+  { label: 'static lab shell marker', pattern: /data-sc-static-shell/ },
+  { label: 'lab prepaint state', pattern: /\bsc-catalog-prepaint\b/ },
+  { label: 'lab banner-ready state', pattern: /\bsc-banner-media-ready\b/ },
+  { label: 'lab mobile-logo-ready state', pattern: /\bsc-mobile-logo-ready\b/ },
+  { label: 'lab directory dependency', pattern: /(?:^|["'`(\s])lab\/pages\// },
+];
+
+const validation = createValidationReporter();
+if (!fs.existsSync(OVERRIDE_ROOT)) validation.fail('override/ is missing');
+
+for (const file of walkFiles(OVERRIDE_ROOT)) {
+  const relativePath = relativeTo(ROOT, file);
+  if (file.endsWith('.js')) validation.fail(`${relativePath}: project-owned JavaScript source is forbidden`);
+  if (!RUNTIME_EXTENSIONS.has(path.extname(file))) continue;
+
+  const source = readText(file);
+  for (const rule of RULES) {
+    if (rule.pattern.test(source)) validation.fail(`${relativePath}: contains ${rule.label}`);
+  }
+}
+
+validation.finish('Production/lab boundary validation failed', 'Production/lab boundary validation passed.');

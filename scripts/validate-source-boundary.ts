@@ -1,5 +1,48 @@
 import fs from 'node:fs';
 import path from 'node:path';
-const root=process.cwd();const errors:string[]=[];const runtimeErrors:string[]=[];const ignored=new Set(['.git','node_modules','.build','.generated','.pages-site','handoff']);
-function walk(dir:string,relative=''):void{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const rel=relative?`${relative}/${entry.name}`:entry.name;if(entry.isDirectory()){if(ignored.has(entry.name))continue;walk(path.join(dir,entry.name),rel);continue;}const ext=path.extname(entry.name);const legacy=rel.startsWith('js/')||rel.startsWith('_js_dev/');if(!legacy&&['.js','.mjs','.py'].includes(ext))errors.push(rel);if(!legacy&&ext==='.sh')errors.push(rel);if(/requirements\.txt$/i.test(rel))errors.push(rel);}}
-walk(root);const motionEntry=path.join(root,'override','motion','main.ts');if(fs.existsSync(motionEntry)){const source=fs.readFileSync(motionEntry,'utf8');if(/createElement\s*\(\s*['"]script['"]\s*\)/.test(source)||/\bscript\s*\.\s*src\s*=/.test(source))runtimeErrors.push('override/motion/main.ts');}if(errors.length||runtimeErrors.length){if(errors.length){console.error('Owned source boundary failed; forbidden source files remain:');for(const error of errors)console.error(`- ${error}`);}if(runtimeErrors.length){console.error('Owned source boundary failed; motion runtime must remain self-contained:');for(const error of runtimeErrors)console.error(`- ${error}`);}process.exit(1);}console.log('Owned source boundary passed: JS remains only in legacy directories; no owned MJS/Python/shell build sources remain and the motion runtime is self-contained.');
+import { ROOT, readText, relativeTo, walkFiles } from './lib/files.js';
+import { createValidationReporter } from './lib/validation.js';
+
+const IGNORED_DIRECTORIES = new Set([
+  '.git',
+  'node_modules',
+  '.build',
+  '.generated',
+  '.pages-site',
+  'handoff',
+]);
+const LEGACY_PREFIXES = ['js/', '_js_dev/'] as const;
+const FORBIDDEN_OWNED_EXTENSIONS = new Set(['.js', '.mjs', '.py', '.sh']);
+const MOTION_ENTRY = path.join(ROOT, 'override', 'motion', 'main.ts');
+
+function isLegacySource(relativePath: string): boolean {
+  return LEGACY_PREFIXES.some((prefix) => relativePath.startsWith(prefix));
+}
+
+const validation = createValidationReporter();
+for (const file of walkFiles(ROOT, { ignoredDirectories: IGNORED_DIRECTORIES })) {
+  const relativePath = relativeTo(ROOT, file);
+  if (/requirements\.txt$/i.test(relativePath)) {
+    validation.fail(`forbidden owned requirements file: ${relativePath}`);
+    continue;
+  }
+  if (isLegacySource(relativePath)) continue;
+
+  if (FORBIDDEN_OWNED_EXTENSIONS.has(path.extname(file))) {
+    validation.fail(`forbidden owned source file: ${relativePath}`);
+  }
+}
+
+if (fs.existsSync(MOTION_ENTRY)) {
+  const motion = readText(MOTION_ENTRY);
+  const createsScript = /createElement\s*\(\s*['"]script['"]\s*\)/.test(motion);
+  const assignsScriptSource = /\bscript\s*\.\s*src\s*=/.test(motion);
+  if (createsScript || assignsScriptSource) {
+    validation.fail('override/motion/main.ts: motion runtime must remain self-contained');
+  }
+}
+
+validation.finish(
+  'Owned source boundary failed',
+  'Owned source boundary passed: JS remains only in legacy directories; no owned MJS/Python/shell build sources remain and the motion runtime is self-contained.',
+);

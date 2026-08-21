@@ -1,11 +1,74 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-const root=process.cwd(),handoff=path.resolve(process.argv[2]||'handoff'),reference=process.argv[3]?path.resolve(process.argv[3]):null;
-const required=['source','compiled','BUILD_SHA','README.md','build-local.sh','serve-local.sh','build-local.ps1','serve-local.ps1'];
-for(const name of required)if(!fs.existsSync(path.join(handoff,name)))throw new Error(`Missing handoff contract path: ${name}`);
-function walk(dir:string):string[]{return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry=>{const full=path.join(dir,entry.name);return entry.isDirectory()?walk(full):[full];});}
-const source=path.join(handoff,'source');for(const file of walk(source)){const rel=path.relative(source,file).replaceAll(path.sep,'/');if(/\.(?:py|mjs)$/i.test(rel)||/requirements\.txt$/i.test(rel))throw new Error(`Forbidden legacy tooling leaked into handoff source: ${rel}`);if(file.endsWith('.js')&&!rel.startsWith('js/')&&!rel.startsWith('_js_dev/'))throw new Error(`Owned JS source leaked into handoff source: ${rel}`);}
-if(reference){const compiled=path.join(handoff,'compiled');const filesA=walk(reference).map(f=>path.relative(reference,f).replaceAll(path.sep,'/')).sort(),filesB=walk(compiled).map(f=>path.relative(compiled,f).replaceAll(path.sep,'/')).sort();if(JSON.stringify(filesA)!==JSON.stringify(filesB))throw new Error('Clean-room handoff file set differs from reference');for(const rel of filesA){const a=fs.readFileSync(path.join(reference,rel)),b=fs.readFileSync(path.join(compiled,rel));if(crypto.createHash('sha256').update(a).digest('hex')!==crypto.createHash('sha256').update(b).digest('hex'))throw new Error(`Clean-room handoff mismatch: ${rel}`);}}
+import { listRelativeFiles, normalizePath, walkFiles } from './lib/files.js';
+
+interface ValidationInputs {
+  readonly handoffRoot: string;
+  readonly referenceRoot: string | null;
+}
+
+const REQUIRED_PATHS = [
+  'source',
+  'compiled',
+  'BUILD_SHA',
+  'README.md',
+  'build-local.sh',
+  'serve-local.sh',
+  'build-local.ps1',
+  'serve-local.ps1',
+] as const;
+
+function inputs(): ValidationInputs {
+  return {
+    handoffRoot: path.resolve(process.argv[2] ?? 'handoff'),
+    referenceRoot: process.argv[3] ? path.resolve(process.argv[3]) : null,
+  };
+}
+
+function requireHandoffPaths(handoffRoot: string): void {
+  for (const relativePath of REQUIRED_PATHS) {
+    if (!fs.existsSync(path.join(handoffRoot, relativePath))) {
+      throw new Error(`Missing handoff contract path: ${relativePath}`);
+    }
+  }
+}
+
+function validateSourceBoundary(sourceRoot: string): void {
+  for (const file of walkFiles(sourceRoot)) {
+    const relativePath = normalizePath(path.relative(sourceRoot, file));
+    if (/\.(?:py|mjs)$/i.test(relativePath) || /requirements\.txt$/i.test(relativePath)) {
+      throw new Error(`Forbidden legacy tooling leaked into handoff source: ${relativePath}`);
+    }
+    if (file.endsWith('.js') && !relativePath.startsWith('js/') && !relativePath.startsWith('_js_dev/')) {
+      throw new Error(`Owned JS source leaked into handoff source: ${relativePath}`);
+    }
+  }
+}
+
+function sha256(file: string): string {
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+function validateCompiledReference(compiledRoot: string, referenceRoot: string): void {
+  const referenceFiles = listRelativeFiles(referenceRoot);
+  const compiledFiles = listRelativeFiles(compiledRoot);
+  if (
+    referenceFiles.length !== compiledFiles.length
+    || referenceFiles.some((file, index) => file !== compiledFiles[index])
+  ) {
+    throw new Error('Clean-room handoff file set differs from reference');
+  }
+
+  for (const relativePath of referenceFiles) {
+    if (sha256(path.join(referenceRoot, relativePath)) !== sha256(path.join(compiledRoot, relativePath))) {
+      throw new Error(`Clean-room handoff mismatch: ${relativePath}`);
+    }
+  }
+}
+
+const { handoffRoot, referenceRoot } = inputs();
+requireHandoffPaths(handoffRoot);
+validateSourceBoundary(path.join(handoffRoot, 'source'));
+if (referenceRoot) validateCompiledReference(path.join(handoffRoot, 'compiled'), referenceRoot);
 console.log('Handoff validation passed.');
-void root;

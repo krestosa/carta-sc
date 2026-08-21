@@ -1,15 +1,32 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { ROOT, relativeTo, walkFiles } from './lib/files.js';
 
-const root=process.cwd();
-const source=path.join(root,'override');
-const generated=path.join(root,'.generated','browser','override');
-if(!fs.existsSync(generated))throw new Error('Missing .generated/browser/override; compile browser TypeScript first');
-const sourceJs:string[]=[];
-function walk(dir:string):string[]{return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry=>{const full=path.join(dir,entry.name);return entry.isDirectory()?walk(full):[full];});}
-for(const file of walk(source))if(file.endsWith('.js'))sourceJs.push(path.relative(root,file));
-if(sourceJs.length)throw new Error(`Project-owned JavaScript must not be versioned in override/: ${sourceJs.join(', ')}`);
-const tsFiles=walk(source).filter(file=>file.endsWith('.ts'));
-const generatedJs=walk(generated).filter(file=>file.endsWith('.js'));
-if(tsFiles.length!==generatedJs.length)throw new Error(`Generated browser JS count mismatch: ts=${tsFiles.length}, js=${generatedJs.length}`);
-console.log(`Runtime compile ready: ${tsFiles.length} TypeScript sources -> ${generatedJs.length} generated JavaScript files.`);
+const SOURCE_DIR = path.join(ROOT, 'override');
+const GENERATED_DIR = path.join(ROOT, '.generated', 'browser', 'override');
+
+if (!fs.existsSync(GENERATED_DIR)) {
+  throw new Error('Missing .generated/browser/override; compile browser TypeScript first');
+}
+
+const sourceFiles = walkFiles(SOURCE_DIR);
+const sourceJavaScript = sourceFiles.filter((file) => file.endsWith('.js'));
+if (sourceJavaScript.length > 0) {
+  throw new Error(
+    `Project-owned JavaScript must not be versioned in override/: ${sourceJavaScript
+      .map((file) => relativeTo(ROOT, file))
+      .join(', ')}`,
+  );
+}
+
+const typeScriptFiles = sourceFiles.filter((file) => file.endsWith('.ts'));
+const generatedJavaScript = walkFiles(GENERATED_DIR).filter((file) => file.endsWith('.js'));
+if (typeScriptFiles.length !== generatedJavaScript.length) {
+  throw new Error(
+    `Generated browser JS count mismatch: ts=${typeScriptFiles.length}, js=${generatedJavaScript.length}`,
+  );
+}
+
+console.log(
+  `Runtime compile ready: ${typeScriptFiles.length} TypeScript sources -> ${generatedJavaScript.length} generated JavaScript files.`,
+);
