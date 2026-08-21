@@ -4,8 +4,6 @@ import { motion } from './main.js';
 import type { MotionHandle } from './types.js';
 
 const EVENT = 'shown.bs.dropdown.scUxMotion';
-const DURATION = 0.16;
-const REDUCED_DURATION = 0.12;
 const OFFSET_Y = -3;
 
 class GlobalUiMotionController {
@@ -41,27 +39,33 @@ class GlobalUiMotionController {
     if (!(node instanceof HTMLElement)) return;
 
     const reduced = motion.reduced();
-    const duration = reduced ? REDUCED_DURATION : DURATION;
     this.#stop(node);
     node.style.opacity = '0';
     node.style.visibility = 'visible';
     node.style.transform = reduced ? 'translate3d(0,0,0)' : `translate3d(0,${OFFSET_Y}px,0)`;
+
     const handles: MotionHandle[] = [
       motion.engine.opacity(node, 1, {
-        duration,
-        ease: motionTokens.easings.out,
+        duration: reduced ? motionTokens.durations.short2 : motionTokens.durations.short3,
+        ease: motionTokens.easings.decelerate,
         clear: true,
       }),
-      motion.engine.transform(node, { y: 0 }, {
-        duration,
-        ease: motionTokens.easings.out,
+    ];
+
+    if (!reduced) {
+      handles.push(motion.engine.springTransform(node, { y: 0 }, motionTokens.springs.spatial.fast, {
         clear: true,
         onComplete: () => {
           this.#active.delete(node);
           this.#clear(node);
         },
-      }),
-    ];
+      }));
+    } else {
+      handles.push(motion.engine.delay(motionTokens.durations.short2, () => {
+        this.#active.delete(node);
+        this.#clear(node);
+      }));
+    }
     this.#active.set(node, handles);
   };
 }
