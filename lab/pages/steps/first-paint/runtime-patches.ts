@@ -22,9 +22,10 @@ function rewriteShopStartup(source: string): string {
 }
 
 function removeFunction(source: string, name: string): string {
-  const pattern = new RegExp(`\\nfunction ${name}\\(\\)\\s*\\{[\\s\\S]*?\\n\\}\\n`);
+  const pattern = new RegExp(`(?:\\r?\\n)function ${name}\\(\\)\\s*\\{[\\s\\S]*?(?:\\r?\\n)\\}(?:\\r?\\n)`);
   assert((source.match(new RegExp(pattern.source, 'g')) ?? []).length === 1, `cannot remove ${name}`);
-  return source.replace(pattern, '\n');
+  const newline = source.includes('\r\n') ? '\r\n' : '\n';
+  return source.replace(pattern, newline);
 }
 
 function patchShopRuntime(): void {
@@ -36,7 +37,7 @@ function patchShopRuntime(): void {
 
 function patchLegacyFile(): void {
   const file = path.join(SITE, '_pages/legacy.js');
-  const normalize = /\/\*Knormalize_+\*\/\s*function Knormalize\(obj\)\s*\{[\s\S]*?\n\}\s*/;
+  const normalize = /\/\*Knormalize_+\*\/\s*function Knormalize\(obj\)\s*\{[\s\S]*?\r?\n\}\s*/;
   const source = read(file);
   assert((source.match(new RegExp(normalize.source, 'g')) ?? []).length === 1, 'cannot remove Knormalize');
   write(file, source.replace(normalize, ''));
