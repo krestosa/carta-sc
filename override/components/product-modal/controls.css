@@ -23,7 +23,7 @@ body.sushiShop .sc-product-modal__cart-button {
   text-align: center !important;
   transform: scale(1);
   transform-origin: 50% 50%;
-  transition: transform 100ms var(--sc-motion-ease-out),background-color 100ms var(--sc-motion-ease-out),border-color 100ms var(--sc-motion-ease-out) !important;
+  transition: transform var(--sc-motion-short2) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-short2) var(--sc-motion-ease-standard),border-color var(--sc-motion-short2) var(--sc-motion-ease-standard) !important;
   touch-action: manipulation;
 }
 body.sushiShop .sc-product-modal__cart-button:hover,
@@ -75,7 +75,7 @@ body.sushiShop .sc-product-modal__close::before {
   background: rgba(255,255,255,.86) !important;
   transform: scale(1);
   transform-origin: 50% 50%;
-  transition: transform 90ms var(--sc-motion-ease-out),background-color 100ms var(--sc-motion-ease-out),border-color 100ms var(--sc-motion-ease-out) !important;
+  transition: transform var(--sc-motion-short2) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-short2) var(--sc-motion-ease-standard),border-color var(--sc-motion-short2) var(--sc-motion-ease-standard) !important;
   z-index: 0 !important;
 }
 body.sushiShop .sc-product-modal__close svg {
