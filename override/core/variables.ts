@@ -75,10 +75,18 @@ const springs = Object.freeze({
   }),
 });
 
+const cssEasings = Object.freeze({
+  standard: 'cubic-bezier(0.2, 0, 0, 1)',
+  accelerate: 'cubic-bezier(0.3, 0, 1, 1)',
+  decelerate: 'cubic-bezier(0, 0, 0, 1)',
+  linear: 'cubic-bezier(0, 0, 1, 1)',
+});
+
 export const motionTokens = Object.freeze({
   geometryRefreshDelay: 180,
   durations,
   springs,
+  cssEasings,
   easings: Object.freeze({
     standard: 'standard',
     accelerate: 'standard.accelerate',
