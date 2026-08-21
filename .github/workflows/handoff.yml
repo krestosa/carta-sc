@@ -73,9 +73,9 @@ jobs:
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run validate:handoff -- .pages-site
+          npm run validate:handoff
 
-      - name: Validate handoff browser parity with Pages
+      - name: Validate standalone handoff in browser
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
