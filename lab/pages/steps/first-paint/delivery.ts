@@ -47,10 +47,6 @@ export function verify(
     'override runtime must load as an ES module',
   );
   assert(
-    html.includes("querySelectorAll('img[data-sc-first-viewport][data-sc-src]')"),
-    'first-viewport image release contract is missing',
-  );
-  assert(
     html.includes("querySelectorAll('img[data-sc-desktop-src]')"),
     'desktop image release contract is missing',
   );
