@@ -4,7 +4,7 @@
     padding: 8px !important;
   }
   body.sushiShop .sc-product-modal__dialog {
-    width: calc(100vw - var(--sc-modal-phone-dialog-inline-space)) !important;
+    width: 100% !important;
     max-height: calc(100dvh - var(--sc-modal-phone-dialog-inline-space)) !important;
   }
   body.sushiShop .sc-product-modal__content {
