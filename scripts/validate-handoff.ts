@@ -169,11 +169,15 @@ class HandoffValidator {
     }
 
     const html = fs.readFileSync(path.join(compiledRoot, 'index.html'), 'utf8');
-    if (/<script\s+type=["']module["']>/i.test(html) || /kind:\s*["']module["']/i.test(html)) {
-      throw new Error('Compiled handoff still depends on ES module loading');
+    const loader = /<script\b(?=[^>]*\bid=["']sc-pages-delivery-loader["'])(?=[^>]*\btype=["']module["'])[^>]*>/i;
+    if (!loader.test(html)) {
+      throw new Error('Compiled handoff is missing its HTTP delivery loader');
+    }
+    if (/kind:\s*["']module["']/i.test(html)) {
+      throw new Error('Compiled handoff still references a module application runtime');
     }
     if (/override\/main\.js/i.test(html)) {
-      throw new Error('Compiled handoff still references the module source runtime');
+      throw new Error('Compiled handoff still references the source module runtime');
     }
     if (!html.includes("_static/runtime.js?v=' + VERSION")) {
       throw new Error('Compiled handoff does not load the static runtime');
