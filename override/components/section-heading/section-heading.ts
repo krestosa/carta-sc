@@ -2,19 +2,17 @@ import { motionTokens, selectors } from '../../core/variables.js';
 import { revealGate, scrollState } from '../../core/state.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
+import { SECTION_RULE_PROPERTY, SectionHeadingLayout } from './layout.js';
 
 interface HeadingState {
   prepared: boolean;
   done: boolean;
   started: boolean;
   maxProgress: number;
-  originalHtml: string | null;
-  lines: HTMLElement[];
   autoplay: MotionHandle | null;
   frame: number;
 }
 
-const RULE_PROPERTY = '--sc-section-rule-scale';
 const REVEAL = {
   startPercent: 99,
   endPercent: 86,
@@ -24,6 +22,7 @@ const REVEAL = {
   refreshDelay: 60,
 } as const;
 
+const layout = new SectionHeadingLayout();
 const states = new WeakMap<HTMLElement, HeadingState>();
 let initialized = false;
 let generation = 0;
@@ -42,8 +41,6 @@ function stateFor(element: HTMLElement): HeadingState {
     done: false,
     started: false,
     maxProgress: 0,
-    originalHtml: null,
-    lines: [],
     autoplay: null,
     frame: 0,
   };
@@ -51,105 +48,13 @@ function stateFor(element: HTMLElement): HeadingState {
   return state;
 }
 
-function targets(): HTMLElement[] {
-  return Array.from(document.querySelectorAll<HTMLElement>('.listadoShop .titleShopSeccion > div, .listadoShop .subTitleShopSeccion'))
-    .filter((element) => Boolean(element.textContent?.replace(/\s+/g, ' ').trim()));
-}
-
-function isSectionTitleChild(element: HTMLElement): boolean {
-  return Boolean(element.parentElement?.classList.contains(selectors.sectionTitle.slice(1)));
-}
-
-function hostFor(element: HTMLElement): HTMLElement {
-  return isSectionTitleChild(element) && element.parentElement ? element.parentElement : element;
-}
-
-function headingUnit(node: Element | null): HTMLElement | null {
-  if (!node) return null;
-  if (node.matches(selectors.sectionSubtitle)) return node as HTMLElement;
-  return node.matches(selectors.sectionTitle) ? node.querySelector<HTMLElement>(':scope > div') : null;
-}
-
-function renderable(element: HTMLElement): boolean {
-  const host = hostFor(element);
-  return !host.hidden && host.offsetParent !== null && host.getBoundingClientRect().height > 0;
-}
-
 function programmaticScrollActive(): boolean {
   return scrollState.programmatic || performance.now() < scrollState.suppressRevealUntil;
 }
 
-function restore(element: HTMLElement): void {
-  const state = stateFor(element);
-  if (state.originalHtml !== null) element.innerHTML = state.originalHtml;
-  state.lines = [];
-}
-
-function clearLineStyles(element: HTMLElement): void {
-  for (const line of stateFor(element).lines) {
-    line.style.removeProperty('transform');
-    line.style.removeProperty('opacity');
-    line.style.removeProperty('visibility');
-    line.style.removeProperty('will-change');
-  }
-  if (isSectionTitleChild(element)) element.style.removeProperty(RULE_PROPERTY);
-}
-
-function splitLines(element: HTMLElement): HTMLElement[] {
-  const state = stateFor(element);
-  if (state.originalHtml === null) state.originalHtml = element.innerHTML;
-  else element.innerHTML = state.originalHtml;
-
-  const content = element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-  if (!content) return [element];
-
-  const words = content.split(' ');
-  const probe = document.createDocumentFragment();
-  const wordNodes: HTMLSpanElement[] = words.map((word, index) => {
-    const span = document.createElement('span');
-    span.className = 'sc-section-word-probe';
-    span.textContent = word;
-    span.style.display = 'inline-block';
-    span.style.whiteSpace = 'pre';
-    probe.append(span);
-    if (index < words.length - 1) probe.append(document.createTextNode(' '));
-    return span;
-  });
-
-  element.textContent = '';
-  element.append(probe);
-
-  const groups: string[][] = [];
-  let lastTop: number | null = null;
-  for (const node of wordNodes) {
-    const top = node.getBoundingClientRect().top;
-    if (lastTop === null || Math.abs(top - lastTop) > 1) {
-      groups.push([]);
-      lastTop = top;
-    }
-    groups.at(-1)?.push(node.textContent ?? '');
-  }
-
-  element.textContent = '';
-  const fragment = document.createDocumentFragment();
-  const lines = groups.map((group) => {
-    const mask = document.createElement('span');
-    const line = document.createElement('span');
-    mask.className = 'sc-section-text-mask';
-    line.className = 'sc-section-text-line';
-    line.textContent = group.join(' ');
-    mask.append(line);
-    fragment.append(mask);
-    return line;
-  });
-  element.append(fragment);
-  state.lines = lines;
-  return lines;
-}
-
 function renderProgress(element: HTMLElement, progress: number): void {
-  const state = stateFor(element);
-  const lines = state.lines.length > 0 ? state.lines : [element];
+  const measuredLines = layout.lines(element);
+  const lines = measuredLines.length > 0 ? measuredLines : [element];
   const total = 1 + Math.max(0, lines.length - 1) * REVEAL.lineStagger;
   const time = Math.max(0, Math.min(1, progress)) * total;
 
@@ -161,7 +66,9 @@ function renderProgress(element: HTMLElement, progress: number): void {
     line.style.visibility = 'visible';
     line.style.willChange = 'transform,opacity';
   });
-  if (isSectionTitleChild(element)) element.style.setProperty(RULE_PROPERTY, String(Math.max(0, Math.min(1, time))));
+  if (layout.isSectionTitleChild(element)) {
+    element.style.setProperty(SECTION_RULE_PROPERTY, String(Math.max(0, Math.min(1, time))));
+  }
 }
 
 function finish(element: HTMLElement): void {
@@ -175,7 +82,7 @@ function finish(element: HTMLElement): void {
   state.autoplay?.cancel();
   state.autoplay = null;
   renderProgress(element, 1);
-  clearLineStyles(element);
+  layout.clearLineStyles(element);
 }
 
 function advance(element: HTMLElement, progress: number, scrollDirection: number): void {
@@ -214,7 +121,7 @@ function autoplay(element: HTMLElement): void {
 }
 
 function progressFor(element: HTMLElement): number {
-  const rect = hostFor(element).getBoundingClientRect();
+  const rect = layout.hostFor(element).getBoundingClientRect();
   const start = innerHeight * (REVEAL.startPercent / 100);
   const end = innerHeight * (REVEAL.endPercent / 100);
   return Math.max(0, Math.min(1, (start - rect.top) / Math.max(1, start - end)));
@@ -222,30 +129,22 @@ function progressFor(element: HTMLElement): number {
 
 function evaluate(element: HTMLElement, initialPass: boolean): void {
   const state = stateFor(element);
-  if (state.done || !renderable(element)) return;
-  const rect = hostFor(element).getBoundingClientRect();
-  if (rect.bottom <= 0) {
-    finish(element);
-  } else if (initialPass && rect.top < innerHeight && rect.bottom > 0) {
-    autoplay(element);
-  } else {
-    advance(element, progressFor(element), direction);
-  }
+  if (state.done || !layout.renderable(element)) return;
+  const rect = layout.hostFor(element).getBoundingClientRect();
+  if (rect.bottom <= 0) finish(element);
+  else if (initialPass && rect.top < innerHeight && rect.bottom > 0) autoplay(element);
+  else advance(element, progressFor(element), direction);
 }
 
 function prepare(element: HTMLElement, initialPass: boolean): void {
   const state = stateFor(element);
-  if (state.prepared || !renderable(element)) return;
+  if (state.prepared || !layout.renderable(element)) return;
   state.prepared = true;
-  if (isSectionTitleChild(element)) {
-    element.classList.add('sc-section-rule-host');
-    element.removeAttribute('aria-label');
-    element.style.setProperty(RULE_PROPERTY, '0');
-  }
-  splitLines(element);
+  layout.prepareHost(element);
+  layout.splitLines(element);
   if (state.done) {
     renderProgress(element, 1);
-    clearLineStyles(element);
+    layout.clearLineStyles(element);
     return;
   }
   renderProgress(element, 0);
@@ -259,12 +158,12 @@ function armNode(node: Node): void {
   if (!(node instanceof HTMLElement) || node.hidden) return;
   if (node.matches(selectors.productList)) {
     node.querySelectorAll(`${selectors.sectionTitle},${selectors.sectionSubtitle}`).forEach((item) => {
-      const heading = headingUnit(item);
+      const heading = layout.headingUnit(item);
       if (heading) prepare(heading, true);
     });
     return;
   }
-  const heading = headingUnit(node);
+  const heading = layout.headingUnit(node);
   if (heading) prepare(heading, true);
 }
 
@@ -288,11 +187,11 @@ function resplit(): void {
     if (!state.prepared) continue;
     const progress = state.maxProgress;
     const done = state.done;
-    restore(element);
-    splitLines(element);
+    layout.restore(element);
+    layout.splitLines(element);
     if (done) {
       renderProgress(element, 1);
-      clearLineStyles(element);
+      layout.clearLineStyles(element);
     } else {
       renderProgress(element, progress);
     }
@@ -308,7 +207,7 @@ export function initializeSectionHeadings(): () => void {
   if (initialized) return destroySectionHeadings;
   const token = ++generation;
   initialized = true;
-  elements = targets();
+  elements = layout.targets();
 
   if (motion.reduced()) {
     for (const element of elements) {
@@ -316,7 +215,7 @@ export function initializeSectionHeadings(): () => void {
       state.prepared = true;
       state.done = true;
       state.started = true;
-      state.originalHtml = element.innerHTML;
+      layout.capture(element);
     }
     revealGate.mark('headings');
     return destroySectionHeadings;
@@ -327,7 +226,14 @@ export function initializeSectionHeadings(): () => void {
   if (container) {
     mutationObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'hidden' && mutation.target instanceof HTMLElement && !mutation.target.hidden) armNode(mutation.target);
+        if (
+          mutation.type === 'attributes'
+          && mutation.attributeName === 'hidden'
+          && mutation.target instanceof HTMLElement
+          && !mutation.target.hidden
+        ) {
+          armNode(mutation.target);
+        }
       }
     });
     mutationObserver.observe(container, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
@@ -358,12 +264,10 @@ export function destroySectionHeadings(): void {
     const state = stateFor(element);
     if (state.frame) cancelAnimationFrame(state.frame);
     state.autoplay?.cancel();
-    restore(element);
-    element.classList.remove('sc-section-rule-host');
-    element.style.removeProperty(RULE_PROPERTY);
+    layout.restore(element);
+    layout.cleanupHost(element);
     state.prepared = false;
   }
   initialized = false;
   elements = [];
 }
-
