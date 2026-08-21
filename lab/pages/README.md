@@ -11,7 +11,7 @@ El lab puede copiar el snapshot a `.pages-site`, reescribir HTML staged, bundlea
 ## Implementación
 
 - `build.ts`: orquestador del build de `.pages-site`.
-- `lib/`: utilidades TypeScript/Node para filesystem, red e imágenes.
+- `lib/core.ts`: utilidades TypeScript/Node compartidas del pipeline.
 - `steps/`: transformaciones TypeScript del pipeline.
 - `validators.ts` + `validators/`: validaciones del artifact.
 - `assets/prepaint.css` y `assets/performance.css`: CSS exclusivo de staging.
