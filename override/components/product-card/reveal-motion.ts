@@ -1,8 +1,8 @@
 import { scrollState } from '../../core/state.js';
 import type { Cleanup } from '../../core/types.js';
-import { selectors } from '../../core/variables.js';
+import { motionTokens, selectors } from '../../core/variables.js';
 import { imagePreloader } from '../../features/image-preloader/image-preloader.js';
-import type { MotionEngine, MotionHandle } from '../../motion/types.js';
+import type { MotionEngine, MotionHandle, MotionSpringSpec } from '../../motion/types.js';
 
 export interface RevealProfile {
   initialY?: number;
@@ -19,12 +19,10 @@ interface RevealState {
 }
 
 const MOTION = {
-  baseDuration: 0.56,
-  fastDuration: 0.2,
   velocityFloor: 180,
   velocityCeil: 2800,
-  rowDelay: 0.045,
-  rowDelayMax: 0.14,
+  rowDelay: motionTokens.durations.short1,
+  rowDelayMax: motionTokens.durations.short3,
 } as const;
 
 class ProductCardRevealController {
@@ -149,9 +147,16 @@ class ProductCardRevealController {
     );
   }
 
-  #durationFor(speed: number): number {
-    return MOTION.baseDuration
-      + (MOTION.fastDuration - MOTION.baseDuration) * this.#velocityFactor(speed);
+  #spatialSpring(speed: number): MotionSpringSpec {
+    return this.#velocityFactor(speed) >= 0.5
+      ? motionTokens.springs.spatial.fast
+      : motionTokens.springs.spatial.default;
+  }
+
+  #effectsSpring(speed: number): MotionSpringSpec {
+    return this.#velocityFactor(speed) >= 0.5
+      ? motionTokens.springs.effects.fast
+      : motionTokens.springs.effects.default;
   }
 
   #delayFor(card: HTMLElement, speed: number): number {
@@ -190,15 +195,12 @@ class ProductCardRevealController {
       return;
     }
 
-    const duration = this.#durationFor(speed);
     const delay = this.#delayFor(card, speed);
     const startTop = Number.parseFloat(card.style.top) || 0;
     this.#stop(card);
     state.handles = [
-      this.#engine.tween(duration * 0.92, 'quad.out', (progress) => {
-        card.style.opacity = String(progress);
-      }, { delay }),
-      this.#engine.tween(duration, 'quart.out', (progress) => {
+      this.#engine.springOpacity(card, 1, this.#effectsSpring(speed), { delay }),
+      this.#engine.spring(this.#spatialSpring(speed), (progress) => {
         card.style.top = `${startTop * (1 - progress)}px`;
       }, {
         delay,
