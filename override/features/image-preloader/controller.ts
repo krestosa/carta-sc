@@ -133,7 +133,13 @@ export class ImagePreloaderController {
     const source = image.getAttribute('data-sc-src')?.trim() ?? '';
     if (!source || image.getAttribute('src')?.trim()) return;
     image.removeAttribute('data-sc-src');
-    image.src = source;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!this.#started || !image.isConnected || image.getAttribute('src')?.trim()) return;
+        image.src = source;
+      });
+    });
   }
 
   #catalogueRoot(): ParentNode {
