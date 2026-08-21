@@ -1,4 +1,118 @@
-import path from 'node:path';import { SITE,assert,read,write } from '../lib/core.js';
-const bootstrap=`<style id="sc-theme-prepaint-css">.sc-catalog-tools:not([data-sc-theme-prepaint-ready]) .sc-theme-icon{visibility:hidden!important}</style>
-<script id="sc-theme-prepaint">(function(){'use strict';var w=window,d=document,h=d.documentElement,M=['system','light','dark'],K='scTheme:v1',m='';try{m=localStorage.getItem(K)||''}catch(_){}if(M.indexOf(m)<0)m='system';w.__scInitialTheme=m;var dark=matchMedia('(prefers-color-scheme:dark)').matches,a=m==='system'?(dark?'dark':'light'):m;h.setAttribute('data-sc-theme',m);h.setAttribute('data-sc-theme-resolved',a);var SUN='M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z',MOON='M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z',AUTO='M12 3.6a8.4 8.4 0 0 1 0 16.8z';function seed(r){if(!r||r.hasAttribute('data-sc-theme-prepaint-ready'))return true;var s=r.querySelector('[data-sc-theme-icon]'),c=r.querySelector('[data-sc-theme-core]'),b=r.querySelector('[data-sc-theme-bite]'),g=r.querySelector('[data-sc-theme-auto-ring]'),q=r.querySelector('[data-sc-theme-rays]'),ls=r.querySelectorAll('[data-sc-theme-rays] line');if(!s||!c||!b||!g||!q||ls.length!==8)return false;r.setAttribute('data-sc-theme-mode',m);r.setAttribute('data-sc-theme-actual',a);c.setAttribute('d',m==='system'?AUTO:(m==='dark'?MOON:SUN));b.setAttribute('cx','18.3');b.setAttribute('cy','6.2');b.setAttribute('r',m==='dark'?'8.6':'0');g.setAttribute('r','8.4');g.style.opacity=m==='system'?'1':'0';q.style.opacity=m==='light'?'1':'0';for(var i=0;i<ls.length;i++){ls[i].setAttribute('pathLength','1');ls[i].style.strokeDasharray='1';ls[i].style.strokeDashoffset=m==='light'?'0':'1'}s.setAttribute('data-sc-theme-glyph-state',m);var btn=r.querySelector('.sc-theme-toggle');if(btn){btn.setAttribute('aria-label',m==='system'?'Tema automático. Elegir tema':m==='dark'?'Tema oscuro. Elegir tema':'Tema claro. Elegir tema');btn.setAttribute('title',m==='system'?'Tema automático':'Tema '+(m==='dark'?'oscuro':'claro'))}var os=r.querySelectorAll('[data-sc-theme-option]');for(var j=0;j<os.length;j++){var on=os[j].getAttribute('data-sc-theme-option')===m;os[j].setAttribute('aria-checked',on?'true':'false');os[j].classList.toggle('sc-theme-option-selected',on)}r.setAttribute('data-sc-theme-prepaint-ready','1');return true}function scan(n){if(n&&n.nodeType===1&&n.matches&&n.matches('.sc-catalog-tools'))seed(n);var r=d.querySelector('.sc-catalog-tools');if(r)seed(r)}scan(d.documentElement);var o=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){for(var j=0;j<ms[i].addedNodes.length;j++)scan(ms[i].addedNodes[j])}var r=d.querySelector('.sc-catalog-tools[data-sc-theme-prepaint-ready]');if(r)o.disconnect()});o.observe(d.documentElement,{childList:true,subtree:true});})();</script>`;
-export function seedTheme():void{const file=path.join(SITE,'index.html');let html=read(file);assert(!html.includes('id="sc-theme-prepaint"'),'theme prepaint bootstrap already present');const head=/<head\b[^>]*>/i.exec(html);assert(head&&head.index!==undefined,'head missing for theme prepaint seed');html=html.slice(0,head.index+head[0].length)+'\n'+bootstrap+html.slice(head.index+head[0].length);assert(html.split('id="sc-theme-prepaint"').length-1===1,'theme prepaint bootstrap count invalid');write(file,html);}
+import path from 'node:path';
+import { SITE, assert, read, write } from '../lib/core.js';
+
+const PREPAINT_STYLE = `<style id="sc-theme-prepaint-css">
+.sc-catalog-tools:not([data-sc-theme-prepaint-ready]) .sc-theme-icon {
+  visibility: hidden !important;
+}
+</style>`;
+
+const PREPAINT_SCRIPT = String.raw`<script id="sc-theme-prepaint">
+{
+  const browser = window;
+  const documentRoot = document;
+  const html = documentRoot.documentElement;
+  const themeModes = ['system', 'light', 'dark'];
+  const storageKey = 'scTheme:v1';
+  const paths = {
+    sun: 'M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z',
+    moon: 'M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z',
+    automatic: 'M12 3.6a8.4 8.4 0 0 1 0 16.8z',
+  };
+
+  let theme = 'system';
+  try {
+    theme = localStorage.getItem(storageKey) || 'system';
+  } catch {
+    theme = 'system';
+  }
+  if (!themeModes.includes(theme)) theme = 'system';
+
+  browser.__scInitialTheme = theme;
+  const systemDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const resolved = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+  html.setAttribute('data-sc-theme', theme);
+  html.setAttribute('data-sc-theme-resolved', resolved);
+
+  function seed(root) {
+    if (!root || root.hasAttribute('data-sc-theme-prepaint-ready')) return true;
+
+    const icon = root.querySelector('[data-sc-theme-icon]');
+    const core = root.querySelector('[data-sc-theme-core]');
+    const bite = root.querySelector('[data-sc-theme-bite]');
+    const ring = root.querySelector('[data-sc-theme-auto-ring]');
+    const rays = root.querySelector('[data-sc-theme-rays]');
+    const rayLines = root.querySelectorAll('[data-sc-theme-rays] line');
+    if (!icon || !core || !bite || !ring || !rays || rayLines.length !== 8) return false;
+
+    root.setAttribute('data-sc-theme-mode', theme);
+    root.setAttribute('data-sc-theme-actual', resolved);
+    core.setAttribute('d', theme === 'system' ? paths.automatic : theme === 'dark' ? paths.moon : paths.sun);
+    bite.setAttribute('cx', '18.3');
+    bite.setAttribute('cy', '6.2');
+    bite.setAttribute('r', theme === 'dark' ? '8.6' : '0');
+    ring.setAttribute('r', '8.4');
+    ring.style.opacity = theme === 'system' ? '1' : '0';
+    rays.style.opacity = theme === 'light' ? '1' : '0';
+
+    for (const line of rayLines) {
+      line.setAttribute('pathLength', '1');
+      line.style.strokeDasharray = '1';
+      line.style.strokeDashoffset = theme === 'light' ? '0' : '1';
+    }
+    icon.setAttribute('data-sc-theme-glyph-state', theme);
+
+    const button = root.querySelector('.sc-theme-toggle');
+    if (button) {
+      const label = theme === 'system'
+        ? 'Tema automático. Elegir tema'
+        : theme === 'dark'
+          ? 'Tema oscuro. Elegir tema'
+          : 'Tema claro. Elegir tema';
+      const title = theme === 'system' ? 'Tema automático' : 'Tema ' + (theme === 'dark' ? 'oscuro' : 'claro');
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', title);
+    }
+
+    for (const option of root.querySelectorAll('[data-sc-theme-option]')) {
+      const selected = option.getAttribute('data-sc-theme-option') === theme;
+      option.setAttribute('aria-checked', String(selected));
+      option.classList.toggle('sc-theme-option-selected', selected);
+    }
+
+    root.setAttribute('data-sc-theme-prepaint-ready', '1');
+    return true;
+  }
+
+  function scan(node) {
+    if (node instanceof Element && node.matches('.sc-catalog-tools')) seed(node);
+    const root = documentRoot.querySelector('.sc-catalog-tools');
+    if (root) seed(root);
+  }
+
+  scan(documentRoot.documentElement);
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) scan(node);
+    }
+    if (documentRoot.querySelector('.sc-catalog-tools[data-sc-theme-prepaint-ready]')) observer.disconnect();
+  });
+  observer.observe(documentRoot.documentElement, { childList: true, subtree: true });
+}
+</script>`;
+
+const BOOTSTRAP = `${PREPAINT_STYLE}\n${PREPAINT_SCRIPT}`;
+
+export function seedTheme(): void {
+  const file = path.join(SITE, 'index.html');
+  let html = read(file);
+  assert(!html.includes('id="sc-theme-prepaint"'), 'theme prepaint bootstrap already present');
+
+  const head = /<head\b[^>]*>/i.exec(html);
+  assert(head?.index !== undefined, 'head missing for theme prepaint seed');
+  const insertion = head.index + head[0].length;
+  html = `${html.slice(0, insertion)}\n${BOOTSTRAP}${html.slice(insertion)}`;
+
+  assert(html.split('id="sc-theme-prepaint"').length - 1 === 1, 'theme prepaint bootstrap count invalid');
+  write(file, html);
+}

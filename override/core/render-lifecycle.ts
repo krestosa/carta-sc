@@ -9,7 +9,6 @@ interface Waiter {
 
 const STABLE_LAYOUT_TIMEOUT = 900;
 const FONT_TIMEOUT = 1100;
-const MEDIA_TIMEOUT = 1200;
 const MOBILE_HEADER_TIMEOUT = 500;
 
 const waiters: Waiter[] = [];
@@ -151,43 +150,6 @@ const waitForFonts = (): Promise<void> => {
   return withTimeout(document.fonts.ready, FONT_TIMEOUT);
 };
 
-const waitForImage = (image: HTMLImageElement | null): Promise<void> => {
-  if (!image) return Promise.resolve();
-  if (image.complete) {
-    if (image.naturalWidth > 0 && typeof image.decode === 'function') {
-      return withTimeout(image.decode(), MEDIA_TIMEOUT);
-    }
-    return Promise.resolve();
-  }
-
-  return withTimeout(new Promise<void>((resolve) => {
-    const done = (): void => {
-      image.removeEventListener('load', done);
-      image.removeEventListener('error', done);
-      resolve();
-    };
-    image.addEventListener('load', done, { once: true });
-    image.addEventListener('error', done, { once: true });
-  }), MEDIA_TIMEOUT);
-};
-
-const waitForCriticalMedia = async (): Promise<void> => {
-  if (!queries.desktop.matches || !document.documentElement.classList.contains('sc-catalog-prepaint')) return;
-  await waitFor(
-    () => Boolean(document.querySelector('.bannerShop .imgBannerShop')),
-    STABLE_LAYOUT_TIMEOUT,
-  );
-  await waitForImage(document.querySelector<HTMLImageElement>('.bannerShop .imgBannerShop'));
-};
-
-const clearPrepaint = (): void => {
-  document.documentElement.classList.remove(
-    'sc-catalog-prepaint',
-    'sc-banner-media-ready',
-    'sc-mobile-logo-ready',
-  );
-};
-
 const afterLayoutFrame = (): Promise<void> => new Promise((resolve) => {
   requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
 });
@@ -195,10 +157,10 @@ const afterLayoutFrame = (): Promise<void> => new Promise((resolve) => {
 export const waitForStableLayout = async (): Promise<void> => {
   await whenDomReady();
   const waits = [waitForCatalogLayout(), waitForCatalogTools(), waitForMobileHeader()];
-  if (queries.desktop.matches) waits.push(waitForFonts(), waitForCriticalMedia());
+  if (queries.desktop.matches) waits.push(waitForFonts());
   await Promise.all(waits);
   await afterLayoutFrame();
-  clearPrepaint();
+  window.dispatchEvent(new CustomEvent('sc:layoutstable'));
 };
 
 export const renderLifecycle = Object.freeze({

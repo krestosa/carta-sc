@@ -26,6 +26,8 @@ let runtimeScheduled = false;
 let pendingClick = null;
 let analyticsStarted = false;
 let recaptchaStarted = false;
+let layoutStable = false;
+let criticalMediaStable = false;
 
 function activateImage(image) {
   const source = image?.getAttribute('data-sc-src');
@@ -53,6 +55,63 @@ function activateDeferredImages() {
   }, { rootMargin: '0px' });
   images.forEach((image) => observer.observe(image));
 }
+
+function activateDesktopImages() {
+  for (const image of documentRoot.querySelectorAll('img[data-sc-desktop-src]')) {
+    const source = image.getAttribute('data-sc-desktop-src');
+    if (!source) continue;
+    image.removeAttribute('data-sc-desktop-src');
+    image.src = source;
+  }
+}
+
+function scheduleDesktopImages() {
+  const desktop = browser.matchMedia?.('(min-width: 993px)');
+  if (!desktop || desktop.matches) {
+    activateDesktopImages();
+    return;
+  }
+
+  const onChange = (event) => {
+    if (!event.matches) return;
+    activateDesktopImages();
+    desktop.removeEventListener?.('change', onChange);
+  };
+  desktop.addEventListener?.('change', onChange);
+}
+
+function releasePrepaintWhenStable() {
+  if (!layoutStable || !criticalMediaStable) return;
+  documentRoot.documentElement.classList.remove(
+    'sc-catalog-prepaint',
+    'sc-banner-media-ready',
+    'sc-mobile-logo-ready',
+  );
+}
+
+function markCriticalMediaReady() {
+  criticalMediaStable = true;
+  releasePrepaintWhenStable();
+}
+
+function waitForCriticalMedia() {
+  const desktop = browser.matchMedia?.('(min-width: 993px)').matches ?? false;
+  const image = desktop
+    ? documentRoot.querySelector('.bannerShop .imgBannerShop')
+    : documentRoot.querySelector('img[data-sc-lcp-logo="1"]');
+  if (!(image instanceof HTMLImageElement) || image.complete) {
+    markCriticalMediaReady();
+    return;
+  }
+  image.addEventListener('load', markCriticalMediaReady, { once: true });
+  image.addEventListener('error', markCriticalMediaReady, { once: true });
+  setTimeout(markCriticalMediaReady, 1800);
+}
+
+browser.addEventListener('sc:layoutstable', () => {
+  layoutStable = true;
+  releasePrepaintWhenStable();
+}, { once: true });
 
 function loadStylesheet(href) {
   return new Promise((resolve) => {
@@ -116,6 +175,7 @@ function boot() {
     if (settled) return;
     settled = true;
     activateDeferredImages();
+    scheduleDesktopImages();
     scheduleRuntime();
   };
 
