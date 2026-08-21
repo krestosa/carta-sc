@@ -73,6 +73,12 @@ export interface MotionEngine {
     options?: MotionSpringPropertyOptions,
   ): MotionHandle;
   attributes(target: Element, to: Record<string, number>, options: MotionPropertyOptions): MotionHandle;
+  springAttributes(
+    target: Element,
+    to: Readonly<Record<string, number>>,
+    spec: MotionSpringSpec,
+    options?: MotionSpringOptions,
+  ): MotionHandle;
   path(target: SVGPathElement, toD: string, options: MotionPropertyOptions): MotionHandle;
   currentTransform(target: HTMLElement | SVGElement): MotionTransformState;
   ease(name: string | undefined, progress: number): number;
