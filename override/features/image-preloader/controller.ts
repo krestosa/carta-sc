@@ -6,6 +6,9 @@ import {
 } from './config.js';
 import { ImagePlaceholderMotion } from './motion.js';
 
+const READY_REVEAL_BATCH_MS = 24;
+const READY_REVEAL_STAGGER_MS = 80;
+
 interface ImageBinding {
   stage: HTMLElement;
   token: number;
@@ -17,6 +20,7 @@ export class ImagePreloaderController {
   readonly #assignedPriority = new WeakSet<HTMLImageElement>();
   readonly #bindings = new Map<HTMLImageElement, ImageBinding>();
   readonly #placeholderMotion = new ImagePlaceholderMotion();
+  readonly #readyStages = new Set<HTMLElement>();
 
   #observer: MutationObserver | null = null;
   #intersection: IntersectionObserver | null = null;
@@ -27,6 +31,7 @@ export class ImagePreloaderController {
   #initialIdle = 0;
   #initialTimer = 0;
   #waveFrame = 0;
+  #readyRevealTimer = 0;
 
   get started(): boolean {
     return this.#started;
@@ -83,6 +88,7 @@ export class ImagePreloaderController {
       this.#readyHandler = null;
     }
     this.#cancelInitialScan();
+    this.#cancelReadyReveal();
     if (this.#waveFrame) cancelAnimationFrame(this.#waveFrame);
     this.#waveFrame = 0;
     this.#observer?.disconnect();
@@ -155,7 +161,51 @@ export class ImagePreloaderController {
   }
 
   #markReadyIfTracked(stage: HTMLElement): void {
-    if (this.#isPlaceholderTracked(stage)) this.#placeholderMotion.markReady(stage);
+    if (!this.#isPlaceholderTracked(stage)) return;
+    this.#readyStages.add(stage);
+    this.#scheduleReadyReveal(READY_REVEAL_BATCH_MS);
+  }
+
+  #documentOrderBefore(left: HTMLElement, right: HTMLElement): boolean {
+    return Boolean(left.compareDocumentPosition(right) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+
+  #nextReadyStage(): HTMLElement | null {
+    let next: HTMLElement | null = null;
+    for (const stage of this.#readyStages) {
+      if (!stage.isConnected || !this.#isPlaceholderTracked(stage)) {
+        this.#readyStages.delete(stage);
+        continue;
+      }
+      if (!next || this.#documentOrderBefore(stage, next)) next = stage;
+    }
+    return next;
+  }
+
+  #scheduleReadyReveal(delay: number): void {
+    if (!this.#started || this.#readyRevealTimer || !this.#readyStages.size) return;
+    this.#readyRevealTimer = window.setTimeout(this.#flushNextReadyStage, delay);
+  }
+
+  #flushNextReadyStage = (): void => {
+    this.#readyRevealTimer = 0;
+    if (!this.#started) {
+      this.#readyStages.clear();
+      return;
+    }
+
+    const stage = this.#nextReadyStage();
+    if (!stage) return;
+    this.#readyStages.delete(stage);
+    this.#placeholderMotion.markReady(stage);
+
+    if (this.#readyStages.size) this.#scheduleReadyReveal(READY_REVEAL_STAGGER_MS);
+  };
+
+  #cancelReadyReveal(): void {
+    if (this.#readyRevealTimer) clearTimeout(this.#readyRevealTimer);
+    this.#readyRevealTimer = 0;
+    this.#readyStages.clear();
   }
 
   #revealLoaded(image: HTMLImageElement, stage: HTMLElement, token: number): void {
@@ -171,6 +221,7 @@ export class ImagePreloaderController {
       return;
     }
 
+    this.#readyStages.delete(stage);
     this.#placeholderMotion.markLoading(stage, true);
     this.#scheduleWaveSync();
 
@@ -214,7 +265,10 @@ export class ImagePreloaderController {
 
   #release(root: Node): void {
     if (!(root instanceof Element)) return;
-    this.#stagesIn(root).forEach((stage) => this.#placeholderMotion.release(stage));
+    this.#stagesIn(root).forEach((stage) => {
+      this.#readyStages.delete(stage);
+      this.#placeholderMotion.release(stage);
+    });
     if (root instanceof HTMLImageElement) {
       this.#intersection?.unobserve(root);
       this.#unbindNativeImage(root);
