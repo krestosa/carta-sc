@@ -1,29 +1,29 @@
 # GitHub Pages / Lighthouse lab
 
-`lab/pages/` es el harness de benchmark para la réplica estática de GitHub Pages. No es código de aplicación de producción y no puede convertirse en dependencia de `override/`.
+`lab/pages/` es el harness TypeScript/Node que construye la réplica estática usada por GitHub Pages y Lighthouse. No es código de aplicación de producción y no puede convertirse en dependencia de `override/`.
 
 ## Ownership
 
-El frontend propio vive en `override/` y su fuente JavaScript fue reemplazada por TypeScript. Los árboles `js/` y `_js_dev/` permanecen legacy/originales y el laboratorio los trata como dependencias inmutables.
+El frontend propio vive en `override/` y su fuente es TypeScript. Los árboles `js/` y `_js_dev/` permanecen legacy/originales e inmutables.
 
-Este lab puede copiar el snapshot a `.pages-site`, reescribir HTML staged, bundlear legacy CSS/JS, generar media WebP, alterar prioridades de carga e inyectar CSS/lifecycle exclusivos del benchmark.
+El lab puede copiar el snapshot a `.pages-site`, reescribir HTML staged, bundlear legacy CSS/JS, generar media optimizada, alterar prioridades de carga e inyectar CSS/lifecycle exclusivos del benchmark. Ninguna de esas transformaciones modifica el source de `override/`.
 
 ## Implementación
 
-- `build.ts`: orquestador único del build de `.pages-site`.
-- `lib/`: utilidades Node para filesystem, red e imágenes.
+- `build.ts`: orquestador del build de `.pages-site`.
+- `lib/`: utilidades TypeScript/Node para filesystem, red e imágenes.
 - `steps/`: transformaciones TypeScript del pipeline.
-- `validators.ts`: validaciones del artifact.
-- `assets/prepaint.css` y `assets/performance.css`: CSS inyectado sólo en staging.
+- `validators.ts` + `validators/`: validaciones del artifact.
+- `assets/prepaint.css` y `assets/performance.css`: CSS exclusivo de staging.
 - `.nojekyll`: marker del artifact.
 
-No hay Python, `requirements.txt`, MJS ni shell de build en la implementación canónica.
+No hay Python, `requirements.txt`, MJS ni scripts shell versionados en la implementación canónica.
 
 ## Staging de TypeScript
 
-El build compila `override/**/*.ts` a `.generated/browser/`. Luego copia el snapshot excluyendo los `.ts` y superpone el JavaScript compilado únicamente dentro de `.pages-site/override/`. Por eso el source permanece TypeScript-only mientras las URLs runtime legacy continúan terminando en `.js` dentro del artifact generado.
+`npm run build:runtime` compila `override/**/*.ts` a `.generated/browser/`. El build de Pages copia el snapshot excluyendo source `.ts` y superpone el JavaScript generado únicamente dentro de `.pages-site/override/`. Por eso el repositorio conserva fuente TypeScript mientras el artifact navegador usa URLs `.js`.
 
-`apply-lab-overrides.ts` modifica sólo la copia staged de `render-lifecycle.js` y agrega los assets de first paint del lab. El source TypeScript de `override/` no se reescribe.
+`apply-lab-overrides.ts` sólo modifica la copia staged de `render-lifecycle.js`; el source `override/core/render-lifecycle.ts` nunca se reescribe.
 
 ## Validación
 
@@ -36,8 +36,8 @@ npm run validate
 GITHUB_SHA=<sha-git-de-40-caracteres> npm run build:pages
 ```
 
-`npm run validate` verifica también el límite de lenguaje: JavaScript versionado sólo puede existir en `js/` y `_js_dev/`.
+`npm run validate` comprueba también la frontera de lenguaje: JavaScript versionado sólo puede existir en `js/` y `_js_dev/`.
 
-## CI
+## CI y deploy
 
-`.github/workflows/lab-pages-replica.yml` ejecuta Node 22, `npm ci`, typecheck, validaciones y el build. La branch `type` construye y valida el artifact sin desplegarlo. Sólo `ux` puede desplegar GitHub Pages, conservando los guards de SHA y los reintentos del deploy.
+`.github/workflows/lab-pages-replica.yml` se ejecuta sobre `type`, usa Node 22, instala con `npm ci`, ejecuta typecheck/validaciones, construye `.pages-site`, verifica que el run no esté stale y despliega el artifact exacto a GitHub Pages. Después verifica públicamente que el HTML servido contiene el SHA exacto del HEAD desplegado.
