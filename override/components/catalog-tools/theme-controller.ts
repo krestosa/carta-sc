@@ -10,8 +10,41 @@ const rootElement = document.documentElement;
 const optionsCache = new WeakMap<HTMLElement, HTMLElement[]>();
 const themeIcon = new ThemeIconController();
 
-let contrastHandles: MotionHandle[] = [];
-let contrastNode: HTMLButtonElement | null = null;
+class ThemeContrastController {
+  #handles: MotionHandle[] = [];
+  #node: HTMLButtonElement | null = null;
+
+  stop(): void {
+    const handles = this.#handles.splice(0);
+    for (const handle of handles) handle.cancel();
+    this.#node?.style.removeProperty('color');
+    this.#node = null;
+  }
+
+  lock(root: HTMLElement | null, context: PaletteTransitionContext): void {
+    this.stop();
+    const parts = themeIcon.parts(root);
+    const from = context.from['--sc-color-ink'];
+    const to = context.to['--sc-color-ink'];
+    if (!parts || !from || !to || from === to || context.duration <= 0) return;
+
+    const button = parts.button;
+    this.#node = button;
+    button.style.setProperty('color', from, 'important');
+    this.#handles.push(motion.engine.delay(context.duration / 2, () => {
+      if (this.#node === button) button.style.setProperty('color', to, 'important');
+    }));
+    this.#handles.push(motion.engine.delay(context.duration, () => {
+      if (this.#node === button) {
+        button.style.removeProperty('color');
+        this.#node = null;
+      }
+      this.#handles = [];
+    }));
+  }
+}
+
+const themeContrast = new ThemeContrastController();
 
 export function selectedTheme(): ThemeMode {
   return themeState.selected();
@@ -46,36 +79,6 @@ function syncMetadata(root: HTMLElement, mode: ThemeMode): void {
   }
 }
 
-function stopContrastMotion(): void {
-  const handles = contrastHandles;
-  contrastHandles = [];
-  for (const handle of handles) handle.cancel();
-  contrastNode?.style.removeProperty('color');
-  contrastNode = null;
-}
-
-function lockButtonContrast(root: HTMLElement | null, context: PaletteTransitionContext): void {
-  stopContrastMotion();
-  const parts = themeIcon.parts(root);
-  const from = context.from['--sc-color-ink'];
-  const to = context.to['--sc-color-ink'];
-  if (!parts || !from || !to || from === to || context.duration <= 0) return;
-
-  const button = parts.button;
-  contrastNode = button;
-  button.style.setProperty('color', from, 'important');
-  contrastHandles.push(motion.engine.delay(context.duration / 2, () => {
-    if (contrastNode === button) button.style.setProperty('color', to, 'important');
-  }));
-  contrastHandles.push(motion.engine.delay(context.duration, () => {
-    if (contrastNode === button) {
-      button.style.removeProperty('color');
-      contrastNode = null;
-    }
-    contrastHandles = [];
-  }));
-}
-
 export function seedTheme(root: HTMLElement): ThemeMode {
   const mode = themeState.load();
   syncMetadata(root, mode);
@@ -89,7 +92,7 @@ function commitTheme(root: HTMLElement | null, mode: ThemeMode, persist: boolean
 
   syncMetadata(root, mode);
   if (!keepIcon) {
-    stopContrastMotion();
+    themeContrast.stop();
     themeIcon.setStatic(root, mode);
   }
   if (transition.before !== transition.after) {
@@ -102,7 +105,7 @@ function transitionTheme(root: HTMLElement, requested: string, persist: boolean)
   const mode = themeState.normalize(requested) ?? 'system';
   const from = themeState.normalize(root.getAttribute('data-sc-theme-mode')) ?? selectedTheme();
   const transition = themeState.transition(mode);
-  stopContrastMotion();
+  themeContrast.stop();
   themeIcon.animate(root, from, mode);
 
   if (transition.before === transition.after) {
@@ -111,12 +114,12 @@ function transitionTheme(root: HTMLElement, requested: string, persist: boolean)
   }
   transitionPalette(
     () => commitTheme(root, mode, persist, true),
-    (context) => lockButtonContrast(root, context),
+    (context) => themeContrast.lock(root, context),
   );
 }
 
 export function applyTheme(root: HTMLElement, requested: string, persist = false): void {
-  stopContrastMotion();
+  themeContrast.stop();
   cancelPaletteTransition();
   commitTheme(root, themeState.normalize(requested) ?? themeState.load(), persist, false);
 }
@@ -145,7 +148,7 @@ export function installThemeControl(root: HTMLElement): () => void {
     cleanMenu();
     cleanMicro();
     themeIcon.stop();
-    stopContrastMotion();
+    themeContrast.stop();
     cancelPaletteTransition();
   };
 }
@@ -155,7 +158,7 @@ export function syncThemeControl(): void {
   if (!root) return;
   const mode = selectedTheme();
   syncMetadata(root, mode);
-  stopContrastMotion();
+  themeContrast.stop();
   themeIcon.setStatic(root, mode);
 }
 
@@ -170,10 +173,10 @@ function onSystemThemeChange(): void {
   if (before === after) return;
 
   const root = document.querySelector<HTMLElement>('.sc-catalog-tools');
-  stopContrastMotion();
+  themeContrast.stop();
   transitionPalette(() => {
     themeState.commitSystemResolution(after);
     root?.setAttribute('data-sc-theme-actual', after);
     themeState.emit('system', after);
-  }, (context) => lockButtonContrast(root, context));
+  }, (context) => themeContrast.lock(root, context));
 }
