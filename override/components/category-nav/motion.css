@@ -1,6 +1,6 @@
 /* Token local de motion del riel. */
 body.sushiShop {
-  --sc-motion-micro: 120ms;
+  --sc-motion-micro: var(--sc-motion-short2);
 }
 
 /* Transiciones de color de las categorías. */
@@ -37,14 +37,14 @@ body.sushiShop {
 /* Entrada y salida del desplegable. */
 .sushiShop .topPullDown {
   -webkit-transform: translateY(var(--sc-category-dropdown-offset-y));transform: translateY(var(--sc-category-dropdown-offset-y));
-  -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
-  transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out),transform var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
+  -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-accelerate),-webkit-transform var(--sc-motion-micro) var(--sc-motion-ease-accelerate) !important;
+  transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-accelerate),transform var(--sc-motion-micro) var(--sc-motion-ease-accelerate) !important;
   -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
 }
 .sushiShop .topPullDown.open {
   -webkit-transform: translateY(0);transform: translateY(0);
-  -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),-webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
-  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-out),transform var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  -webkit-transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-decelerate),-webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-decelerate) !important;
+  transition: opacity var(--sc-motion-fast) var(--sc-motion-ease-decelerate),transform var(--sc-motion-fast) var(--sc-motion-ease-decelerate) !important;
   -webkit-transition-delay: 0ms !important;transition-delay: 0ms !important;
 }
 
@@ -55,7 +55,7 @@ body.sushiShop {
 @media (prefers-reduced-motion: reduce) {
   .sushiShop .topPullDown,.sushiShop .topPullDown.open {
     -webkit-transform: none !important;transform: none !important;
-    -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out) !important;transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-out) !important;
+    -webkit-transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-standard) !important;transition: opacity var(--sc-motion-micro) var(--sc-motion-ease-standard) !important;
   }
   .sushiShop .sc-category-indicator {will-change: auto;}
 }
