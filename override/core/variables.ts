@@ -19,7 +19,8 @@ const mediaEntries = Object.entries(MEDIA) as Array<[MediaName, string]>;
 export const media = MEDIA;
 export const queries = Object.freeze(
   Object.fromEntries(mediaEntries.map(([name, query]) => [name, window.matchMedia(query)])),
-) as MediaQueries;
+) as MediaQueries,
+);
 
 export const selectors = Object.freeze({
   container: '.containerShop',
@@ -77,6 +78,7 @@ const springs = Object.freeze({
     soft: Object.freeze({ stiffness: 50, damping: 1 }),
     firm: Object.freeze({ stiffness: 1000, damping: 1 }),
   }),
+  focus: Object.freeze({ stiffness: 1500, damping: 1 }),
 });
 
 const cssEasings = Object.freeze({
