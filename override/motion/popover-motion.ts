@@ -26,9 +26,9 @@ class AnchoredPopoverMotion {
       return;
     }
 
-    if (getComputedStyle(surface).opacity === '0') surface.style.opacity = '0';
+    if (!surface.style.opacity) surface.style.opacity = '0';
     const current = motion.engine.currentTransform(surface);
-    if (Math.abs(current.scale - OPEN_SCALE) < 0.001) {
+    if (!surface.style.transform || Math.abs(current.scale - OPEN_SCALE) < 0.001) {
       surface.style.transform = `translate3d(${current.x}px,${current.y}px,0) rotate(${current.rotation}deg) scale(${CLOSED_SCALE})`;
     }
 
