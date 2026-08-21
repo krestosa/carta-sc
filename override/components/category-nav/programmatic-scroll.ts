@@ -96,16 +96,21 @@ export class ProgrammaticCategoryScroll {
 
   #animate(target: HTMLElement, token: number, destination: number): void {
     const startY = currentPageY();
-    this.#move = motion.engine.spring(motionTokens.springs.effects.slow, (progress) => {
-      if (token !== this.#token) return;
-      if (categoryOffsetIsDirty()) destination = targetYFromOffset(target);
-      window.scrollTo(0, startY + (destination - startY) * progress);
-    }, {
-      onComplete: () => {
+    this.#move = motion.engine.tween(
+      motionTokens.durations.medium1,
+      'quad.inout',
+      (progress) => {
         if (token !== this.#token) return;
-        this.#move = null;
-        this.#finish(token, target);
+        if (categoryOffsetIsDirty()) destination = targetYFromOffset(target);
+        window.scrollTo(0, startY + (destination - startY) * progress);
       },
-    });
+      {
+        onComplete: () => {
+          if (token !== this.#token) return;
+          this.#move = null;
+          this.#finish(token, target);
+        },
+      },
+    );
   }
 }
