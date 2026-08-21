@@ -1,4 +1,4 @@
-name: Temporary Corrected Handoff
+name: TypeScript CI and Optional Handoff
 
 on:
   push:
@@ -7,26 +7,25 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: corrected-handoff-${{ github.event.pull_request.number || github.ref }}
+  group: typescript-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  handoff:
+  ci:
     if: github.ref == 'refs/heads/type' || (github.event_name == 'pull_request' && github.head_ref == 'type')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
-      - name: Checkout exact type commit
+      - name: Checkout exact commit
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
 
       - name: Set up Node 22
@@ -38,22 +37,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify checked out type SHA
-        run: test "$(git rev-parse HEAD)" = "$TYPE_SHA"
+      - name: Verify checked out SHA
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Run full TypeScript CI
-        run: GITHUB_SHA="$TYPE_SHA" npm run ci
+        run: npm run ci
 
-      - name: Build corrected handoff
-        run: GITHUB_SHA="$TYPE_SHA" npm run handoff:temporary
+      - name: Build temporary handoff
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run handoff:temporary
 
-      - name: Verify corrected handoff
+      - name: Verify temporary handoff
+        if: github.event_name == 'workflow_dispatch'
         run: npm run validate:handoff -- .pages-site
 
-      - name: Upload corrected handoff
+      - name: Upload temporary handoff
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
-          name: handoff-${{ env.TYPE_SHA }}
+          name: handoff-${{ github.sha }}
           path: handoff
           if-no-files-found: error
           include-hidden-files: true
