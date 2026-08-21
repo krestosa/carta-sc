@@ -113,7 +113,7 @@ function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
   const entries: WaveEntry[] = [];
   for (const stage of stages) {
     const card = cardFor(stage);
-    if (!card || card.hidden) continue;
+    if (!card || card.hidden || !stage.classList.contains('sc-image-active')) continue;
     const rect = card.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) continue;
     entries.push({ stage, top: rect.top, left: rect.left });
@@ -210,10 +210,14 @@ class PlaceholderFrameCoordinator {
 }
 
 export function synchronizeImagePlaceholderCycle(): void {
+  const activeStages = [
+    ...document.querySelectorAll<HTMLElement>(
+      '.listadoShop .productoShop .sc-image-loading.sc-image-active',
+    ),
+  ];
+  if (!activeStages.length) return;
   document.documentElement.style.setProperty(CLOCK_PROPERTY, phaseDelay());
-  applyWaveLayout([
-    ...document.querySelectorAll<HTMLElement>('.listadoShop .productoShop .imgShop,.listadoShop .productoShop .imgLiquidNoFillShop'),
-  ]);
+  applyWaveLayout(activeStages);
 }
 
 export class ImagePlaceholderMotion {
@@ -222,6 +226,7 @@ export class ImagePlaceholderMotion {
   readonly #coordinator = new PlaceholderFrameCoordinator();
 
   synchronize(stages: readonly HTMLElement[]): void {
+    if (!stages.length) return;
     document.documentElement.style.setProperty(CLOCK_PROPERTY, phaseDelay());
     applyWaveLayout(stages);
   }
@@ -363,6 +368,8 @@ export class ImagePlaceholderMotion {
     card?.classList.add('sc-card-placeholder-ready');
     clearAlpha(stage);
     removeSharedProperty(stage, PHASE_PROPERTY);
+    removeSharedProperty(stage, WAVE_DELAY_PROPERTY);
+    this.#registered.delete(stage);
   }
 
   #cancel(stage: HTMLElement): void {
