@@ -131,20 +131,12 @@ export function installThemeControl(root: HTMLElement): () => void {
   if (!menu) return () => undefined;
 
   applyTheme(root, themeState.load());
-  const parts = themeIcon.parts(root);
-  const cleanMicro = parts
-    ? motion.bindMicroInteraction(menu.button, parts.svg, {
-        active: { rotation: 12 },
-        press: { rotation: -6 },
-      })
-    : () => undefined;
   const cleanMenu = menu.install();
   const cleanSystem = themeState.onSystemChange(onSystemThemeChange);
 
   return () => {
     cleanSystem();
     cleanMenu();
-    cleanMicro();
     themeIcon.stop();
     themeContrast.stop();
     cancelPaletteTransition();
