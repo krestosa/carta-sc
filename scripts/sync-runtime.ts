@@ -21,6 +21,26 @@ function runtimeInventory(): RuntimeInventory {
   };
 }
 
+function runtimeRelative(file: string, root: string): string {
+  return path.relative(root, file).replaceAll(path.sep, '/');
+}
+
+function expectedGeneratedRuntime(file: string): string {
+  return runtimeRelative(file, SOURCE_DIR).replace(/\.ts$/, '.js');
+}
+
+function validateGeneratedParity(inventory: RuntimeInventory): void {
+  const expected = new Set(inventory.typeScriptFiles.map(expectedGeneratedRuntime));
+  const actual = new Set(inventory.generatedJavaScript.map((file) => runtimeRelative(file, GENERATED_DIR)));
+  const missing = [...expected].filter((file) => !actual.has(file)).sort();
+  const extra = [...actual].filter((file) => !expected.has(file)).sort();
+
+  if (missing.length === 0 && extra.length === 0) return;
+  throw new Error(
+    `Generated browser JS path mismatch; missing=${missing.join(',') || 'none'}; extra=${extra.join(',') || 'none'}`,
+  );
+}
+
 export function syncRuntime(): void {
   if (!fs.existsSync(GENERATED_DIR)) {
     throw new Error('Missing .generated/browser/override; compile browser TypeScript first');
@@ -35,14 +55,10 @@ export function syncRuntime(): void {
     );
   }
 
-  if (inventory.typeScriptFiles.length !== inventory.generatedJavaScript.length) {
-    throw new Error(
-      `Generated browser JS count mismatch: ts=${inventory.typeScriptFiles.length}, js=${inventory.generatedJavaScript.length}`,
-    );
-  }
+  validateGeneratedParity(inventory);
 
   console.log(
-    `Runtime compile ready: ${inventory.typeScriptFiles.length} TypeScript sources -> ${inventory.generatedJavaScript.length} generated JavaScript files.`,
+    `Runtime compile ready: ${inventory.typeScriptFiles.length} TypeScript sources -> ${inventory.generatedJavaScript.length} generated JavaScript files with exact path parity.`,
   );
 }
 
