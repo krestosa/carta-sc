@@ -1,5 +1,5 @@
-import { queries } from '../../core/variables.js';
 import type { ThemeMode } from '../../core/types.js';
+import { motionTokens, queries } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 
@@ -96,19 +96,31 @@ export class ThemeIconController {
     const path = to === 'system' ? AUTO_PATH : to === 'dark' ? MOON_PATH : SUN_PATH;
     const direction = to === 'dark' ? -1 : 1;
 
-    this.#track(motion.engine.path(parts.core, path, { duration: 0.18, ease: 'cubic.inOut' }));
-    this.#track(motion.engine.attributes(
+    this.#track(motion.engine.path(parts.core, path, {
+      duration: motionTokens.durations.short4,
+      ease: motionTokens.easings.standard,
+    }));
+    this.#track(motion.engine.springAttributes(
       parts.bite,
       { cx: MOON_BITE.cx, cy: MOON_BITE.cy, r: to === 'dark' ? MOON_BITE.radius : 0 },
-      { duration: 0.16, ease: 'cubic.inOut' },
+      motionTokens.springs.spatial.fast,
     ));
-    this.#track(motion.engine.attributes(parts.ring, { r: 8.4 }, { duration: 0.14, ease: 'cubic.out' }));
-    this.#track(motion.engine.opacity(parts.ring, to === 'system' ? 1 : 0, { duration: 0.14, ease: 'cubic.out' }));
-    this.#track(motion.engine.transform(parts.rotor, { rotation: direction * 5.5 }, { duration: 0.075, ease: 'cubic.out' }));
-    this.#track(motion.engine.delay(0.06, () => {
-      if (token !== this.#geometryToken) return;
-      this.#track(motion.engine.transform(parts.rotor, { rotation: 0 }, { duration: 0.12, ease: 'quart.out' }));
+    this.#track(motion.engine.springAttributes(parts.ring, { r: 8.4 }, motionTokens.springs.spatial.fast));
+    this.#track(motion.engine.opacity(parts.ring, to === 'system' ? 1 : 0, {
+      duration: motionTokens.durations.short3,
+      ease: motionTokens.easings.standard,
     }));
+    this.#track(motion.engine.springTransform(
+      parts.rotor,
+      { rotation: direction * 5.5 },
+      motionTokens.springs.spatial.fast,
+      {
+        onComplete: () => {
+          if (token !== this.#geometryToken) return;
+          this.#track(motion.engine.springTransform(parts.rotor, { rotation: 0 }, motionTokens.springs.spatial.fast));
+        },
+      },
+    ));
 
     for (const line of parts.lines) {
       if (line.getAttribute('pathLength') !== '1') line.setAttribute('pathLength', '1');
@@ -116,13 +128,25 @@ export class ThemeIconController {
     }
     if (to === 'light') {
       parts.rays.style.opacity = '1';
-      parts.lines.forEach((line, index) => this.#tweenRay(line, 0, 0.14, 'quart.out', 0.015 + index * 0.006));
+      parts.lines.forEach((line, index) => this.#springRay(
+        line,
+        0,
+        index * (motionTokens.durations.short1 / 4),
+      ));
     } else {
-      [...parts.lines].reverse().forEach((line, index) => this.#tweenRay(line, 1, 0.09, 'cubic.in', index * 0.004));
-      this.#track(motion.engine.opacity(parts.rays, 0, { duration: 0.08, delay: 0.055, ease: 'cubic.out' }));
+      [...parts.lines].reverse().forEach((line, index) => this.#springRay(
+        line,
+        1,
+        index * (motionTokens.durations.short1 / 4),
+      ));
+      this.#track(motion.engine.opacity(parts.rays, 0, {
+        duration: motionTokens.durations.short2,
+        delay: motionTokens.durations.short1,
+        ease: motionTokens.easings.accelerate,
+      }));
     }
 
-    this.#track(motion.engine.delay(0.2, () => {
+    this.#track(motion.engine.delay(motionTokens.durations.medium2, () => {
       if (token !== this.#geometryToken) return;
       this.#handles = [];
       this.applyStatic(root, to);
@@ -146,9 +170,9 @@ export class ThemeIconController {
     }
   }
 
-  #tweenRay(line: SVGLineElement, to: number, duration: number, ease: string, delay: number): void {
+  #springRay(line: SVGLineElement, to: number, delay: number): void {
     const from = Number.parseFloat(line.style.strokeDashoffset || line.getAttribute('stroke-dashoffset') || '0');
-    this.#track(motion.engine.tween(duration, ease, (progress) => {
+    this.#track(motion.engine.spring(motionTokens.springs.effects.fast, (progress) => {
       line.style.strokeDashoffset = String(from + (to - from) * progress);
     }, { delay }));
   }
