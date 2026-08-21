@@ -2,6 +2,7 @@ import { spring, tween } from './scheduler.js';
 import type {
   MotionHandle,
   MotionPropertyOptions,
+  MotionSpringOptions,
   MotionSpringPropertyOptions,
   MotionSpringSpec,
   MotionTransformState,
@@ -140,22 +141,51 @@ export function animateSpringOpacity(
   });
 }
 
-export function animateAttributes(
+function attributeEndpoints(
   target: Element,
   to: Readonly<Record<string, number>>,
-  options: MotionPropertyOptions,
-): MotionHandle {
+): readonly [readonly string[], Record<string, number>] {
   const keys = Object.keys(to);
   const from = Object.fromEntries(keys.map((key) => {
     const value = Number.parseFloat(target.getAttribute(key) ?? '0');
     return [key, Number.isFinite(value) ? value : 0];
   })) as Record<string, number>;
+  return [keys, from];
+}
 
+function writeAttributes(
+  target: Element,
+  keys: readonly string[],
+  from: Readonly<Record<string, number>>,
+  to: Readonly<Record<string, number>>,
+  progress: number,
+): void {
+  for (const key of keys) {
+    const start = from[key] ?? 0;
+    const end = to[key] ?? start;
+    target.setAttribute(key, String(start + (end - start) * progress));
+  }
+}
+
+export function animateAttributes(
+  target: Element,
+  to: Readonly<Record<string, number>>,
+  options: MotionPropertyOptions,
+): MotionHandle {
+  const [keys, from] = attributeEndpoints(target, to);
   return tween(options.duration, options.ease, (progress) => {
-    for (const key of keys) {
-      const start = from[key] ?? 0;
-      const end = to[key] ?? start;
-      target.setAttribute(key, String(start + (end - start) * progress));
-    }
+    writeAttributes(target, keys, from, to, progress);
   }, { delay: options.delay, onComplete: options.onComplete });
+}
+
+export function animateSpringAttributes(
+  target: Element,
+  to: Readonly<Record<string, number>>,
+  spec: MotionSpringSpec,
+  options: MotionSpringOptions = {},
+): MotionHandle {
+  const [keys, from] = attributeEndpoints(target, to);
+  return spring(spec, (progress) => {
+    writeAttributes(target, keys, from, to, progress);
+  }, options);
 }
