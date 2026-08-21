@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildPages } from '../pages/build.js';
-import { ROOT, SITE, assert, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
+import { ROOT, SITE, assert, copyFile, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
 import { staticizeCompiled } from './staticize.js';
 
 interface HandoffPaths {
@@ -21,7 +21,7 @@ interface RootPackage {
 }
 
 interface LauncherDefinition {
-  readonly name: 'build.sh' | 'build.ps1';
+  readonly name: 'build.sh' | 'build.ps1' | 'serve.sh' | 'serve.ps1';
   readonly content: (sha: string) => string;
   readonly executable?: boolean;
 }
@@ -65,7 +65,9 @@ const SOURCE_PACKAGE_SCRIPTS = {
   'build:site': 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
   'build:compiled': 'npm run build:site && node .build/tooling/lab/handoff/staticize.js .pages-site ../compiled',
   'build:handoff': 'npm run build:compiled',
+  'serve:compiled': 'npm run compile:tooling && node .build/tooling/lab/handoff/static-server.js ../compiled 4173',
   build: 'npm run build:compiled',
+  serve: 'npm run serve:compiled',
 } as const;
 
 const LAUNCHERS: readonly LauncherDefinition[] = [
@@ -89,6 +91,24 @@ Set-Location (Join-Path $Root 'source')
 if (-not $env:GITHUB_SHA) { $env:GITHUB_SHA = '${sha}' }
 npm ci
 npm run build:handoff
+`,
+  },
+  {
+    name: 'serve.sh',
+    executable: true,
+    content: () => `#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
+cd "$ROOT"
+node server.mjs compiled 4173
+`,
+  },
+  {
+    name: 'serve.ps1',
+    content: () => `$ErrorActionPreference = 'Stop'
+$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $Root
+node server.mjs compiled 4173
 `,
   },
 ];
@@ -126,6 +146,7 @@ class HandoffBuildPipeline {
     this.#copySource();
     this.#writeSourcePackage();
     staticizeCompiled(SITE, PATHS.compiled);
+    this.#writeServer();
     this.#writeLaunchers();
   }
 
@@ -164,7 +185,8 @@ class HandoffBuildPipeline {
         || normalized === 'lab/pages'
         || normalized.startsWith('lab/pages/')
         || normalized === 'lab/handoff'
-        || normalized === 'lab/handoff/staticize.ts';
+        || normalized === 'lab/handoff/staticize.ts'
+        || normalized === 'lab/handoff/static-server.ts';
     }
 
     if (topLevel === 'scripts') {
@@ -188,6 +210,12 @@ class HandoffBuildPipeline {
       scripts: SOURCE_PACKAGE_SCRIPTS,
       devDependencies: rootPackage.devDependencies,
     });
+  }
+
+  #writeServer(): void {
+    const compiledServer = path.join(ROOT, '.build', 'tooling', 'lab', 'handoff', 'static-server.js');
+    assert(fs.existsSync(compiledServer), 'compiled handoff server is missing');
+    copyFile(compiledServer, path.join(PATHS.root, 'server.mjs'));
   }
 
   #writeLaunchers(): void {
