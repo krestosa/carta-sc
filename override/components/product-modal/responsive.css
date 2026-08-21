@@ -14,16 +14,30 @@
     font-size: 19px !important;
   }
   body.sushiShop .sc-product-modal__footer {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 12px !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+  body.sushiShop .sc-product-modal__price-slot {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  body.sushiShop .sc-product-modal__price-row {
+    width: auto !important;
+    min-width: 0 !important;
+    flex-wrap: nowrap !important;
   }
   body.sushiShop .sc-product-modal__actions {
     flex: 0 0 auto !important;
     min-width: 0 !important;
-    width: 100% !important;
+    width: auto !important;
   }
-  body.sushiShop .sc-product-modal__price-row {
-    width: 100% !important;
+  body.sushiShop .sc-product-modal__cart-button {
+    width: auto !important;
+    min-width: 0 !important;
+    padding-inline: 14px !important;
+    white-space: nowrap !important;
   }
 }
