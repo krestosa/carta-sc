@@ -32,7 +32,7 @@ export function isDir(file: string): boolean {
 }
 
 export function read(file: string): string {
-  return fs.readFileSync(file, 'utf8');
+  return fs.readFileSync(file, 'utf8').replace(/\r\n?/g, '\n');
 }
 
 export function write(file: string, content: string | Buffer): void {
