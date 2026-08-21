@@ -161,35 +161,8 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
   .sc-card-placeholder-active.sc-card-placeholder-loading,
   .sc-card-placeholder-revealing
-) .title-shop1,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
-  .sc-card-placeholder-active.sc-card-placeholder-loading,
-  .sc-card-placeholder-revealing
-) .priceRow,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
-  .sc-card-placeholder-active.sc-card-placeholder-loading,
-  .sc-card-placeholder-revealing
-) .descrip,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
-  .sc-card-placeholder-active.sc-card-placeholder-loading,
-  .sc-card-placeholder-revealing
-) .sc-product-flavors {
+) > a.fancyboxModalAddProd > :not(.imgShop):not(.imgLiquidNoFillShop) {
   opacity: var(--sc-image-preloader-content-alpha, 0) !important;
-}
-
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
-  .sc-card-placeholder-active.sc-card-placeholder-loading,
-  .sc-card-placeholder-revealing
-) .descrip {
-  border-top-color: transparent !important;
-}
-
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
-  .sc-card-placeholder-active.sc-card-placeholder-loading,
-  .sc-card-placeholder-revealing
-) .descrip.sc-description-truncated::after {
-  content: none !important;
-  display: none !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading:not(.sc-card-placeholder-transitioning) {
