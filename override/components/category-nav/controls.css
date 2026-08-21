@@ -71,20 +71,16 @@ body.sushiShop > .sc-category-submenu {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translate3d(0,-4px,0) scale(.99);
+  transform: scale(.8);
   transform-origin: var(--sc-submenu-origin-x,24px) var(--sc-submenu-origin-y,0px);
-  transition:
-    opacity var(--sc-motion-short3) var(--sc-motion-ease-decelerate),
-    transform var(--sc-motion-short4) var(--sc-motion-ease-decelerate),
-    visibility 0s linear var(--sc-motion-short4);
+  transition: none;
 }
 
 body.sushiShop > .sc-category-submenu.sc-category-submenu-open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translate3d(0,0,0) scale(1);
-  transition-delay: 0s;
+  transform: scale(1);
 }
 
 body.sushiShop > .sc-category-submenu .sc-category-submenu-list {
@@ -262,9 +258,5 @@ body.sushiShop .nav-top-li.sc-submenu-open > a.anchorLink .sc-category-submenu-c
   body.sushiShop .sc-rail-arrow:active svg,
   body.sushiShop .sc-rail-arrow--left:active svg,
   body.sushiShop > .sc-category-submenu .sc-category-submenu-link:active { transform: none !important; }
-  body.sushiShop > .sc-category-submenu {
-    transform: none !important;
-    transition: opacity var(--sc-motion-short2) var(--sc-motion-ease-linear), visibility 0s linear var(--sc-motion-short2) !important;
-  }
-  body.sushiShop > .sc-category-submenu.sc-category-submenu-open { transition-delay: 0s !important; }
+  body.sushiShop > .sc-category-submenu { transform: none !important; transition: none !important; }
 }
