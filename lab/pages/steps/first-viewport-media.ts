@@ -1,20 +1,22 @@
 import path from 'node:path';
 import { SITE, githubSha, read, write } from '../lib/core.js';
-import { FIRST_VIEWPORT_COUNT } from './first-viewport-media/config.js';
+import {
+  FIRST_VIEWPORT_COUNT,
+  type DesktopMediaStats,
+  type FirstViewportStat,
+} from './first-viewport-media/config.js';
 import { optimizeDesktopStability } from './first-viewport-media/desktop.js';
 import { summarizeChrome, verifyDesktopAssets } from './first-viewport-media/desktop-verify.js';
 import {
   optimizeFirstViewportProducts,
   summarizeFirstViewport,
   verifyFirstViewportAssets,
-  type FirstViewportStats,
 } from './first-viewport-media/products.js';
-import type { DesktopStabilityStats } from './first-viewport-media/desktop.js';
 
 interface MediaOptimizationResult {
   readonly html: string;
-  readonly firstViewportStats: FirstViewportStats;
-  readonly desktopStats: DesktopStabilityStats;
+  readonly firstViewportStats: readonly FirstViewportStat[];
+  readonly desktopStats: DesktopMediaStats;
 }
 
 class FirstViewportMediaOptimizer {
