@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { SITE, assert, read, readJson, write, writeJson } from '../lib/core.js';
+import { SITE, assert, read, readJson, remove, write, writeJson } from '../lib/core.js';
 import { SYSTEM_LOGO_STYLE_ID } from './system-logo-config.js';
 import { createCalibratedSystemLogoCss } from './system-logo-style.js';
 
@@ -33,7 +33,8 @@ function opticalWidth(bounds: OpticalBounds): number {
 }
 
 async function visibleBounds(file: string): Promise<OpticalBounds> {
-  const { data, info } = await sharp(file)
+  const input = fs.readFileSync(file);
+  const { data, info } = await sharp(input, { failOn: 'error' })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -117,5 +118,5 @@ export function applySystemLogoOptics(): void {
   const css = createCalibratedSystemLogoCss(state.mobile_width, state.desktop_width);
   html = `${html.slice(0, start)}${css}${html.slice(endStart + '</style>'.length)}`;
   write(indexFile, html);
-  fs.rmSync(stateFile);
+  remove(stateFile);
 }
