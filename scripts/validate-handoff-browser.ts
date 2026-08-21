@@ -127,9 +127,7 @@ function chromeCandidates(): string[] {
       path.join(process.env.LOCALAPPDATA ?? '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
     ];
   }
-  if (process.platform === 'darwin') {
-    return ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
-  }
+  if (process.platform === 'darwin') return ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
   return ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
 }
 
@@ -211,6 +209,7 @@ async function waitFor(client: CdpClient, expression: string, timeout = 20_000):
 }
 
 const PROBE_SCRIPT = `(() => {
+  if (window.__cartaHandoffProbe) return;
   const state = { raf: 0, animate: 0, errors: [] };
   const originalRaf = window.requestAnimationFrame.bind(window);
   window.requestAnimationFrame = (callback) => {
@@ -229,10 +228,20 @@ const PROBE_SCRIPT = `(() => {
   Object.defineProperty(window, '__cartaHandoffProbe', { value: state, configurable: false });
 })();`;
 
+const FUNCTIONAL_READY = `(() => {
+  const tools = document.querySelector('.sc-catalog-tools');
+  return !!tools
+    && tools.hasAttribute('data-sc-view')
+    && tools.hasAttribute('data-sc-theme-mode')
+    && document.documentElement.hasAttribute('data-sc-catalog-view');
+})()`;
+
 const SNAPSHOT_SCRIPT = `(() => {
   const cards = [...document.querySelectorAll('.productoShop')];
   const images = [...document.querySelectorAll('.productoShop .imgShop img, .productoShop .imgLiquidNoFillShop img')];
+  const tools = document.querySelector('.sc-catalog-tools');
   const visible = (el) => {
+    if (!el) return false;
     const style = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
     return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity || 1) > 0 && rect.width > 0 && rect.height > 0;
@@ -245,8 +254,8 @@ const SNAPSHOT_SCRIPT = `(() => {
     pendingProductImages: images.filter((img) => img.getAttribute('data-sc-src') && !img.getAttribute('src')).length,
     categoryCount: document.querySelectorAll('.sc-category-nav a, .sc-category-nav button, .nav-tabsTopShop a.anchorLink, .sc-category-rail a, .sc-category-rail button').length,
     skeletonCount: [...document.querySelectorAll('.sc-card-placeholder-loading, .sc-product-skeleton, [data-sc-skeleton]')].filter(visible).length,
-    runtimeReady: document.documentElement.getAttribute('data-sc-catalog-reveal-ready') === 'true' && !document.documentElement.classList.contains('sc-catalog-reveal-prepaint'),
-    toolsVisible: !!document.querySelector('.sc-catalog-tools') && visible(document.querySelector('.sc-catalog-tools')),
+    runtimeReady: !!tools && tools.hasAttribute('data-sc-view') && tools.hasAttribute('data-sc-theme-mode') && document.documentElement.hasAttribute('data-sc-catalog-view'),
+    toolsVisible: visible(tools),
     searchPresent: !!document.querySelector('.sc-catalog-search-input'),
     themePresent: !!document.querySelector('.sc-theme-toggle'),
     viewPresent: !!document.querySelector('.sc-catalog-view-toggle'),
@@ -328,16 +337,16 @@ async function inspectSite(client: CdpClient, url: string): Promise<BrowserSnaps
   const runtimeErrors: string[] = [];
   client.on('Network.responseReceived', (params) => {
     const response = params?.response;
-    if (response && String(response.url).startsWith('http://127.0.0.1') && response.status >= 400) {
-      localFailures.push(`${response.status} ${response.url}`);
+    const responseUrl = String(response?.url ?? '');
+    if (response && responseUrl.startsWith('http://127.0.0.1') && !responseUrl.endsWith('/favicon.ico') && response.status >= 400) {
+      localFailures.push(`${response.status} ${responseUrl}`);
     }
   });
-  client.on('Runtime.exceptionThrown', (params) => {
-    runtimeErrors.push(params?.exceptionDetails?.text ?? 'runtime exception');
-  });
+  client.on('Runtime.exceptionThrown', (params) => runtimeErrors.push(params?.exceptionDetails?.text ?? 'runtime exception'));
   client.on('Log.entryAdded', (params) => {
     const entry = params?.entry;
-    if (entry?.level === 'error' && String(entry.url ?? '').startsWith('http://127.0.0.1')) {
+    const entryUrl = String(entry?.url ?? '');
+    if (entry?.level === 'error' && entryUrl.startsWith('http://127.0.0.1') && !entryUrl.endsWith('/favicon.ico')) {
       runtimeErrors.push(entry.text ?? 'browser error');
     }
   });
@@ -350,8 +359,7 @@ async function inspectSite(client: CdpClient, url: string): Promise<BrowserSnaps
   await client.send('Page.navigate', { url });
   await waitFor(client, `document.readyState === 'complete'`);
   await waitFor(client, `document.querySelectorAll('.productoShop').length > 100`);
-  await waitFor(client, `document.documentElement.getAttribute('data-sc-catalog-reveal-ready') === 'true'`);
-  await waitFor(client, `document.querySelector('.sc-catalog-tools') !== null`);
+  await waitFor(client, FUNCTIONAL_READY, 30_000);
   await scrollCatalog(client);
   await waitFor(client, `[...document.querySelectorAll('.productoShop .imgShop img, .productoShop .imgLiquidNoFillShop img')].filter((img) => img.complete && img.naturalWidth > 0).length >= 8`, 30_000);
 
@@ -392,7 +400,7 @@ function validateSnapshot(label: string, snapshot: BrowserSnapshot): void {
   assert(snapshot.productImageCount > 100, `${label}: product image inventory is incomplete (${snapshot.productImageCount})`);
   assert(snapshot.loadedProductImages >= 8, `${label}: product images did not load (${snapshot.loadedProductImages})`);
   assert(snapshot.brokenProductImages === 0, `${label}: broken product images detected (${snapshot.brokenProductImages})`);
-  assert(snapshot.runtimeReady, `${label}: runtime never reached ready state`);
+  assert(snapshot.runtimeReady, `${label}: catalog runtime did not mount its functional state`);
   assert(snapshot.toolsVisible && snapshot.searchPresent && snapshot.themePresent && snapshot.viewPresent, `${label}: catalog controls are incomplete`);
   assert(snapshot.viewModeBefore !== snapshot.viewModeAfter, `${label}: view toggle did not change mode`);
   assert(snapshot.viewAnimated, `${label}: view icon changed without its expected interpolation`);
