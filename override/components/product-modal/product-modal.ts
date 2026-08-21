@@ -4,180 +4,211 @@ import { animateModalClose, animateModalOpen, animateModalReopen, cancelModalMot
 import { buildProductModal, PRODUCT_MODAL_SELECTORS } from './view.js';
 
 interface ModalSession {
-  modal: HTMLElement;
-  link: HTMLElement;
-  restoreFocus: HTMLElement | null;
-  background: BackgroundLock;
+  readonly modal: HTMLElement;
+  readonly link: HTMLElement;
+  readonly restoreFocus: HTMLElement | null;
+  readonly background: BackgroundLock;
 }
 
-let active: ModalSession | null = null;
-let closing: ModalSession | null = null;
-let openFrame = 0;
-let initialized = false;
+class ProductModalController {
+  #active: ModalSession | null = null;
+  #closing: ModalSession | null = null;
+  #openFrame = 0;
+  #initialized = false;
 
-function focus(node: HTMLElement | null): void {
-  if (!node || !document.documentElement.contains(node)) return;
-  try {
-    node.focus({ preventScroll: true });
-  } catch {
-    node.focus();
+  initialize(): () => void {
+    if (this.#initialized) return this.destroy;
+    this.#initialized = true;
+    document.addEventListener('click', this.#onClick, true);
+    document.addEventListener('mousedown', this.#onMouseDown, true);
+    document.addEventListener('keydown', this.#onKeyDown, true);
+    document.addEventListener('focusin', this.#onFocusIn);
+    return this.destroy;
   }
+
+  destroy = (): void => {
+    if (this.#initialized) {
+      this.#initialized = false;
+      document.removeEventListener('click', this.#onClick, true);
+      document.removeEventListener('mousedown', this.#onMouseDown, true);
+      document.removeEventListener('keydown', this.#onKeyDown, true);
+      document.removeEventListener('focusin', this.#onFocusIn);
+    }
+
+    this.#cancelOpenFrame();
+    const session = this.#active ?? this.#closing;
+    this.#active = null;
+    this.#closing = null;
+    if (session) this.#removeSession(session, true);
+    else document.body?.classList.remove('sc-product-modal-open');
+  };
+
+  open(link: HTMLElement): void {
+    if (this.#active) return;
+    if (this.#closing) {
+      if (this.#resumeClosing(link)) return;
+      const stale = this.#closing;
+      this.#closing = null;
+      this.#removeSession(stale, false);
+    }
+
+    const modal = buildProductModal(link);
+    if (!modal) return;
+
+    document.body.append(modal);
+    document.body.classList.add('sc-product-modal-open');
+    this.#active = {
+      modal,
+      link,
+      restoreFocus: link,
+      background: lockBackground(modal),
+    };
+    this.#focus(modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.close));
+
+    this.#cancelOpenFrame();
+    this.#openFrame = requestAnimationFrame(() => {
+      this.#openFrame = 0;
+      if (this.#active?.modal !== modal) return;
+      modal.classList.add('is-visible');
+      animateModalOpen(modal, link);
+    });
+  }
+
+  close(event?: Event): void {
+    event?.preventDefault();
+    if (!this.#active) return;
+
+    this.#cancelOpenFrame();
+    const session = this.#active;
+    this.#active = null;
+    this.#closing = session;
+    animateModalClose(session.modal, () => this.#finishClosing(session, true));
+  }
+
+  get activeModal(): HTMLElement | null {
+    return this.#active?.modal ?? null;
+  }
+
+  get isClosing(): boolean {
+    return this.#closing !== null;
+  }
+
+  #focus(node: HTMLElement | null): void {
+    if (!node || !document.documentElement.contains(node)) return;
+    try {
+      node.focus({ preventScroll: true });
+    } catch {
+      node.focus();
+    }
+  }
+
+  #cancelOpenFrame(): void {
+    if (!this.#openFrame) return;
+    cancelAnimationFrame(this.#openFrame);
+    this.#openFrame = 0;
+  }
+
+  #removeSession(session: ModalSession, restoreFocus: boolean): void {
+    cancelModalMotion(session.modal);
+    session.modal.remove();
+    document.body.classList.remove('sc-product-modal-open');
+    session.background.release();
+    if (restoreFocus) this.#focus(session.restoreFocus);
+  }
+
+  #finishClosing(session: ModalSession, restoreFocus: boolean): void {
+    if (this.#closing !== session) return;
+    this.#closing = null;
+    this.#removeSession(session, restoreFocus);
+  }
+
+  #resumeClosing(link: HTMLElement): boolean {
+    if (!this.#closing || this.#closing.link !== link) return false;
+    this.#active = this.#closing;
+    this.#closing = null;
+    document.body.classList.add('sc-product-modal-open');
+    this.#active.modal.classList.add('is-visible');
+    animateModalReopen(this.#active.modal, link);
+    this.#focus(this.#active.modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.close));
+    return true;
+  }
+
+  #target(event: Event): Element | null {
+    return event.target instanceof Element ? event.target : null;
+  }
+
+  #onClick = (event: MouseEvent): void => {
+    const target = this.#target(event);
+    const close = target?.closest<HTMLElement>(PRODUCT_MODAL_SELECTORS.close);
+    if (close && this.#active?.modal.contains(close)) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      this.close();
+      return;
+    }
+
+    const link = target?.closest<HTMLElement>(selectors.productLink);
+    if (!link) return;
+    if ((event.button && event.button !== 0)
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    if (!this.#resumeClosing(link)) this.open(link);
+  };
+
+  #onMouseDown = (event: MouseEvent): void => {
+    if (!this.#active || event.target !== this.#active.modal) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    this.close();
+  };
+
+  #onKeyDown = (event: KeyboardEvent): void => {
+    if (!this.#active) return;
+    if (event.key === 'Escape' || event.key === 'Esc') {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      this.close();
+    } else if (event.key === 'Tab') {
+      trapTab(this.#active.modal, event, PRODUCT_MODAL_SELECTORS.dialog);
+    }
+  };
+
+  #onFocusIn = (event: FocusEvent): void => {
+    containFocus(this.#active?.modal ?? null, event, PRODUCT_MODAL_SELECTORS.dialog);
+  };
 }
 
-function cancelOpenFrame(): void {
-  if (!openFrame) return;
-  cancelAnimationFrame(openFrame);
-  openFrame = 0;
-}
-
-function removeSession(session: ModalSession, restoreFocus: boolean): void {
-  cancelModalMotion(session.modal);
-  session.modal.remove();
-  document.body.classList.remove('sc-product-modal-open');
-  session.background.release();
-  if (restoreFocus) focus(session.restoreFocus);
-}
-
-function finishClosing(session: ModalSession, restoreFocus: boolean): void {
-  if (closing !== session) return;
-  closing = null;
-  removeSession(session, restoreFocus);
-}
-
-function resumeClosingModal(link: HTMLElement): boolean {
-  if (!closing || closing.link !== link) return false;
-  active = closing;
-  closing = null;
-  document.body.classList.add('sc-product-modal-open');
-  active.modal.classList.add('is-visible');
-  animateModalReopen(active.modal, link);
-  focus(active.modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.close));
-  return true;
-}
+const productModal = new ProductModalController();
 
 export function closeProductModal(event?: Event): void {
-  event?.preventDefault();
-  if (!active) return;
-
-  cancelOpenFrame();
-  const session = active;
-  active = null;
-  closing = session;
-  animateModalClose(session.modal, () => finishClosing(session, true));
+  productModal.close(event);
 }
 
 export function openProductModal(link: HTMLElement): void {
-  if (active) return;
-  if (closing) {
-    if (resumeClosingModal(link)) return;
-    const stale = closing;
-    closing = null;
-    removeSession(stale, false);
-  }
-
-  const modal = buildProductModal(link);
-  if (!modal) return;
-
-  document.body.append(modal);
-  document.body.classList.add('sc-product-modal-open');
-  active = {
-    modal,
-    link,
-    restoreFocus: link,
-    background: lockBackground(modal),
-  };
-  focus(modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.close));
-
-  cancelOpenFrame();
-  openFrame = requestAnimationFrame(() => {
-    openFrame = 0;
-    if (active?.modal !== modal) return;
-    modal.classList.add('is-visible');
-    animateModalOpen(modal, link);
-  });
-}
-
-function targetElement(event: Event): Element | null {
-  return event.target instanceof Element ? event.target : null;
-}
-
-function onClick(event: MouseEvent): void {
-  const target = targetElement(event);
-  const close = target?.closest<HTMLElement>(PRODUCT_MODAL_SELECTORS.close);
-  if (close && active?.modal.contains(close)) {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    closeProductModal();
-    return;
-  }
-
-  const link = target?.closest<HTMLElement>(selectors.productLink);
-  if (!link) return;
-  if ((event.button && event.button !== 0) || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-  event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
-  if (!resumeClosingModal(link)) openProductModal(link);
-}
-
-function onMouseDown(event: MouseEvent): void {
-  if (!active || event.target !== active.modal) return;
-  event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
-  closeProductModal();
-}
-
-function onKeyDown(event: KeyboardEvent): void {
-  if (!active) return;
-  if (event.key === 'Escape' || event.key === 'Esc') {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    closeProductModal();
-  } else if (event.key === 'Tab') {
-    trapTab(active.modal, event, PRODUCT_MODAL_SELECTORS.dialog);
-  }
-}
-
-function onFocusIn(event: FocusEvent): void {
-  containFocus(active?.modal ?? null, event, PRODUCT_MODAL_SELECTORS.dialog);
+  productModal.open(link);
 }
 
 export function initializeProductModal(): () => void {
-  if (initialized) return destroyProductModal;
-  initialized = true;
-  document.addEventListener('click', onClick, true);
-  document.addEventListener('mousedown', onMouseDown, true);
-  document.addEventListener('keydown', onKeyDown, true);
-  document.addEventListener('focusin', onFocusIn);
-  return destroyProductModal;
+  return productModal.initialize();
 }
 
 export function destroyProductModal(): void {
-  if (initialized) {
-    initialized = false;
-    document.removeEventListener('click', onClick, true);
-    document.removeEventListener('mousedown', onMouseDown, true);
-    document.removeEventListener('keydown', onKeyDown, true);
-    document.removeEventListener('focusin', onFocusIn);
-  }
-
-  cancelOpenFrame();
-  const session = active ?? closing;
-  active = null;
-  closing = null;
-  if (session) removeSession(session, true);
-  else document.body?.classList.remove('sc-product-modal-open');
+  productModal.destroy();
 }
 
 export function getActiveProductModal(): HTMLElement | null {
-  return active?.modal ?? null;
+  return productModal.activeModal;
 }
 
 export function isProductModalClosing(): boolean {
-  return closing !== null;
+  return productModal.isClosing;
 }
-
