@@ -136,9 +136,7 @@ Esto permite que el navegador siga recibiendo JavaScript generado sin volver a i
 lab/pages/
 ├── build.ts
 ├── lib/
-│   ├── core.ts
-│   ├── image.ts
-│   └── net.ts
+│   └── core.ts
 ├── steps/
 │   ├── apply-lab-overrides.ts
 │   ├── bundle-legacy.ts
