@@ -1,4 +1,4 @@
-import { queries } from '../../core/variables.js';
+import { motionTokens, queries } from '../../core/variables.js';
 
 export interface PaletteSnapshot {
   readonly [property: string]: string;
@@ -43,7 +43,9 @@ class ThemePaletteTransitionController {
     const node = this.#overlayElement();
     this.cancel();
     const token = this.#transitionToken;
-    const duration = queries.reducedMotion.matches ? 0.18 : 0.56;
+    const duration = queries.reducedMotion.matches
+      ? motionTokens.durations.short4
+      : motionTokens.durations.long3;
     const half = duration / 2;
     const context: PaletteTransitionContext = { from, to: from, duration, token, fade: true };
 
@@ -134,7 +136,7 @@ class ThemePaletteTransitionController {
     if (typeof node.animate !== 'function') return false;
     const animation = node.animate([{ opacity: from }, { opacity: to }], {
       duration: durationMs,
-      easing: 'cubic-bezier(.37,0,.63,1)',
+      easing: motionTokens.cssEasings.standard,
       fill: 'forwards',
     });
     this.#activeAnimations.push(animation);
