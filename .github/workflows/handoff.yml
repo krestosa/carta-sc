@@ -4,23 +4,29 @@ on:
   push:
     branches:
       - type
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: windows-handoff-${{ github.ref }}
+  group: windows-handoff-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   windows-handoff:
+    if: github.ref == 'refs/heads/type' || (github.event_name == 'pull_request' && github.head_ref == 'type')
     runs-on: windows-latest
     timeout-minutes: 40
+    env:
+      TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
-      - name: Checkout exact commit
+      - name: Checkout exact type commit
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
 
       - name: Set up Node 22
@@ -32,14 +38,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify checked out SHA
+      - name: Verify checked out type SHA
         shell: pwsh
         run: |
           $actual = git rev-parse HEAD
-          if ($actual -ne $env:GITHUB_SHA) { throw "Checkout SHA mismatch: $actual != $env:GITHUB_SHA" }
+          if ($actual -ne $env:TYPE_SHA) { throw "Checkout SHA mismatch: $actual != $env:TYPE_SHA" }
 
       - name: Build handoff on Windows
-        run: npm run build:handoff
+        shell: pwsh
+        run: |
+          $env:GITHUB_SHA = $env:TYPE_SHA
+          npm run build:handoff
 
       - name: Validate handoff on Windows
         run: npm run validate:handoff -- .pages-site
