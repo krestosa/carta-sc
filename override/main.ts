@@ -30,6 +30,14 @@ function applyInitialTheme(): void {
   window.__scInitialTheme = theme;
 }
 
+function runtimeAssetVersion(): string {
+  try {
+    return new URL(import.meta.url).searchParams.get('v') || DEFAULT_ASSET_VERSION;
+  } catch {
+    return DEFAULT_ASSET_VERSION;
+  }
+}
+
 function releasePrepaint(error: unknown): void {
   root.setAttribute('data-sc-catalog-reveal-ready', 'true');
   root.classList.remove('sc-catalog-reveal-prepaint');
@@ -37,8 +45,8 @@ function releasePrepaint(error: unknown): void {
 }
 
 async function startRuntime(): Promise<void> {
-  const assetVersion = window.__scCatalogAssetVersion ?? DEFAULT_ASSET_VERSION;
-  await import(`./runtime-main.js?v=${encodeURIComponent(assetVersion)}`);
+  const version = runtimeAssetVersion();
+  await import(`./runtime-main.js?v=${encodeURIComponent(version)}`);
 }
 
 applyInitialTheme();

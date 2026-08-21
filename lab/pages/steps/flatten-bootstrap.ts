@@ -46,52 +46,85 @@ const PREPAINT_SCRIPT = String.raw`{
   root.classList.add('sc-catalog-prepaint', 'sc-no-loading-state');
 }`;
 
-function countMatches(source: string, pattern: RegExp): number {
-  return source.match(new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`))?.length ?? 0;
+interface BootstrapAssets {
+  readonly legacyRuntime: string;
+  readonly overrideStyle: string;
+  readonly overrideModule: string;
 }
 
-export function flattenBootstrap(): void {
-  const sha = githubSha();
-  const file = path.join(SITE, 'index.html');
-  let html = read(file);
+function countMatches(source: string, pattern: RegExp): number {
+  const flags = pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`;
+  return source.match(new RegExp(pattern.source, flags))?.length ?? 0;
+}
 
-  const bootstrap = new RegExp(
-    `<script\\b(?=[^>]*\\bsrc=["']_js_dev/main\\.js\\?v=${escapeRegExp(sha)}["'])[^>]*>\\s*<\\/script>`,
-    'i',
-  );
-  assert(countMatches(html, bootstrap) === 1, 'Expected exactly one Pages development bootstrap script');
+function assets(sha: string): BootstrapAssets {
+  return {
+    legacyRuntime: `_js_dev/main-legacy.js?v=${sha}`,
+    overrideStyle: `override/main.css?v=${sha}`,
+    overrideModule: `override/main.js?v=${sha}`,
+  };
+}
 
-  const replacement = [
-    `<script>${PREPAINT_SCRIPT}\nwindow.__scCatalogAssetVersion='${sha}';</script>`,
-    `<script src="_js_dev/main-legacy.js?v=${sha}"></script>`,
-    `<link rel="stylesheet" href="override/main.css?v=${sha}">`,
-    `<script type="module" src="override/main.js?v=${sha}"></script>`,
+function replacementFor(bundle: BootstrapAssets): string {
+  return [
+    `<script>${PREPAINT_SCRIPT}</script>`,
+    `<script src="${bundle.legacyRuntime}"></script>`,
+    `<link rel="stylesheet" href="${bundle.overrideStyle}">`,
+    `<script type="module" src="${bundle.overrideModule}"></script>`,
   ].join('\n');
+}
 
-  html = html.replace(bootstrap, replacement);
-
-  assert(!bootstrap.test(html), 'Development bootstrap script remains in Pages index');
-  assert(html.includes('data-sc-catalog-view') && html.includes('scCatalogView:v3'), 'Remembered catalogue view prepaint bootstrap is missing');
+function assertGeneratedContract(html: string, bundle: BootstrapAssets): void {
+  assert(
+    html.includes('data-sc-catalog-view') && html.includes('scCatalogView:v3'),
+    'Remembered catalogue view prepaint bootstrap is missing',
+  );
   assert(html.includes("view = 'compact'"), 'Catalogue prepaint default must be compact');
-  assert(html.includes("const viewModes = ['compact', 'list']"), 'Pages prepaint must expose density and list only');
-  assert(html.includes('data-sc-theme-resolved') && html.includes('scTheme:v1'), 'Remembered color theme prepaint bootstrap is missing');
+  assert(
+    html.includes("const viewModes = ['compact', 'list']"),
+    'Pages prepaint must expose compact and list only',
+  );
+  assert(
+    html.includes('data-sc-theme-resolved') && html.includes('scTheme:v1'),
+    'Remembered color theme prepaint bootstrap is missing',
+  );
+  assert(!html.includes('__scCatalogAssetVersion'), 'Legacy asset-version global remains in Pages bootstrap');
 
   const legacyRuntime = new RegExp(
-    `<script\\b[^>]*\\bsrc=["']_js_dev/main-legacy\\.js\\?v=${escapeRegExp(sha)}["'][^>]*>\\s*<\\/script>`,
+    `<script\\b[^>]*\\bsrc=["']${escapeRegExp(bundle.legacyRuntime)}["'][^>]*>\\s*<\\/script>`,
     'gi',
   );
   const overrideStyle = new RegExp(
-    `<link\\b[^>]*\\bhref=["']override/main\\.css\\?v=${escapeRegExp(sha)}["'][^>]*>`,
+    `<link\\b[^>]*\\bhref=["']${escapeRegExp(bundle.overrideStyle)}["'][^>]*>`,
     'gi',
   );
   const overrideModule = new RegExp(
-    `<script\\b(?=[^>]*\\btype=["']module["'])(?=[^>]*\\bsrc=["']override/main\\.js\\?v=${escapeRegExp(sha)}["'])[^>]*>\\s*<\\/script>`,
+    `<script\\b(?=[^>]*\\btype=["']module["'])(?=[^>]*\\bsrc=["']${escapeRegExp(bundle.overrideModule)}["'])[^>]*>\\s*<\\/script>`,
     'gi',
   );
 
   assert(countMatches(html, legacyRuntime) === 1, 'Direct main-legacy script must appear exactly once');
   assert(countMatches(html, overrideStyle) === 2, 'Override CSS must appear once as preload and once as stylesheet');
   assert(countMatches(html, overrideModule) === 1, 'Direct override module entry must appear exactly once');
+}
 
+export function flattenBootstrap(): void {
+  const sha = githubSha();
+  const file = path.join(SITE, 'index.html');
+  const bundle = assets(sha);
+  let html = read(file);
+
+  const developmentBootstrap = new RegExp(
+    `<script\\b(?=[^>]*\\bsrc=["']_js_dev/main\\.js\\?v=${escapeRegExp(sha)}["'])[^>]*>\\s*<\\/script>`,
+    'i',
+  );
+  assert(
+    countMatches(html, developmentBootstrap) === 1,
+    'Expected exactly one Pages development bootstrap script',
+  );
+
+  html = html.replace(developmentBootstrap, replacementFor(bundle));
+  assert(!developmentBootstrap.test(html), 'Development bootstrap script remains in Pages index');
+  assertGeneratedContract(html, bundle);
   write(file, html);
 }
