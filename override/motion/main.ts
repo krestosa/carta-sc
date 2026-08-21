@@ -1,7 +1,7 @@
 import { media, queries } from '../core/variables.js';
 import { easeValue } from './easing.js';
 import { bindMicroInteraction as bindMicroInteractionBehavior } from './micro-interaction.js';
-import { animatePath } from './path.js';
+import { animatePath, animateSpringPath } from './path.js';
 import {
   animateAttributes,
   animateOpacity,
@@ -38,6 +38,7 @@ export const motionEngine: MotionEngine = Object.freeze({
   attributes: animateAttributes,
   springAttributes: animateSpringAttributes,
   path: animatePath,
+  springPath: animateSpringPath,
   currentTransform,
   ease: easeValue,
 });
