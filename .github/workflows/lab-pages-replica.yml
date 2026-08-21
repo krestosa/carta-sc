@@ -1,4 +1,4 @@
-name: LAB - Deploy type replica to Pages
+name: LAB - Build type replica
 
 on:
   push:
@@ -8,23 +8,16 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages-type-lab
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     if: github.ref == 'refs/heads/type'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    env:
-      GITHUB_PAGES: 'true'
     steps:
       - name: Checkout exact triggering commit
         uses: actions/checkout@v6
@@ -63,19 +56,10 @@ jobs:
       - name: Validate source and runtime
         run: npm run validate
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
       - name: Build isolated Pages artifact
         run: npm run build:pages
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: '.pages-site'
-          include-hidden-files: true
-
-      - name: Guard again before deploy
+      - name: Guard artifact against stale HEAD
         uses: actions/github-script@v9
         with:
           script: |
@@ -85,30 +69,15 @@ jobs:
               ref: 'heads/type'
             });
             if (data.object.sha !== context.sha) {
-              core.setFailed(`Refusing stale Pages deploy: run=${context.sha}, type=${data.object.sha}`);
+              core.setFailed(`Refusing stale Pages artifact: run=${context.sha}, type=${data.object.sha}`);
             }
 
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Verify public Pages serves exact type HEAD
-        env:
-          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        run: |
-          set -euo pipefail
-          test -n "$PAGE_URL"
-          for attempt in $(seq 1 30); do
-            verify_url="${PAGE_URL%/}/?sc-deploy-verify=${GITHUB_SHA}-${attempt}"
-            html=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              -H 'Pragma: no-cache' \
-              "$verify_url" || true)
-            if grep -Fq "window.__scCatalogAssetVersion='${GITHUB_SHA}'" <<<"$html"; then
-              echo "Verified public Pages is serving exact type HEAD $GITHUB_SHA"
-              exit 0
-            fi
-            sleep 3
-          done
-          echo "Pages deployment completed but public HTML is not serving exact type HEAD $GITHUB_SHA" >&2
-          exit 1
+      - name: Upload lab artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: pages-lab-${{ github.sha }}
+          path: '.pages-site'
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 30
+          compression-level: 6
