@@ -1,5 +1,4 @@
 import {
-  criticalImageLimit,
   IMAGE_STAGE_SELECTOR,
   imageBatchConfig,
   imagePreloaderPolicy,
@@ -24,8 +23,6 @@ export class ImagePreloaderController {
   #readyHandler: (() => void) | null = null;
   #started = false;
   #generation = 0;
-  #criticalCount = 0;
-  #criticalLimit = 0;
   #initialQueue: HTMLElement[] = [];
   #initialIdle = 0;
   #initialTimer = 0;
@@ -226,13 +223,18 @@ export class ImagePreloaderController {
     const stage = this.#stageFor(image);
     if (!stage) return;
 
-    this.#activateDeferredSource(image);
     if (this.#imageReady(image)) {
       this.#markReadyIfTracked(stage);
       return;
     }
 
     this.#bindNativeImage(image, stage);
+    this.#activateDeferredSource(image);
+
+    if (this.#imageReady(image)) {
+      this.#markReadyIfTracked(stage);
+      this.#unbindNativeImage(image);
+    }
   }
 
   #ensureIntersection(): IntersectionObserver | null {
@@ -252,20 +254,9 @@ export class ImagePreloaderController {
   #setPriority(image: HTMLImageElement): void {
     if (this.#assignedPriority.has(image)) return;
     this.#assignedPriority.add(image);
+    image.loading = 'lazy';
     image.decoding = 'async';
-
-    try {
-      if (this.#criticalCount < this.#criticalLimit) {
-        this.#criticalCount += 1;
-        image.loading = 'eager';
-        image.fetchPriority = 'auto';
-      } else {
-        image.loading = 'lazy';
-        image.fetchPriority = 'low';
-      }
-    } catch {
-      image.loading = 'lazy';
-    }
+    try { image.fetchPriority = 'low'; } catch { /* Compatibilidad de navegador. */ }
   }
 
   #collectImage(image: HTMLImageElement, explicitStage?: HTMLElement | null): void {
@@ -395,8 +386,6 @@ export class ImagePreloaderController {
 
   #activate(): void {
     if (!this.#started) return;
-    this.#criticalCount = 0;
-    this.#criticalLimit = criticalImageLimit();
     this.#decorateCriticalMedia();
     const root = this.#catalogueRoot();
     this.#observe(root);
