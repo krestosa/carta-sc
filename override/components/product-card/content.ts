@@ -6,6 +6,12 @@ import {
   ignoredTrait,
   traitLabels,
 } from './data.js';
+import {
+  cancelDescriptionMeasure,
+  ensureDescriptionCopy,
+  measureDescriptions,
+  scheduleDescriptionMeasure,
+} from './description.js';
 
 interface TraitSpec {
   readonly key: string;
@@ -13,25 +19,9 @@ interface TraitSpec {
   readonly icon: string;
 }
 
-type DescriptionState = readonly [card: HTMLElement, clamped: boolean];
+export { cancelDescriptionMeasure, ensureDescriptionCopy, measureDescriptions, scheduleDescriptionMeasure };
 
-const DESCRIPTION_BATCH = 8;
-const DESCRIPTION_BUDGET_MS = 4;
-const DESCRIPTION_WRITE_BATCH = 24;
-const DESCRIPTION_IDLE_TIMEOUT = 1400;
-
-let descriptionStartFrame = 0;
-let descriptionMeasureFrame = 0;
-let descriptionWriteFrame = 0;
-let descriptionIdle = 0;
-let descriptionTimer = 0;
-let descriptionQueue: HTMLElement[] = [];
-let descriptionStates: DescriptionState[] = [];
-let descriptionRerun = false;
-let descriptionVisibilityObserver: IntersectionObserver | null = null;
 let referenceStrip: HTMLElement | null = null;
-
-const observedDescriptionCards = new Set<HTMLElement>();
 
 const traitKey = (label: string): string => label.trim().toLocaleLowerCase('es-AR');
 
@@ -60,26 +50,6 @@ const appendTraitVisual = (target: HTMLElement, source: ParentNode, label: strin
     return icon;
   }
   return markTrait(appendDataTraitVisual(target, source, label), spec.key);
-};
-
-const descriptionNode = (target: Element | null): HTMLElement | null => {
-  if (!target) return null;
-  if (target.matches(selectors.productDescription)) return target as HTMLElement;
-  return target.querySelector<HTMLElement>(selectors.productDescription);
-};
-
-export const ensureDescriptionCopy = (target: Element | null): HTMLElement | null => {
-  const description = descriptionNode(target);
-  if (!description) return null;
-
-  const existing = [...description.children].find((child) => child.classList.contains('sc-description-copy'));
-  if (existing instanceof HTMLElement) return existing;
-
-  const copy = document.createElement('span');
-  copy.className = 'sc-description-copy';
-  while (description.firstChild) copy.appendChild(description.firstChild);
-  description.appendChild(copy);
-  return copy;
 };
 
 export const clearFlavorRows = (root: ParentNode = document): void => {
@@ -188,121 +158,7 @@ export const installFlavorRow = (link: HTMLElement | null): void => {
   }
 };
 
-const applyDescriptionState = (card: HTMLElement, clamped: boolean): void => {
-  const description = card.querySelector<HTMLElement>(selectors.productDescription);
-  if (!description) return;
-  description.classList.toggle('sc-description-clamped', clamped);
-  card.classList.toggle('sc-description-is-clamped', clamped);
-};
-
-const measureDescriptionCard = (card: HTMLElement): boolean => {
-  const description = card.querySelector<HTMLElement>(selectors.productDescription);
-  const copy = ensureDescriptionCopy(description);
-  if (!description || !copy) return false;
-
-  const lineHeight = Number.parseFloat(getComputedStyle(copy).lineHeight) || 0;
-  return lineHeight > 0 && copy.scrollHeight > lineHeight * 2 + 0.5;
-};
-
-const flushDescriptionWrites = (): void => {
-  descriptionWriteFrame = 0;
-  const batch = descriptionStates.splice(0, DESCRIPTION_WRITE_BATCH);
-  batch.forEach(([card, clamped]) => applyDescriptionState(card, clamped));
-
-  if (descriptionStates.length) descriptionWriteFrame = requestAnimationFrame(flushDescriptionWrites);
-  else if (descriptionQueue.length) scheduleDescriptionMeasure();
-};
-
-const queueDescriptionWrite = (card: HTMLElement, clamped: boolean): void => {
-  descriptionStates.push([card, clamped]);
-  if (!descriptionWriteFrame) descriptionWriteFrame = requestAnimationFrame(flushDescriptionWrites);
-};
-
-const observeDescriptionCard = (card: HTMLElement): void => {
-  if (!('IntersectionObserver' in window)) return;
-  descriptionVisibilityObserver ??= new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      const node = entry.target as HTMLElement;
-      observedDescriptionCards.delete(node);
-      descriptionVisibilityObserver?.unobserve(node);
-      descriptionQueue.push(node);
-      scheduleDescriptionMeasure();
-    });
-  }, { rootMargin: '180px 0px' });
-
-  if (!observedDescriptionCards.has(card)) {
-    observedDescriptionCards.add(card);
-    descriptionVisibilityObserver.observe(card);
-  }
-};
-
-const measureDescriptionBatch = (deadline: IdleDeadline | null = null): void => {
-  descriptionMeasureFrame = 0;
-  descriptionIdle = 0;
-  descriptionTimer = 0;
-  const start = performance.now();
-  let count = 0;
-
-  while (descriptionQueue.length && count < DESCRIPTION_BATCH) {
-    if (deadline && deadline.timeRemaining() < 1 && !deadline.didTimeout) break;
-    if (performance.now() - start > DESCRIPTION_BUDGET_MS) break;
-    const card = descriptionQueue.shift();
-    if (!card) continue;
-    if (card.hidden || card.offsetParent === null) {
-      observeDescriptionCard(card);
-      continue;
-    }
-    queueDescriptionWrite(card, measureDescriptionCard(card));
-    count += 1;
-  }
-
-  if (descriptionQueue.length) scheduleDescriptionMeasure();
-  else if (descriptionRerun) {
-    descriptionRerun = false;
-    scheduleDescriptionMeasure();
-  }
-};
-
-export const cancelDescriptionMeasure = (): void => {
-  if (descriptionStartFrame) cancelAnimationFrame(descriptionStartFrame);
-  if (descriptionMeasureFrame) cancelAnimationFrame(descriptionMeasureFrame);
-  if (descriptionWriteFrame) cancelAnimationFrame(descriptionWriteFrame);
-  if (descriptionIdle && window.cancelIdleCallback) window.cancelIdleCallback(descriptionIdle);
-  if (descriptionTimer) clearTimeout(descriptionTimer);
-
-  descriptionStartFrame = 0;
-  descriptionMeasureFrame = 0;
-  descriptionWriteFrame = 0;
-  descriptionIdle = 0;
-  descriptionTimer = 0;
-  descriptionQueue = [];
-  descriptionStates = [];
-  descriptionRerun = false;
-};
-
-export const scheduleDescriptionMeasure = (): void => {
-  if (descriptionStartFrame || descriptionMeasureFrame || descriptionIdle || descriptionTimer) {
-    descriptionRerun = true;
-    return;
-  }
-
-  descriptionStartFrame = requestAnimationFrame(() => {
-    descriptionStartFrame = 0;
-    if (!descriptionQueue.length) {
-      descriptionQueue = [...document.querySelectorAll<HTMLElement>(selectors.productCards)];
-    }
-    if (window.requestIdleCallback) {
-      descriptionIdle = window.requestIdleCallback(measureDescriptionBatch, { timeout: DESCRIPTION_IDLE_TIMEOUT });
-    } else {
-      descriptionTimer = window.setTimeout(() => measureDescriptionBatch(), 30);
-    }
-  });
-};
-
 export const installFlavorRows = (root: ParentNode = document): void => {
   installTraitReferences();
   root.querySelectorAll<HTMLElement>(`${selectors.productCard} > ${selectors.productLink}`).forEach(installFlavorRow);
 };
-
-export const measureDescriptions = scheduleDescriptionMeasure;
