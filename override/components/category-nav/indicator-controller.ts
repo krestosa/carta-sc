@@ -1,14 +1,12 @@
 import { motionTokens, queries } from '../../core/variables.js';
 import { visible } from '../../core/utils.js';
-import { motion } from '../../motion/main.js';
-import type { MotionHandle, MotionSpringSpec } from '../../motion/types.js';
+import type { MotionSpringSpec } from '../../motion/types.js';
 import { cloneTemplate } from '../../templates/registry.js';
 import { anchorForHref, categoryLinks, CATEGORY_SELECTORS } from './core.js';
 
 interface IndicatorState {
   x: number;
   width: number;
-  warp: number;
 }
 
 interface IndicatorEntry {
@@ -23,28 +21,12 @@ interface IndicatorEntry {
   visible: boolean;
   moveFrame: number;
   lastMoveTime: number;
-  velocityX: number;
-  velocityWidth: number;
-  velocityWarp: number;
-  scrollElement: HTMLElement | null;
-  onScroll: (() => void) | null;
-  scrollX: number;
-  scrollTime: number;
-  warpTween: MotionHandle | null;
-  settle: MotionHandle | null;
+  velocityStart: number;
+  velocityEnd: number;
 }
 
 const INDICATOR = {
   minWidth: 6,
-  maxWarp: 11,
-  minWarp: 4.5,
-  warpWidthRatio: 0.13,
-  leadingShare: 0.92,
-  trailingShare: 0.08,
-  scrollSampleMin: 0.003,
-  scrollSampleMax: 0.16,
-  scrollVelocityScale: 700,
-  scrollSettleDelay: motionTokens.durations.short1,
   textInsetMax: 1.25,
   textInsetRatio: 0.025,
   springMaxDt: 0.032,
@@ -52,8 +34,6 @@ const INDICATOR = {
   springVelocityEpsilon: 0.45,
 } as const;
 
-const now = (): number => performance.now();
-const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const physicalPixel = (): number => 1 / Math.max(1, devicePixelRatio || 1);
 const floorPhysical = (value: number): number => {
   const ratio = Math.max(1, devicePixelRatio || 1);
@@ -77,11 +57,6 @@ function visualBounds(link: HTMLElement): DOMRect {
   return fallback;
 }
 
-function scrollElementFor(root: HTMLElement, host: HTMLElement): HTMLElement | null {
-  return root.closest<HTMLElement>(`${CATEGORY_SELECTORS.mobileScroller},${CATEGORY_SELECTORS.scroller}`) ??
-    (host.scrollWidth > host.clientWidth + 1 ? host : null);
-}
-
 function sameTarget(link: HTMLAnchorElement, target: Element | null): boolean {
   const resolved = anchorForHref(link.getAttribute('href'));
   return resolved === target || Boolean(resolved && target && resolved.id && target.id && resolved.id === target.id);
@@ -95,10 +70,6 @@ function visibleRoots(target: Element | null): HTMLElement[] {
     if (root) roots.add(root);
   }
   return Array.from(roots);
-}
-
-function maxWarp(width: number): number {
-  return Math.min(INDICATOR.maxWarp, Math.max(INDICATOR.minWarp, width * INDICATOR.warpWidthRatio));
 }
 
 function springAxis(
@@ -159,10 +130,7 @@ export class CategoryIndicatorController {
   isDirty(): boolean { return this.#dirty; }
 
   pause(): void {
-    for (const entry of this.#entries) {
-      this.#unbindScroll(entry);
-      this.#stopMotion(entry);
-    }
+    for (const entry of this.#entries) this.#stopMove(entry);
   }
 
   resume(): void {
@@ -174,32 +142,16 @@ export class CategoryIndicatorController {
         this.#entries.splice(index, 1);
         continue;
       }
-      this.#bindScroll(entry);
       this.#render(entry);
     }
   }
 
   #render(entry: IndicatorEntry): void {
-    const stretch = Math.abs(entry.state.warp);
-    let left = entry.state.x;
-    const width = entry.state.width + stretch;
-    left -= stretch * (entry.state.warp >= 0 ? INDICATOR.trailingShare : INDICATOR.leadingShare);
     if (!entry.visible) {
       entry.line.style.opacity = '1';
       entry.visible = true;
     }
-    entry.line.style.transform = `translate3d(${left}px,0,0) scaleX(${Math.max(1, width)})`;
-  }
-
-  #stopSettle(entry: IndicatorEntry): void {
-    entry.settle?.cancel();
-    entry.settle = null;
-  }
-
-  #stopWarp(entry: IndicatorEntry): void {
-    this.#stopSettle(entry);
-    entry.warpTween?.cancel();
-    entry.warpTween = null;
+    entry.line.style.transform = `translate3d(${entry.state.x}px,0,0) scaleX(${Math.max(1, entry.state.width)})`;
   }
 
   #stopMove(entry: IndicatorEntry): void {
@@ -208,66 +160,9 @@ export class CategoryIndicatorController {
     entry.lastMoveTime = 0;
   }
 
-  #stopMotion(entry: IndicatorEntry): void {
-    this.#stopMove(entry);
-    this.#stopWarp(entry);
-  }
-
-  #unbindScroll(entry: IndicatorEntry): void {
-    if (entry.scrollElement && entry.onScroll) entry.scrollElement.removeEventListener('scroll', entry.onScroll);
-    entry.scrollElement = null;
-    entry.onScroll = null;
-    this.#stopSettle(entry);
-  }
-
   #destroyEntry(entry: IndicatorEntry): void {
-    this.#unbindScroll(entry);
-    this.#stopMotion(entry);
+    this.#stopMove(entry);
     entry.line.remove();
-  }
-
-  #springWarp(entry: IndicatorEntry, target: number): void {
-    entry.warpTween?.cancel();
-    const from = entry.state.warp;
-    entry.warpTween = motion.engine.spring(motionTokens.springs.effects.fast, (progress) => {
-      entry.state.warp = from + (target - from) * progress;
-      this.#render(entry);
-    }, { onComplete: () => { entry.warpTween = null; } });
-  }
-
-  #pulseScroll(entry: IndicatorEntry, velocity: number): void {
-    if (queries.reducedMotion.matches || entry.moveFrame) return;
-    const amount = maxWarp(entry.targetWidth || entry.state.width) * clamp(Math.abs(velocity) / INDICATOR.scrollVelocityScale, 0, 1);
-    if (amount < 0.2) return;
-    entry.direction = velocity > 0 ? 1 : -1;
-    this.#springWarp(entry, entry.direction * amount);
-    this.#stopSettle(entry);
-    entry.settle = motion.engine.delay(INDICATOR.scrollSettleDelay, () => {
-      entry.settle = null;
-      this.#springWarp(entry, 0);
-    });
-  }
-
-  #bindScroll(entry: IndicatorEntry): void {
-    const element = scrollElementFor(entry.root, entry.host);
-    if (element === entry.scrollElement) return;
-    this.#unbindScroll(entry);
-    entry.scrollElement = element;
-    if (!element) return;
-
-    entry.scrollX = element.scrollLeft;
-    entry.scrollTime = now();
-    entry.onScroll = () => {
-      const time = now();
-      const x = element.scrollLeft;
-      const deltaTime = (time - entry.scrollTime) / 1000;
-      if (deltaTime > INDICATOR.scrollSampleMin && deltaTime < INDICATOR.scrollSampleMax) {
-        this.#pulseScroll(entry, -(x - entry.scrollX) / deltaTime);
-      }
-      entry.scrollX = x;
-      entry.scrollTime = time;
-    };
-    element.addEventListener('scroll', entry.onScroll, { passive: true });
   }
 
   #entryFor(root: HTMLElement): IndicatorEntry {
@@ -275,10 +170,7 @@ export class CategoryIndicatorController {
     for (let index = this.#entries.length - 1; index >= 0; index -= 1) {
       const current = this.#entries[index];
       if (!current || current.root !== root) continue;
-      if (current.host === host) {
-        this.#bindScroll(current);
-        return current;
-      }
+      if (current.host === host) return current;
       this.#destroyEntry(current);
       this.#entries.splice(index, 1);
     }
@@ -292,7 +184,7 @@ export class CategoryIndicatorController {
       root,
       host,
       line,
-      state: { x: 0, width: 1, warp: 0 },
+      state: { x: 0, width: 1 },
       targetX: 0,
       targetWidth: 1,
       direction: 1,
@@ -300,40 +192,32 @@ export class CategoryIndicatorController {
       visible: false,
       moveFrame: 0,
       lastMoveTime: 0,
-      velocityX: 0,
-      velocityWidth: 0,
-      velocityWarp: 0,
-      scrollElement: null,
-      onScroll: null,
-      scrollX: 0,
-      scrollTime: 0,
-      warpTween: null,
-      settle: null,
+      velocityStart: 0,
+      velocityEnd: 0,
     };
     this.#entries.push(entry);
-    this.#bindScroll(entry);
     return entry;
   }
 
   #snap(entry: IndicatorEntry, x: number, width: number): void {
-    this.#stopMotion(entry);
+    this.#stopMove(entry);
     entry.targetX = x;
     entry.targetWidth = width;
     entry.state.x = x;
     entry.state.width = width;
-    entry.state.warp = 0;
-    entry.velocityX = 0;
-    entry.velocityWidth = 0;
-    entry.velocityWarp = 0;
+    entry.velocityStart = 0;
+    entry.velocityEnd = 0;
     entry.initialized = true;
     this.#render(entry);
   }
 
   #settled(entry: IndicatorEntry): boolean {
+    const currentEnd = entry.state.x + entry.state.width;
+    const targetEnd = entry.targetX + entry.targetWidth;
     return Math.abs(entry.state.x - entry.targetX) < INDICATOR.springPositionEpsilon &&
-      Math.abs(entry.state.width - entry.targetWidth) < INDICATOR.springPositionEpsilon &&
-      Math.abs(entry.velocityX) < INDICATOR.springVelocityEpsilon &&
-      Math.abs(entry.velocityWidth) < INDICATOR.springVelocityEpsilon;
+      Math.abs(currentEnd - targetEnd) < INDICATOR.springPositionEpsilon &&
+      Math.abs(entry.velocityStart) < INDICATOR.springVelocityEpsilon &&
+      Math.abs(entry.velocityEnd) < INDICATOR.springVelocityEpsilon;
   }
 
   #step(entry: IndicatorEntry, timestamp: number): void {
@@ -343,40 +227,38 @@ export class CategoryIndicatorController {
       : 1 / 60;
     entry.lastMoveTime = timestamp;
 
-    [entry.state.x, entry.velocityX] = springAxis(
-      entry.state.x,
-      entry.velocityX,
-      entry.targetX,
-      deltaTime,
-      motionTokens.springs.spatial.default,
-    );
-    [entry.state.width, entry.velocityWidth] = springAxis(
-      entry.state.width,
-      entry.velocityWidth,
-      entry.targetWidth,
-      deltaTime,
-      motionTokens.springs.spatial.default,
-    );
-    entry.state.width = Math.max(1, entry.state.width);
+    let start = entry.state.x;
+    let end = entry.state.x + entry.state.width;
+    const targetStart = entry.targetX;
+    const targetEnd = entry.targetX + entry.targetWidth;
+    const forward = entry.direction >= 0;
+    const startSpec = forward ? motionTokens.springs.indicator.soft : motionTokens.springs.indicator.firm;
+    const endSpec = forward ? motionTokens.springs.indicator.firm : motionTokens.springs.indicator.soft;
 
-    const centerVelocity = entry.velocityX + entry.velocityWidth * 0.5;
-    const warpTarget = clamp(centerVelocity / 900, -1, 1) * maxWarp(entry.state.width);
-    [entry.state.warp, entry.velocityWarp] = springAxis(
-      entry.state.warp,
-      entry.velocityWarp,
-      warpTarget,
+    [start, entry.velocityStart] = springAxis(
+      start,
+      entry.velocityStart,
+      targetStart,
       deltaTime,
-      motionTokens.springs.effects.fast,
+      startSpec,
     );
+    [end, entry.velocityEnd] = springAxis(
+      end,
+      entry.velocityEnd,
+      targetEnd,
+      deltaTime,
+      endSpec,
+    );
+
+    entry.state.x = Math.min(start, end - 1);
+    entry.state.width = Math.max(1, end - start);
     this.#render(entry);
 
     if (this.#settled(entry)) {
       entry.state.x = entry.targetX;
       entry.state.width = entry.targetWidth;
-      entry.state.warp = 0;
-      entry.velocityX = 0;
-      entry.velocityWidth = 0;
-      entry.velocityWarp = 0;
+      entry.velocityStart = 0;
+      entry.velocityEnd = 0;
       entry.moveFrame = 0;
       entry.lastMoveTime = 0;
       this.#render(entry);
@@ -390,7 +272,6 @@ export class CategoryIndicatorController {
       this.#snap(entry, x, width);
       return;
     }
-    this.#stopWarp(entry);
     const from = entry.state.x + entry.state.width / 2;
     const to = x + width / 2;
     entry.targetX = x;
