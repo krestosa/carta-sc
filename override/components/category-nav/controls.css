@@ -26,7 +26,7 @@ body.sushiShop .sc-rail-arrow {
 body.sushiShop .sc-rail-arrow::before {
   content: '';
   position: absolute;
-  inset: -6px -10px;
+  inset: -6px 0;
   pointer-events: auto;
 }
 
@@ -62,7 +62,7 @@ body.sushiShop > .sc-category-submenu {
   position: fixed;
   z-index: calc(var(--sc-z-category-sticky) + 24);
   min-width: 190px;
-  max-width: min(320px, calc(100vw - 24px));
+  max-width: min(320px, calc(100% - 24px));
   padding: 5px;
   border: var(--sc-border-hairline) solid var(--sc-color-border);
   border-radius: 2px;
