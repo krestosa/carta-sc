@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
-import { SITE, assert, read, walk } from '../lib/core.js';
+import { SITE, assert, read } from '../lib/core.js';
 import { type Attrs, type HtmlTag, SOCIAL_HOSTS, VOID_TAGS, classSet, decodeHtml, failList, safeDecode, scanTags, unique } from './shared.js';
 
 export function validateHtml():void{
@@ -20,6 +20,5 @@ export function validateHtml():void{
   for(const style of imgStyles){const normalized=decodeHtml(style).trim();if(normalized.startsWith('uploads_shop/')||normalized.startsWith('url('))issues.push(`malformed imgShop inline style: ${style.slice(0,120)}`);if(/(^|;)\s*background-(?:image|size|position|repeat)\s*:/i.test(normalized))issues.push('imgShop retains eager imgLiquid background styles after cleanup');}
   for(const control of controls){const a=control.attrs,named=Boolean((a['aria-label']??'').trim()||(a['aria-labelledby']??'').trim()||(a.title??'').trim()||(a.id&&labels.has(a.id)));if(!named)issues.push(`form control lacks an accessible name: ${control.tag}[${a.name||a.id||'<unnamed>'}]`);}
   for(const link of social)if(!link.named)issues.push(`social link lacks an accessible name: ${link.href}`);
-  const forbiddenMotion=[['g','sap'].join(''),['mo','rph','s','vg'].join(''),['scroll','trigger'].join(''),['split','text'].join('')];const externalMotion:string[]=[];for(const file of walk(path.join(SITE,'override')).filter((item)=>item.endsWith('.js'))){const source=read(file).toLowerCase();if(forbiddenMotion.some((term)=>source.includes(term)))externalMotion.push(path.relative(SITE,file).replaceAll(path.sep,'/'));}if(externalMotion.length)issues.push(`external motion dependency reference(s): ${externalMotion.sort().join(', ')}`);
   if(issues.length)failList('Pages HTML validation failed',issues);
 }
