@@ -1,4 +1,3 @@
-import { motionTokens } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';
 
@@ -71,14 +70,6 @@ function animate(
   return target.animate(keyframes, { ...options, fill: 'both' });
 }
 
-function imageStagePart(dialog: HTMLElement): HTMLElement | null {
-  return dialog.querySelector<HTMLElement>('.sc-product-modal__image-stage');
-}
-
-function imagePart(dialog: HTMLElement): HTMLElement | null {
-  return dialog.querySelector<HTMLElement>('.sc-product-modal__image');
-}
-
 function clear(modal: HTMLElement, dialog: HTMLElement): void {
   for (const property of ['background-color', 'visibility', 'will-change']) {
     modal.style.removeProperty(property);
@@ -86,54 +77,12 @@ function clear(modal: HTMLElement, dialog: HTMLElement): void {
   for (const property of ['transform', 'opacity', 'visibility', 'will-change']) {
     dialog.style.removeProperty(property);
   }
-
-  const stage = imageStagePart(dialog);
-  if (stage) {
-    stage.style.removeProperty('clip-path');
-    stage.style.removeProperty('will-change');
-  }
-
-  const image = imagePart(dialog);
-  if (image) {
-    image.style.removeProperty('transform');
-    image.style.removeProperty('will-change');
-  }
 }
 
 function finishOpen(modal: HTMLElement, dialog: HTMLElement, token: number): void {
   if (!isCurrent(modal, token)) return;
   stop(modal);
   clear(modal, dialog);
-}
-
-function imageEntrance(
-  dialog: HTMLElement,
-  onComplete: () => void,
-): CancelableMotion[] {
-  const stage = imageStagePart(dialog);
-  const image = imagePart(dialog);
-  if (!stage || !image) return [];
-
-  stage.style.willChange = 'clip-path';
-  image.style.willChange = 'transform';
-  image.style.transform = 'translate3d(-42px,0,0) scale(1.08)';
-
-  return [
-    animate(
-      stage,
-      [
-        { clipPath: 'inset(0 18% 0 18% round 28px)' },
-        { clipPath: 'inset(0 0 0 0 round 28px)' },
-      ],
-      { duration: TIMING.open, easing: EASING.open },
-    ),
-    motion.engine.springTransform(
-      image,
-      { x: 0, scale: 1 },
-      motionTokens.springs.focus,
-      { clear: true, onComplete },
-    ),
-  ];
 }
 
 function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): void {
@@ -163,13 +112,10 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
     { duration: TIMING.open, easing: EASING.open },
   );
 
-  const finish = (): void => finishOpen(modal, dialog, token);
-  const imageHandles = imageEntrance(dialog, finish);
-  register(modal, [backdrop, surfaceOpacity, surfacePosition, ...imageHandles]);
-
-  if (imageHandles.length === 0) {
-    surfacePosition.finished.then(finish).catch(() => undefined);
-  }
+  register(modal, [backdrop, surfaceOpacity, surfacePosition]);
+  surfacePosition.finished
+    .then(() => finishOpen(modal, dialog, token))
+    .catch(() => undefined);
 }
 
 export function cancelModalMotion(modal: HTMLElement | null): void {
