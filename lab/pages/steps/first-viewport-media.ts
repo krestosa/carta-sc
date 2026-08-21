@@ -1,11 +1,8 @@
 import path from 'node:path';
 import { SITE, githubSha, read, write } from '../lib/core.js';
 import { FIRST_VIEWPORT_COUNT } from './first-viewport-media/config.js';
-import {
-  optimizeDesktopStability,
-  summarizeChrome,
-  verifyDesktopAssets,
-} from './first-viewport-media/desktop.js';
+import { optimizeDesktopStability } from './first-viewport-media/desktop.js';
+import { summarizeChrome, verifyDesktopAssets } from './first-viewport-media/desktop-verify.js';
 import {
   optimizeFirstViewportProducts,
   summarizeFirstViewport,

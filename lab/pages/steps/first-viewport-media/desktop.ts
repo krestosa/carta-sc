@@ -1,6 +1,5 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import { SITE, assert, escapeRegExp } from '../../lib/core.js';
+import { assert } from '../../lib/core.js';
 import {
   BANNER,
   CHROME_MEDIA,
@@ -119,47 +118,4 @@ export async function optimizeDesktopStability(html: string, sha: string): Promi
       dimensions,
     },
   };
-}
-
-export function verifyDesktopAssets(html: string, sha: string): void {
-  assert(!html.includes(BANNER.url), 'remote desktop banner remains after localization');
-  assert(!html.includes('web-sushiclub2_black.png'), 'remote desktop logo remains after localization');
-  assert(
-    (html.match(/_chrome-media\/flag-/g) ?? []).length >= COUNTRY_LINKS.length,
-    'country chrome-media localization incomplete',
-  );
-  assert(
-    fs.existsSync(path.join(SITE, '_critical-media', BANNER.outputName)),
-    'localized desktop banner missing',
-  );
-
-  assert(
-    new RegExp(
-      `<img\\b(?=[^>]*\\bclass=["'][^"']*\\bimgBannerShop\\b)(?=[^>]*\\bsrc=["']_critical-media/desktop-banner\\.webp\\?v=${escapeRegExp(sha)}["'])(?=[^>]*\\bwidth=["']1500["'])(?=[^>]*\\bheight=["']157["'])[^>]*>`,
-      'i',
-    ).test(html),
-    'desktop banner lost localized intrinsic geometry',
-  );
-  assert(
-    new RegExp(
-      `<img\\b(?=[^>]*\\bsrc=["']_chrome-media/desktop-logo\\.webp\\?v=${escapeRegExp(sha)}["'])(?=[^>]*\\bwidth=["'][1-9][0-9]*["'])(?=[^>]*\\bheight=["'][1-9][0-9]*["'])[^>]*>`,
-      'i',
-    ).test(html),
-    'desktop logo intrinsic dimensions missing',
-  );
-
-  for (const [name, label] of COUNTRY_LINKS) {
-    const localUrl = `_chrome-media/${name}.webp?v=${sha}`;
-    const pattern = new RegExp(
-      `<a\\b(?=[^>]*\\baria-label=["']${escapeRegExp(label)}["'])[^>]*>(?:(?!<\\/a>).)*?<img\\b(?=[^>]*\\bsrc=["']${escapeRegExp(localUrl)}["'])(?=[^>]*\\balt=["']["'])[^>]*>(?:(?!<\\/a>).)*?<\\/a>`,
-      'is',
-    );
-    assert(pattern.test(html), `accessibility normalization missing for country ${label}`);
-  }
-}
-
-export function summarizeChrome(stats: readonly ChromeMediaStat[]): string {
-  return stats
-    .map((stat) => `${stat.name}:${stat.count}x/${stat.size[0]}x${stat.size[1]}/${stat.bytes}B`)
-    .join(', ');
 }
