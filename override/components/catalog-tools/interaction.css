@@ -36,7 +36,6 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip::
 
 body.sushiShop .sc-theme-toggle,
 body.sushiShop .sc-catalog-view-toggle {
-  --sc-icon-control-radius: 20px;
   box-sizing: border-box !important;
   position: relative !important;
   isolation: isolate;
@@ -68,7 +67,7 @@ body.sushiShop .sc-catalog-view-toggle::after {
   content: '';
   position: absolute;
   inset: var(--sc-control-visual-inset);
-  border-radius: var(--sc-icon-control-radius,20px);
+  border-radius: 50%;
   pointer-events: none;
 }
 
@@ -108,11 +107,6 @@ body.sushiShop .sc-catalog-view-toggle:focus-visible::before {
 body.sushiShop .sc-theme-toggle:focus-visible::after,
 body.sushiShop .sc-catalog-view-toggle:focus-visible::after {
   opacity: var(--sc-state-focus-opacity);
-}
-
-body.sushiShop .sc-theme-toggle:active::after,
-body.sushiShop .sc-catalog-view-toggle:active::after {
-  opacity: var(--sc-state-pressed-opacity);
 }
 
 body.sushiShop .sc-theme-toggle:disabled,
