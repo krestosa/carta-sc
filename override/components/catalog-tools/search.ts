@@ -1,133 +1,26 @@
 import { classes, selectors } from '../../core/variables.js';
-import { traitLabels } from '../product-card/data.js';
-
-interface SearchSegment {
-  readonly heading: HTMLElement | null;
-  readonly headingWasHidden: boolean;
-  readonly index: number;
-  readonly items: SearchItem[];
-  headingVisible: boolean;
-  count: number;
-  bestRank: number;
-}
-
-interface SearchHost {
-  readonly parent: Node;
-  readonly groups: SearchGroup[];
-  after: ChildNode | null;
-  signature: string;
-}
-
-interface SearchGroup {
-  readonly node: HTMLElement;
-  readonly host: SearchHost;
-  readonly index: number;
-  readonly segments: SearchSegment[];
-  readonly items: SearchItem[];
-  readonly wasHidden: boolean;
-  titleNode: HTMLElement | null;
-  titleWasHidden: boolean;
-  titleVisible: boolean;
-  count: number;
-  bestRank: number;
-  visible: boolean;
-}
-
-interface SearchItem {
-  readonly card: HTMLElement;
-  readonly title: string;
-  readonly description: string;
-  readonly text: string;
-  readonly traitMask: number;
-  readonly group: SearchGroup;
-  readonly segment: SearchSegment;
-  readonly index: number;
-  readonly wasHidden: boolean;
-  visible: boolean;
-  matchEpoch: number;
-  rank: number;
-}
-
-interface SearchNodes {
-  readonly root: HTMLElement;
-  readonly input: HTMLInputElement;
-  readonly clear: HTMLElement | null;
-  readonly status: HTMLElement | null;
-  readonly results: HTMLElement | null;
-  readonly empty: HTMLElement | null;
-}
+import {
+  activeFilterMask,
+  filterKeyFromTarget,
+  filterMaskPasses,
+  prepareFilterControls,
+  syncFilterButtons,
+  toggleFilter,
+  traitMaskForCard,
+} from './search-filters.js';
+import {
+  NO_SEARCH_RANK,
+  createSearchSegment,
+  type SearchGroup,
+  type SearchHost,
+  type SearchItem,
+  type SearchNodes,
+  type SearchSegment,
+} from './search-domain.js';
+import { fieldMatches, normalizeSearchText, rankSearchItem } from './search-ranking.js';
 
 export interface CatalogSearchOptions {
   readonly onRestore?: () => void;
-}
-
-const SPICE_FILTERS = new Set(['poco picante', 'picante', 'muy picante']);
-const FILTER_LABELS: Readonly<Record<string, string>> = {
-  'poco picante': 'Poco Picante',
-  picante: 'Picante',
-  'muy picante': 'Muy Picante',
-  vegetariano: 'Vegetariano',
-};
-const TRAIT_BITS: Readonly<Record<string, number>> = {
-  'poco picante': 1,
-  picante: 2,
-  'muy picante': 4,
-  vegetariano: 8,
-};
-
-function normalize(value: unknown): string {
-  return String(value ?? '')
-    .toLowerCase()
-    .trim()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ');
-}
-
-function normalizeLegacyTrait(label: unknown): string {
-  const key = normalize(label);
-  return key === 'algo picante' ? 'picante' : key;
-}
-
-function cardTraits(card: HTMLElement): string[] {
-  const explicit = Array.from(card.querySelectorAll<HTMLElement>('[data-sc-trait]'))
-    .map((node) => normalize(node.getAttribute('data-sc-trait')))
-    .filter(Boolean);
-  if (explicit.length > 0) return [...new Set(explicit)];
-  return [...new Set(traitLabels(card).map(normalizeLegacyTrait).filter(Boolean))];
-}
-
-function traitsMask(traits: readonly string[]): number {
-  return traits.reduce((mask, trait) => mask | (TRAIT_BITS[trait] ?? 0), 0);
-}
-
-function makeSegment(heading: HTMLElement | null, index: number): SearchSegment {
-  return {
-    heading,
-    headingWasHidden: heading?.hidden ?? false,
-    headingVisible: heading ? !heading.hidden : false,
-    items: [],
-    count: 0,
-    bestRank: 99,
-    index,
-  };
-}
-
-function fieldMatches(text: string, query: string, tokens: readonly string[]): boolean {
-  return text.includes(query) || tokens.every((token) => text.includes(token));
-}
-
-function rankItem(item: SearchItem, query: string, tokens: readonly string[]): number {
-  if (!query) return 0;
-  if (item.title === query) return 0;
-  if (item.title.startsWith(query)) return 1;
-  if (item.title.includes(query)) return 2;
-  if (fieldMatches(item.title, query, tokens)) return 3;
-  if (item.description === query) return 4;
-  if (item.description.startsWith(query)) return 5;
-  if (item.description.includes(query)) return 6;
-  if (fieldMatches(item.description, query, tokens)) return 7;
-  return fieldMatches(item.text, query, tokens) ? 8 : -1;
 }
 
 export class CatalogSearchController {
@@ -224,8 +117,8 @@ export class CatalogSearchController {
     const nodes = this.#nodes;
     if (!nodes) return;
 
-    const query = normalize(value);
-    const mask = this.#filterMask();
+    const query = normalizeSearchText(value);
+    const mask = activeFilterMask(this.#activeFilters);
     const hasMode = Boolean(query) || mask !== 0;
     const stateKey = `${query}|${mask}`;
     if (stateKey === this.#lastState) return;
@@ -253,16 +146,16 @@ export class CatalogSearchController {
 
     for (const group of this.#groups) {
       group.count = 0;
-      group.bestRank = 99;
+      group.bestRank = NO_SEARCH_RANK;
       for (const segment of group.segments) {
         segment.count = 0;
-        segment.bestRank = 99;
+        segment.bestRank = NO_SEARCH_RANK;
       }
     }
 
     for (const item of candidates) {
-      if (!this.#filtersPass(item, mask)) continue;
-      const rank = rankItem(item, query, tokens);
+      if (!filterMaskPasses(item.traitMask, mask)) continue;
+      const rank = rankSearchItem(item, query, tokens);
       if (rank < 0) continue;
       item.rank = rank;
       item.matchEpoch = epoch;
@@ -371,11 +264,11 @@ export class CatalogSearchController {
         segments: [],
         items: [],
         count: 0,
-        bestRank: 99,
+        bestRank: NO_SEARCH_RANK,
         wasHidden: section.hidden,
         visible: !section.hidden,
       };
-      let segment = makeSegment(null, 0);
+      let segment = createSearchSegment(null, 0);
       group.segments.push(segment);
       this.#groups.push(group);
       host.groups.push(group);
@@ -389,27 +282,27 @@ export class CatalogSearchController {
           continue;
         }
         if (child.matches(selectors.sectionSubtitle)) {
-          segment = makeSegment(child, group.segments.length);
+          segment = createSearchSegment(child, group.segments.length);
           group.segments.push(segment);
           continue;
         }
         if (!child.matches(selectors.productCard)) continue;
 
-        const title = normalize(child.querySelector<HTMLElement>(selectors.productTitle)?.textContent);
-        const description = normalize(child.querySelector<HTMLElement>(selectors.productDescription)?.textContent);
+        const title = normalizeSearchText(child.querySelector<HTMLElement>(selectors.productTitle)?.textContent);
+        const description = normalizeSearchText(child.querySelector<HTMLElement>(selectors.productDescription)?.textContent);
         const item: SearchItem = {
           card: child,
           title,
           description,
           text: `${title} ${description}`.trim(),
-          traitMask: traitsMask(cardTraits(child)),
+          traitMask: traitMaskForCard(child),
           group,
           segment,
           index: this.#inventory.length,
           wasHidden: child.hidden,
           visible: !child.hidden,
           matchEpoch: 0,
-          rank: 99,
+          rank: NO_SEARCH_RANK,
         };
         this.#inventory.push(item);
         group.items.push(item);
@@ -429,17 +322,6 @@ export class CatalogSearchController {
     this.#captured = true;
   }
 
-  #filterMask(): number {
-    let mask = 0;
-    for (const filter of this.#activeFilters) mask |= TRAIT_BITS[filter] ?? 0;
-    return mask;
-  }
-
-  #filtersPass(item: SearchItem, mask: number): boolean {
-    const spiceMask = mask & 7;
-    if (spiceMask && (item.traitMask & spiceMask) === 0) return false;
-    return !(mask & 8) || (item.traitMask & 8) !== 0;
-  }
 
   #candidatesFor(query: string): SearchItem[] {
     if (!query) {
@@ -539,14 +421,14 @@ export class CatalogSearchController {
       item.card.hidden = item.wasHidden;
       item.visible = !item.wasHidden;
       item.matchEpoch = 0;
-      item.rank = 99;
+      item.rank = NO_SEARCH_RANK;
       item.card.style.removeProperty('order');
     }
     for (const group of this.#groups) {
       group.node.hidden = group.wasHidden;
       group.visible = !group.wasHidden;
       group.count = 0;
-      group.bestRank = 99;
+      group.bestRank = NO_SEARCH_RANK;
       if (group.titleNode) {
         group.titleNode.hidden = group.titleWasHidden;
         group.titleVisible = !group.titleWasHidden;
@@ -554,7 +436,7 @@ export class CatalogSearchController {
       }
       for (const segment of group.segments) {
         segment.count = 0;
-        segment.bestRank = 99;
+        segment.bestRank = NO_SEARCH_RANK;
         if (segment.heading) {
           segment.heading.hidden = segment.headingWasHidden;
           segment.headingVisible = !segment.headingWasHidden;
@@ -580,56 +462,23 @@ export class CatalogSearchController {
     if (this.#nodes?.clear) this.#nodes.clear.hidden = !this.#nodes.input.value;
   }
 
-  #filterKey(box: HTMLElement): string {
-    const explicit = box.querySelector<HTMLElement>('[data-sc-trait]')?.getAttribute('data-sc-trait');
-    if (explicit) return normalize(explicit);
-    return normalizeLegacyTrait(box.querySelector<HTMLElement>('.ref_label')?.textContent);
-  }
-
   #syncFilterButtons(): void {
     const root = this.#nodes?.root;
-    if (!root) return;
-    for (const button of root.querySelectorAll<HTMLElement>('[data-sc-filter]')) {
-      const key = button.getAttribute('data-sc-filter') ?? '';
-      const active = this.#activeFilters.has(key);
-      button.setAttribute('aria-pressed', String(active));
-      button.classList.toggle('is-active', active);
-    }
+    if (root) syncFilterButtons(root, this.#activeFilters);
   }
 
   #prepareFilters(): void {
     const root = this.#nodes?.root;
-    if (!root) return;
-    const strip = root.querySelector<HTMLElement>('.referencias_picor.sc-trait-reference-strip');
-    if (!strip) return;
-
-    strip.querySelectorAll('[data-sc-filter="discount"],.sc-filter-chip--discount').forEach((node) => node.remove());
-    for (const box of strip.querySelectorAll<HTMLElement>('.refBox')) {
-      const key = this.#filterKey(box);
-      if (!SPICE_FILTERS.has(key) && key !== 'vegetariano') continue;
-      const label = FILTER_LABELS[key] ?? key;
-      const labelNode = box.querySelector<HTMLElement>('.ref_label');
-      if (labelNode) labelNode.textContent = label;
-      box.classList.add('sc-filter-chip');
-      box.dataset.scFilter = key;
-      box.setAttribute('role', 'button');
-      box.tabIndex = 0;
-      box.setAttribute('aria-pressed', 'false');
-      box.setAttribute('aria-label', `Filtrar por ${label}`);
-    }
-    this.#syncFilterButtons();
+    if (root) prepareFilterControls(root, this.#activeFilters);
   }
 
   #toggleFilter(target: EventTarget | null): boolean {
     const root = this.#nodes?.root;
-    const element = target instanceof Element ? target : null;
-    const chip = element?.closest<HTMLElement>('[data-sc-filter]');
-    if (!root || !chip || !root.contains(chip)) return false;
-    const key = chip.dataset.scFilter;
+    if (!root) return false;
+    const key = filterKeyFromTarget(root, target);
     if (!key) return false;
 
-    if (this.#activeFilters.has(key)) this.#activeFilters.delete(key);
-    else this.#activeFilters.add(key);
+    toggleFilter(this.#activeFilters, key);
     this.#syncFilterButtons();
     this.#lastState = '';
     this.apply(this.#nodes?.input.value ?? '');
