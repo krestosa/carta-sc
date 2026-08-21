@@ -80,12 +80,15 @@ function clearAlpha(stage: HTMLElement): void {
 }
 
 export class ImagePlaceholderMotion {
+  readonly #initialized = new WeakSet<HTMLElement>();
   readonly #states = new Map<HTMLElement, StageMotionState>();
 
   markLoading(stage: HTMLElement, active: boolean): void {
     const wasReady = stage.classList.contains('sc-image-ready');
     const wasRevealing = stage.classList.contains('sc-image-revealing');
     const alreadyLoading = stage.classList.contains('sc-image-loading') && !wasRevealing;
+    const firstLoading = !this.#initialized.has(stage);
+    this.#initialized.add(stage);
 
     if (alreadyLoading) {
       this.#setActive(stage, active);
@@ -97,7 +100,7 @@ export class ImagePlaceholderMotion {
     stage.classList.add('sc-image-loading');
     this.#setActive(stage, active);
 
-    if (queries.reducedMotion.matches || (!wasReady && !wasRevealing)) {
+    if (queries.reducedMotion.matches || firstLoading || (!wasReady && !wasRevealing)) {
       stage.classList.remove('sc-image-transitioning');
       clearAlpha(stage);
       return;
@@ -124,6 +127,7 @@ export class ImagePlaceholderMotion {
 
   markReady(stage: HTMLElement): void {
     const wasLoading = stage.classList.contains('sc-image-loading');
+    if (stage.querySelector('img[src],img[srcset]')) this.#initialized.add(stage);
     this.#cancel(stage);
     stage.classList.remove('sc-image-active');
 
@@ -143,6 +147,7 @@ export class ImagePlaceholderMotion {
 
   release(stage: HTMLElement): void {
     this.#cancel(stage);
+    this.#initialized.delete(stage);
     stage.classList.remove(
       'sc-image-loading',
       'sc-image-active',
