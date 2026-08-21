@@ -3,7 +3,6 @@ import { queries } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import { scheduleDescriptionMeasure } from '../product-card/content.js';
 import {
-  bindCatalogViewIconMicroInteraction,
   ensureCatalogViewIconPresentation,
   stopCatalogViewIconMotion,
   syncCatalogViewControl,
@@ -65,7 +64,6 @@ class CatalogViewController {
 
     ensureCatalogViewIconPresentation(host);
     this.apply(root, loadCatalogView());
-    const cleanMicroInteraction = bindCatalogViewIconMicroInteraction(button, host);
     const onClick = (): void => this.apply(
       root,
       selectedCatalogView() === 'compact' ? 'list' : 'compact',
@@ -78,7 +76,6 @@ class CatalogViewController {
     queries.compactWide.addEventListener('change', onBreakpoint);
 
     const cleanup = (): void => {
-      cleanMicroInteraction();
       button.removeEventListener('click', onClick);
       queries.phone.removeEventListener('change', onBreakpoint);
       queries.compactWide.removeEventListener('change', onBreakpoint);
