@@ -204,11 +204,13 @@ Los launchers generados pueden ser shell/PowerShell porque son output del handof
 
 Usa Node 22, `npm ci` y `npm run ci`. Verifica el contrato del handoff y publica el artifact.
 
-### Pages
+### Pages lab
 
 `.github/workflows/lab-pages-replica.yml` corre sobre `type`.
 
-Usa Node 22, valida SHA contra la branch actual, ejecuta typecheck/validaciones, construye `.pages-site`, despliega con GitHub Pages y verifica que el HTML público sirve el SHA exacto desplegado.
+Usa Node 22, valida SHA contra la branch actual, ejecuta typecheck/validaciones, construye `.pages-site` y publica el resultado como artifact normal de Actions llamado `pages-lab-<sha>`.
+
+La rama `type` no declara el environment `github-pages` ni intenta un deploy público. Las reglas de protección actuales del environment rechazan deployments desde `type` antes de iniciar el job. Un deploy público sólo debe ejecutarse desde una rama permitida por esas reglas o después de cambiar explícitamente la configuración de protección del environment.
 
 ## 12. Legacy e integración
 
