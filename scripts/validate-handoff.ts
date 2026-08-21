@@ -12,6 +12,9 @@ const REQUIRED_ROOT_ENTRIES = [
   'build.ps1',
   'build.sh',
   'compiled',
+  'serve.ps1',
+  'serve.sh',
+  'server.mjs',
   'source',
 ] as const;
 
@@ -26,6 +29,7 @@ const REQUIRED_SOURCE_PATHS = [
   'types',
   'lab/pages/build.ts',
   'lab/handoff/staticize.ts',
+  'lab/handoff/static-server.ts',
   'scripts/sync-runtime.ts',
   'scripts/lib',
 ] as const;
@@ -88,6 +92,13 @@ class HandoffValidator {
         throw new Error(`Missing compiled handoff path: ${relativePath}`);
       }
     }
+
+    for (const launcher of ['build.ps1', 'build.sh', 'serve.ps1', 'serve.sh', 'server.mjs']) {
+      const file = path.join(this.inputs.handoffRoot, launcher);
+      if (!fs.statSync(file).isFile() || fs.statSync(file).size === 0) {
+        throw new Error(`Missing handoff launcher: ${launcher}`);
+      }
+    }
   }
 
   #validateSourceBoundary(sourceRoot: string): void {
@@ -110,7 +121,8 @@ class HandoffValidator {
       }
       if (relativePath.startsWith('lab/')
         && !relativePath.startsWith('lab/pages/')
-        && relativePath !== 'lab/handoff/staticize.ts') {
+        && relativePath !== 'lab/handoff/staticize.ts'
+        && relativePath !== 'lab/handoff/static-server.ts') {
         throw new Error(`Unrelated lab tooling leaked into handoff source: ${relativePath}`);
       }
       if (relativePath.startsWith('scripts/')
