@@ -36,22 +36,22 @@
   --sc-product-image-ratio: 286 / 200;
 
   /* Duraciones y curvas compartidas por transiciones basadas en tiempo. */
-  --sc-motion-short1: 50ms;
-  --sc-motion-short2: 100ms;
-  --sc-motion-short3: 150ms;
-  --sc-motion-short4: 200ms;
-  --sc-motion-medium1: 250ms;
-  --sc-motion-medium2: 300ms;
-  --sc-motion-medium3: 350ms;
-  --sc-motion-medium4: 400ms;
-  --sc-motion-long1: 450ms;
-  --sc-motion-long2: 500ms;
-  --sc-motion-long3: 550ms;
-  --sc-motion-long4: 600ms;
-  --sc-motion-extra-long1: 700ms;
-  --sc-motion-extra-long2: 800ms;
-  --sc-motion-extra-long3: 900ms;
-  --sc-motion-extra-long4: 1000ms;
+  --sc-motion-short1: 48ms;
+  --sc-motion-short2: 95ms;
+  --sc-motion-short3: 143ms;
+  --sc-motion-short4: 190ms;
+  --sc-motion-medium1: 238ms;
+  --sc-motion-medium2: 286ms;
+  --sc-motion-medium3: 333ms;
+  --sc-motion-medium4: 381ms;
+  --sc-motion-long1: 429ms;
+  --sc-motion-long2: 476ms;
+  --sc-motion-long3: 524ms;
+  --sc-motion-long4: 571ms;
+  --sc-motion-extra-long1: 667ms;
+  --sc-motion-extra-long2: 762ms;
+  --sc-motion-extra-long3: 857ms;
+  --sc-motion-extra-long4: 952ms;
   --sc-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --sc-motion-ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
   --sc-motion-ease-decelerate: cubic-bezier(0, 0, 0, 1);
