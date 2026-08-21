@@ -156,7 +156,7 @@ function removeEmptyDirectories(directory: string, root = directory): void {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     if (entry.isDirectory()) removeEmptyDirectories(path.join(directory, entry.name), root);
   }
-  if (directory !== root && fs.readdirSync(directory).length === 0) fs.rmdirSync(directory);
+  if (directory !== root && fs.readdirSync(directory).length === 0) remove(directory);
 }
 
 function pruneCompiled(compiledRoot: string): void {
