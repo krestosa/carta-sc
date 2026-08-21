@@ -7,3 +7,14 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidd
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) {
   margin-top: 0 !important;
 }
+
+body.sushiShop .sc-catalog-search-icon {
+  transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard);
+}
+
+@media (max-width: 992px) and (prefers-reduced-motion: no-preference) {
+  body.sushiShop.sc-catalog-searching .sc-catalog-search-results:not([hidden]) {
+    animation-duration: var(--sc-motion-medium1);
+    animation-timing-function: var(--sc-motion-ease-decelerate);
+  }
+}
