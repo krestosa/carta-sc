@@ -2,8 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildPages } from '../pages/build.js';
-import { ROOT, SITE, assert, copyTree, ensureDir, remove, write } from '../pages/lib/core.js';
-import { neutralizeCompiled } from './shared.js';
+import { ROOT, SITE, assert, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
 
 interface HandoffPaths {
   readonly root: string;
@@ -11,8 +10,16 @@ interface HandoffPaths {
   readonly compiled: string;
 }
 
-interface LauncherDefinition {
+interface RootPackage {
   readonly name: string;
+  readonly version: string;
+  readonly type: string;
+  readonly engines?: Readonly<Record<string, string>>;
+  readonly devDependencies?: Readonly<Record<string, string>>;
+}
+
+interface LauncherDefinition {
+  readonly name: 'build.sh' | 'build.ps1';
   readonly content: (sha: string) => string;
   readonly executable?: boolean;
 }
@@ -23,7 +30,7 @@ const PATHS: HandoffPaths = {
   compiled: path.join(ROOT, 'handoff', 'compiled'),
 };
 
-const SOURCE_EXCLUDES = new Set([
+const EXCLUDED_TOP_LEVEL = new Set([
   '.git',
   '.github',
   '.build',
@@ -34,107 +41,132 @@ const SOURCE_EXCLUDES = new Set([
   'handoff',
 ]);
 
+const EXCLUDED_SOURCE_EXTENSIONS = new Set([
+  '.md',
+  '.map',
+  '.mjs',
+  '.py',
+  '.ps1',
+  '.sh',
+]);
+
+const SOURCE_PACKAGE_SCRIPTS = {
+  'compile:tooling': 'tsc -p tsconfig.tooling.json',
+  'compile:browser': 'tsc -p tsconfig.browser.json',
+  'build:runtime': 'npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js',
+  build: 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
+} as const;
+
 const LAUNCHERS: readonly LauncherDefinition[] = [
   {
-    name: 'build-local.sh',
+    name: 'build.sh',
     executable: true,
     content: (sha) => `#!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
-cd "$ROOT/source"
+SOURCE="$ROOT/source"
+COMPILED="$ROOT/compiled"
+cd "$SOURCE"
 export GITHUB_SHA="${'${GITHUB_SHA:-'}${sha}}"
 npm ci
-npm run handoff:rebuild
+npm run build
+rm -rf "$COMPILED"
+mkdir -p "$COMPILED"
+cp -a "$SOURCE/.pages-site/." "$COMPILED/"
 `,
   },
   {
-    name: 'serve-local.sh',
-    executable: true,
-    content: () => `#!/usr/bin/env bash
-set -euo pipefail
-ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
-cd "$ROOT/source"
-npm ci
-npm run serve:handoff -- --root "$ROOT/compiled"
-`,
-  },
-  {
-    name: 'build-local.ps1',
+    name: 'build.ps1',
     content: (sha) => `$ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location (Join-Path $Root 'source')
+$Source = Join-Path $Root 'source'
+$Compiled = Join-Path $Root 'compiled'
+Set-Location $Source
 if (-not $env:GITHUB_SHA) { $env:GITHUB_SHA = '${sha}' }
 npm ci
-npm run handoff:rebuild
-`,
-  },
-  {
-    name: 'serve-local.ps1',
-    content: () => `$ErrorActionPreference = 'Stop'
-$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location (Join-Path $Root 'source')
-npm ci
-npm run serve:handoff -- --root (Join-Path $Root 'compiled')
+npm run build
+if (Test-Path $Compiled) { Remove-Item -Recurse -Force $Compiled }
+New-Item -ItemType Directory -Force $Compiled | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $Source '.pages-site') -Force | Copy-Item -Destination $Compiled -Recurse -Force
 `,
   },
 ];
 
-const README = `# SushiClub build handoff
-
-\`source/\` contiene la fuente TypeScript/Node reproducible. \`compiled/\` contiene el artefacto neutralizado.
-
-Requiere Node.js 22+. Ejecute \`build-local.sh\`/\`build-local.ps1\` para reconstruir y \`serve-local.sh\`/\`serve-local.ps1\` para servirlo.
-`;
-
 class HandoffBuildPipeline {
-  readonly #sha = process.env.GITHUB_SHA ?? 'local';
+  readonly #sha = process.env.GITHUB_SHA ?? '';
 
   async run(): Promise<void> {
-    this.validateInputs();
+    this.#validateInputs();
     await buildPages();
-    this.prepareOutput();
-    this.copySource();
-    this.copyCompiledArtifact();
-    this.writeMetadata();
+    this.#prepareOutput();
+    this.#copySource();
+    this.#writeSourcePackage();
+    this.#copyCompiledArtifact();
+    this.#writeLaunchers();
   }
 
-  private validateInputs(): void {
-    assert(
-      fs.existsSync(path.join(ROOT, 'package-lock.json')),
-      'package-lock.json is required for reproducible handoff builds',
-    );
+  #validateInputs(): void {
+    assert(/^[0-9a-f]{40}$/.test(this.#sha), 'GITHUB_SHA is required for a deterministic handoff');
+    assert(fs.existsSync(path.join(ROOT, 'package-lock.json')), 'package-lock.json is required for reproducible handoff builds');
   }
 
-  private prepareOutput(): void {
+  #prepareOutput(): void {
     remove(PATHS.root);
     ensureDir(PATHS.source);
     ensureDir(PATHS.compiled);
   }
 
-  private copySource(): void {
-    copyTree(ROOT, PATHS.source, (relative) => this.shouldCopySource(relative));
+  #copySource(): void {
+    copyTree(ROOT, PATHS.source, (relative, absolute) => this.#shouldCopySource(relative, absolute));
   }
 
-  private shouldCopySource(relative: string): boolean {
+  #shouldCopySource(relative: string, absolute: string): boolean {
     const normalized = relative.replaceAll(path.sep, '/');
-    const topLevel = normalized.split('/', 1)[0] ?? normalized;
-    if (SOURCE_EXCLUDES.has(topLevel)) return false;
-    if (/\.(?:py|mjs)$/i.test(normalized)) return false;
-    return !/requirements(?:\.txt)?$/i.test(normalized);
+    const segments = normalized.split('/');
+    const topLevel = segments[0] ?? normalized;
+    if (EXCLUDED_TOP_LEVEL.has(topLevel)) return false;
+    if (segments.some((segment) => segment === '.git' || segment === '.github' || segment === 'node_modules')) return false;
+
+    const isDirectory = fs.statSync(absolute).isDirectory();
+    if (!isDirectory && EXCLUDED_SOURCE_EXTENSIONS.has(path.extname(normalized).toLowerCase())) return false;
+    if (!isDirectory && /requirements(?:\.txt)?$/i.test(normalized)) return false;
+    if (normalized === '.gitignore' || normalized === 'package.json') return false;
+
+    if (topLevel === 'lab') {
+      return normalized === 'lab' || normalized === 'lab/pages' || normalized.startsWith('lab/pages/');
+    }
+
+    if (topLevel === 'scripts') {
+      return normalized === 'scripts'
+        || normalized === 'scripts/lib'
+        || normalized.startsWith('scripts/lib/')
+        || normalized === 'scripts/sync-runtime.ts';
+    }
+
+    return true;
   }
 
-  private copyCompiledArtifact(): void {
-    copyTree(SITE, PATHS.compiled);
-    neutralizeCompiled(PATHS.compiled);
+  #writeSourcePackage(): void {
+    const rootPackage = readJson<RootPackage>(path.join(ROOT, 'package.json'));
+    writeJson(path.join(PATHS.source, 'package.json'), {
+      name: rootPackage.name,
+      private: true,
+      version: rootPackage.version,
+      type: rootPackage.type,
+      engines: rootPackage.engines,
+      scripts: SOURCE_PACKAGE_SCRIPTS,
+      devDependencies: rootPackage.devDependencies,
+    });
   }
 
-  private writeMetadata(): void {
-    write(path.join(PATHS.root, 'BUILD_SHA'), `${this.#sha}\n`);
-    this.writeLaunchers();
-    write(path.join(PATHS.root, 'README.md'), README);
+  #copyCompiledArtifact(): void {
+    copyTree(SITE, PATHS.compiled, (relative, absolute) => {
+      if (fs.statSync(absolute).isDirectory()) return true;
+      return path.extname(relative).toLowerCase() !== '.md';
+    });
   }
 
-  private writeLaunchers(): void {
+  #writeLaunchers(): void {
     for (const launcher of LAUNCHERS) {
       const file = path.join(PATHS.root, launcher.name);
       write(file, launcher.content(this.#sha));
