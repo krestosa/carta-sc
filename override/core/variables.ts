@@ -43,13 +43,51 @@ export const classes = Object.freeze({
   staticInitialSection: 'sc-static-initial-section',
 });
 
+const durations = Object.freeze({
+  short1: 0.05,
+  short2: 0.1,
+  short3: 0.15,
+  short4: 0.2,
+  medium1: 0.25,
+  medium2: 0.3,
+  medium3: 0.35,
+  medium4: 0.4,
+  long1: 0.45,
+  long2: 0.5,
+  long3: 0.55,
+  long4: 0.6,
+  extraLong1: 0.7,
+  extraLong2: 0.8,
+  extraLong3: 0.9,
+  extraLong4: 1,
+});
+
+const springs = Object.freeze({
+  spatial: Object.freeze({
+    fast: Object.freeze({ stiffness: 1400, damping: 0.9 }),
+    default: Object.freeze({ stiffness: 700, damping: 0.9 }),
+    slow: Object.freeze({ stiffness: 300, damping: 0.9 }),
+  }),
+  effects: Object.freeze({
+    fast: Object.freeze({ stiffness: 3800, damping: 1 }),
+    default: Object.freeze({ stiffness: 1600, damping: 1 }),
+    slow: Object.freeze({ stiffness: 800, damping: 1 }),
+  }),
+});
+
 export const motionTokens = Object.freeze({
   geometryRefreshDelay: 180,
+  durations,
+  springs,
   easings: Object.freeze({
-    out: 'cubic.out',
-    strongOut: 'quart.out',
-    in: 'cubic.in',
-    inOut: 'cubic.inOut',
+    standard: 'standard',
+    accelerate: 'standard.accelerate',
+    decelerate: 'standard.decelerate',
+    linear: 'linear',
+    out: 'standard.decelerate',
+    strongOut: 'standard.decelerate',
+    in: 'standard.accelerate',
+    inOut: 'standard',
   }),
 });
 
