@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -92,11 +93,34 @@ npm run build:handoff
   },
 ];
 
+function isCommitSha(value: string): boolean {
+  return /^[0-9a-f]{40}$/i.test(value);
+}
+
+function resolveHandoffSha(): string {
+  const environmentSha = (process.env.GITHUB_SHA ?? '').trim();
+  if (isCommitSha(environmentSha)) return environmentSha.toLowerCase();
+
+  try {
+    const repositorySha = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (isCommitSha(repositorySha)) return repositorySha.toLowerCase();
+  } catch {
+    // Validation below reports a single actionable error when no revision can be resolved.
+  }
+
+  return '';
+}
+
 class HandoffBuildPipeline {
-  readonly #sha = process.env.GITHUB_SHA ?? '';
+  readonly #sha = resolveHandoffSha();
 
   async run(): Promise<void> {
     this.#validateInputs();
+    process.env.GITHUB_SHA = this.#sha;
     await buildPages();
     this.#prepareOutput();
     this.#copySource();
@@ -106,7 +130,10 @@ class HandoffBuildPipeline {
   }
 
   #validateInputs(): void {
-    assert(/^[0-9a-f]{40}$/.test(this.#sha), 'GITHUB_SHA is required for a deterministic handoff');
+    assert(
+      isCommitSha(this.#sha),
+      'Could not resolve a commit SHA for the handoff. Run from a Git checkout or provide GITHUB_SHA explicitly.',
+    );
     assert(fs.existsSync(path.join(ROOT, 'package-lock.json')), 'package-lock.json is required for reproducible handoff builds');
   }
 
