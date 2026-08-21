@@ -1,6 +1,9 @@
 import { queries } from '../../core/variables.js';
 
-const SHIMMER_CYCLE_MS = 2000;
+const PULSE_CYCLE_MS = 1500;
+const WAVE_ROW_DELAY_MS = 200;
+const WAVE_COLUMN_DELAY_MS = 100;
+const ROW_TOLERANCE_PX = 4;
 const REVEAL_DURATION_MS = 300;
 const REVEAL_ALPHA_DURATION_MS = 80;
 const RESET_OUTGOING_MS = 150;
@@ -10,6 +13,8 @@ const RESET_DURATION_MS = RESET_OUTGOING_MS + RESET_INCOMING_MS;
 const COVER_ALPHA_PROPERTY = '--sc-image-preloader-cover-alpha';
 const CONTENT_ALPHA_PROPERTY = '--sc-image-preloader-content-alpha';
 const PHASE_PROPERTY = '--sc-image-preloader-phase';
+const CLOCK_PROPERTY = '--sc-image-preloader-clock';
+const WAVE_DELAY_PROPERTY = '--sc-image-preloader-wave-delay';
 
 interface CubicBezier {
   readonly x1: number;
@@ -21,6 +26,12 @@ interface CubicBezier {
 interface StageMotionState {
   token: number;
   frame: number;
+}
+
+interface WaveEntry {
+  readonly stage: HTMLElement;
+  readonly top: number;
+  readonly left: number;
 }
 
 const STANDARD: CubicBezier = Object.freeze({ x1: 0.2, y1: 0, x2: 0, y2: 1 });
@@ -69,8 +80,8 @@ function cubicBezierValue(curve: CubicBezier, progress: number): number {
   return cubicCoordinate(t, curve.y1, curve.y2);
 }
 
-function phaseDelay(): string {
-  return `${-(performance.now() % SHIMMER_CYCLE_MS)}ms`;
+function phaseDelay(waveDelay = 0): string {
+  return `${-(performance.now() % PULSE_CYCLE_MS) + waveDelay}ms`;
 }
 
 function setAlpha(stage: HTMLElement, cover: number, content: number): void {
@@ -83,13 +94,47 @@ function clearAlpha(stage: HTMLElement): void {
   stage.style.removeProperty(CONTENT_ALPHA_PROPERTY);
 }
 
+function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
+  const entries: WaveEntry[] = [];
+  for (const stage of stages) {
+    const card = stage.closest<HTMLElement>('.productoShop');
+    if (!card || card.hidden) continue;
+    const rect = card.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    entries.push({ stage, top: rect.top, left: rect.left });
+  }
+  return entries.sort((a, b) => Math.abs(a.top - b.top) > ROW_TOLERANCE_PX
+    ? a.top - b.top
+    : a.left - b.left);
+}
+
 export function synchronizeImagePlaceholderCycle(): void {
-  document.documentElement.style.setProperty(PHASE_PROPERTY, phaseDelay());
+  document.documentElement.style.setProperty(CLOCK_PROPERTY, phaseDelay());
 }
 
 export class ImagePlaceholderMotion {
   readonly #initialized = new WeakSet<HTMLElement>();
   readonly #states = new Map<HTMLElement, StageMotionState>();
+
+  synchronize(stages: readonly HTMLElement[]): void {
+    synchronizeImagePlaceholderCycle();
+    const entries = visibleWaveEntries(stages);
+    let row = -1;
+    let rowTop = Number.NEGATIVE_INFINITY;
+    let column = 0;
+
+    for (const entry of entries) {
+      if (row < 0 || Math.abs(entry.top - rowTop) > ROW_TOLERANCE_PX) {
+        row += 1;
+        rowTop = entry.top;
+        column = 0;
+      }
+      const delay = (row * WAVE_ROW_DELAY_MS + column * WAVE_COLUMN_DELAY_MS) % PULSE_CYCLE_MS;
+      entry.stage.style.setProperty(WAVE_DELAY_PROPERTY, `${delay}ms`);
+      if (entry.stage.classList.contains('sc-image-active')) this.#syncPhase(entry.stage);
+      column += 1;
+    }
+  }
 
   markLoading(stage: HTMLElement, active: boolean): void {
     const wasReady = stage.classList.contains('sc-image-ready');
@@ -148,8 +193,8 @@ export class ImagePlaceholderMotion {
     stage.classList.remove('sc-image-ready');
 
     this.#animate(stage, REVEAL_DURATION_MS, (elapsed) => {
-      const wipeProgress = cubicBezierValue(WIPE, clamp(elapsed / REVEAL_ALPHA_DURATION_MS));
-      setAlpha(stage, 1 - wipeProgress, wipeProgress);
+      const reveal = cubicBezierValue(WIPE, clamp(elapsed / REVEAL_ALPHA_DURATION_MS));
+      setAlpha(stage, 1 - reveal, reveal);
     }, () => this.#settleReady(stage));
   }
 
@@ -165,12 +210,13 @@ export class ImagePlaceholderMotion {
     );
     clearAlpha(stage);
     stage.style.removeProperty(PHASE_PROPERTY);
+    stage.style.removeProperty(WAVE_DELAY_PROPERTY);
   }
 
   destroy(): void {
     for (const stage of [...this.#states.keys()]) this.release(stage);
     this.#states.clear();
-    document.documentElement.style.removeProperty(PHASE_PROPERTY);
+    document.documentElement.style.removeProperty(CLOCK_PROPERTY);
   }
 
   #setActive(stage: HTMLElement, active: boolean): void {
@@ -179,7 +225,8 @@ export class ImagePlaceholderMotion {
   }
 
   #syncPhase(stage: HTMLElement): void {
-    stage.style.setProperty(PHASE_PROPERTY, phaseDelay());
+    const waveDelay = Number.parseFloat(stage.style.getPropertyValue(WAVE_DELAY_PROPERTY)) || 0;
+    stage.style.setProperty(PHASE_PROPERTY, phaseDelay(waveDelay));
   }
 
   #settleReady(stage: HTMLElement): void {
