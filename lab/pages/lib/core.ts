@@ -9,6 +9,8 @@ export const SITE = path.join(ROOT, '.pages-site');
 export const LAB = path.join(ROOT, 'lab', 'pages');
 export const PAGE_ASSETS = path.join(LAB, 'assets');
 
+const TRANSIENT_REMOVE_CODES = new Set(['EBUSY', 'EPERM', 'EACCES']);
+
 export function githubSha(): string {
   const sha = process.env.GITHUB_SHA ?? '';
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error('GITHUB_SHA is missing or invalid');
@@ -45,7 +47,34 @@ export function ensureDir(dir: string): void {
 }
 
 export function remove(target: string): void {
-  fs.rmSync(target, { recursive: true, force: true });
+  if (!fs.existsSync(target)) return;
+
+  const options: fs.RmDirOptions = {
+    recursive: true,
+    force: true,
+    maxRetries: process.platform === 'win32' ? 20 : 3,
+    retryDelay: process.platform === 'win32' ? 150 : 100,
+  };
+
+  try {
+    fs.rmSync(target, options);
+    return;
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code ?? '';
+    if (process.platform !== 'win32' || !TRANSIENT_REMOVE_CODES.has(code)) throw error;
+  }
+
+  try {
+    fs.chmodSync(target, 0o777);
+  } catch {
+    // The retry below is authoritative; chmod is only a Windows read-only recovery path.
+  }
+
+  fs.rmSync(target, {
+    ...options,
+    maxRetries: 30,
+    retryDelay: 200,
+  });
 }
 
 export function copyFile(source: string, target: string): void {
