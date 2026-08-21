@@ -96,10 +96,7 @@ export class ThemeIconController {
     const path = to === 'system' ? AUTO_PATH : to === 'dark' ? MOON_PATH : SUN_PATH;
     const direction = to === 'dark' ? -1 : 1;
 
-    this.#track(motion.engine.path(parts.core, path, {
-      duration: motionTokens.durations.short4,
-      ease: motionTokens.easings.standard,
-    }));
+    this.#track(motion.engine.springPath(parts.core, path, motionTokens.springs.spatial.fast));
     this.#track(motion.engine.springAttributes(
       parts.bite,
       { cx: MOON_BITE.cx, cy: MOON_BITE.cy, r: to === 'dark' ? MOON_BITE.radius : 0 },
@@ -146,7 +143,7 @@ export class ThemeIconController {
       }));
     }
 
-    this.#track(motion.engine.delay(motionTokens.durations.medium2, () => {
+    this.#track(motion.engine.delay(motionTokens.durations.medium3, () => {
       if (token !== this.#geometryToken) return;
       this.#handles = [];
       this.applyStatic(root, to);
