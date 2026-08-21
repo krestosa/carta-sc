@@ -22,34 +22,60 @@ export function currentTransform(target: HTMLElement | SVGElement): MotionTransf
   }
 }
 
-function writeTransform(target: HTMLElement | SVGElement, state: MotionTransformState): void {
-  target.style.transform = `translate3d(${state.x}px,${state.y}px,0) rotate(${state.rotation}deg) scale(${state.scale})`;
+function writeTransform(
+  target: HTMLElement | SVGElement,
+  x: number,
+  y: number,
+  scale: number,
+  rotation: number,
+): void {
+  target.style.transform = `translate3d(${x}px,${y}px,0) rotate(${rotation}deg) scale(${scale})`;
+}
+
+interface TransformEndpoints {
+  readonly fromX: number;
+  readonly fromY: number;
+  readonly fromScale: number;
+  readonly fromRotation: number;
+  readonly deltaX: number;
+  readonly deltaY: number;
+  readonly deltaScale: number;
+  readonly deltaRotation: number;
 }
 
 function transformEndpoints(
   target: HTMLElement | SVGElement,
   to: Partial<MotionTransformState>,
-): readonly [MotionTransformState, MotionTransformState] {
+): TransformEndpoints {
   const from = currentTransform(target);
-  return [from, {
-    x: to.x ?? from.x,
-    y: to.y ?? from.y,
-    scale: to.scale ?? from.scale,
-    rotation: to.rotation ?? from.rotation,
-  }];
+  const endX = to.x ?? from.x;
+  const endY = to.y ?? from.y;
+  const endScale = to.scale ?? from.scale;
+  const endRotation = to.rotation ?? from.rotation;
+  return {
+    fromX: from.x,
+    fromY: from.y,
+    fromScale: from.scale,
+    fromRotation: from.rotation,
+    deltaX: endX - from.x,
+    deltaY: endY - from.y,
+    deltaScale: endScale - from.scale,
+    deltaRotation: endRotation - from.rotation,
+  };
 }
 
-function interpolateTransform(
-  from: MotionTransformState,
-  end: MotionTransformState,
+function renderTransform(
+  target: HTMLElement | SVGElement,
+  endpoints: TransformEndpoints,
   progress: number,
-): MotionTransformState {
-  return {
-    x: from.x + (end.x - from.x) * progress,
-    y: from.y + (end.y - from.y) * progress,
-    scale: from.scale + (end.scale - from.scale) * progress,
-    rotation: from.rotation + (end.rotation - from.rotation) * progress,
-  };
+): void {
+  writeTransform(
+    target,
+    endpoints.fromX + endpoints.deltaX * progress,
+    endpoints.fromY + endpoints.deltaY * progress,
+    endpoints.fromScale + endpoints.deltaScale * progress,
+    endpoints.fromRotation + endpoints.deltaRotation * progress,
+  );
 }
 
 export function animateTransform(
@@ -57,11 +83,11 @@ export function animateTransform(
   to: Partial<MotionTransformState>,
   options: MotionPropertyOptions,
 ): MotionHandle {
-  const [from, end] = transformEndpoints(target, to);
+  const endpoints = transformEndpoints(target, to);
   target.style.willChange = 'transform';
 
   return tween(options.duration, options.ease, (progress) => {
-    writeTransform(target, interpolateTransform(from, end, progress));
+    renderTransform(target, endpoints, progress);
   }, {
     delay: options.delay,
     onComplete: () => {
@@ -78,11 +104,11 @@ export function animateSpringTransform(
   spec: MotionSpringSpec,
   options: MotionSpringPropertyOptions = {},
 ): MotionHandle {
-  const [from, end] = transformEndpoints(target, to);
+  const endpoints = transformEndpoints(target, to);
   target.style.willChange = 'transform';
 
   return spring(spec, (progress) => {
-    writeTransform(target, interpolateTransform(from, end, progress));
+    renderTransform(target, endpoints, progress);
   }, {
     delay: options.delay,
     initialVelocity: options.initialVelocity,
@@ -105,10 +131,11 @@ export function animateOpacity(
   options: MotionPropertyOptions,
 ): MotionHandle {
   const from = currentOpacity(target);
+  const delta = to - from;
   target.style.willChange = 'opacity';
 
   return tween(options.duration, options.ease, (progress) => {
-    target.style.opacity = String(from + (to - from) * progress);
+    target.style.opacity = String(from + delta * progress);
   }, {
     delay: options.delay,
     onComplete: () => {
@@ -126,10 +153,11 @@ export function animateSpringOpacity(
   options: MotionSpringPropertyOptions = {},
 ): MotionHandle {
   const from = currentOpacity(target);
+  const delta = to - from;
   target.style.willChange = 'opacity';
 
   return spring(spec, (progress) => {
-    target.style.opacity = String(from + (to - from) * progress);
+    target.style.opacity = String(from + delta * progress);
   }, {
     delay: options.delay,
     initialVelocity: options.initialVelocity,
