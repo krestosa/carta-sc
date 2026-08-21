@@ -11,13 +11,11 @@ body.sushiShop {
 }
 
 @media (max-width: 992px) {
-  /* Oculta menús duplicados y conserva solo el principal. */
   body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     visibility: hidden !important;
     pointer-events: none !important;
   }
 
-  /* Centra el logo dentro de una altura fija. */
   body.sushiShop .brandOnlyMobile {
     box-sizing: border-box !important;
     display: block !important;
@@ -64,7 +62,6 @@ body.sushiShop {
     transform: none !important;
   }
 
-  /* Retira barras legacy del flujo móvil. */
   body.sushiShop .topBar.newVer17topBar {
     display: none !important;
     height: 0 !important;
@@ -82,7 +79,6 @@ body.sushiShop {
     padding: 0 !important;
   }
 
-  /* Superpone el menú sin alterar el alto del header. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu {
     box-sizing: border-box !important;
     display: block !important;
@@ -101,7 +97,6 @@ body.sushiShop {
     z-index: var(--sc-z-mobile-menu) !important;
   }
 
-  /* Botón de menú con target táctil amplio. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
     box-sizing: border-box !important;
     display: flex !important;
@@ -134,7 +129,7 @@ body.sushiShop {
     background: var(--sc-color-ink) !important;
     transform: scale(1);
     transform-origin: 50% 50%;
-    transition: transform 90ms var(--sc-motion-ease-out) !important;
+    transition: transform var(--sc-motion-short2) var(--sc-motion-ease-decelerate) !important;
     z-index: 0 !important;
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn:active::before { transform: scale(.94); }
@@ -167,7 +162,6 @@ body.sushiShop {
     box-shadow: none !important;
   }
 
-  /* El estado semántico viene del menú; CSS resuelve la transición del panel. */
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     box-sizing: border-box !important;
     display: block !important;
@@ -189,7 +183,7 @@ body.sushiShop {
     pointer-events: none !important;
     transform: translate3d(0,-8px,0) !important;
     transform-origin: 50% 0 !important;
-    transition: opacity 150ms var(--sc-motion-ease-out),transform 180ms var(--sc-motion-ease-out),visibility 0s linear 180ms !important;
+    transition: opacity var(--sc-motion-short3) var(--sc-motion-ease-decelerate),transform var(--sc-motion-short4) var(--sc-motion-ease-decelerate),visibility 0s linear var(--sc-motion-short4) !important;
     z-index: var(--sc-z-mobile-panel) !important;
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] {
@@ -209,7 +203,6 @@ body.sushiShop {
   }
 }
 
-/* Ajustes de ancho en móvil chico. */
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
     width: var(--sc-mobile-logo-width) !important;
@@ -228,20 +221,18 @@ body.sushiShop {
   }
 }
 
-/* El menú móvil no participa en desktop. */
 @media (min-width: 993px) {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu {
     display: none !important;
   }
 }
 
-/* Reduce movimiento del panel y del botón. */
 @media (prefers-reduced-motion: reduce) and (max-width: 992px) {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before { transition: none !important; }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn:active::before { transform: none !important; }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     transform: none !important;
-    transition: opacity 120ms linear,visibility 0s linear 120ms !important;
+    transition: opacity var(--sc-motion-short2) var(--sc-motion-ease-linear),visibility 0s linear var(--sc-motion-short2) !important;
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] { transition-delay: 0s !important; }
 }
