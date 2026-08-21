@@ -27,8 +27,15 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgSho
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop {
   position: relative !important;
   isolation: isolate;
+  box-sizing: border-box !important;
   overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
   background-color: transparent !important;
+  background-image: none !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::after,
@@ -50,13 +57,31 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img {
+  display: block !important;
   position: relative !important;
   z-index: 1;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
   opacity: 1 !important;
   visibility: visible !important;
   transform: none !important;
   transition: none !important;
   will-change: auto;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-revealing,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-revealing {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: var(--sc-image-preloader-base) !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active::after,
@@ -71,6 +96,10 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-revealing > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-revealing > img {
   opacity: var(--sc-image-preloader-content-alpha, 0) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
