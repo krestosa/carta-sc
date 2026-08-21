@@ -1,7 +1,5 @@
-import { motionTokens, queries } from '../../core/variables.js';
-import { motion } from '../../motion/main.js';
-import type { MotionHandle } from '../../motion/types.js';
 import { cloneTemplate } from '../../templates/registry.js';
+import { moveRailBy } from './rail-motion.js';
 
 type RailDirection = 'left' | 'right';
 type RailButtonState = 'enabled' | 'disabled' | 'hidden';
@@ -10,7 +8,6 @@ const RAIL_STEP_MIN = 140;
 const RAIL_STEP_RATIO = 0.65;
 const buttonCache = new WeakMap<HTMLElement, Map<RailDirection, HTMLButtonElement>>();
 const buttonStates = new WeakMap<HTMLButtonElement, RailButtonState>();
-const railMotions = new WeakMap<HTMLElement, MotionHandle>();
 
 function cacheFor(host: HTMLElement): Map<RailDirection, HTMLButtonElement> {
   const existing = buttonCache.get(host);
@@ -18,31 +15,6 @@ function cacheFor(host: HTMLElement): Map<RailDirection, HTMLButtonElement> {
   const cache = new Map<RailDirection, HTMLButtonElement>();
   buttonCache.set(host, cache);
   return cache;
-}
-
-function moveRail(scroller: HTMLElement, delta: number, onScroll: () => void): void {
-  railMotions.get(scroller)?.cancel();
-  const start = scroller.scrollLeft;
-  const max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
-  const target = Math.max(0, Math.min(max, start + delta));
-
-  if (queries.reducedMotion.matches || Math.abs(target - start) < 1) {
-    scroller.scrollLeft = target;
-    railMotions.delete(scroller);
-    onScroll();
-    return;
-  }
-
-  const handle = motion.engine.spring(motionTokens.springs.spatial.fast, (progress) => {
-    scroller.scrollLeft = start + (target - start) * progress;
-  }, {
-    onComplete: () => {
-      if (railMotions.get(scroller) === handle) railMotions.delete(scroller);
-      scroller.scrollLeft = target;
-      onScroll();
-    },
-  });
-  railMotions.set(scroller, handle);
 }
 
 function arrow(host: HTMLElement, scroller: HTMLElement, direction: RailDirection, onScroll: () => void): HTMLButtonElement {
@@ -59,7 +31,7 @@ function arrow(host: HTMLElement, scroller: HTMLElement, direction: RailDirectio
   const button = cloneTemplate<HTMLButtonElement>(`category-arrow-${direction}`);
   button.addEventListener('click', () => {
     const step = Math.max(RAIL_STEP_MIN, Math.round(scroller.clientWidth * RAIL_STEP_RATIO)) * (direction === 'left' ? -1 : 1);
-    moveRail(scroller, step, onScroll);
+    moveRailBy(scroller, step, onScroll);
   });
   host.append(button);
   cache.set(direction, button);
