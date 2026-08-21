@@ -18,6 +18,11 @@ const EASING = {
   linear: 'linear',
 } as const;
 
+const BACKDROP = {
+  clear: 'rgba(0,0,0,0)',
+  dimmed: 'rgba(0,0,0,.32)',
+} as const;
+
 interface CancelableMotion {
   cancel(): void;
 }
@@ -75,7 +80,7 @@ function imagePart(dialog: HTMLElement): HTMLElement | null {
 }
 
 function clear(modal: HTMLElement, dialog: HTMLElement): void {
-  for (const property of ['opacity', 'visibility', 'will-change']) {
+  for (const property of ['background-color', 'visibility', 'will-change']) {
     modal.style.removeProperty(property);
   }
   for (const property of ['transform', 'opacity', 'visibility', 'will-change']) {
@@ -136,9 +141,12 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
   modal.style.visibility = 'visible';
   dialog.style.visibility = 'visible';
 
-  const overlay = animate(
+  const backdrop = animate(
     modal,
-    [{ opacity: 0 }, { opacity: 1 }],
+    [
+      { backgroundColor: BACKDROP.clear },
+      { backgroundColor: BACKDROP.dimmed },
+    ],
     { duration: TIMING.open, easing: EASING.linear },
   );
   const surfaceOpacity = animate(
@@ -157,8 +165,7 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
 
   const finish = (): void => finishOpen(modal, dialog, token);
   const imageHandles = imageEntrance(dialog, finish);
-  const handles: CancelableMotion[] = [overlay, surfaceOpacity, surfacePosition, ...imageHandles];
-  register(modal, handles);
+  register(modal, [backdrop, surfaceOpacity, surfacePosition, ...imageHandles]);
 
   if (imageHandles.length === 0) {
     surfacePosition.finished.then(finish).catch(() => undefined);
@@ -220,9 +227,12 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
 
   stop(modal);
 
-  const overlay = animate(
+  const backdrop = animate(
     modal,
-    [{ opacity: 1 }, { opacity: 0 }],
+    [
+      { backgroundColor: BACKDROP.dimmed },
+      { backgroundColor: BACKDROP.clear },
+    ],
     { duration: TIMING.close, easing: EASING.linear },
   );
   const surfaceOpacity = animate(
@@ -239,7 +249,7 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
     { duration: TIMING.close, easing: EASING.close },
   );
 
-  register(modal, [overlay, surfaceOpacity, surfacePosition]);
+  register(modal, [backdrop, surfaceOpacity, surfacePosition]);
   surfacePosition.finished.then(() => {
     if (!isCurrent(modal, token)) return;
     stateFor(modal).handles = [];
