@@ -1,6 +1,5 @@
 /* CSS define estados; el motor local interpola apertura y cierre. */
 .sushiShop .sc-product-modal {
-  opacity: 0;
   visibility: hidden;
 }
 
@@ -11,7 +10,6 @@
 }
 
 .sushiShop .sc-product-modal.is-visible {
-  opacity: 1;
   visibility: visible;
 }
 
