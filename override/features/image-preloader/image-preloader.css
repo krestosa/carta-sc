@@ -111,6 +111,25 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   opacity: 1 !important;
 }
 
+/* Las fuentes diferidas reciben placeholder antes de que el runtime libere su src. */
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop:has(> img[data-sc-src]:not([src]))::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop:has(> img[data-sc-src]:not([src]))::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop:has(> img[data-sc-src][src=''])::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop:has(> img[data-sc-src][src=''])::after {
+  opacity: 1;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop:has(> img[data-sc-src]:not([src]))::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop:has(> img[data-sc-src]:not([src]))::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop:has(> img[data-sc-src][src=''])::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop:has(> img[data-sc-src][src=''])::before {
+  will-change: background-position, opacity;
+  animation-name: sc-image-preloader-shimmer-position, sc-image-preloader-shimmer-alpha;
+  animation-duration: var(--sc-image-preloader-cycle), var(--sc-image-preloader-cycle);
+  animation-timing-function: linear, linear;
+  animation-iteration-count: infinite, infinite;
+}
+
 /* El barrido ocupa 800 ms y queda en reposo hasta completar el ciclo de 2 s. */
 @keyframes sc-image-preloader-shimmer-position {
   0% {
