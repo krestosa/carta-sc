@@ -29,7 +29,7 @@ body.sushiShop .sc-product-modal {
   width: 100% !important;
   height: 100% !important;
   padding: clamp(8px,2.2vw,24px) !important;
-  background: rgba(0,0,0,.32) !important;
+  background-color: rgba(0,0,0,.32);
   z-index: var(--sc-z-modal) !important;
 }
 
@@ -79,6 +79,7 @@ body.sushiShop .sc-product-modal__content {
 body.sushiShop .sc-product-modal__footer {
   box-sizing: border-box !important;
   display: flex !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: clamp(12px,2vw,24px) !important;
