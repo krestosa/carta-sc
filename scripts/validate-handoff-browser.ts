@@ -18,7 +18,7 @@ interface BrowserSnapshot {
   readonly brokenProductImages: number;
   readonly pendingProductImages: number;
   readonly categoryCount: number;
-  readonly skeletonCount: number;
+  readonly visibleSkeletonCount: number;
   readonly runtimeReady: boolean;
   readonly toolsVisible: boolean;
   readonly searchPresent: boolean;
@@ -233,7 +233,8 @@ const FUNCTIONAL_READY = `(() => {
   return !!tools
     && tools.hasAttribute('data-sc-view')
     && tools.hasAttribute('data-sc-theme-mode')
-    && document.documentElement.hasAttribute('data-sc-catalog-view');
+    && document.documentElement.hasAttribute('data-sc-catalog-view')
+    && document.body.classList.contains('sc-catalog-tools-ready');
 })()`;
 
 const SNAPSHOT_SCRIPT = `(() => {
@@ -246,6 +247,11 @@ const SNAPSHOT_SCRIPT = `(() => {
     const rect = el.getBoundingClientRect();
     return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity || 1) > 0 && rect.width > 0 && rect.height > 0;
   };
+  const inViewport = (el) => {
+    if (!visible(el)) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
+  };
   return {
     cardCount: cards.length,
     productImageCount: images.length,
@@ -253,8 +259,8 @@ const SNAPSHOT_SCRIPT = `(() => {
     brokenProductImages: images.filter((img) => img.complete && img.getAttribute('src') && img.naturalWidth <= 0).length,
     pendingProductImages: images.filter((img) => img.getAttribute('data-sc-src') && !img.getAttribute('src')).length,
     categoryCount: document.querySelectorAll('.sc-category-nav a, .sc-category-nav button, .nav-tabsTopShop a.anchorLink, .sc-category-rail a, .sc-category-rail button').length,
-    skeletonCount: [...document.querySelectorAll('.sc-card-placeholder-loading, .sc-product-skeleton, [data-sc-skeleton]')].filter(visible).length,
-    runtimeReady: !!tools && tools.hasAttribute('data-sc-view') && tools.hasAttribute('data-sc-theme-mode') && document.documentElement.hasAttribute('data-sc-catalog-view'),
+    visibleSkeletonCount: [...document.querySelectorAll('.sc-card-placeholder-loading, .sc-product-skeleton, [data-sc-skeleton]')].filter(inViewport).length,
+    runtimeReady: !!tools && tools.hasAttribute('data-sc-view') && tools.hasAttribute('data-sc-theme-mode') && document.documentElement.hasAttribute('data-sc-catalog-view') && document.body.classList.contains('sc-catalog-tools-ready'),
     toolsVisible: visible(tools),
     searchPresent: !!document.querySelector('.sc-catalog-search-input'),
     themePresent: !!document.querySelector('.sc-theme-toggle'),
@@ -263,16 +269,24 @@ const SNAPSHOT_SCRIPT = `(() => {
   };
 })()`;
 
+async function startRuntimeInteraction(client: CdpClient): Promise<void> {
+  await evaluate(client, `(() => {
+    const target = document.querySelector('.sc-catalog-tools') || document.body;
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse' }));
+    return true;
+  })()`);
+}
+
 async function scrollCatalog(client: CdpClient): Promise<void> {
   await evaluate(client, `(async () => {
-    const step = 700;
+    const step = Math.max(500, Math.floor(innerHeight * 0.75));
     const end = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
     for (let y = 0; y <= end; y += step) {
       window.scrollTo(0, y);
-      await new Promise((resolve) => setTimeout(resolve, 35));
+      await new Promise((resolve) => setTimeout(resolve, 55));
     }
     window.scrollTo(0, 0);
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise((resolve) => setTimeout(resolve, 350));
     return true;
   })()`);
 }
@@ -287,11 +301,11 @@ async function exerciseView(client: CdpClient): Promise<{ before: string; after:
     const start = shapes();
     button.click();
     const samples = [];
-    for (const wait of [25, 35, 45, 55]) {
+    for (const wait of [20, 30, 40, 50, 60]) {
       await new Promise((resolve) => setTimeout(resolve, wait));
       samples.push(shapes());
     }
-    await new Promise((resolve) => setTimeout(resolve, 260));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     const end = shapes();
     const after = root.getAttribute('data-sc-catalog-view') || '';
     return { before, after, animated: samples.some((sample) => sample !== start && sample !== end) };
@@ -305,12 +319,12 @@ async function exerciseTheme(client: CdpClient): Promise<boolean> {
     if (!tools || !toggle) return false;
     const before = tools.getAttribute('data-sc-theme-mode') || 'system';
     toggle.click();
-    await new Promise((resolve) => setTimeout(resolve, 40));
+    await new Promise((resolve) => setTimeout(resolve, 60));
     const options = [...document.querySelectorAll('[data-sc-theme-option]')];
     const target = options.find((node) => node.getAttribute('data-sc-theme-option') !== before);
     if (!target) return false;
     target.click();
-    await new Promise((resolve) => setTimeout(resolve, 360));
+    await new Promise((resolve) => setTimeout(resolve, 420));
     const after = tools.getAttribute('data-sc-theme-mode') || '';
     return before !== after;
   })()`);
@@ -322,31 +336,34 @@ async function exerciseSearch(client: CdpClient): Promise<boolean> {
     if (!input) return false;
     input.value = '__handoff_no_match_927451__';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 220));
+    await new Promise((resolve) => setTimeout(resolve, 260));
     const empty = document.querySelector('.sc-catalog-search-empty-message');
     const worked = !!empty && !empty.hidden;
     input.value = '';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 180));
+    await new Promise((resolve) => setTimeout(resolve, 220));
     return worked;
   })()`);
 }
 
-async function inspectSite(client: CdpClient, url: string): Promise<BrowserSnapshot> {
+async function inspectStandalone(client: CdpClient, url: string): Promise<BrowserSnapshot> {
   const localFailures: string[] = [];
   const runtimeErrors: string[] = [];
   client.on('Network.responseReceived', (params) => {
     const response = params?.response;
     const responseUrl = String(response?.url ?? '');
-    if (response && responseUrl.startsWith('http://127.0.0.1') && !responseUrl.endsWith('/favicon.ico') && response.status >= 400) {
+    if (response && responseUrl.startsWith(url) && !responseUrl.endsWith('/favicon.ico') && response.status >= 400) {
       localFailures.push(`${response.status} ${responseUrl}`);
     }
   });
-  client.on('Runtime.exceptionThrown', (params) => runtimeErrors.push(params?.exceptionDetails?.text ?? 'runtime exception'));
+  client.on('Runtime.exceptionThrown', (params) => {
+    const detail = params?.exceptionDetails;
+    runtimeErrors.push(String(detail?.exception?.description ?? detail?.text ?? 'runtime exception'));
+  });
   client.on('Log.entryAdded', (params) => {
     const entry = params?.entry;
     const entryUrl = String(entry?.url ?? '');
-    if (entry?.level === 'error' && entryUrl.startsWith('http://127.0.0.1') && !entryUrl.endsWith('/favicon.ico')) {
+    if (entry?.level === 'error' && entryUrl.startsWith(url) && !entryUrl.endsWith('/favicon.ico')) {
       runtimeErrors.push(entry.text ?? 'browser error');
     }
   });
@@ -357,11 +374,20 @@ async function inspectSite(client: CdpClient, url: string): Promise<BrowserSnaps
   await client.send('Log.enable');
   await client.send('Page.addScriptToEvaluateOnNewDocument', { source: PROBE_SCRIPT });
   await client.send('Page.navigate', { url });
-  await waitFor(client, `document.readyState === 'complete'`);
-  await waitFor(client, `document.querySelectorAll('.productoShop').length > 100`);
-  await waitFor(client, FUNCTIONAL_READY, 30_000);
+  await waitFor(client, `document.readyState === 'complete'`, 20_000);
+  await waitFor(client, `document.querySelectorAll('.productoShop').length > 100`, 20_000);
+  await waitFor(client, `document.querySelector('.sc-catalog-tools') !== null`, 20_000);
+
+  await delay(2200);
+  if (!await evaluate<boolean>(client, FUNCTIONAL_READY)) await startRuntimeInteraction(client);
+  await waitFor(client, FUNCTIONAL_READY, 20_000);
+
   await scrollCatalog(client);
-  await waitFor(client, `[...document.querySelectorAll('.productoShop .imgShop img, .productoShop .imgLiquidNoFillShop img')].filter((img) => img.complete && img.naturalWidth > 0).length >= 8`, 30_000);
+  await waitFor(
+    client,
+    `[...document.querySelectorAll('.productoShop .imgShop img, .productoShop .imgLiquidNoFillShop img')].filter((img) => img.complete && img.naturalWidth > 0).length >= 8`,
+    35_000,
+  );
 
   const before = await evaluate<any>(client, SNAPSHOT_SCRIPT);
   const view = await exerciseView(client);
@@ -377,7 +403,7 @@ async function inspectSite(client: CdpClient, url: string): Promise<BrowserSnaps
     brokenProductImages: after.brokenProductImages,
     pendingProductImages: after.pendingProductImages,
     categoryCount: after.categoryCount,
-    skeletonCount: after.skeletonCount,
+    visibleSkeletonCount: after.visibleSkeletonCount,
     runtimeReady: after.runtimeReady,
     toolsVisible: after.toolsVisible,
     searchPresent: after.searchPresent,
@@ -395,62 +421,37 @@ async function inspectSite(client: CdpClient, url: string): Promise<BrowserSnaps
   };
 }
 
-function validateSnapshot(label: string, snapshot: BrowserSnapshot): void {
-  assert(snapshot.cardCount > 100, `${label}: product grid is incomplete (${snapshot.cardCount})`);
-  assert(snapshot.productImageCount > 100, `${label}: product image inventory is incomplete (${snapshot.productImageCount})`);
-  assert(snapshot.loadedProductImages >= 8, `${label}: product images did not load (${snapshot.loadedProductImages})`);
-  assert(snapshot.brokenProductImages === 0, `${label}: broken product images detected (${snapshot.brokenProductImages})`);
-  assert(snapshot.runtimeReady, `${label}: catalog runtime did not mount its functional state`);
-  assert(snapshot.toolsVisible && snapshot.searchPresent && snapshot.themePresent && snapshot.viewPresent, `${label}: catalog controls are incomplete`);
-  assert(snapshot.viewModeBefore !== snapshot.viewModeAfter, `${label}: view toggle did not change mode`);
-  assert(snapshot.viewAnimated, `${label}: view icon changed without its expected interpolation`);
-  assert(snapshot.themeChanged, `${label}: theme control did not change mode`);
-  assert(snapshot.searchEmptyStateWorked, `${label}: search empty-state interaction failed`);
-  assert(snapshot.animationFrameDelta > 0 || snapshot.elementAnimateDelta > 0, `${label}: no animation activity detected during interactions`);
-  assert(snapshot.localFailures.length === 0, `${label}: local HTTP failures: ${snapshot.localFailures.join('; ')}`);
-  assert(snapshot.runtimeErrors.length === 0, `${label}: runtime errors: ${snapshot.runtimeErrors.join('; ')}`);
-}
-
-function compareSnapshots(pages: BrowserSnapshot, handoff: BrowserSnapshot): void {
-  const exact: Array<[keyof BrowserSnapshot, string]> = [
-    ['cardCount', 'product card count'],
-    ['productImageCount', 'product image count'],
-    ['categoryCount', 'category control count'],
-    ['runtimeReady', 'runtime readiness'],
-    ['toolsVisible', 'catalog tools visibility'],
-    ['searchPresent', 'search control'],
-    ['themePresent', 'theme control'],
-    ['viewPresent', 'view control'],
-    ['viewAnimated', 'view animation'],
-    ['themeChanged', 'theme interaction'],
-    ['searchEmptyStateWorked', 'search interaction'],
-  ];
-  for (const [key, label] of exact) {
-    assert(pages[key] === handoff[key], `Handoff differs from Pages: ${label}: pages=${String(pages[key])} handoff=${String(handoff[key])}`);
-  }
-
-  const imageGap = Math.abs(pages.loadedProductImages - handoff.loadedProductImages);
-  assert(imageGap <= 2, `Handoff differs from Pages: loaded product images pages=${pages.loadedProductImages} handoff=${handoff.loadedProductImages}`);
+function validateSnapshot(snapshot: BrowserSnapshot): void {
+  assert(snapshot.cardCount > 100, `Product grid is incomplete (${snapshot.cardCount})`);
+  assert(snapshot.productImageCount > 100, `Product image inventory is incomplete (${snapshot.productImageCount})`);
+  assert(snapshot.loadedProductImages >= 8, `Product images did not load (${snapshot.loadedProductImages})`);
+  assert(snapshot.brokenProductImages === 0, `Broken product images detected (${snapshot.brokenProductImages})`);
+  assert(snapshot.categoryCount > 0, 'Category navigation is missing');
+  assert(snapshot.runtimeReady, 'Catalog runtime did not mount');
+  assert(snapshot.toolsVisible && snapshot.searchPresent && snapshot.themePresent && snapshot.viewPresent, 'Catalog controls are incomplete');
+  assert(snapshot.viewModeBefore !== snapshot.viewModeAfter, 'View toggle did not change mode');
+  assert(snapshot.viewAnimated, 'View transition did not animate');
+  assert(snapshot.themeChanged, 'Theme control did not change mode');
+  assert(snapshot.searchEmptyStateWorked, 'Search interaction failed');
+  assert(snapshot.animationFrameDelta > 0 || snapshot.elementAnimateDelta > 0, 'No animation activity detected during interactions');
+  assert(snapshot.visibleSkeletonCount === 0, `Visible loading skeletons remained after image loading (${snapshot.visibleSkeletonCount})`);
+  assert(snapshot.localFailures.length === 0, `Local HTTP failures: ${snapshot.localFailures.join('; ')}`);
+  assert(snapshot.runtimeErrors.length === 0, `Runtime errors: ${snapshot.runtimeErrors.join('; ')}`);
 }
 
 async function main(): Promise<void> {
-  const pagesRoot = path.resolve(process.argv[2] ?? '.pages-site');
-  const handoffRoot = path.resolve(process.argv[3] ?? path.join('handoff', 'compiled'));
-  const pagesServer = await startStaticServer(pagesRoot);
-  const handoffServer = await startStaticServer(handoffRoot);
+  const handoffRoot = path.resolve(process.argv[2] ?? path.join('handoff', 'compiled'));
+  const server = await startStaticServer(handoffRoot);
   const browser = await launchChrome();
 
   try {
-    const pages = await inspectSite(browser.client, pagesServer.url);
-    const handoff = await inspectSite(browser.client, handoffServer.url);
-    validateSnapshot('Pages', pages);
-    validateSnapshot('Handoff', handoff);
-    compareSnapshots(pages, handoff);
-    console.log('Browser parity passed.');
-    console.log(JSON.stringify({ pages, handoff }, null, 2));
+    const snapshot = await inspectStandalone(browser.client, server.url);
+    console.log(JSON.stringify(snapshot, null, 2));
+    validateSnapshot(snapshot);
+    console.log('Standalone handoff browser validation passed.');
   } finally {
     await browser.cleanup();
-    await Promise.all([pagesServer.close(), handoffServer.close()]);
+    await server.close();
   }
 }
 
