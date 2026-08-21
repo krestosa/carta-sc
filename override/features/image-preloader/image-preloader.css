@@ -95,6 +95,90 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   opacity: 1;
 }
 
+/* El placeholder cubre también la información textual de la tarjeta. */
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .title-shop1,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .priceRow,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .descrip {
+  position: relative !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .title-shop1::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .priceRow::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .descrip::before {
+  content: '';
+  display: block;
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  opacity: var(--sc-image-preloader-cover-alpha, 1);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .title-shop1::after {
+  top: var(--sc-card-title-padding-top);
+  left: 0;
+  width: 100%;
+  height: 34px;
+  background:
+    linear-gradient(var(--sc-image-preloader-base), var(--sc-image-preloader-base)) 0 0 / 78% 12px no-repeat,
+    linear-gradient(var(--sc-image-preloader-base), var(--sc-image-preloader-base)) 0 20px / 52% 10px no-repeat;
+  border-radius: 999px;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .priceRow::after {
+  top: var(--sc-card-title-padding-top);
+  right: 0;
+  width: 100%;
+  height: 34px;
+  background:
+    linear-gradient(var(--sc-image-preloader-base), var(--sc-image-preloader-base)) 100% 0 / min(68px, 92%) 12px no-repeat,
+    linear-gradient(var(--sc-image-preloader-base), var(--sc-image-preloader-base)) 100% 20px / min(48px, 68%) 9px no-repeat;
+  border-radius: 999px;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .descrip::before {
+  top: var(--sc-card-description-offset);
+  right: 0;
+  left: 0;
+  height: 38px;
+  background:
+    linear-gradient(var(--sc-image-preloader-base), var(--sc-image-preloader-base)) 0 0 / 100% 10px no-repeat,
+    linear-gradient(var(--sc-image-preloader-base), var(--sc-image-preloader-base)) 0 18px / 72% 10px no-repeat;
+  border-radius: 999px;
+}
+
+/* Mientras pulsa, el contenido real permanece oculto detrás de los bloques. */
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .title-shop1,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .descrip {
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .priceRow .price,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .priceRow .priceHijass,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .priceRow .ofertaPrice,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .sc-product-price-traits,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .sc-product-flavors {
+  opacity: 0 !important;
+}
+
+/* La división entre metadata y descripción solo existe cuando ya se reveló contenido real. */
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .descrip {
+  border-top-color: transparent !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading:not(.sc-card-placeholder-revealing) .descrip.sc-description-truncated::after {
+  content: none !important;
+  display: none !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading.sc-card-placeholder-active:not(.sc-card-placeholder-transitioning) .title-shop1::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading.sc-card-placeholder-active:not(.sc-card-placeholder-transitioning) .priceRow::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading.sc-card-placeholder-active:not(.sc-card-placeholder-transitioning) .descrip::before {
+  will-change: opacity;
+  animation: sc-image-preloader-pulse var(--sc-image-preloader-cycle) linear infinite;
+  animation-delay: var(--sc-image-preloader-phase, var(--sc-image-preloader-clock, 0ms));
+}
+
 @keyframes sc-image-preloader-pulse {
   0% { opacity: 1; }
   20% { opacity: 0; }
@@ -105,7 +189,10 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
 
 @media (prefers-reduced-motion: reduce) {
   html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::after,
-  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::after {
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::after,
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .title-shop1::after,
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .priceRow::after,
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-loading .descrip::before {
     animation: none !important;
     will-change: auto !important;
   }
