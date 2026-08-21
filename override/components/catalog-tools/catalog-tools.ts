@@ -3,6 +3,7 @@ import { selectors } from '../../core/variables.js';
 import { cloneTemplate } from '../../templates/registry.js';
 import { refreshCategoryNavMetrics } from '../category-nav/category-nav.js';
 import { positionTraitReferences } from '../product-card/content.js';
+import { installIconControlMotion } from './icon-control-motion.js';
 import { CatalogSearchController } from './search.js';
 import { installThemeControl, seedTheme } from './theme-controller.js';
 import { installCatalogView, refreshCatalogViewLayout } from './view.js';
@@ -81,6 +82,7 @@ class CatalogToolsController {
       this.#search.install(root),
       installThemeControl(root),
       installCatalogView(root),
+      installIconControlMotion(root),
     ];
     document.body.classList.add('sc-catalog-tools-ready');
     return root;
