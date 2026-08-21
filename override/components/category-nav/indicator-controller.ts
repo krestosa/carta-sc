@@ -18,6 +18,8 @@ interface IndicatorEntry {
   targetEnd: number;
   startSpec: MotionSpringSpec;
   endSpec: MotionSpringSpec;
+  startDeadline: number;
+  endDeadline: number;
   initialized: boolean;
   visible: boolean;
   moveFrame: number;
@@ -30,16 +32,13 @@ const INDICATOR = {
   minWidth: 6,
   textInsetMax: 1.25,
   textInsetRatio: 0.025,
-  springMaxDt: 0.032,
-  springPositionEpsilon: 0.06,
-  springVelocityEpsilon: 0.45,
+  visibilityThreshold: 0.4,
 } as const;
 
-const physicalPixel = (): number => 1 / Math.max(1, devicePixelRatio || 1);
-const floorPhysical = (value: number): number => {
-  const ratio = Math.max(1, devicePixelRatio || 1);
-  return Math.floor(value * ratio + 1e-6) / ratio;
-};
+const pixelRatio = (): number => Math.max(1, devicePixelRatio || 1);
+const physicalPixel = (): number => 1 / pixelRatio();
+const floorPhysical = (value: number): number => Math.floor(value * pixelRatio() + 1e-6) / pixelRatio();
+const roundPhysical = (value: number): number => Math.round(value * pixelRatio()) / pixelRatio();
 
 function mountFor(root: HTMLElement): HTMLElement {
   return root.closest<HTMLElement>(CATEGORY_SELECTORS.mobileScroller) ?? root;
@@ -87,6 +86,63 @@ function criticalSpringAxis(
   const nextDisplacement = (displacement + coefficient * deltaTime) * decay;
   const nextVelocity = (velocity - omega * coefficient * deltaTime) * decay;
   return [target + nextDisplacement, nextVelocity];
+}
+
+function criticalSpringDurationMs(
+  position: number,
+  velocity: number,
+  target: number,
+  spec: MotionSpringSpec,
+): number {
+  const threshold = INDICATOR.visibilityThreshold;
+  const displacement = (position - target) / threshold;
+  const normalizedVelocity = velocity / threshold;
+  if (displacement === 0 && normalizedVelocity === 0) return 0;
+
+  const root = -Math.sqrt(spec.stiffness);
+  const initialPosition = Math.abs(displacement);
+  const initialVelocity = displacement < 0 ? -normalizedVelocity : normalizedVelocity;
+  const c1 = initialPosition;
+  const c2 = initialVelocity - root * c1;
+  const delta = 1;
+
+  const t1 = Math.log(Math.abs(delta / c1)) / root;
+  const guess = Math.log(Math.abs(delta / c2));
+  let t2 = guess;
+  for (let iteration = 0; iteration <= 5; iteration += 1) {
+    t2 = guess - Math.log(Math.abs(t2 / root));
+  }
+  t2 /= root;
+
+  let current = !Number.isFinite(t1) ? t2 : !Number.isFinite(t2) ? t1 : Math.max(t1, t2);
+  const inflectionTime = -(root * c1 + c2) / (root * c2);
+  const inflectionValue = (c1 + c2 * inflectionTime) * Math.exp(root * inflectionTime);
+
+  let signedDelta: number;
+  if (!Number.isFinite(inflectionTime) || inflectionTime <= 0) {
+    signedDelta = -delta;
+  } else if (-inflectionValue < delta) {
+    if (c2 < 0 && c1 > 0) current = 0;
+    signedDelta = -delta;
+  } else {
+    current = -(2 / root) - c1 / c2;
+    signedDelta = delta;
+  }
+
+  if (!Number.isFinite(current)) return 0;
+  let difference = Number.POSITIVE_INFINITY;
+  for (let iteration = 0; difference > 0.001 && iteration < 100; iteration += 1) {
+    const previous = current;
+    const exponential = Math.exp(root * current);
+    const value = (c1 + c2 * current) * exponential + signedDelta;
+    const derivative = (c2 * (root * current + 1) + c1 * root) * exponential;
+    if (!Number.isFinite(derivative) || Math.abs(derivative) < 1e-9) break;
+    current -= value / derivative;
+    if (!Number.isFinite(current)) return 0;
+    difference = Math.abs(previous - current);
+  }
+
+  return Math.max(0, Math.floor(current * 1000));
 }
 
 export class CategoryIndicatorController {
@@ -154,13 +210,18 @@ export class CategoryIndicatorController {
       entry.line.style.opacity = '1';
       entry.visible = true;
     }
-    entry.line.style.transform = `translate3d(${entry.state.x}px,0,0) scaleX(${Math.max(1, entry.state.width)})`;
+    const start = roundPhysical(entry.state.x);
+    const end = roundPhysical(entry.state.x + entry.state.width);
+    const width = Math.max(physicalPixel(), end - start);
+    entry.line.style.transform = `translate3d(${start}px,0,0) scaleX(${width})`;
   }
 
   #stopMove(entry: IndicatorEntry): void {
     if (entry.moveFrame) cancelAnimationFrame(entry.moveFrame);
     entry.moveFrame = 0;
     entry.lastMoveTime = 0;
+    entry.startDeadline = 0;
+    entry.endDeadline = 0;
   }
 
   #destroyEntry(entry: IndicatorEntry): void {
@@ -192,6 +253,8 @@ export class CategoryIndicatorController {
       targetEnd: 1,
       startSpec: motionTokens.springs.indicator.firm,
       endSpec: motionTokens.springs.indicator.firm,
+      startDeadline: 0,
+      endDeadline: 0,
       initialized: false,
       visible: false,
       moveFrame: 0,
@@ -215,44 +278,58 @@ export class CategoryIndicatorController {
     this.#render(entry);
   }
 
-  #settled(entry: IndicatorEntry): boolean {
-    const currentEnd = entry.state.x + entry.state.width;
-    return Math.abs(entry.state.x - entry.targetStart) < INDICATOR.springPositionEpsilon &&
-      Math.abs(currentEnd - entry.targetEnd) < INDICATOR.springPositionEpsilon &&
-      Math.abs(entry.velocityStart) < INDICATOR.springVelocityEpsilon &&
-      Math.abs(entry.velocityEnd) < INDICATOR.springVelocityEpsilon;
-  }
-
-  #step(entry: IndicatorEntry, timestamp: number): void {
-    if (!entry.moveFrame) return;
+  #advance(entry: IndicatorEntry, timestamp: number): void {
     const deltaTime = entry.lastMoveTime
-      ? Math.min(INDICATOR.springMaxDt, Math.max(0.001, (timestamp - entry.lastMoveTime) / 1000))
-      : 1 / 60;
+      ? Math.max(0, (timestamp - entry.lastMoveTime) / 1000)
+      : 0;
     entry.lastMoveTime = timestamp;
+    if (deltaTime <= 0) return;
 
     let start = entry.state.x;
     let end = entry.state.x + entry.state.width;
 
-    [start, entry.velocityStart] = criticalSpringAxis(
-      start,
-      entry.velocityStart,
-      entry.targetStart,
-      deltaTime,
-      entry.startSpec,
-    );
-    [end, entry.velocityEnd] = criticalSpringAxis(
-      end,
-      entry.velocityEnd,
-      entry.targetEnd,
-      deltaTime,
-      entry.endSpec,
-    );
+    if (entry.startDeadline) {
+      if (timestamp >= entry.startDeadline) {
+        start = entry.targetStart;
+        entry.velocityStart = 0;
+        entry.startDeadline = 0;
+      } else {
+        [start, entry.velocityStart] = criticalSpringAxis(
+          start,
+          entry.velocityStart,
+          entry.targetStart,
+          deltaTime,
+          entry.startSpec,
+        );
+      }
+    }
+
+    if (entry.endDeadline) {
+      if (timestamp >= entry.endDeadline) {
+        end = entry.targetEnd;
+        entry.velocityEnd = 0;
+        entry.endDeadline = 0;
+      } else {
+        [end, entry.velocityEnd] = criticalSpringAxis(
+          end,
+          entry.velocityEnd,
+          entry.targetEnd,
+          deltaTime,
+          entry.endSpec,
+        );
+      }
+    }
 
     entry.state.x = start;
     entry.state.width = end - start;
+  }
+
+  #step(entry: IndicatorEntry, timestamp: number): void {
+    if (!entry.moveFrame) return;
+    this.#advance(entry, timestamp);
     this.#render(entry);
 
-    if (this.#settled(entry)) {
+    if (!entry.startDeadline && !entry.endDeadline) {
       entry.state.x = entry.targetStart;
       entry.state.width = entry.targetEnd - entry.targetStart;
       entry.velocityStart = 0;
@@ -271,6 +348,9 @@ export class CategoryIndicatorController {
       return;
     }
 
+    const now = performance.now();
+    if (entry.moveFrame && entry.lastMoveTime) this.#advance(entry, now);
+
     const newStart = x;
     const newEnd = x + width;
 
@@ -279,6 +359,12 @@ export class CategoryIndicatorController {
         ? motionTokens.springs.indicator.firm
         : motionTokens.springs.indicator.soft;
       entry.targetEnd = newEnd;
+      entry.endDeadline = now + criticalSpringDurationMs(
+        entry.state.x + entry.state.width,
+        entry.velocityEnd,
+        newEnd,
+        entry.endSpec,
+      );
     }
 
     if (entry.targetStart !== newStart) {
@@ -286,11 +372,23 @@ export class CategoryIndicatorController {
         ? motionTokens.springs.indicator.soft
         : motionTokens.springs.indicator.firm;
       entry.targetStart = newStart;
+      entry.startDeadline = now + criticalSpringDurationMs(
+        entry.state.x,
+        entry.velocityStart,
+        newStart,
+        entry.startSpec,
+      );
     }
 
     entry.initialized = true;
+    if (!entry.startDeadline && !entry.endDeadline) {
+      entry.state.x = entry.targetStart;
+      entry.state.width = entry.targetEnd - entry.targetStart;
+      this.#render(entry);
+      return;
+    }
     if (!entry.moveFrame) {
-      entry.lastMoveTime = 0;
+      entry.lastMoveTime = now;
       entry.moveFrame = requestAnimationFrame((timestamp) => this.#step(entry, timestamp));
     }
   }
