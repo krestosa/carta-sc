@@ -55,7 +55,11 @@ export class ImagePreloaderController {
 
   warmCache(image: HTMLImageElement | null): void {
     if (!imagePreloaderPolicy.cacheImages || !window.fetch || !image) return;
-    const url = image.currentSrc || image.src || image.getAttribute('src') || '';
+    const url = image.currentSrc
+      || image.src
+      || image.getAttribute('src')
+      || image.getAttribute('data-sc-src')
+      || '';
     if (!url || /^(?:data|blob):/i.test(url) || this.#cacheWarmUrls.has(url)) return;
 
     this.#cacheWarmUrls.add(url);
@@ -73,6 +77,7 @@ export class ImagePreloaderController {
   scan(root: ParentNode | Node = document): void {
     if (!this.#started) return;
     this.#stagesIn(root).forEach((stage) => this.#collectStage(stage));
+    this.#placeholderMotion.synchronize(this.#stagesIn(this.#catalogueRoot()));
   }
 
   start(): void {
@@ -138,6 +143,16 @@ export class ImagePreloaderController {
     return image?.closest<HTMLElement>(IMAGE_STAGE_SELECTOR) ?? null;
   }
 
+  #deferredWithoutSource(image: HTMLImageElement): boolean {
+    const deferred = image.getAttribute('data-sc-src')?.trim() ?? '';
+    const source = image.getAttribute('src')?.trim() ?? '';
+    return Boolean(deferred && !source && !image.currentSrc);
+  }
+
+  #imageReady(image: HTMLImageElement): boolean {
+    return !this.#deferredWithoutSource(image) && image.complete && image.naturalWidth > 0;
+  }
+
   #nearViewport(image: HTMLImageElement | null): boolean {
     if (!image) return false;
     const rect = image.getBoundingClientRect();
@@ -159,13 +174,13 @@ export class ImagePreloaderController {
 
   #revealLoaded(image: HTMLImageElement, stage: HTMLElement, token: number): void {
     const current = this.#stageFor(image) ?? stage;
-    if (!current || !this.#started || token !== this.#generation) return;
+    if (!current || !this.#started || token !== this.#generation || !this.#imageReady(image)) return;
     this.#markReady(current);
     this.warmCache(image);
   }
 
   #bindNativeImage(image: HTMLImageElement, stage: HTMLElement, active: boolean): void {
-    if (image.complete) {
+    if (this.#imageReady(image)) {
       this.#markReady(stage);
       this.warmCache(image);
       this.#unbindNativeImage(image);
@@ -188,7 +203,7 @@ export class ImagePreloaderController {
     };
     binding.load = () => {
       this.#revealLoaded(image, binding.stage, binding.token);
-      this.#unbindNativeImage(image);
+      if (this.#imageReady(image)) this.#unbindNativeImage(image);
     };
     binding.error = () => {
       if (this.#started && binding.token === this.#generation) this.#markReady(binding.stage);
@@ -198,7 +213,7 @@ export class ImagePreloaderController {
     this.#bindings.set(image, binding);
     image.addEventListener('load', binding.load);
     image.addEventListener('error', binding.error);
-    if (image.complete) {
+    if (this.#imageReady(image)) {
       this.#markReady(stage);
       this.warmCache(image);
       this.#unbindNativeImage(image);
@@ -217,7 +232,7 @@ export class ImagePreloaderController {
   }
 
   #promote(image: HTMLImageElement, visible: boolean): void {
-    if (image.complete) return;
+    if (this.#imageReady(image)) return;
     try {
       if (visible && image.fetchPriority === 'low') image.fetchPriority = 'auto';
     } catch {
@@ -261,11 +276,11 @@ export class ImagePreloaderController {
       const active = this.#nearViewport(image);
       if (
         imagePreloaderPolicy.cacheImages
-        && (imagePreloaderPolicy.loadAllImagesInBatches || active || image.complete)
+        && (imagePreloaderPolicy.loadAllImagesInBatches || active || this.#imageReady(image))
       ) {
         this.warmCache(image);
       }
-      if (!image.complete) {
+      if (!this.#imageReady(image)) {
         if (active) this.#promote(image, true);
         else this.#ensureIntersection()?.observe(image);
       }
@@ -279,7 +294,7 @@ export class ImagePreloaderController {
     const stage = explicitStage ?? this.#stageFor(image);
     const active = this.#setPriority(image);
     if (!stage) return;
-    if (image.complete) {
+    if (this.#imageReady(image)) {
       this.#markReady(stage);
       this.warmCache(image);
       this.#unbindNativeImage(image);
@@ -290,7 +305,7 @@ export class ImagePreloaderController {
 
   #collectStage(stage: HTMLElement | undefined): void {
     if (!stage) return;
-    const image = stage.querySelector<HTMLImageElement>('img[src],img[srcset]');
+    const image = stage.querySelector<HTMLImageElement>('img[src],img[srcset],img[data-sc-src]');
     if (image) this.#collectImage(image, stage);
     else this.#markReady(stage);
   }
@@ -331,6 +346,7 @@ export class ImagePreloaderController {
       this.#collectStage(this.#initialQueue.shift());
       count += 1;
     }
+    this.#placeholderMotion.synchronize(this.#stagesIn(this.#catalogueRoot()));
     if (this.#initialQueue.length) this.#scheduleInitialBatch();
   };
 
@@ -352,6 +368,7 @@ export class ImagePreloaderController {
     const stages = this.#stagesIn(root);
     const syncCount = Math.min(imageBatchConfig.sync, stages.length);
     stages.slice(0, syncCount).forEach((stage) => this.#collectStage(stage));
+    this.#placeholderMotion.synchronize(stages);
     this.#initialQueue = stages.slice(syncCount);
     this.#scheduleInitialBatch();
   }
@@ -359,6 +376,7 @@ export class ImagePreloaderController {
   #observe(root: ParentNode | Node): void {
     if (this.#observer || !('MutationObserver' in window) || !document.documentElement) return;
     this.#observer = new MutationObserver((mutations) => {
+      let layoutChanged = false;
       for (const mutation of mutations) {
         if (mutation.type === 'attributes') {
           if (mutation.target instanceof HTMLImageElement) this.#collectImage(mutation.target);
@@ -367,10 +385,12 @@ export class ImagePreloaderController {
         mutation.removedNodes.forEach((node) => this.#release(node));
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof Element)) return;
+          layoutChanged = true;
           if (node instanceof HTMLImageElement) this.#collectImage(node);
           else this.scan(node);
         });
       }
+      if (layoutChanged) this.#placeholderMotion.synchronize(this.#stagesIn(this.#catalogueRoot()));
     });
 
     this.#observer.observe(root instanceof Element ? root : document.documentElement, {
