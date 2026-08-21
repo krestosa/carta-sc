@@ -23,6 +23,21 @@ html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
   }
 }
 
+body.sushiShop .listadoShop .productoShop .imgShop > img[data-sc-src]:not([src]),
+body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img[data-sc-src]:not([src]) {
+  display: block !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: transparent !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop {
   position: relative !important;
