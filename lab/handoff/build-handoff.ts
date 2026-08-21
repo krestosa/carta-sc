@@ -86,49 +86,65 @@ const README = `# SushiClub build handoff
 Requiere Node.js 22+. Ejecute \`build-local.sh\`/\`build-local.ps1\` para reconstruir y \`serve-local.sh\`/\`serve-local.ps1\` para servirlo.
 `;
 
-function shouldCopySource(relative: string): boolean {
-  const normalized = relative.replaceAll(path.sep, '/');
-  const topLevel = normalized.split('/', 1)[0] ?? normalized;
-  if (SOURCE_EXCLUDES.has(topLevel)) return false;
-  if (/\.(?:py|mjs)$/i.test(normalized)) return false;
-  if (/requirements(?:\.txt)?$/i.test(normalized)) return false;
-  return true;
-}
+class HandoffBuildPipeline {
+  readonly #sha = process.env.GITHUB_SHA ?? 'local';
 
-function copySource(): void {
-  copyTree(ROOT, PATHS.source, (relative) => shouldCopySource(relative));
-}
+  async run(): Promise<void> {
+    this.validateInputs();
+    await buildPages();
+    this.prepareOutput();
+    this.copySource();
+    this.copyCompiledArtifact();
+    this.writeMetadata();
+  }
 
-function writeLaunchers(sha: string): void {
-  for (const launcher of LAUNCHERS) {
-    const file = path.join(PATHS.root, launcher.name);
-    write(file, launcher.content(sha));
-    if (launcher.executable) fs.chmodSync(file, 0o755);
+  private validateInputs(): void {
+    assert(
+      fs.existsSync(path.join(ROOT, 'package-lock.json')),
+      'package-lock.json is required for reproducible handoff builds',
+    );
+  }
+
+  private prepareOutput(): void {
+    remove(PATHS.root);
+    ensureDir(PATHS.source);
+    ensureDir(PATHS.compiled);
+  }
+
+  private copySource(): void {
+    copyTree(ROOT, PATHS.source, (relative) => this.shouldCopySource(relative));
+  }
+
+  private shouldCopySource(relative: string): boolean {
+    const normalized = relative.replaceAll(path.sep, '/');
+    const topLevel = normalized.split('/', 1)[0] ?? normalized;
+    if (SOURCE_EXCLUDES.has(topLevel)) return false;
+    if (/\.(?:py|mjs)$/i.test(normalized)) return false;
+    return !/requirements(?:\.txt)?$/i.test(normalized);
+  }
+
+  private copyCompiledArtifact(): void {
+    copyTree(SITE, PATHS.compiled);
+    neutralizeCompiled(PATHS.compiled);
+  }
+
+  private writeMetadata(): void {
+    write(path.join(PATHS.root, 'BUILD_SHA'), `${this.#sha}\n`);
+    this.writeLaunchers();
+    write(path.join(PATHS.root, 'README.md'), README);
+  }
+
+  private writeLaunchers(): void {
+    for (const launcher of LAUNCHERS) {
+      const file = path.join(PATHS.root, launcher.name);
+      write(file, launcher.content(this.#sha));
+      if (launcher.executable) fs.chmodSync(file, 0o755);
+    }
   }
 }
 
-function prepareOutput(): void {
-  remove(PATHS.root);
-  ensureDir(PATHS.source);
-  ensureDir(PATHS.compiled);
-}
-
-export async function buildHandoff(): Promise<void> {
-  assert(
-    fs.existsSync(path.join(ROOT, 'package-lock.json')),
-    'package-lock.json is required for reproducible handoff builds',
-  );
-
-  await buildPages();
-  const sha = process.env.GITHUB_SHA ?? 'local';
-
-  prepareOutput();
-  copySource();
-  copyTree(SITE, PATHS.compiled);
-  neutralizeCompiled(PATHS.compiled);
-  write(path.join(PATHS.root, 'BUILD_SHA'), `${sha}\n`);
-  writeLaunchers(sha);
-  write(path.join(PATHS.root, 'README.md'), README);
+export function buildHandoff(): Promise<void> {
+  return new HandoffBuildPipeline().run();
 }
 
 function isDirectExecution(): boolean {
