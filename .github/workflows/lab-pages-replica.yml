@@ -1,9 +1,7 @@
-name: LAB - Deploy type replica to Pages
+name: LAB - Deploy latest replica to Pages
 
 on:
   push:
-    branches:
-      - type
   workflow_dispatch:
 
 permissions:
@@ -12,17 +10,13 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-type-lab
+  group: pages-latest-deploy
   cancel-in-progress: true
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/type'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     env:
       GITHUB_PAGES: 'true'
     steps:
@@ -43,19 +37,6 @@ jobs:
 
       - name: Verify checked out SHA
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-
-      - name: Guard against stale run
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const { data } = await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/type'
-            });
-            if (data.object.sha !== context.sha) {
-              core.setFailed(`Refusing stale Pages build: run=${context.sha}, type=${data.object.sha}`);
-            }
 
       - name: Typecheck
         run: npm run typecheck
@@ -111,25 +92,13 @@ jobs:
             });
           const manifest = {
             sha: process.env.GITHUB_SHA,
+            ref: process.env.GITHUB_REF,
             fileCount: files.length,
             files,
           };
           fs.writeFileSync(output, `${JSON.stringify(manifest)}\n`);
           console.log(`Deployment manifest: ${files.length} files for ${process.env.GITHUB_SHA}`);
           NODE
-
-      - name: Guard artifact against stale HEAD
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const { data } = await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/type'
-            });
-            if (data.object.sha !== context.sha) {
-              core.setFailed(`Refusing stale Pages artifact: run=${context.sha}, type=${data.object.sha}`);
-            }
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
@@ -143,9 +112,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Verify public Pages serves exact type artifact
+      - name: Verify public Pages serves exact artifact
         env:
-          GH_TOKEN: ${{ github.token }}
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         shell: bash
         run: |
@@ -153,18 +121,6 @@ jobs:
           test -n "$PAGE_URL"
 
           for attempt in $(seq 1 30); do
-            latest=$(curl -fsSL \
-              -H 'Accept: application/vnd.github+json' \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H 'X-GitHub-Api-Version: 2022-11-28' \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/type" \
-              | python3 -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')
-
-            if [ "$latest" != "$GITHUB_SHA" ]; then
-              echo "Refusing to validate stale deploy: run=$GITHUB_SHA type=$latest" >&2
-              exit 1
-            fi
-
             nonce="${GITHUB_SHA}-${attempt}"
             remote_manifest=$(mktemp)
             html=$(curl -fsSL --retry 3 --retry-delay 1 \
@@ -192,7 +148,7 @@ jobs:
               && grep -Fq -- '--sc-icon-control-radius: 20px;' <<<"$css" \
               && grep -Fq 'translate3d(-42px,0,0) scale(1.08)' <<<"$modal" \
               && grep -Fq "./icon-control-motion.js?v=${GITHUB_SHA}" <<<"$catalog"; then
-              echo "Verified public Pages is serving the exact type artifact $GITHUB_SHA"
+              echo "Verified public Pages is serving exact workflow commit $GITHUB_SHA"
               rm -f "$remote_manifest"
               exit 0
             fi
@@ -201,5 +157,5 @@ jobs:
             sleep 3
           done
 
-          echo "Pages deployment completed but public assets do not match exact type HEAD $GITHUB_SHA" >&2
+          echo "Pages deployment completed but public assets do not match workflow commit $GITHUB_SHA" >&2
           exit 1
