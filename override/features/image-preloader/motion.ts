@@ -5,7 +5,6 @@ const WAVE_ROW_DELAY_MS = 200;
 const WAVE_COLUMN_DELAY_MS = 100;
 const ROW_TOLERANCE_PX = 4;
 const REVEAL_DURATION_MS = 300;
-const REVEAL_ALPHA_DURATION_MS = 80;
 const RESET_OUTGOING_MS = 150;
 const RESET_INCOMING_MS = 250;
 const RESET_DURATION_MS = RESET_OUTGOING_MS + RESET_INCOMING_MS;
@@ -39,7 +38,6 @@ interface WaveEntry {
 
 const STANDARD: CubicBezier = Object.freeze({ x1: 0.2, y1: 0, x2: 0, y2: 1 });
 const ACCELERATE: CubicBezier = Object.freeze({ x1: 0.3, y1: 0, x2: 1, y2: 1 });
-const WIPE: CubicBezier = Object.freeze({ x1: 0, y1: 0.2, x2: 1, y2: 0.6 });
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, value));
@@ -300,7 +298,7 @@ export class ImagePlaceholderMotion {
     card?.classList.remove('sc-card-placeholder-ready');
 
     this.#animate(stage, REVEAL_DURATION_MS, (elapsed) => {
-      const reveal = cubicBezierValue(WIPE, clamp(elapsed / REVEAL_ALPHA_DURATION_MS));
+      const reveal = cubicBezierValue(STANDARD, clamp(elapsed / REVEAL_DURATION_MS));
       setAlpha(stage, 1 - reveal, reveal);
     }, () => this.#settleReady(stage));
   }
