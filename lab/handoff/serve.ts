@@ -1,13 +1,10 @@
 import fs from 'node:fs';
-import http from 'node:http';
+import http, { type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'node:path';
 
-const args = process.argv.slice(2);
-const rootArg = args.indexOf('--root');
-const explicitRoot = rootArg >= 0 ? args[rootArg + 1] : undefined;
-const root = path.resolve(explicitRoot ?? path.join(process.cwd(), 'handoff', 'compiled'));
-
-const mime: Record<string, string> = {
+const DEFAULT_PORT = 8080;
+const DEFAULT_HOST = '127.0.0.1';
+const MIME_TYPES: Readonly<Record<string, string>> = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -20,26 +17,68 @@ const mime: Record<string, string> = {
   '.woff2': 'font/woff2',
 };
 
-http.createServer((req, res) => {
-  const pathname = (req.url ?? '/').split('?', 1)[0] ?? '/';
-  const raw = decodeURIComponent(pathname);
-  const relative = raw === '/' ? 'index.html' : raw.replace(/^\/+/, '');
-  const file = path.resolve(root, relative);
+function argumentValue(name: string): string | undefined {
+  const args = process.argv.slice(2);
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
+}
 
-  if (file !== root && !file.startsWith(`${root}${path.sep}`)) {
-    res.writeHead(403).end('Forbidden');
+function serveRoot(): string {
+  const explicit = argumentValue('--root');
+  return path.resolve(explicit ?? path.join(process.cwd(), 'handoff', 'compiled'));
+}
+
+function requestPath(request: IncomingMessage): string {
+  const pathname = (request.url ?? '/').split('?', 1)[0] ?? '/';
+  return decodeURIComponent(pathname);
+}
+
+function fileForRequest(root: string, request: IncomingMessage): string | null {
+  const requested = requestPath(request);
+  const relative = requested === '/' ? 'index.html' : requested.replace(/^\/+/, '');
+  const candidate = path.resolve(root, relative);
+
+  if (candidate !== root && !candidate.startsWith(`${root}${path.sep}`)) return null;
+  if (!fs.existsSync(candidate)) return candidate;
+  return fs.statSync(candidate).isDirectory() ? path.join(candidate, 'index.html') : candidate;
+}
+
+function sendText(response: ServerResponse, status: number, message: string): void {
+  response.writeHead(status, { 'Content-Type': 'text/plain; charset=utf-8' });
+  response.end(message);
+}
+
+function handleRequest(root: string, request: IncomingMessage, response: ServerResponse): void {
+  let target: string | null;
+  try {
+    target = fileForRequest(root, request);
+  } catch {
+    sendText(response, 400, 'Bad request');
     return;
   }
 
-  let target = file;
-  if (fs.existsSync(target) && fs.statSync(target).isDirectory()) target = path.join(target, 'index.html');
+  if (!target) {
+    sendText(response, 403, 'Forbidden');
+    return;
+  }
   if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
-    res.writeHead(404).end('Not found');
+    sendText(response, 404, 'Not found');
     return;
   }
 
-  res.setHeader('Content-Type', mime[path.extname(target).toLowerCase()] ?? 'application/octet-stream');
-  fs.createReadStream(target).pipe(res);
-}).listen(8080, '127.0.0.1', () => {
-  console.log(`Serving ${root} at http://127.0.0.1:8080`);
-});
+  response.setHeader(
+    'Content-Type',
+    MIME_TYPES[path.extname(target).toLowerCase()] ?? 'application/octet-stream',
+  );
+  fs.createReadStream(target).pipe(response);
+}
+
+export function serveHandoff(root = serveRoot()): http.Server {
+  const server = http.createServer((request, response) => handleRequest(root, request, response));
+  server.listen(DEFAULT_PORT, DEFAULT_HOST, () => {
+    console.log(`Serving ${root} at http://${DEFAULT_HOST}:${DEFAULT_PORT}`);
+  });
+  return server;
+}
+
+serveHandoff();

@@ -1,27 +1,71 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TEXT_EXTENSIONS = new Set(['.html','.css','.js','.json','.txt','.svg','.xml','.md']);
+const TEXT_EXTENSIONS = new Set([
+  '.html',
+  '.css',
+  '.js',
+  '.json',
+  '.txt',
+  '.svg',
+  '.xml',
+  '.md',
+]);
+
+const NEUTRALIZATIONS = [
+  ['_pages', '_build'],
+  ['sc-pages-', 'sc-build-'],
+  ['Pages', 'Build'],
+] as const;
+
+function textFiles(root: string): string[] {
+  const files: string[] = [];
+  const directories = [root];
+
+  while (directories.length) {
+    const directory = directories.pop();
+    if (!directory) continue;
+
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        directories.push(target);
+      } else if (entry.isFile() && TEXT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+        files.push(target);
+      }
+    }
+  }
+  return files;
+}
+
+function neutralizeText(text: string): string {
+  return NEUTRALIZATIONS.reduce(
+    (current, [source, target]) => current.replaceAll(source, target),
+    text,
+  );
+}
+
+function renamePagesDirectory(root: string): void {
+  const pages = path.join(root, '_pages');
+  if (!fs.existsSync(pages)) return;
+
+  const build = path.join(root, '_build');
+  fs.rmSync(build, { recursive: true, force: true });
+  fs.renameSync(pages, build);
+}
 
 export function neutralizeCompiled(root: string): void {
-  const pages = path.join(root, '_pages');
-  const build = path.join(root, '_build');
-  if (fs.existsSync(pages)) {
-    fs.rmSync(build, { recursive: true, force: true });
-    fs.renameSync(pages, build);
-  }
-  const stack = [root];
-  while (stack.length) {
-    const dir = stack.pop();
-    if (!dir) continue;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const file = path.join(dir, entry.name);
-      if (entry.isDirectory()) { stack.push(file); continue; }
-      if (!entry.isFile() || !TEXT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
-      let text: string;
-      try { text = fs.readFileSync(file, 'utf8'); } catch { continue; }
-      const next = text.replaceAll('_pages', '_build').replaceAll('sc-pages-', 'sc-build-').replaceAll('Pages', 'Build');
-      if (next !== text) fs.writeFileSync(file, next);
+  renamePagesDirectory(root);
+
+  for (const file of textFiles(root)) {
+    let text: string;
+    try {
+      text = fs.readFileSync(file, 'utf8');
+    } catch {
+      continue;
     }
+
+    const neutralized = neutralizeText(text);
+    if (neutralized !== text) fs.writeFileSync(file, neutralized);
   }
 }
