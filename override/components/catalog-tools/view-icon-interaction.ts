@@ -1,4 +1,4 @@
-import { queries } from '../../core/variables.js';
+import { motionTokens, queries } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 
@@ -74,7 +74,7 @@ export class CatalogViewIconInteraction {
     this.#handles = [];
   }
 
-  #apply(offsets: readonly OffsetPair[], duration: number, ease: string): void {
+  #apply(offsets: readonly OffsetPair[]): void {
     if (this.#destroyed) return;
     this.#stop();
     if (queries.reducedMotion.matches) {
@@ -87,25 +87,22 @@ export class CatalogViewIconInteraction {
 
     this.#handles = this.#shapes.map((shape, index) => {
       const [x, y] = offsets[index] ?? [0, 0];
-      return motion.engine.transform(shape, { x, y }, {
-        duration,
-        delay: index * 0.004,
-        ease,
+      return motion.engine.springTransform(shape, { x, y }, motionTokens.springs.spatial.fast, {
         onComplete: () => shape.style.removeProperty('will-change'),
       });
     });
   }
 
   #active(): void {
-    this.#apply(HOVER_OFFSETS, 0.068, 'quart.out');
+    this.#apply(HOVER_OFFSETS);
   }
 
   #home(): void {
-    this.#apply(HOME_OFFSETS, 0.09, 'quart.out');
+    this.#apply(HOME_OFFSETS);
   }
 
   #press(): void {
-    this.#apply(PRESS_OFFSETS, 0.042, 'cubic.out');
+    this.#apply(PRESS_OFFSETS);
   }
 
   #onPointerEnter = (event: PointerEvent): void => {
