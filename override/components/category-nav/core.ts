@@ -1,82 +1,252 @@
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config;if(!SC||!U||!C||SC.__categoryNavCoreBooted)return;SC.__categoryNavCoreBooted=true;
-interface ScrollPlan { y:number; distance:number; duration:number; }
-/* Selectores, offsets y estado del scroll programático. */
-var S=C.selectors,K=C.classes,N=SC.categoryNav=SC.categoryNav||{},each=U.each,offsetCache:number|null=null,autoRaf=0,autoToken=0;
-N.selectors=N.selectors||{select:'.JSgoMenu',scroller:'.sc-catalog-categories',mobileWrapper:'.fixedTopShop.wtopShopMenuMobile',mobileRail:'.topShopMenuMobile',mobileScroller:'.topShopMenuMobileScroller'};
-var CFG={offsetGap:12,currentMarkOffset:2,programmaticGraceMs:180,scrollMinDuration:.72,scrollMaxDuration:1.36,scrollDistanceScale:2400,scrollDistancePower:.62,settleTolerance:.75};N.currentMarkOffset=CFG.currentMarkOffset;
-var scrollState=SC.scrollState=SC.scrollState||{};scrollState.programmatic=false;scrollState.suppressRevealUntil=0;N.mq=C.queries.desktop;
+import { queries, selectors } from '../../core/variables.js';
+import { scrollState } from '../../core/state.js';
 
-/* Resuelve anchors y relaciones padre/subcategoría. */
-function anchor(href:string|null):HTMLElement|null{if(!href||href[0]!=='#'||href==='#')return null;var id=href.slice(1);try{id=decodeURIComponent(id);}catch(_error){}return document.getElementById(id)||document.getElementsByName(id)[0]||null;}
-function parentLink(a:Element):boolean{return a.matches('a.anchorLink[href^="#"]')&&!a.classList.contains('anchorLinkSub')&&!a.closest('.topPullDown,.dropdown-menu');}
-function links(root?:ParentNode):HTMLAnchorElement[]{return Array.prototype.filter.call((root||document).querySelectorAll('a.anchorLink[href^="#"]'),parentLink) as HTMLAnchorElement[];}
-function subcategoryOwner(link:Element|null):HTMLElement|null{
-  if(!link)return null;var href=link.getAttribute('data-sc-parent-href');if(href)return anchor(href);var nested=link.closest('.topPullDown');if(!nested)return null;
-  var item=nested.closest('.nav-top-li'),parent=item&&item.querySelector<HTMLAnchorElement>(':scope > a.anchorLink[href^="#"]');return parent?anchor(parent.getAttribute('href')):null;
-}
+export const CATEGORY_SELECTORS = {
+  select: '.JSgoMenu',
+  scroller: '.sc-catalog-categories',
+  mobileWrapper: '.fixedTopShop.wtopShopMenuMobile',
+  mobileRail: '.topShopMenuMobile',
+  mobileScroller: '.topShopMenuMobileScroller',
+} as const;
 
-/* Calcula el espacio ocupado por headers fijos/sticky. */
-function invalidateOffset():void{offsetCache=null;}
-function persistentSticky(node:HTMLElement,style:CSSStyleDeclaration,rect:DOMRect):number{
-  if(style.position!=='sticky')return 0;var isRail=(S.categoryToolbar&&node.matches(S.categoryToolbar))||node.matches(N.selectors.mobileWrapper);if(!isRail)return rect.top<=CFG.currentMarkOffset&&rect.bottom>0?rect.bottom:0;var top=parseFloat(style.top);if(!isFinite(top))top=0;return Math.max(0,top+rect.height);
-}
-function offset():number{
-  if(offsetCache!==null)return offsetCache;var bottom=0;
-  ['.topBar','.topShop',S.categoryToolbar,N.selectors.mobileWrapper].forEach(function(selector:string){if(!selector)return;each(document.querySelectorAll(selector),function(node:Element){var element=node as HTMLElement,style=getComputedStyle(element),rect=element.getBoundingClientRect(),candidate=0;if(rect.height<=0||style.display==='none'||style.visibility==='hidden')return;if(style.position==='fixed'&&rect.top<=CFG.currentMarkOffset&&rect.bottom>0)candidate=rect.bottom;else candidate=persistentSticky(element,style,rect);bottom=Math.max(bottom,candidate);});});
-  offsetCache=Math.ceil(Math.max(0,bottom))+CFG.offsetGap;return offsetCache;
+export const CATEGORY_SCROLL = {
+  offsetGap: 12,
+  currentMarkOffset: 2,
+  programmaticGraceMs: 180,
+  minDuration: 0.72,
+  maxDuration: 1.36,
+  distanceScale: 2400,
+  distancePower: 0.62,
+  settleTolerance: 0.75,
+} as const;
+
+export interface ScrollPlan {
+  readonly y: number;
+  readonly distance: number;
+  readonly duration: number;
 }
 
-/* Cierra estados legacy y limpia hashes técnicos. */
-function closeLegacy():void{if(SC.mutations&&SC.mutations.closeLegacyCategoryMenus){SC.mutations.closeLegacyCategoryMenus();return;}each(document.querySelectorAll(S.legacyPullDownOpen),function(node:Element){node.classList.remove('open');});each(document.querySelectorAll(S.legacyMobileOpen),function(node:Element){node.classList.remove('_open');});}
-function cleanHash():void{if(SC.mutations&&SC.mutations.cleanCategoryHash){SC.mutations.cleanCategoryHash();return;}if(/^#anchor/i.test(location.hash||''))try{history.replaceState(history.state,document.title,location.pathname+location.search);}catch(_error){} }
-
-/* Coordina scroll automático y pausa temporal del scroll-spy. */
-function setProgrammatic(on:boolean,grace:boolean):void{scrollState.programmatic=on;scrollState.suppressRevealUntil=on?Infinity:(grace?performance.now()+CFG.programmaticGraceMs:0);}
-function cancelAutoScroll(userInterrupt:boolean):void{autoToken++;if(autoRaf){cancelAnimationFrame(autoRaf);autoRaf=0;}if(userInterrupt){setProgrammatic(false,false);if(N.releaseSpyHold)N.releaseSpyHold();if(N.scheduleSpy)N.scheduleSpy();}}
-function durationFor(distance:number):number{var range=CFG.scrollMaxDuration-CFG.scrollMinDuration;return Math.min(CFG.scrollMaxDuration,Math.max(CFG.scrollMinDuration,CFG.scrollMinDuration+Math.pow(Math.min(1,distance/CFG.scrollDistanceScale),CFG.scrollDistancePower)*range));}
-function targetYFromCurrentOffset(target:HTMLElement):number{var y=target.getBoundingClientRect().top+(pageYOffset||document.documentElement.scrollTop||0)-offset(),max=Math.max(0,document.documentElement.scrollHeight-innerHeight);return Math.max(0,Math.min(max,y));}
-function targetY(target:HTMLElement):number{invalidateOffset();return targetYFromCurrentOffset(target);}
-function scrollPlan(target:HTMLElement):ScrollPlan{var y=targetY(target),startY=pageYOffset||document.documentElement.scrollTop||0,distance=Math.abs(y-startY),instant=C.queries.reducedMotion.matches||distance<CFG.currentMarkOffset;return{y:y,distance:distance,duration:instant?0:durationFor(distance)};}
-function ease(p:number):number{return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;}
-
-/* Busca el heading asociado para confirmar visualmente el destino. */
-function headingFor(target:HTMLElement|null):HTMLElement|null{
-  if(!target)return null;var selector=S.sectionTitle+','+S.sectionSubtitle;if(target.matches(selector))return target;
-  var node=target.nextElementSibling,steps=0;while(node&&steps<5){if(node.matches(selector))return node as HTMLElement;if(node.matches(S.productCard))break;node=node.nextElementSibling;steps++;}
-  var parent=target.parentElement;if(!parent)return null;var headings=parent.querySelectorAll<HTMLElement>(selector),targetTop=target.getBoundingClientRect().top;
-  for(var i=0;i<headings.length;i++){var heading=headings.item(i);if(heading&&heading.getBoundingClientRect().top>=targetTop-2)return heading;}return null;
-}
-function confirmCategory(target:HTMLElement):void{
-  var heading=headingFor(target);if(!heading||C.queries.reducedMotion.matches||!heading.animate)return;var previous=heading.__scCategoryConfirm;if(previous)try{previous.cancel();}catch(_error){}
-  var activeHeading:HTMLElement=heading,animation=activeHeading.animate([{opacity:.62},{opacity:1}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)'});activeHeading.__scCategoryConfirm=animation;animation.onfinish=animation.oncancel=function(){if(activeHeading.__scCategoryConfirm===animation)activeHeading.__scCategoryConfirm=null;};
+export interface ProgrammaticScrollCallbacks {
+  readonly refreshMetrics: () => void;
+  readonly releaseSpyHold: () => void;
+  readonly scheduleSpy: () => void;
+  readonly confirmTarget?: (target: HTMLElement) => void;
 }
 
-/* Anima scroll y corrige la posición final con el offset actual. */
-function finishAutoScroll(token:number,target:HTMLElement):void{
-  if(token!==autoToken)return;autoRaf=requestAnimationFrame(function(){if(token!==autoToken)return;autoRaf=requestAnimationFrame(function(){autoRaf=0;if(token!==autoToken)return;var finalY=targetY(target),currentY=pageYOffset||document.documentElement.scrollTop||0;if(Math.abs(finalY-currentY)>CFG.settleTolerance)scrollTo(0,finalY);if(N.refreshMetrics)N.refreshMetrics();setProgrammatic(false,true);if(N.releaseSpyHold)N.releaseSpyHold();if(N.scheduleSpy)N.scheduleSpy();confirmCategory(target);});});
-}
-function animateScroll(target:HTMLElement,token:number,duration:number,destination:number):void{
-  var startY=pageYOffset||document.documentElement.scrollTop||0,start=performance.now(),ms=duration*1000;
-  function frame(now:number):void{if(token!==autoToken)return;if(offsetCache===null)destination=targetYFromCurrentOffset(target);var p=Math.min(1,(now-start)/ms);scrollTo(0,startY+(destination-startY)*ease(p));if(p<1)autoRaf=requestAnimationFrame(frame);else{autoRaf=0;finishAutoScroll(token,target);}}
-  autoRaf=requestAnimationFrame(frame);
-}
-function scrollToTarget(target:HTMLElement,plan?:ScrollPlan):void{invalidateOffset();var activePlan=plan||scrollPlan(target);cancelAutoScroll(false);var token=++autoToken;setProgrammatic(true,false);if(!activePlan.duration){scrollTo(0,targetY(target));finishAutoScroll(token,target);return;}animateScroll(target,token,activePlan.duration,activePlan.y);}
-function activateAndScroll(target:HTMLElement,activeTarget?:HTMLElement|null):void{var selected=activeTarget||target;invalidateOffset();var plan=scrollPlan(target);if(N.holdSpy)N.holdSpy(selected);if(N.setActive)N.setActive(selected,true);scrollToTarget(target,plan);}
+const confirmationAnimations = new WeakMap<HTMLElement, Animation>();
+let offsetCache: number | null = null;
 
-/* Maneja click/tap de categorías y subcategorías. */
-function onCategory(event:MouseEvent):void{
-  if(event.defaultPrevented||event.button>0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-  var origin=event.target instanceof Element?event.target:null,link=origin&&origin.closest<HTMLAnchorElement>('a.anchorLink, a.anchorLinkSub, a.sc-category-submenu-link');if(!link)return;
-  var submenuLink=link.classList.contains('sc-category-submenu-link'),nestedLegacy=!!link.closest('.topPullDown,.dropdown-menu');if(nestedLegacy&&!submenuLink)return;
-  if(!(link.closest(S.categoryToolbar)||link.closest(N.selectors.mobileWrapper+' '+N.selectors.mobileRail)||link.closest('.sc-category-submenu')))return;
-  var target=anchor(link.getAttribute('href'));if(!target)return;var owner=submenuLink?subcategoryOwner(link):null,hasChildren=!submenuLink&&N.categorySubmenu&&N.categorySubmenu.has(link),compact=!N.mq.matches;
-  event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();
-  if(submenuLink){if(N.categorySubmenu)N.categorySubmenu.close(false);activateAndScroll(target,owner||target);return;}
-  if(hasChildren&&compact){N.categorySubmenu.open(link,true);return;}if(hasChildren)N.categorySubmenu.open(link,true);activateAndScroll(target,target);
+export const desktopCategories = queries.desktop;
+
+export function anchorForHref(href: string | null): HTMLElement | null {
+  if (!href?.startsWith('#') || href === '#') return null;
+  let id = href.slice(1);
+  try { id = decodeURIComponent(id); } catch { /* El hash puede contener escapes legacy inválidos. */ }
+  return document.getElementById(id) ?? (document.getElementsByName(id)[0] as HTMLElement | undefined) ?? null;
 }
-function onSelect(event:Event):void{var select=event.target instanceof HTMLSelectElement?event.target:null;if(!select||!select.matches(N.selectors.select))return;var target=anchor(select.value);if(!target)return;event.preventDefault();event.stopImmediatePropagation();closeLegacy();cleanHash();if(N.categorySubmenu)N.categorySubmenu.close(false);activateAndScroll(target,target);}
-function interrupt():void{if(scrollState.programmatic)cancelAutoScroll(true);}
-N.interruptAutoScroll=interrupt;N.resolveAnchor=N.anchor=anchor;N.parentLink=parentLink;N.links=links;N.subcategoryOwner=subcategoryOwner;N.offset=offset;N.invalidateOffset=invalidateOffset;N.closeLegacy=closeLegacy;N.cleanHash=cleanHash;N.scrollToTarget=scrollToTarget;N.onCategory=onCategory;N.onSelect=onSelect;N.isAutoScrolling=function(){return!!scrollState.programmatic;};
-})();
+
+export function isParentCategoryLink(element: Element): element is HTMLAnchorElement {
+  return element.matches('a.anchorLink[href^="#"]') &&
+    !element.classList.contains('anchorLinkSub') &&
+    !element.closest('.topPullDown,.dropdown-menu');
+}
+
+export function categoryLinks(root: ParentNode = document): HTMLAnchorElement[] {
+  return Array.from(root.querySelectorAll<HTMLAnchorElement>('a.anchorLink[href^="#"]')).filter(isParentCategoryLink);
+}
+
+export function subcategoryOwner(link: Element | null): HTMLElement | null {
+  if (!link) return null;
+  const parentHref = link.getAttribute('data-sc-parent-href');
+  if (parentHref) return anchorForHref(parentHref);
+  const nested = link.closest('.topPullDown');
+  const parent = nested?.closest('.nav-top-li')?.querySelector<HTMLAnchorElement>(':scope > a.anchorLink[href^="#"]');
+  return parent ? anchorForHref(parent.getAttribute('href')) : null;
+}
+
+export function invalidateCategoryOffset(): void {
+  offsetCache = null;
+}
+
+function persistentStickyHeight(node: HTMLElement, style: CSSStyleDeclaration, rect: DOMRect): number {
+  if (style.position !== 'sticky') return 0;
+  const isRail = node.matches(selectors.categoryToolbar) || node.matches(CATEGORY_SELECTORS.mobileWrapper);
+  if (!isRail) return rect.top <= CATEGORY_SCROLL.currentMarkOffset && rect.bottom > 0 ? rect.bottom : 0;
+  const top = Number.parseFloat(style.top);
+  return Math.max(0, (Number.isFinite(top) ? top : 0) + rect.height);
+}
+
+export function categoryOffset(): number {
+  if (offsetCache !== null) return offsetCache;
+  let bottom = 0;
+  for (const selector of ['.topBar', '.topShop', selectors.categoryToolbar, CATEGORY_SELECTORS.mobileWrapper]) {
+    for (const node of document.querySelectorAll<HTMLElement>(selector)) {
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      if (rect.height <= 0 || style.display === 'none' || style.visibility === 'hidden') continue;
+      const candidate = style.position === 'fixed' && rect.top <= CATEGORY_SCROLL.currentMarkOffset && rect.bottom > 0
+        ? rect.bottom
+        : persistentStickyHeight(node, style, rect);
+      bottom = Math.max(bottom, candidate);
+    }
+  }
+  offsetCache = Math.ceil(bottom) + CATEGORY_SCROLL.offsetGap;
+  return offsetCache;
+}
+
+export function closeLegacyCategoryMenus(): void {
+  document.querySelectorAll(selectors.legacyPullDownOpen).forEach((node) => node.classList.remove('open'));
+  document.querySelectorAll(selectors.legacyMobileOpen).forEach((node) => node.classList.remove('_open'));
+}
+
+export function cleanCategoryHash(): void {
+  if (!/^#anchor/i.test(location.hash)) return;
+  try { history.replaceState(history.state, document.title, location.pathname + location.search); } catch { /* history puede estar restringido. */ }
+}
+
+function durationForDistance(distance: number): number {
+  const range = CATEGORY_SCROLL.maxDuration - CATEGORY_SCROLL.minDuration;
+  const scaled = Math.pow(Math.min(1, distance / CATEGORY_SCROLL.distanceScale), CATEGORY_SCROLL.distancePower);
+  return Math.min(CATEGORY_SCROLL.maxDuration, Math.max(CATEGORY_SCROLL.minDuration, CATEGORY_SCROLL.minDuration + scaled * range));
+}
+
+function currentPageY(): number {
+  return window.pageYOffset || document.documentElement.scrollTop || 0;
+}
+
+function targetYFromOffset(target: HTMLElement): number {
+  const y = target.getBoundingClientRect().top + currentPageY() - categoryOffset();
+  const max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+  return Math.max(0, Math.min(max, y));
+}
+
+export function categoryTargetY(target: HTMLElement): number {
+  invalidateCategoryOffset();
+  return targetYFromOffset(target);
+}
+
+export function categoryScrollPlan(target: HTMLElement): ScrollPlan {
+  const y = categoryTargetY(target);
+  const distance = Math.abs(y - currentPageY());
+  const instant = queries.reducedMotion.matches || distance < CATEGORY_SCROLL.currentMarkOffset;
+  return { y, distance, duration: instant ? 0 : durationForDistance(distance) };
+}
+
+function easing(progress: number): number {
+  return progress < 0.5 ? 4 * progress ** 3 : 1 - ((-2 * progress + 2) ** 3) / 2;
+}
+
+function associatedHeading(target: HTMLElement): HTMLElement | null {
+  const headingSelector = `${selectors.sectionTitle},${selectors.sectionSubtitle}`;
+  if (target.matches(headingSelector)) return target;
+
+  let sibling = target.nextElementSibling;
+  for (let steps = 0; sibling && steps < 5; steps += 1, sibling = sibling.nextElementSibling) {
+    if (sibling.matches(headingSelector)) return sibling as HTMLElement;
+    if (sibling.matches(selectors.productCard)) break;
+  }
+
+  const parent = target.parentElement;
+  if (!parent) return null;
+  const targetTop = target.getBoundingClientRect().top;
+  return Array.from(parent.querySelectorAll<HTMLElement>(headingSelector))
+    .find((heading) => heading.getBoundingClientRect().top >= targetTop - 2) ?? null;
+}
+
+export function confirmCategoryTarget(target: HTMLElement): void {
+  const heading = associatedHeading(target);
+  if (!heading || queries.reducedMotion.matches || typeof heading.animate !== 'function') return;
+  confirmationAnimations.get(heading)?.cancel();
+  const animation = heading.animate([{ opacity: 0.62 }, { opacity: 1 }], {
+    duration: 260,
+    easing: 'cubic-bezier(.22,1,.36,1)',
+  });
+  confirmationAnimations.set(heading, animation);
+  const clear = (): void => {
+    if (confirmationAnimations.get(heading) === animation) confirmationAnimations.delete(heading);
+  };
+  animation.onfinish = clear;
+  animation.oncancel = clear;
+}
+
+export class ProgrammaticCategoryScroll {
+  readonly #callbacks: ProgrammaticScrollCallbacks;
+  #frame = 0;
+  #token = 0;
+
+  constructor(callbacks: ProgrammaticScrollCallbacks) {
+    this.#callbacks = callbacks;
+  }
+
+  get active(): boolean {
+    return scrollState.programmatic;
+  }
+
+  scrollTo(target: HTMLElement, plan: ScrollPlan = categoryScrollPlan(target)): void {
+    invalidateCategoryOffset();
+    this.cancel(false);
+    const token = ++this.#token;
+    this.#setProgrammatic(true, false);
+    if (plan.duration === 0) {
+      window.scrollTo(0, categoryTargetY(target));
+      this.#finish(token, target);
+      return;
+    }
+    this.#animate(target, token, plan.duration, plan.y);
+  }
+
+  interrupt(): void {
+    if (scrollState.programmatic) this.cancel(true);
+  }
+
+  cancel(userInterrupt: boolean): void {
+    this.#token += 1;
+    if (this.#frame) cancelAnimationFrame(this.#frame);
+    this.#frame = 0;
+    if (!userInterrupt) return;
+    this.#setProgrammatic(false, false);
+    this.#callbacks.releaseSpyHold();
+    this.#callbacks.scheduleSpy();
+  }
+
+  #setProgrammatic(active: boolean, grace: boolean): void {
+    scrollState.programmatic = active;
+    scrollState.suppressRevealUntil = active ? Infinity : grace ? performance.now() + CATEGORY_SCROLL.programmaticGraceMs : 0;
+  }
+
+  #finish(token: number, target: HTMLElement): void {
+    if (token !== this.#token) return;
+    this.#frame = requestAnimationFrame(() => {
+      if (token !== this.#token) return;
+      this.#frame = requestAnimationFrame(() => {
+        this.#frame = 0;
+        if (token !== this.#token) return;
+        const finalY = categoryTargetY(target);
+        if (Math.abs(finalY - currentPageY()) > CATEGORY_SCROLL.settleTolerance) window.scrollTo(0, finalY);
+        this.#callbacks.refreshMetrics();
+        this.#setProgrammatic(false, true);
+        this.#callbacks.releaseSpyHold();
+        this.#callbacks.scheduleSpy();
+        (this.#callbacks.confirmTarget ?? confirmCategoryTarget)(target);
+      });
+    });
+  }
+
+  #animate(target: HTMLElement, token: number, duration: number, destination: number): void {
+    const startY = currentPageY();
+    const startTime = performance.now();
+    const durationMs = duration * 1000;
+    const frame = (now: number): void => {
+      if (token !== this.#token) return;
+      if (offsetCache === null) destination = targetYFromOffset(target);
+      const progress = Math.min(1, (now - startTime) / durationMs);
+      window.scrollTo(0, startY + (destination - startY) * easing(progress));
+      if (progress < 1) this.#frame = requestAnimationFrame(frame);
+      else {
+        this.#frame = 0;
+        this.#finish(token, target);
+      }
+    };
+    this.#frame = requestAnimationFrame(frame);
+  }
+}

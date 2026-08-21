@@ -1,138 +1,294 @@
-(function(){
-'use strict';
-if(window.__scMotionCoreBooted)return;window.__scMotionCoreBooted=true;
+import { media, queries } from '../core/variables.js';
+import type { Cleanup } from '../core/types.js';
+import type {
+  MicroInteractionOptions,
+  MotionDependencies,
+  MotionEngine,
+  MotionHandle,
+  MotionPropertyOptions,
+  MotionRuntime,
+  MotionTransformState,
+  MotionTweenOptions,
+} from './types.js';
 
-/* Motor de motion propio. No carga librerías externas: todos los tiempos, easings,
-   interpolaciones y cancelaciones se ejecutan con requestAnimationFrame. */
-var SC=window.SCOverride=window.SCOverride||{},C=SC.config||{},MEDIA=C.media||{};
-type MotionCallback=(deps:MotionDeps)=>void;
-interface MicroPose { rotation?:number; }
-interface MicroOptions {
-  active?:MicroPose;press?:MicroPose;transformOrigin?:string;
-  enterDuration?:number;exitDuration?:number;pressDuration?:number;pressReturnDuration?:number;
-  enterEase?:string;exitEase?:string;
-}
-var readyQueue:MotionCallback[]=[],loadedQueue:MotionCallback[]=[],unlocked=false,refreshTimer=0;
-var ROOT=document.documentElement;
-ROOT.classList.add('sc-motion-engine-ready');
+type MotionCallback = (dependencies: MotionDependencies) => void;
+type Point = readonly [x: number, y: number];
 
-function clamp(value:number,min:number,max:number):number{return Math.max(min,Math.min(max,value));}
-function reduced():boolean{return (C.queries&&C.queries.reducedMotion?C.queries.reducedMotion:window.matchMedia(MEDIA.reducedMotion||'(prefers-reduced-motion: reduce)')).matches;}
-function easeValue(name:string|undefined,t:number):number{
-  var x=clamp(t,0,1),key=(name||'linear').toLowerCase();
-  if(key==='none'||key==='linear')return x;
-  if(key==='quad.in')return x*x;
-  if(key==='quad.out')return 1-Math.pow(1-x,2);
-  if(key==='quad.inout')return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
-  if(key==='cubic.in')return x*x*x;
-  if(key==='cubic.out')return 1-Math.pow(1-x,3);
-  if(key==='cubic.inout')return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
-  if(key==='quart.in')return Math.pow(x,4);
-  if(key==='quart.out')return 1-Math.pow(1-x,4);
-  if(key==='quart.inout')return x<.5?8*Math.pow(x,4):1-Math.pow(-2*x+2,4)/2;
-  if(key==='quint.in')return Math.pow(x,5);
-  if(key==='quint.out')return 1-Math.pow(1-x,5);
-  if(key==='quint.inout')return x<.5?16*Math.pow(x,5):1-Math.pow(-2*x+2,5)/2;
-  if(key==='sine.in')return 1-Math.cos((x*Math.PI)/2);
-  if(key==='sine.out')return Math.sin((x*Math.PI)/2);
-  if(key==='sine.inout')return-(Math.cos(Math.PI*x)-1)/2;
-  return 1-Math.pow(1-x,3);
+interface SampledPath {
+  readonly points: Point[];
+  readonly closed: boolean;
 }
-function tween(duration:number,ease:string|undefined,update:(progress:number)=>void,options?:MotionTweenOptions):MotionHandle{
-  var opts=options||{},delay=Math.max(0,(opts.delay||0)*1000),length=Math.max(0,duration*1000),raf=0,start=-1,active=true,completed=false;
-  function complete():void{if(completed)return;completed=true;active=false;if(opts.onComplete)opts.onComplete();}
-  function frame(time:number):void{
-    if(!active)return;if(start<0)start=time;var elapsed=time-start;
-    if(elapsed<delay){raf=requestAnimationFrame(frame);return;}
-    var raw=length===0?1:clamp((elapsed-delay)/length,0,1);update(easeValue(ease,raw));
-    if(raw>=1){complete();return;}raf=requestAnimationFrame(frame);
+
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+const PATH_SAMPLE_COUNT = 64;
+const readyQueue: MotionCallback[] = [];
+const root = document.documentElement;
+
+let unlocked = false;
+let refreshTimer = 0;
+
+root.classList.add('sc-motion-engine-ready');
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value));
+
+export const prefersReducedMotion = (): boolean =>
+  (queries.reducedMotion ?? window.matchMedia(media.reducedMotion)).matches;
+
+const easeValue = (name: string | undefined, progress: number): number => {
+  const x = clamp(progress, 0, 1);
+  const key = (name ?? 'linear').toLowerCase();
+
+  switch (key) {
+    case 'none':
+    case 'linear': return x;
+    case 'quad.in': return x * x;
+    case 'quad.out': return 1 - (1 - x) ** 2;
+    case 'quad.inout': return x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+    case 'cubic.in': return x ** 3;
+    case 'cubic.out': return 1 - (1 - x) ** 3;
+    case 'cubic.inout': return x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2;
+    case 'quart.in': return x ** 4;
+    case 'quart.out': return 1 - (1 - x) ** 4;
+    case 'quart.inout': return x < 0.5 ? 8 * x ** 4 : 1 - (-2 * x + 2) ** 4 / 2;
+    case 'quint.in': return x ** 5;
+    case 'quint.out': return 1 - (1 - x) ** 5;
+    case 'quint.inout': return x < 0.5 ? 16 * x ** 5 : 1 - (-2 * x + 2) ** 5 / 2;
+    case 'sine.in': return 1 - Math.cos((x * Math.PI) / 2);
+    case 'sine.out': return Math.sin((x * Math.PI) / 2);
+    case 'sine.inout': return -(Math.cos(Math.PI * x) - 1) / 2;
+    default: return 1 - (1 - x) ** 3;
   }
-  raf=requestAnimationFrame(frame);
-  return {
-    cancel:function():void{if(!active)return;active=false;if(raf)cancelAnimationFrame(raf);},
-    finish:function():void{if(!active)return;if(raf)cancelAnimationFrame(raf);update(1);complete();},
-    active:function():boolean{return active;}
+};
+
+const tween = (duration: number, easing: string | undefined, update: (progress: number) => void, options: MotionTweenOptions = {}): MotionHandle => {
+  const delayMs = Math.max(0, (options.delay ?? 0) * 1000);
+  const durationMs = Math.max(0, duration * 1000);
+  let frameId = 0;
+  let startTime: number | undefined;
+  let running = true;
+  let completed = false;
+
+  const complete = (): void => {
+    if (completed) return;
+    completed = true;
+    running = false;
+    options.onComplete?.();
   };
-}
-function delay(seconds:number,callback:()=>void):MotionHandle{
-  var active=true,id=window.setTimeout(function(){if(!active)return;active=false;callback();},Math.max(0,seconds*1000));
-  return {cancel:function(){if(!active)return;active=false;clearTimeout(id);},finish:function(){if(!active)return;active=false;clearTimeout(id);callback();},active:function(){return active;}};
-}
-function currentTransform(target:HTMLElement|SVGElement):MotionTransformState{
-  var transform=getComputedStyle(target).transform;if(!transform||transform==='none')return{x:0,y:0,scale:1,rotation:0};
-  try{var matrix=new DOMMatrixReadOnly(transform),scale=Math.sqrt(matrix.a*matrix.a+matrix.b*matrix.b)||1,rotation=Math.atan2(matrix.b,matrix.a)*180/Math.PI;return{x:matrix.m41,y:matrix.m42,scale:scale,rotation:rotation};}catch(_){return{x:0,y:0,scale:1,rotation:0};}
-}
-function writeTransform(target:HTMLElement|SVGElement,state:MotionTransformState):void{target.style.transform='translate3d('+state.x+'px,'+state.y+'px,0) rotate('+state.rotation+'deg) scale('+state.scale+')';}
-function transform(target:HTMLElement|SVGElement,to:Partial<MotionTransformState>,options:MotionPropertyOptions):MotionHandle{
-  var from=currentTransform(target),end={x:to.x==null?from.x:to.x,y:to.y==null?from.y:to.y,scale:to.scale==null?from.scale:to.scale,rotation:to.rotation==null?from.rotation:to.rotation};
-  target.style.willChange='transform';
-  return tween(options.duration,options.ease,function(p){writeTransform(target,{x:from.x+(end.x-from.x)*p,y:from.y+(end.y-from.y)*p,scale:from.scale+(end.scale-from.scale)*p,rotation:from.rotation+(end.rotation-from.rotation)*p});},{delay:options.delay,onComplete:function(){target.style.removeProperty('will-change');if(options.clear)target.style.removeProperty('transform');if(options.onComplete)options.onComplete();}});
-}
-function opacity(target:HTMLElement|SVGElement,to:number,options:MotionPropertyOptions):MotionHandle{
-  var parsed=parseFloat(getComputedStyle(target).opacity),from=Number.isFinite(parsed)?parsed:1;target.style.willChange='opacity';
-  return tween(options.duration,options.ease,function(p){target.style.opacity=String(from+(to-from)*p);},{delay:options.delay,onComplete:function(){target.style.removeProperty('will-change');if(options.clear)target.style.removeProperty('opacity');if(options.onComplete)options.onComplete();}});
-}
-function attributes(target:Element,to:Record<string,number>,options:MotionPropertyOptions):MotionHandle{
-  var keys=Object.keys(to),from:Record<string,number>={};keys.forEach(function(key){var value=parseFloat(target.getAttribute(key)||'0');from[key]=Number.isFinite(value)?value:0;});
-  return tween(options.duration,options.ease,function(p){keys.forEach(function(key){var start=from[key]??0,end=to[key]??start;target.setAttribute(key,String(start+(end-start)*p));});},{delay:options.delay,onComplete:options.onComplete});
-}
-interface SampledPath { points:Array<[number,number]>; closed:boolean; }
-function splitPathData(data:string):string[]{var found=data.match(/[Mm][^Mm]*/g);return found&&found.length?found:[data];}
-function samplePath(svg:SVGSVGElement,data:string,count:number):SampledPath|null{
-  var probe=document.createElementNS('http://www.w3.org/2000/svg','path');probe.setAttribute('d',data);probe.setAttribute('visibility','hidden');probe.setAttribute('pointer-events','none');svg.appendChild(probe);
-  try{var length=probe.getTotalLength();if(!Number.isFinite(length)||length<=0)return null;var closed=/[zZ]\s*$/.test(data),points:Array<[number,number]>=[];for(var i=0;i<count;i++){var ratio=closed?i/count:(count===1?0:i/(count-1)),point=probe.getPointAtLength(length*ratio);points.push([point.x,point.y]);}return{points:points,closed:closed};}catch(_){return null;}finally{probe.remove();}
-}
-function samplePathSet(svg:SVGSVGElement,data:string,count:number):SampledPath[]|null{var parts=splitPathData(data),result:SampledPath[]=[];for(var i=0;i<parts.length;i++){var sampled=samplePath(svg,parts[i]||'',count);if(!sampled)return null;result.push(sampled);}return result;}
-function pointDistance(a:[number,number],b:[number,number]):number{var dx=a[0]-b[0],dy=a[1]-b[1];return dx*dx+dy*dy;}
-function alignPoints(source:Array<[number,number]>,target:Array<[number,number]>):Array<[number,number]>{
-  if(source.length!==target.length||source.length<2)return target.slice();var count=source.length,best=target.slice(),bestScore=Infinity;
-  for(var reverse=0;reverse<2;reverse++){var candidate=reverse?target.slice().reverse():target;for(var shift=0;shift<count;shift++){var score=0;for(var i=0;i<count;i+=Math.max(1,Math.floor(count/16))){var point=candidate[(i+shift)%count];if(point)score+=pointDistance(source[i]||source[0]!,point);}if(score<bestScore){bestScore=score;best=[];for(var j=0;j<count;j++)best.push(candidate[(j+shift)%count]||candidate[0]!);}}}
+
+  const frame = (timestamp: number): void => {
+    if (!running) return;
+    startTime ??= timestamp;
+    const elapsed = timestamp - startTime;
+    if (elapsed < delayMs) { frameId = requestAnimationFrame(frame); return; }
+    const linearProgress = durationMs === 0 ? 1 : clamp((elapsed - delayMs) / durationMs, 0, 1);
+    update(easeValue(easing, linearProgress));
+    if (linearProgress >= 1) { complete(); return; }
+    frameId = requestAnimationFrame(frame);
+  };
+
+  frameId = requestAnimationFrame(frame);
+  return {
+    cancel(): void { if (!running) return; running = false; cancelAnimationFrame(frameId); },
+    finish(): void { if (!running) return; cancelAnimationFrame(frameId); update(1); complete(); },
+    active: () => running,
+  };
+};
+
+const delay = (seconds: number, callback: () => void): MotionHandle => {
+  let running = true;
+  const timeoutId = window.setTimeout(() => { if (!running) return; running = false; callback(); }, Math.max(0, seconds * 1000));
+  return {
+    cancel(): void { if (!running) return; running = false; clearTimeout(timeoutId); },
+    finish(): void { if (!running) return; running = false; clearTimeout(timeoutId); callback(); },
+    active: () => running,
+  };
+};
+
+const currentTransform = (target: HTMLElement | SVGElement): MotionTransformState => {
+  const transform = getComputedStyle(target).transform;
+  if (!transform || transform === 'none') return { x: 0, y: 0, scale: 1, rotation: 0 };
+  try {
+    const matrix = new DOMMatrixReadOnly(transform);
+    const scale = Math.hypot(matrix.a, matrix.b) || 1;
+    const rotation = Math.atan2(matrix.b, matrix.a) * 180 / Math.PI;
+    return { x: matrix.m41, y: matrix.m42, scale, rotation };
+  } catch { return { x: 0, y: 0, scale: 1, rotation: 0 }; }
+};
+
+const writeTransform = (target: HTMLElement | SVGElement, state: MotionTransformState): void => {
+  target.style.transform = `translate3d(${state.x}px,${state.y}px,0) rotate(${state.rotation}deg) scale(${state.scale})`;
+};
+
+const animateTransform = (target: HTMLElement | SVGElement, to: Partial<MotionTransformState>, options: MotionPropertyOptions): MotionHandle => {
+  const from = currentTransform(target);
+  const end: MotionTransformState = { x: to.x ?? from.x, y: to.y ?? from.y, scale: to.scale ?? from.scale, rotation: to.rotation ?? from.rotation };
+  target.style.willChange = 'transform';
+  return tween(options.duration, options.ease, (progress) => writeTransform(target, {
+    x: from.x + (end.x - from.x) * progress,
+    y: from.y + (end.y - from.y) * progress,
+    scale: from.scale + (end.scale - from.scale) * progress,
+    rotation: from.rotation + (end.rotation - from.rotation) * progress,
+  }), { delay: options.delay, onComplete: () => { target.style.removeProperty('will-change'); if (options.clear) target.style.removeProperty('transform'); options.onComplete?.(); } });
+};
+
+const animateOpacity = (target: HTMLElement | SVGElement, to: number, options: MotionPropertyOptions): MotionHandle => {
+  const parsed = Number.parseFloat(getComputedStyle(target).opacity);
+  const from = Number.isFinite(parsed) ? parsed : 1;
+  target.style.willChange = 'opacity';
+  return tween(options.duration, options.ease, (progress) => { target.style.opacity = String(from + (to - from) * progress); }, { delay: options.delay, onComplete: () => { target.style.removeProperty('will-change'); if (options.clear) target.style.removeProperty('opacity'); options.onComplete?.(); } });
+};
+
+const animateAttributes = (target: Element, to: Readonly<Record<string, number>>, options: MotionPropertyOptions): MotionHandle => {
+  const keys = Object.keys(to);
+  const from = Object.fromEntries(keys.map((key) => { const value = Number.parseFloat(target.getAttribute(key) ?? '0'); return [key, Number.isFinite(value) ? value : 0]; })) as Record<string, number>;
+  return tween(options.duration, options.ease, (progress) => {
+    for (const key of keys) {
+      const start = from[key] ?? 0;
+      const end = to[key] ?? start;
+      target.setAttribute(key, String(start + (end - start) * progress));
+    }
+  }, { delay: options.delay, onComplete: options.onComplete });
+};
+
+const splitPathData = (data: string): string[] => data.match(/[Mm][^Mm]*/g) ?? [data];
+
+const samplePath = (svg: SVGSVGElement, data: string, count: number): SampledPath | null => {
+  const probe = document.createElementNS(SVG_NAMESPACE, 'path');
+  probe.setAttribute('d', data); probe.setAttribute('visibility', 'hidden'); probe.setAttribute('pointer-events', 'none'); svg.appendChild(probe);
+  try {
+    const length = probe.getTotalLength();
+    if (!Number.isFinite(length) || length <= 0) return null;
+    const closed = /[zZ]\s*$/.test(data);
+    const points = Array.from({ length: count }, (_, index): Point => {
+      const ratio = closed ? index / count : count === 1 ? 0 : index / (count - 1);
+      const point = probe.getPointAtLength(length * ratio);
+      return [point.x, point.y];
+    });
+    return { points, closed };
+  } catch { return null; } finally { probe.remove(); }
+};
+
+const samplePathSet = (svg: SVGSVGElement, data: string, count: number): SampledPath[] | null => {
+  const result: SampledPath[] = [];
+  for (const part of splitPathData(data)) { const sampled = samplePath(svg, part, count); if (!sampled) return null; result.push(sampled); }
+  return result;
+};
+
+const pointDistance = (a: Point, b: Point): number => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+
+const alignPoints = (source: Point[], target: Point[]): Point[] => {
+  if (source.length !== target.length || source.length < 2) return [...target];
+  const count = source.length;
+  const scoreStride = Math.max(1, Math.floor(count / 16));
+  let best = [...target];
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const candidateBase of [target, [...target].reverse()]) {
+    for (let shift = 0; shift < count; shift += 1) {
+      let score = 0;
+      for (let index = 0; index < count; index += scoreStride) {
+        const sourcePoint = source[index] ?? source[0];
+        const candidatePoint = candidateBase[(index + shift) % count] ?? candidateBase[0];
+        if (sourcePoint && candidatePoint) score += pointDistance(sourcePoint, candidatePoint);
+      }
+      if (score >= bestScore) continue;
+      bestScore = score;
+      best = Array.from({ length: count }, (_, index) => candidateBase[(index + shift) % count] ?? candidateBase[0]!);
+    }
+  }
   return best;
-}
-function path(target:SVGPathElement,toD:string,options:MotionPropertyOptions):MotionHandle{
-  var svg=target.ownerSVGElement;if(!svg||!toD){target.setAttribute('d',toD);return delay(0,function(){if(options.onComplete)options.onComplete();});}
-  var fromD=target.getAttribute('d')||'',count=64,fromSet=samplePathSet(svg,fromD,count),toSet=samplePathSet(svg,toD,count);
-  if(!fromSet||!toSet||!fromSet.length||!toSet.length){return tween(options.duration,options.ease,function(p){if(p>=1)target.setAttribute('d',toD);},{delay:options.delay,onComplete:options.onComplete});}
-  var pairCount=Math.max(fromSet.length,toSet.length),pairs:Array<{from:SampledPath;to:SampledPath}>=[];
-  for(var pairIndex=0;pairIndex<pairCount;pairIndex++){var source=fromSet[Math.min(pairIndex,fromSet.length-1)]||fromSet[0],dest=toSet[Math.min(pairIndex,toSet.length-1)]||toSet[0];if(!source||!dest)continue;pairs.push({from:source,to:{points:alignPoints(source.points,dest.points),closed:dest.closed}});}
-  return tween(options.duration,options.ease,function(p){var d='';pairs.forEach(function(pair){for(var i=0;i<pair.from.points.length;i++){var a=pair.from.points[i],b=pair.to.points[i];if(!a||!b)continue;var x=a[0]+(b[0]-a[0])*p,y=a[1]+(b[1]-a[1])*p;d+=(i===0?'M':'L')+x.toFixed(3)+' '+y.toFixed(3);}if(pair.from.closed||pair.to.closed)d+='Z';});target.setAttribute('d',d);},{delay:options.delay,onComplete:function(){target.setAttribute('d',toD);if(options.onComplete)options.onComplete();}});
-}
-var engine:MotionEngine={tween:tween,delay:delay,transform:transform,opacity:opacity,attributes:attributes,path:path,currentTransform:currentTransform,ease:easeValue};
-var deps:MotionDeps={engine:engine};
+};
 
-function flushQueue(queue:MotionCallback[]):void{var callbacks=queue.splice(0);callbacks.forEach(function(fn){try{fn(deps);}catch(error){console.error('[SushiClub motion]',error);}});}
-function whenLoaded(fn:MotionCallback):void{if(typeof fn!=='function')return;fn(deps);}
-function whenReady(fn:MotionCallback):void{if(typeof fn!=='function')return;if(unlocked)fn(deps);else readyQueue.push(fn);}
-function run(fn:MotionCallback):boolean{if(!unlocked||typeof fn!=='function')return false;fn(deps);return true;}
-function runLoaded(fn:MotionCallback):boolean{if(typeof fn!=='function')return false;fn(deps);return true;}
-function refresh(delayMs?:number|null):void{if(refreshTimer)clearTimeout(refreshTimer);refreshTimer=window.setTimeout(function(){refreshTimer=0;window.dispatchEvent(new CustomEvent('sc:motionrefresh'));},Math.max(0,delayMs||0));}
+const animatePath = (target: SVGPathElement, toD: string, options: MotionPropertyOptions): MotionHandle => {
+  const svg = target.ownerSVGElement;
+  if (!svg || !toD) { target.setAttribute('d', toD); return delay(0, () => options.onComplete?.()); }
+  const fromD = target.getAttribute('d') ?? '';
+  const fromSet = samplePathSet(svg, fromD, PATH_SAMPLE_COUNT);
+  const toSet = samplePathSet(svg, toD, PATH_SAMPLE_COUNT);
+  if (!fromSet?.length || !toSet?.length) return tween(options.duration, options.ease, (progress) => { if (progress >= 1) target.setAttribute('d', toD); }, { delay: options.delay, onComplete: options.onComplete });
+  const pairCount = Math.max(fromSet.length, toSet.length);
+  const pairs = Array.from({ length: pairCount }, (_, index) => {
+    const source = fromSet[Math.min(index, fromSet.length - 1)] ?? fromSet[0]!;
+    const destination = toSet[Math.min(index, toSet.length - 1)] ?? toSet[0]!;
+    return { from: source, to: { points: alignPoints(source.points, destination.points), closed: destination.closed } };
+  });
+  return tween(options.duration, options.ease, (progress) => {
+    let data = '';
+    for (const pair of pairs) {
+      pair.from.points.forEach((fromPoint, index) => {
+        const toPoint = pair.to.points[index]; if (!toPoint) return;
+        const x = fromPoint[0] + (toPoint[0] - fromPoint[0]) * progress;
+        const y = fromPoint[1] + (toPoint[1] - fromPoint[1]) * progress;
+        data += `${index === 0 ? 'M' : 'L'}${x.toFixed(3)} ${y.toFixed(3)}`;
+      });
+      if (pair.from.closed || pair.to.closed) data += 'Z';
+    }
+    target.setAttribute('d', data);
+  }, { delay: options.delay, onComplete: () => { target.setAttribute('d', toD); options.onComplete?.(); } });
+};
 
-/* Hover/foco/presión con la misma rotación y los mismos easings que el runtime anterior. */
-function bindMicroInteraction(control:HTMLElement,target:HTMLElement|SVGElement,options?:MicroOptions):()=>void{
-  var opts=options||{},activeTween:MotionHandle|null=null,destroyed=false,hover=false,focus=false,pressed=false;
-  function focusVisible():boolean{try{return control.matches(':focus-visible');}catch(_){return document.activeElement===control;}}
-  function kill():void{if(activeTween){activeTween.cancel();activeTween=null;}}
-  function angle(kind:'active'|'press'):number{var source=opts[kind],value=source&&Number(source.rotation);if(Number.isFinite(value)&&value)return value;return kind==='press'?-6:12;}
-  function clear():void{target.style.removeProperty('transform');target.style.removeProperty('will-change');}
-  function move(rotation:number,duration:number,ease:string,clearAtEnd:boolean):void{if(destroyed)return;kill();if(reduced()){clear();return;}target.style.transformOrigin=opts.transformOrigin||'50% 50%';activeTween=engine.transform(target,{rotation:rotation},{duration:duration,ease:ease,onComplete:function(){activeTween=null;if(clearAtEnd)clear();}});}
-  function active():void{move(angle('active'),opts.enterDuration==null?.1:opts.enterDuration,opts.enterEase||'quart.out',false);}
-  function home():void{move(0,opts.exitDuration==null?.14:opts.exitDuration,opts.exitEase||'quart.out',true);}
-  function press():void{if(destroyed)return;kill();if(reduced()){clear();return;}var returnAngle=(hover||focus)?angle('active'):0;activeTween=engine.transform(target,{rotation:angle('press')},{duration:opts.pressDuration==null?.055:opts.pressDuration,ease:'cubic.out',onComplete:function(){activeTween=engine.transform(target,{rotation:returnAngle},{duration:opts.pressReturnDuration==null?.085:opts.pressReturnDuration,ease:'quart.out',onComplete:function(){activeTween=null;if(returnAngle===0)clear();}});}});}
-  function pointerEnter(event:PointerEvent):void{if(event.pointerType==='touch')return;if(!hover){hover=true;if(!pressed)active();}}
-  function pointerLeave():void{hover=false;pressed=false;if(focus)active();else home();}
-  function pointerDown():void{pressed=true;press();}
-  function pointerUp():void{pressed=false;if(hover||focus)active();else home();}
-  function focusIn():void{var visible=focusVisible();if(visible&&!focus){focus=true;if(!pressed)active();}}
-  function focusOut():void{focus=false;pressed=false;if(hover)active();else home();}
-  function keyDown(event:KeyboardEvent):void{if(event.repeat||(event.key!=='Enter'&&event.key!==' '))return;pressed=true;press();}
-  function keyUp(event:KeyboardEvent):void{if(event.key!=='Enter'&&event.key!==' ')return;pressed=false;if(hover||focus)active();else home();}
-  control.addEventListener('pointerenter',pointerEnter);control.addEventListener('pointerleave',pointerLeave);control.addEventListener('pointerdown',pointerDown);control.addEventListener('pointerup',pointerUp);control.addEventListener('pointercancel',pointerLeave);control.addEventListener('focus',focusIn);control.addEventListener('blur',focusOut);control.addEventListener('keydown',keyDown);control.addEventListener('keyup',keyUp);
-  return function(){if(destroyed)return;destroyed=true;control.removeEventListener('pointerenter',pointerEnter);control.removeEventListener('pointerleave',pointerLeave);control.removeEventListener('pointerdown',pointerDown);control.removeEventListener('pointerup',pointerUp);control.removeEventListener('pointercancel',pointerLeave);control.removeEventListener('focus',focusIn);control.removeEventListener('blur',focusOut);control.removeEventListener('keydown',keyDown);control.removeEventListener('keyup',keyUp);kill();clear();};
-}
+export const motionEngine: MotionEngine = Object.freeze({ tween, delay, transform: animateTransform, opacity: animateOpacity, attributes: animateAttributes, path: animatePath, currentTransform, ease: easeValue });
+const dependencies: MotionDependencies = Object.freeze({ engine: motionEngine });
+const dependencyPromise = Promise.resolve(dependencies);
 
-var dependencyPromise=Promise.resolve(deps);flushQueue(loadedQueue);
-function ready():Promise<MotionDeps>{return dependencyPromise;}
-function prepare():Promise<MotionDeps>{return dependencyPromise;}
-function unlock():void{if(unlocked)return;unlocked=true;flushQueue(readyQueue);refresh(0);}
-SC.motion={ready:ready,prepare:prepare,whenLoaded:whenLoaded,whenReady:whenReady,run:run,runLoaded:runLoaded,refresh:refresh,reduced:reduced,bindMicroInteraction:bindMicroInteraction,unlock:unlock,isReady:function(){return unlocked;},isLoaded:function(){return true;}};
-})();
+const execute = (callback: MotionCallback): void => { try { callback(dependencies); } catch (error) { console.error('[SushiClub motion]', error); } };
+const flushReadyQueue = (): void => { for (const callback of readyQueue.splice(0)) execute(callback); };
+const refresh = (delayMs: number | null = 0): void => {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = window.setTimeout(() => { refreshTimer = 0; window.dispatchEvent(new CustomEvent('sc:motionrefresh')); }, Math.max(0, delayMs ?? 0));
+};
+
+const bindMicroInteraction = (control: HTMLElement, target: HTMLElement | SVGElement, options: MicroInteractionOptions = {}): Cleanup => {
+  let activeTween: MotionHandle | null = null;
+  let destroyed = false;
+  let hovered = false;
+  let focused = false;
+  let pressed = false;
+  const focusVisible = (): boolean => { try { return control.matches(':focus-visible'); } catch { return document.activeElement === control; } };
+  const stopTween = (): void => { activeTween?.cancel(); activeTween = null; };
+  const rotationFor = (kind: 'active' | 'press'): number => { const value = Number(options[kind]?.rotation); return Number.isFinite(value) && value !== 0 ? value : kind === 'press' ? -6 : 12; };
+  const clearTransform = (): void => { target.style.removeProperty('transform'); target.style.removeProperty('will-change'); };
+  const move = (rotation: number, duration: number, easing: string, clearAtEnd: boolean): void => {
+    if (destroyed) return; stopTween(); if (prefersReducedMotion()) { clearTransform(); return; }
+    target.style.transformOrigin = options.transformOrigin ?? '50% 50%';
+    activeTween = motionEngine.transform(target, { rotation }, { duration, ease: easing, onComplete: () => { activeTween = null; if (clearAtEnd) clearTransform(); } });
+  };
+  const moveActive = (): void => move(rotationFor('active'), options.enterDuration ?? 0.1, options.enterEase ?? 'quart.out', false);
+  const moveHome = (): void => move(0, options.exitDuration ?? 0.14, options.exitEase ?? 'quart.out', true);
+  const pulsePress = (): void => {
+    if (destroyed) return; stopTween(); if (prefersReducedMotion()) { clearTransform(); return; }
+    const returnAngle = hovered || focused ? rotationFor('active') : 0;
+    activeTween = motionEngine.transform(target, { rotation: rotationFor('press') }, { duration: options.pressDuration ?? 0.055, ease: 'cubic.out', onComplete: () => {
+      activeTween = motionEngine.transform(target, { rotation: returnAngle }, { duration: options.pressReturnDuration ?? 0.085, ease: 'quart.out', onComplete: () => { activeTween = null; if (returnAngle === 0) clearTransform(); } });
+    } });
+  };
+  const onPointerEnter = (event: PointerEvent): void => { if (event.pointerType === 'touch' || hovered) return; hovered = true; if (!pressed) moveActive(); };
+  const onPointerLeave = (): void => { hovered = false; pressed = false; focused ? moveActive() : moveHome(); };
+  const onPointerDown = (): void => { pressed = true; pulsePress(); };
+  const onPointerUp = (): void => { pressed = false; hovered || focused ? moveActive() : moveHome(); };
+  const onFocus = (): void => { if (!focusVisible() || focused) return; focused = true; if (!pressed) moveActive(); };
+  const onBlur = (): void => { focused = false; pressed = false; hovered ? moveActive() : moveHome(); };
+  const onKeyDown = (event: KeyboardEvent): void => { if (event.repeat || (event.key !== 'Enter' && event.key !== ' ')) return; pressed = true; pulsePress(); };
+  const onKeyUp = (event: KeyboardEvent): void => { if (event.key !== 'Enter' && event.key !== ' ') return; pressed = false; hovered || focused ? moveActive() : moveHome(); };
+  control.addEventListener('pointerenter', onPointerEnter); control.addEventListener('pointerleave', onPointerLeave); control.addEventListener('pointerdown', onPointerDown); control.addEventListener('pointerup', onPointerUp); control.addEventListener('pointercancel', onPointerLeave); control.addEventListener('focus', onFocus); control.addEventListener('blur', onBlur); control.addEventListener('keydown', onKeyDown); control.addEventListener('keyup', onKeyUp);
+  return () => {
+    if (destroyed) return; destroyed = true;
+    control.removeEventListener('pointerenter', onPointerEnter); control.removeEventListener('pointerleave', onPointerLeave); control.removeEventListener('pointerdown', onPointerDown); control.removeEventListener('pointerup', onPointerUp); control.removeEventListener('pointercancel', onPointerLeave); control.removeEventListener('focus', onFocus); control.removeEventListener('blur', onBlur); control.removeEventListener('keydown', onKeyDown); control.removeEventListener('keyup', onKeyUp); stopTween(); clearTransform();
+  };
+};
+
+export const motion: MotionRuntime = Object.freeze({
+  engine: motionEngine,
+  ready: () => dependencyPromise,
+  prepare: () => dependencyPromise,
+  whenLoaded: execute,
+  whenReady(callback: MotionCallback): void { unlocked ? execute(callback) : readyQueue.push(callback); },
+  run(callback: MotionCallback): boolean { if (!unlocked) return false; execute(callback); return true; },
+  runLoaded(callback: MotionCallback): boolean { execute(callback); return true; },
+  refresh,
+  reduced: prefersReducedMotion,
+  bindMicroInteraction,
+  unlock(): void { if (unlocked) return; unlocked = true; flushReadyQueue(); refresh(0); },
+  isReady: () => unlocked,
+  isLoaded: () => true,
+});

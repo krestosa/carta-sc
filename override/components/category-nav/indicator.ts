@@ -1,68 +1,385 @@
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,N=SC&&SC.categoryNav,T=SC&&SC.templates;if(!SC||!U||!C||!N||!T||SC.__categoryNavIndicatorBooted)return;SC.__categoryNavIndicatorBooted=true;
+import { queries } from '../../core/variables.js';
+import { visible } from '../../core/utils.js';
+import { motion } from '../../motion/main.js';
+import type { MotionHandle } from '../../motion/types.js';
+import { cloneTemplate } from '../../templates/registry.js';
+import { anchorForHref, categoryLinks, CATEGORY_SELECTORS } from './core.js';
 
-/* Parámetros del spring y deformación por velocidad. */
-interface IndicatorState{x:number;width:number;warp:number;}
-interface IndicatorEntry{root:HTMLElement;host:HTMLElement;line:HTMLElement;state:IndicatorState;targetX:number;targetWidth:number;dir:number;init:boolean;visible:boolean;moveRaf:number;lastMoveT:number;vx:number;vw:number;scrollEl:HTMLElement|null;onScroll:(()=>void)|null;scrollX:number;scrollT:number;warpTween:MotionHandle|null;settle:MotionHandle|null;}
-var CFG={minWidth:6,maxWarp:11,minWarp:4.5,warpWidthRatio:.13,leadingShare:.92,trailingShare:.08,scrollSampleMin:.003,scrollSampleMax:.16,scrollVelocityScale:700,scrollWarpDuration:.14,scrollSettleDelay:.065,textInsetMax:1.25,textInsetRatio:.025,springResponse:.34,springDamping:1,springMaxDt:.032,springPositionEpsilon:.06,springVelocityEpsilon:.45,springWarpResponse:18},entries:IndicatorEntry[]=[],dirty=true,engine:MotionEngine|null=null;
-function now():number{return window.performance&&performance.now?performance.now():Date.now();}
-function clamp(v:number,min:number,max:number):number{return Math.max(min,Math.min(max,v));}
-function physicalPixel():number{return 1/Math.max(1,window.devicePixelRatio||1);}
-function floorPhysical(v:number):number{var dpr=Math.max(1,window.devicePixelRatio||1);return Math.floor(v*dpr+1e-6)/dpr;}
-function reduced():boolean{return SC.motion&&SC.motion.reduced?SC.motion.reduced():C.queries.reducedMotion.matches;}
-
-/* Resuelve geometría visible del texto y su scroller. */
-function mount(root:HTMLElement):HTMLElement{return root.closest<HTMLElement>(N.selectors.mobileScroller)||root;}
-function visual(link:HTMLElement):DOMRect{var fallback=link.getBoundingClientRect();try{var range=document.createRange();range.selectNodeContents(link);var rect=range.getBoundingClientRect();if(rect&&rect.width>1&&rect.height>0)return rect;}catch(_){}return fallback;}
-function scrollNode(root:HTMLElement,host:HTMLElement):HTMLElement|null{return root.closest<HTMLElement>(N.selectors.mobileScroller+','+N.selectors.scroller)||((host.scrollWidth||0)>(host.clientWidth||0)+1?host:null);}
-function sameTarget(link:HTMLAnchorElement,target:Element|null):boolean{var resolved=N.anchor(link.getAttribute('href'));if(resolved===target)return true;return!!(resolved&&target&&resolved.id&&target.id&&resolved.id===target.id);}
-function rootsFor(target:Element|null):HTMLElement[]{var roots:HTMLElement[]=[];(N.links() as HTMLAnchorElement[]).forEach(function(link:HTMLAnchorElement){if(!sameTarget(link,target)||!U.visible(link))return;var root=link.closest<HTMLElement>('.nav-tabsTopShop,.nav-tabs');if(root&&roots.indexOf(root)<0)roots.push(root);});return roots;}
-
-/* Renderiza posición, ancho y estiramiento del indicador. */
-function transform(x:number,width:number):string{return'translate3d('+x+'px,0,0) scaleX('+Math.max(1,width)+')';}
-function render(item:IndicatorEntry):void{var s=item.state,stretch=Math.abs(s.warp),left=s.x,width=s.width+stretch;if(s.warp>=0)left-=stretch*CFG.trailingShare;else left-=stretch*CFG.leadingShare;if(!item.visible){item.line.style.opacity='1';item.visible=true;}item.line.style.transform=transform(left,width);}
-
-/* Gestiona deformación temporal producida por scroll con el motor local. */
-function stopSettle(item:IndicatorEntry):void{if(item.settle){item.settle.cancel();item.settle=null;}}
-function stopWarp(item:IndicatorEntry):void{stopSettle(item);if(item.warpTween){item.warpTween.cancel();item.warpTween=null;}}
-function stopMove(item:IndicatorEntry):void{if(item.moveRaf){cancelAnimationFrame(item.moveRaf);item.moveRaf=0;}item.lastMoveT=0;}
-function stopMotion(item:IndicatorEntry):void{stopMove(item);stopWarp(item);}
-function unbind(item:IndicatorEntry):void{if(item.scrollEl&&item.onScroll)item.scrollEl.removeEventListener('scroll',item.onScroll);item.scrollEl=null;item.onScroll=null;stopSettle(item);}
-function destroy(item:IndicatorEntry):void{unbind(item);stopMotion(item);if(item.line&&item.line.parentNode)item.line.parentNode.removeChild(item.line);}
-function maxWarp(width:number):number{return Math.min(CFG.maxWarp,Math.max(CFG.minWarp,width*CFG.warpWidthRatio));}
-function tweenWarp(item:IndicatorEntry,target:number):void{if(!engine)return;if(item.warpTween)item.warpTween.cancel();var from=item.state.warp;item.warpTween=engine.tween(CFG.scrollWarpDuration,'quart.out',function(p){item.state.warp=from+(target-from)*p;render(item);},{onComplete:function(){item.warpTween=null;}});}
-function pulseScroll(item:IndicatorEntry,velocity:number):void{if(!engine||reduced()||item.moveRaf)return;var amount=maxWarp(item.targetWidth||item.state.width)*clamp(Math.abs(velocity)/CFG.scrollVelocityScale,0,1);if(amount<.2)return;item.dir=velocity>0?1:-1;tweenWarp(item,item.dir*amount);stopSettle(item);item.settle=engine.delay(CFG.scrollSettleDelay,function(){item.settle=null;tweenWarp(item,0);});}
-function bindScroll(item:IndicatorEntry):void{var el=scrollNode(item.root,item.host);if(el===item.scrollEl)return;unbind(item);item.scrollEl=el;if(!el)return;var scrollEl=el;item.scrollX=scrollEl.scrollLeft||0;item.scrollT=now();item.onScroll=function(){var t=now(),x=scrollEl.scrollLeft||0,dt=(t-item.scrollT)/1000;if(dt>CFG.scrollSampleMin&&dt<CFG.scrollSampleMax)pulseScroll(item,-(x-item.scrollX)/dt);item.scrollX=x;item.scrollT=t;};scrollEl.addEventListener('scroll',item.onScroll,{passive:true});}
-
-/* Crea un indicador por riel visible y lo reutiliza. */
-function entry(root:HTMLElement):IndicatorEntry{var host=mount(root),item:IndicatorEntry|null=null;for(var i=entries.length-1;i>=0;i--){var current=entries[i];if(!current||current.root!==root)continue;if(current.host===host){item=current;break;}destroy(current);entries.splice(i,1);}if(!item){var line=T.clone('category-indicator') as HTMLElement;host.classList.add('sc-category-motion-root');host.appendChild(line);if(host.matches(N.selectors.mobileScroller))line.style.setProperty('bottom','0','important');item={root:root,host:host,line:line,state:{x:0,width:1,warp:0},targetX:0,targetWidth:1,dir:1,init:false,visible:false,moveRaf:0,lastMoveT:0,vx:0,vw:0,scrollEl:null,onScroll:null,scrollX:0,scrollT:0,warpTween:null,settle:null};entries.push(item);}bindScroll(item);return item;}
-
-/* Snap inmediato para primer estado o movimiento reducido. */
-function snap(item:IndicatorEntry,x:number,width:number):void{stopMotion(item);item.targetX=x;item.targetWidth=width;item.state.x=x;item.state.width=width;item.state.warp=0;item.vx=0;item.vw=0;item.init=true;render(item);}
-function springAxis(position:number,velocity:number,target:number,dt:number):[number,number]{var omega=(Math.PI*2)/CFG.springResponse,accel=-2*CFG.springDamping*omega*velocity-omega*omega*(position-target);velocity+=accel*dt;position+=velocity*dt;return[position,velocity];}
-function settled(item:IndicatorEntry):boolean{return Math.abs(item.state.x-item.targetX)<CFG.springPositionEpsilon&&Math.abs(item.state.width-item.targetWidth)<CFG.springPositionEpsilon&&Math.abs(item.vx)<CFG.springVelocityEpsilon&&Math.abs(item.vw)<CFG.springVelocityEpsilon;}
-
-/* Integra el spring y deriva el estiramiento de su velocidad. */
-function step(item:IndicatorEntry,t:number):void{
-  if(!item.moveRaf)return;var dt=item.lastMoveT?Math.min(CFG.springMaxDt,Math.max(.001,(t-item.lastMoveT)/1000)):1/60;item.lastMoveT=t;
-  var x=springAxis(item.state.x,item.vx,item.targetX,dt),w=springAxis(item.state.width,item.vw,item.targetWidth,dt);item.state.x=x[0];item.vx=x[1];item.state.width=Math.max(1,w[0]);item.vw=w[1];
-  var centerVelocity=item.vx+item.vw*.5,warpTarget=clamp(centerVelocity/900,-1,1)*maxWarp(item.state.width),blend=Math.min(1,dt*CFG.springWarpResponse);item.state.warp+=(warpTarget-item.state.warp)*blend;render(item);
-  if(settled(item)){item.state.x=item.targetX;item.state.width=item.targetWidth;item.state.warp=0;item.vx=0;item.vw=0;item.moveRaf=0;item.lastMoveT=0;render(item);return;}
-  item.moveRaf=requestAnimationFrame(function(next){step(item,next);});
-}
-function animate(item:IndicatorEntry,x:number,width:number):void{
-  if(reduced()){snap(item,x,width);return;}stopWarp(item);var from=item.state.x+item.state.width*.5,to=x+width*.5;item.targetX=x;item.targetWidth=width;item.dir=to>=from?1:-1;item.init=true;
-  if(!item.moveRaf){item.lastMoveT=0;item.moveRaf=requestAnimationFrame(function(t){step(item,t);});}
+interface IndicatorState {
+  x: number;
+  width: number;
+  warp: number;
 }
 
-/* Mueve todos los indicadores que apuntan a la categoría activa. */
-function move(target:Element|null,animateMotion:boolean):void{var roots=rootsFor(target);roots.forEach(function(root:HTMLElement){var link=(N.links(root) as HTMLAnchorElement[]).find(function(node:HTMLAnchorElement){return sameTarget(node,target)&&U.visible(node);});if(!link)return;var item=entry(root),linkRect=visual(link),x,width,scale=1,inset;if(item.host.matches(N.selectors.mobileScroller)){var hostRect=item.host.getBoundingClientRect();x=item.host.scrollLeft+(linkRect.left-hostRect.left);width=linkRect.width;}else{var rootRect=root.getBoundingClientRect();scale=root.offsetWidth&&rootRect.width?rootRect.width/root.offsetWidth:1;if(!isFinite(scale)||scale<=0)scale=1;x=(linkRect.left-rootRect.left)/scale+(root.scrollLeft||0);width=linkRect.width/scale;}inset=Math.min(CFG.textInsetMax,Math.max(0,width*CFG.textInsetRatio));x+=inset;width=Math.max(CFG.minWidth,width-inset*2);if(item.host.matches(N.selectors.mobileScroller)){var right=floorPhysical(x+width)-physicalPixel();width=Math.max(CFG.minWidth,right-x);}if(!item.init||!animateMotion||reduced())snap(item,x,width);else animate(item,x,width);});dirty=false;}
-function markDirty():void{dirty=true;}function isDirty():boolean{return dirty;}
-function pause():void{entries.forEach(function(item:IndicatorEntry){unbind(item);stopMotion(item);});}
-function resume():void{for(var i=entries.length-1;i>=0;i--){var item=entries[i];if(!item)continue;if(!document.documentElement.contains(item.root)||!document.documentElement.contains(item.host)){destroy(item);entries.splice(i,1);continue;}bindScroll(item);render(item);}}
+interface IndicatorEntry {
+  readonly root: HTMLElement;
+  readonly host: HTMLElement;
+  readonly line: HTMLElement;
+  readonly state: IndicatorState;
+  targetX: number;
+  targetWidth: number;
+  direction: number;
+  initialized: boolean;
+  visible: boolean;
+  moveFrame: number;
+  lastMoveTime: number;
+  velocityX: number;
+  velocityWidth: number;
+  scrollElement: HTMLElement | null;
+  onScroll: (() => void) | null;
+  scrollX: number;
+  scrollTime: number;
+  warpTween: MotionHandle | null;
+  settle: MotionHandle | null;
+}
 
-/* El settle de scroll usa el mismo motor local que el resto de la interfaz. */
-if(SC.motion&&SC.motion.whenLoaded)SC.motion.whenLoaded(function(x:MotionDeps){engine=x.engine;});else if(SC.motion&&SC.motion.whenReady)SC.motion.whenReady(function(x:MotionDeps){engine=x.engine;});
-N.categoryIndicator={move:move,markDirty:markDirty,isDirty:isDirty,pause:pause,resume:resume};N.moveIndicator=move;
-})();
+const INDICATOR = {
+  minWidth: 6,
+  maxWarp: 11,
+  minWarp: 4.5,
+  warpWidthRatio: 0.13,
+  leadingShare: 0.92,
+  trailingShare: 0.08,
+  scrollSampleMin: 0.003,
+  scrollSampleMax: 0.16,
+  scrollVelocityScale: 700,
+  scrollWarpDuration: 0.14,
+  scrollSettleDelay: 0.065,
+  textInsetMax: 1.25,
+  textInsetRatio: 0.025,
+  springResponse: 0.34,
+  springDamping: 1,
+  springMaxDt: 0.032,
+  springPositionEpsilon: 0.06,
+  springVelocityEpsilon: 0.45,
+  springWarpResponse: 18,
+} as const;
+
+const entries: IndicatorEntry[] = [];
+let dirty = true;
+
+const now = (): number => performance.now();
+const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
+const physicalPixel = (): number => 1 / Math.max(1, devicePixelRatio || 1);
+const floorPhysical = (value: number): number => {
+  const ratio = Math.max(1, devicePixelRatio || 1);
+  return Math.floor(value * ratio + 1e-6) / ratio;
+};
+
+function mountFor(root: HTMLElement): HTMLElement {
+  return root.closest<HTMLElement>(CATEGORY_SELECTORS.mobileScroller) ?? root;
+}
+
+function visualBounds(link: HTMLElement): DOMRect {
+  const fallback = link.getBoundingClientRect();
+  try {
+    const range = document.createRange();
+    range.selectNodeContents(link);
+    const bounds = range.getBoundingClientRect();
+    if (bounds.width > 1 && bounds.height > 0) return bounds;
+  } catch {
+    // Algunos nodos legacy no admiten Range; el rect del enlace es suficiente.
+  }
+  return fallback;
+}
+
+function scrollElementFor(root: HTMLElement, host: HTMLElement): HTMLElement | null {
+  return root.closest<HTMLElement>(`${CATEGORY_SELECTORS.mobileScroller},${CATEGORY_SELECTORS.scroller}`) ??
+    (host.scrollWidth > host.clientWidth + 1 ? host : null);
+}
+
+function sameTarget(link: HTMLAnchorElement, target: Element | null): boolean {
+  const resolved = anchorForHref(link.getAttribute('href'));
+  return resolved === target || Boolean(resolved && target && resolved.id && target.id && resolved.id === target.id);
+}
+
+function visibleRoots(target: Element | null): HTMLElement[] {
+  const roots = new Set<HTMLElement>();
+  for (const link of categoryLinks()) {
+    if (!sameTarget(link, target) || !visible(link)) continue;
+    const root = link.closest<HTMLElement>('.nav-tabsTopShop,.nav-tabs');
+    if (root) roots.add(root);
+  }
+  return Array.from(roots);
+}
+
+function render(entry: IndicatorEntry): void {
+  const stretch = Math.abs(entry.state.warp);
+  let left = entry.state.x;
+  const width = entry.state.width + stretch;
+  left -= stretch * (entry.state.warp >= 0 ? INDICATOR.trailingShare : INDICATOR.leadingShare);
+  if (!entry.visible) {
+    entry.line.style.opacity = '1';
+    entry.visible = true;
+  }
+  entry.line.style.transform = `translate3d(${left}px,0,0) scaleX(${Math.max(1, width)})`;
+}
+
+function stopSettle(entry: IndicatorEntry): void {
+  entry.settle?.cancel();
+  entry.settle = null;
+}
+
+function stopWarp(entry: IndicatorEntry): void {
+  stopSettle(entry);
+  entry.warpTween?.cancel();
+  entry.warpTween = null;
+}
+
+function stopMove(entry: IndicatorEntry): void {
+  if (entry.moveFrame) cancelAnimationFrame(entry.moveFrame);
+  entry.moveFrame = 0;
+  entry.lastMoveTime = 0;
+}
+
+function stopMotion(entry: IndicatorEntry): void {
+  stopMove(entry);
+  stopWarp(entry);
+}
+
+function unbindScroll(entry: IndicatorEntry): void {
+  if (entry.scrollElement && entry.onScroll) entry.scrollElement.removeEventListener('scroll', entry.onScroll);
+  entry.scrollElement = null;
+  entry.onScroll = null;
+  stopSettle(entry);
+}
+
+function destroyEntry(entry: IndicatorEntry): void {
+  unbindScroll(entry);
+  stopMotion(entry);
+  entry.line.remove();
+}
+
+function maxWarp(width: number): number {
+  return Math.min(INDICATOR.maxWarp, Math.max(INDICATOR.minWarp, width * INDICATOR.warpWidthRatio));
+}
+
+function tweenWarp(entry: IndicatorEntry, target: number): void {
+  entry.warpTween?.cancel();
+  const from = entry.state.warp;
+  entry.warpTween = motion.engine.tween(INDICATOR.scrollWarpDuration, 'quart.out', (progress) => {
+    entry.state.warp = from + (target - from) * progress;
+    render(entry);
+  }, { onComplete: () => { entry.warpTween = null; } });
+}
+
+function pulseScroll(entry: IndicatorEntry, velocity: number): void {
+  if (queries.reducedMotion.matches || entry.moveFrame) return;
+  const amount = maxWarp(entry.targetWidth || entry.state.width) * clamp(Math.abs(velocity) / INDICATOR.scrollVelocityScale, 0, 1);
+  if (amount < 0.2) return;
+  entry.direction = velocity > 0 ? 1 : -1;
+  tweenWarp(entry, entry.direction * amount);
+  stopSettle(entry);
+  entry.settle = motion.engine.delay(INDICATOR.scrollSettleDelay, () => {
+    entry.settle = null;
+    tweenWarp(entry, 0);
+  });
+}
+
+function bindScroll(entry: IndicatorEntry): void {
+  const element = scrollElementFor(entry.root, entry.host);
+  if (element === entry.scrollElement) return;
+  unbindScroll(entry);
+  entry.scrollElement = element;
+  if (!element) return;
+
+  entry.scrollX = element.scrollLeft;
+  entry.scrollTime = now();
+  entry.onScroll = () => {
+    const time = now();
+    const x = element.scrollLeft;
+    const deltaTime = (time - entry.scrollTime) / 1000;
+    if (deltaTime > INDICATOR.scrollSampleMin && deltaTime < INDICATOR.scrollSampleMax) {
+      pulseScroll(entry, -(x - entry.scrollX) / deltaTime);
+    }
+    entry.scrollX = x;
+    entry.scrollTime = time;
+  };
+  element.addEventListener('scroll', entry.onScroll, { passive: true });
+}
+
+function entryFor(root: HTMLElement): IndicatorEntry {
+  const host = mountFor(root);
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const current = entries[index];
+    if (!current || current.root !== root) continue;
+    if (current.host === host) {
+      bindScroll(current);
+      return current;
+    }
+    destroyEntry(current);
+    entries.splice(index, 1);
+  }
+
+  const line = cloneTemplate<HTMLElement>('category-indicator');
+  host.classList.add('sc-category-motion-root');
+  host.append(line);
+  if (host.matches(CATEGORY_SELECTORS.mobileScroller)) line.style.setProperty('bottom', '0', 'important');
+
+  const entry: IndicatorEntry = {
+    root,
+    host,
+    line,
+    state: { x: 0, width: 1, warp: 0 },
+    targetX: 0,
+    targetWidth: 1,
+    direction: 1,
+    initialized: false,
+    visible: false,
+    moveFrame: 0,
+    lastMoveTime: 0,
+    velocityX: 0,
+    velocityWidth: 0,
+    scrollElement: null,
+    onScroll: null,
+    scrollX: 0,
+    scrollTime: 0,
+    warpTween: null,
+    settle: null,
+  };
+  entries.push(entry);
+  bindScroll(entry);
+  return entry;
+}
+
+function snap(entry: IndicatorEntry, x: number, width: number): void {
+  stopMotion(entry);
+  entry.targetX = x;
+  entry.targetWidth = width;
+  entry.state.x = x;
+  entry.state.width = width;
+  entry.state.warp = 0;
+  entry.velocityX = 0;
+  entry.velocityWidth = 0;
+  entry.initialized = true;
+  render(entry);
+}
+
+function springAxis(position: number, velocity: number, target: number, deltaTime: number): [number, number] {
+  const omega = (Math.PI * 2) / INDICATOR.springResponse;
+  const acceleration = -2 * INDICATOR.springDamping * omega * velocity - omega * omega * (position - target);
+  velocity += acceleration * deltaTime;
+  position += velocity * deltaTime;
+  return [position, velocity];
+}
+
+function settled(entry: IndicatorEntry): boolean {
+  return Math.abs(entry.state.x - entry.targetX) < INDICATOR.springPositionEpsilon &&
+    Math.abs(entry.state.width - entry.targetWidth) < INDICATOR.springPositionEpsilon &&
+    Math.abs(entry.velocityX) < INDICATOR.springVelocityEpsilon &&
+    Math.abs(entry.velocityWidth) < INDICATOR.springVelocityEpsilon;
+}
+
+function step(entry: IndicatorEntry, timestamp: number): void {
+  if (!entry.moveFrame) return;
+  const deltaTime = entry.lastMoveTime
+    ? Math.min(INDICATOR.springMaxDt, Math.max(0.001, (timestamp - entry.lastMoveTime) / 1000))
+    : 1 / 60;
+  entry.lastMoveTime = timestamp;
+
+  [entry.state.x, entry.velocityX] = springAxis(entry.state.x, entry.velocityX, entry.targetX, deltaTime);
+  [entry.state.width, entry.velocityWidth] = springAxis(entry.state.width, entry.velocityWidth, entry.targetWidth, deltaTime);
+  entry.state.width = Math.max(1, entry.state.width);
+
+  const centerVelocity = entry.velocityX + entry.velocityWidth * 0.5;
+  const warpTarget = clamp(centerVelocity / 900, -1, 1) * maxWarp(entry.state.width);
+  const blend = Math.min(1, deltaTime * INDICATOR.springWarpResponse);
+  entry.state.warp += (warpTarget - entry.state.warp) * blend;
+  render(entry);
+
+  if (settled(entry)) {
+    entry.state.x = entry.targetX;
+    entry.state.width = entry.targetWidth;
+    entry.state.warp = 0;
+    entry.velocityX = 0;
+    entry.velocityWidth = 0;
+    entry.moveFrame = 0;
+    entry.lastMoveTime = 0;
+    render(entry);
+    return;
+  }
+  entry.moveFrame = requestAnimationFrame((next) => step(entry, next));
+}
+
+function animate(entry: IndicatorEntry, x: number, width: number): void {
+  if (queries.reducedMotion.matches) {
+    snap(entry, x, width);
+    return;
+  }
+  stopWarp(entry);
+  const from = entry.state.x + entry.state.width / 2;
+  const to = x + width / 2;
+  entry.targetX = x;
+  entry.targetWidth = width;
+  entry.direction = to >= from ? 1 : -1;
+  entry.initialized = true;
+  if (!entry.moveFrame) {
+    entry.lastMoveTime = 0;
+    entry.moveFrame = requestAnimationFrame((timestamp) => step(entry, timestamp));
+  }
+}
+
+export function moveCategoryIndicator(target: Element | null, animateMotion: boolean): void {
+  for (const root of visibleRoots(target)) {
+    const link = categoryLinks(root).find((candidate) => sameTarget(candidate, target) && visible(candidate));
+    if (!link) continue;
+
+    const entry = entryFor(root);
+    const linkRect = visualBounds(link);
+    let x: number;
+    let width: number;
+
+    if (entry.host.matches(CATEGORY_SELECTORS.mobileScroller)) {
+      const hostRect = entry.host.getBoundingClientRect();
+      x = entry.host.scrollLeft + (linkRect.left - hostRect.left);
+      width = linkRect.width;
+    } else {
+      const rootRect = root.getBoundingClientRect();
+      const measuredScale = root.offsetWidth && rootRect.width ? rootRect.width / root.offsetWidth : 1;
+      const scale = Number.isFinite(measuredScale) && measuredScale > 0 ? measuredScale : 1;
+      x = (linkRect.left - rootRect.left) / scale + root.scrollLeft;
+      width = linkRect.width / scale;
+    }
+
+    const inset = Math.min(INDICATOR.textInsetMax, Math.max(0, width * INDICATOR.textInsetRatio));
+    x += inset;
+    width = Math.max(INDICATOR.minWidth, width - inset * 2);
+    if (entry.host.matches(CATEGORY_SELECTORS.mobileScroller)) {
+      const right = floorPhysical(x + width) - physicalPixel();
+      width = Math.max(INDICATOR.minWidth, right - x);
+    }
+
+    if (!entry.initialized || !animateMotion || queries.reducedMotion.matches) snap(entry, x, width);
+    else animate(entry, x, width);
+  }
+  dirty = false;
+}
+
+export function markCategoryIndicatorDirty(): void {
+  dirty = true;
+}
+
+export function isCategoryIndicatorDirty(): boolean {
+  return dirty;
+}
+
+export function pauseCategoryIndicator(): void {
+  entries.forEach((entry) => {
+    unbindScroll(entry);
+    stopMotion(entry);
+  });
+}
+
+export function resumeCategoryIndicator(): void {
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index];
+    if (!entry) continue;
+    if (!document.documentElement.contains(entry.root) || !document.documentElement.contains(entry.host)) {
+      destroyEntry(entry);
+      entries.splice(index, 1);
+      continue;
+    }
+    bindScroll(entry);
+    render(entry);
+  }
+}

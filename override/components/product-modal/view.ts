@@ -1,17 +1,80 @@
-/* Construye la vista del modal desde la card seleccionada. */
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,T=SC&&SC.templates;if(!SC||!U||!C||!T||SC.__productModalViewBooted)return;SC.__productModalViewBooted=true;
-var each=U.each,text=U.text,S=C.selectors,MS=SC.productModalSelectors=SC.productModalSelectors||{dialog:'.sc-product-modal__dialog'},CART_URL='https://www.sushiclub.com.ar/shop_init.php';
-function required<T extends Element>(root:Element,selector:string):T{var node=root.querySelector<T>(selector);if(!node)throw new Error('[SushiClub modal] Falta '+selector);return node;}
-function build(link:HTMLElement):HTMLElement|null{
-  var card=link.closest<HTMLElement>(S.productCard);if(!card)return null;var cardApi=SC.productCard||{},contentApi=SC.productCardContent||{};if(contentApi.installFlavorRow)contentApi.installFlavorRow(link);
-  var name=text(card.querySelector(S.productTitle)),description=text(card.querySelector(S.productDescription)),src=cardApi.imageSource?cardApi.imageSource(card):'',titleId='sc-product-modal-title-'+Date.now(),overlay=T.clone('product-modal') as HTMLElement;
-  var dialog=required<HTMLElement>(overlay,MS.dialog),image=required<HTMLImageElement>(overlay,'.sc-product-modal__image'),title=required<HTMLElement>(overlay,'.sc-product-modal__title'),copy=required<HTMLElement>(overlay,'.sc-product-modal__description'),priceSlot=required<HTMLElement>(overlay,'.sc-product-modal__price-slot'),cta=required<HTMLAnchorElement>(overlay,'.sc-product-modal__cart-button');
-  title.id=titleId;dialog.setAttribute('aria-labelledby',titleId);if(src){image.src=String(src);image.alt=name;}else image.remove();
-  var labels:string[]=cardApi.traitLabels?cardApi.traitLabels(card):[],source=card.querySelector<HTMLElement>(S.productTitle+' '+S.productTraits)||card,traits:HTMLElement|null=contentApi.buildTraitRow?contentApi.buildTraitRow('sc-product-modal__traits sabores',labels,source):null;
-  title.appendChild(document.createTextNode(name));if(description)copy.textContent=description;else copy.remove();
-  var sourcePrice=card.querySelector<HTMLElement>('.priceRow');if(sourcePrice){var price=sourcePrice.cloneNode(true) as HTMLElement;price.className='sc-product-modal__price-row';each(price.querySelectorAll('.sumar,input,button,.sc-product-price-traits'),function(node:Element):void{if(node.parentNode)node.parentNode.removeChild(node);});var secondary=price.querySelector<HTMLElement>('.sc-product-secondary-meta');price.classList.toggle('sc-price-row-has-offer',!!price.querySelector('.ofertaPrice'));if(secondary){secondary.classList.add('sc-product-modal__secondary-meta');if(traits)secondary.appendChild(traits);}else if(traits)price.appendChild(traits);priceSlot.replaceWith(price);}else{priceSlot.remove();if(traits)title.insertBefore(traits,title.firstChild);}cta.href=CART_URL;return overlay;
+import { selectors } from '../../core/variables.js';
+import { text } from '../../core/utils.js';
+import { buildTraitRow, installFlavorRow } from '../product-card/content.js';
+import { imageSource, traitLabels } from '../product-card/data.js';
+import { cloneTemplate } from '../../templates/registry.js';
+
+export const PRODUCT_MODAL_SELECTORS = {
+  dialog: '.sc-product-modal__dialog',
+  close: '.sc-product-modal__close',
+} as const;
+
+const CART_URL = 'https://www.sushiclub.com.ar/shop_init.php';
+let titleSequence = 0;
+
+function required<T extends Element>(root: Element, selector: string): T {
+  const node = root.querySelector<T>(selector);
+  if (!node) throw new Error(`[SushiClub modal] Falta ${selector}`);
+  return node;
 }
-SC.productModalView={build:build};
-})();
+
+export function buildProductModal(link: HTMLElement): HTMLElement | null {
+  const card = link.closest<HTMLElement>(selectors.productCard);
+  if (!card) return null;
+
+  installFlavorRow(link);
+
+  const name = text(card.querySelector(selectors.productTitle));
+  const description = text(card.querySelector(selectors.productDescription));
+  const source = imageSource(card);
+  const titleId = `sc-product-modal-title-${++titleSequence}`;
+  const overlay = cloneTemplate<HTMLElement>('product-modal');
+
+  const dialog = required<HTMLElement>(overlay, PRODUCT_MODAL_SELECTORS.dialog);
+  const image = required<HTMLImageElement>(overlay, '.sc-product-modal__image');
+  const title = required<HTMLElement>(overlay, '.sc-product-modal__title');
+  const copy = required<HTMLElement>(overlay, '.sc-product-modal__description');
+  const priceSlot = required<HTMLElement>(overlay, '.sc-product-modal__price-slot');
+  const cta = required<HTMLAnchorElement>(overlay, '.sc-product-modal__cart-button');
+
+  title.id = titleId;
+  dialog.setAttribute('aria-labelledby', titleId);
+
+  if (source) {
+    image.src = source;
+    image.alt = name;
+  } else {
+    image.remove();
+  }
+
+  const labels = traitLabels(card);
+  const traitSource = card.querySelector<HTMLElement>(`${selectors.productTitle} ${selectors.productTraits}`) ?? card;
+  const traits = buildTraitRow('sc-product-modal__traits sabores', labels, traitSource);
+
+  title.append(document.createTextNode(name));
+  if (description) copy.textContent = description;
+  else copy.remove();
+
+  const sourcePrice = card.querySelector<HTMLElement>('.priceRow');
+  if (sourcePrice) {
+    const price = sourcePrice.cloneNode(true) as HTMLElement;
+    price.className = 'sc-product-modal__price-row';
+    for (const node of price.querySelectorAll('.sumar,input,button,.sc-product-price-traits')) node.remove();
+
+    const secondary = price.querySelector<HTMLElement>('.sc-product-secondary-meta');
+    price.classList.toggle('sc-price-row-has-offer', Boolean(price.querySelector('.ofertaPrice')));
+    if (secondary) {
+      secondary.classList.add('sc-product-modal__secondary-meta');
+      if (traits) secondary.append(traits);
+    } else if (traits) {
+      price.append(traits);
+    }
+    priceSlot.replaceWith(price);
+  } else {
+    priceSlot.remove();
+    if (traits) title.prepend(traits);
+  }
+
+  cta.href = CART_URL;
+  return overlay;
+}

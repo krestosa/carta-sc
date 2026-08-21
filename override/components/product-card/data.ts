@@ -1,22 +1,126 @@
-/* Helpers de extracción y normalización de datos de producto. */
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors;if(!SC||!U||!C||SC.__productCardDataBooted)return;SC.__productCardDataBooted=true;
-var text=U.text;
-var IGNORED_TRAITS=['sin tacc','sin gluten','gluten free'];
-var TRAIT_LABEL_PREFIX='Características: ';
-function cleanPriceText(node:Element|null):string{return text(node).replace(/\s+/g,' ').trim();}
-function ignoredTrait(label:string):boolean{var key=(label||'').trim().toLocaleLowerCase('es-AR');return IGNORED_TRAITS.indexOf(key)>=0;}
-function traitLabels(card:Element):string[]{var labels:string[]=[];card.querySelectorAll(S.productTraits+' img').forEach(function(img:Element){var value=(img.getAttribute('data-original-title')||img.getAttribute('title')||img.getAttribute('alt')||'').trim();if(value&&!ignoredTrait(value)&&labels.indexOf(value)<0)labels.push(value);});return labels;}
-function imageSource(card:Element):string{var image=card.querySelector<HTMLImageElement>('img.productoImageShop');return image?(image.currentSrc||image.src||image.getAttribute('data-src')||''):'';}
-function ensureId(node:Element|null,id:string):string{if(!node)return'';if(!node.id)node.id=id;return node.id;}
-function createTraitIcon(label:string):SVGSVGElement|null{var key=(label||'').toLocaleLowerCase('es-AR'),name=key==='algo picante'?'poco-picante':key==='poco picante'?'picante':key==='muy picante'?'muy-picante':key==='vegetariano'?'vegetariano':'';if(!name)return null;var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','sc-trait-icon sc-trait-icon--'+name);svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');svg.setAttribute('viewBox','0 0 24 24');var use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href','#sc-trait-'+name);svg.appendChild(use);return svg;}
-function appendTraitVisual(target:HTMLElement,source:ParentNode,label:string):Element|null{var icon=createTraitIcon(label);if(icon){target.appendChild(icon);return icon;}var legacy=Array.from(source.querySelectorAll<HTMLImageElement>('img')).find(function(img){return text(img)||((img.getAttribute('data-original-title')||img.getAttribute('title')||img.getAttribute('alt')||'').trim()===label);});if(!legacy)return null;var clone=legacy.cloneNode(true) as HTMLImageElement;clone.removeAttribute('id');target.appendChild(clone);return clone;}
-function buildTraitGroup(card:HTMLElement,className?:string):HTMLElement|null;
-function buildTraitGroup(className:string,labels:string[],source:ParentNode):HTMLSpanElement;
-function buildTraitGroup(cardOrClass:HTMLElement|string,classNameOrLabels?:string|string[],sourceArg?:ParentNode):HTMLElement|null{
-  if(typeof cardOrClass==='string'){var row=document.createElement('span'),labels=Array.isArray(classNameOrLabels)?classNameOrLabels:[],source=sourceArg||document;row.className=cardOrClass;labels.forEach(function(label:string){appendTraitVisual(row,source,label);});if(labels.length){row.setAttribute('role','img');row.setAttribute('aria-label',TRAIT_LABEL_PREFIX+labels.join(', '));}else row.setAttribute('aria-hidden','true');return row;}
-  var card=cardOrClass,legacyLabels=traitLabels(card);if(!legacyLabels.length)return null;var legacySource=card.querySelector<HTMLElement>(S.productTraits);if(!legacySource)return null;var sourceNode:HTMLElement=legacySource;var group=document.createElement('span');group.className=typeof classNameOrLabels==='string'&&classNameOrLabels?classNameOrLabels:S.productTraits.slice(1);group.setAttribute('aria-label',TRAIT_LABEL_PREFIX+legacyLabels.join(', '));legacyLabels.forEach(function(label:string){appendTraitVisual(group,sourceNode,label);});return group;
+import { selectors } from '../../core/variables.js';
+import { text } from '../../core/utils.js';
+
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+const IGNORED_TRAITS = new Set(['sin tacc', 'sin gluten', 'gluten free']);
+
+export const TRAITS_LABEL_PREFIX = 'Características: ';
+
+export const cleanPriceText = (node: Element | null): string => text(node).replace(/\s+/g, ' ').trim();
+
+export const ignoredTrait = (label: string): boolean =>
+  IGNORED_TRAITS.has(label.trim().toLocaleLowerCase('es-AR'));
+
+export const traitLabels = (card: Element): string[] => {
+  const labels = new Set<string>();
+  card.querySelectorAll(`${selectors.productTraits} img`).forEach((image) => {
+    const label = (
+      image.getAttribute('data-original-title')
+      ?? image.getAttribute('title')
+      ?? image.getAttribute('alt')
+      ?? ''
+    ).trim();
+    if (label && !ignoredTrait(label)) labels.add(label);
+  });
+  return [...labels];
+};
+
+export const imageSource = (card: Element): string => {
+  const image = card.querySelector<HTMLImageElement>('img.productoImageShop');
+  return image ? image.currentSrc || image.src || image.getAttribute('data-src') || '' : '';
+};
+
+export const ensureId = (node: Element | null, id: string): string => {
+  if (!node) return '';
+  node.id ||= id;
+  return node.id;
+};
+
+const traitIconName = (label: string): string => {
+  switch (label.toLocaleLowerCase('es-AR')) {
+    case 'algo picante': return 'poco-picante';
+    case 'poco picante': return 'picante';
+    case 'muy picante': return 'muy-picante';
+    case 'vegetariano': return 'vegetariano';
+    default: return '';
+  }
+};
+
+export const createTraitIcon = (label: string): SVGSVGElement | null => {
+  const name = traitIconName(label);
+  if (!name) return null;
+
+  const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+  svg.setAttribute('class', `sc-trait-icon sc-trait-icon--${name}`);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.setAttribute('viewBox', '0 0 24 24');
+
+  const use = document.createElementNS(SVG_NAMESPACE, 'use');
+  use.setAttribute('href', `#sc-trait-${name}`);
+  svg.appendChild(use);
+  return svg;
+};
+
+export const appendTraitVisual = (
+  target: HTMLElement,
+  source: ParentNode,
+  label: string,
+): Element | null => {
+  const icon = createTraitIcon(label);
+  if (icon) {
+    target.appendChild(icon);
+    return icon;
+  }
+
+  const legacyImage = [...source.querySelectorAll<HTMLImageElement>('img')].find((image) => {
+    const imageLabel = (
+      image.getAttribute('data-original-title')
+      ?? image.getAttribute('title')
+      ?? image.getAttribute('alt')
+      ?? ''
+    ).trim();
+    return text(image) === label || imageLabel === label;
+  });
+  if (!legacyImage) return null;
+
+  const clone = legacyImage.cloneNode(true) as HTMLImageElement;
+  clone.removeAttribute('id');
+  target.appendChild(clone);
+  return clone;
+};
+
+export function buildTraitGroup(card: HTMLElement, className?: string): HTMLElement | null;
+export function buildTraitGroup(className: string, labels: string[], source: ParentNode): HTMLSpanElement;
+export function buildTraitGroup(
+  cardOrClassName: HTMLElement | string,
+  classNameOrLabels?: string | string[],
+  sourceArg?: ParentNode,
+): HTMLElement | null {
+  if (typeof cardOrClassName === 'string') {
+    const row = document.createElement('span');
+    const labels = Array.isArray(classNameOrLabels) ? classNameOrLabels : [];
+    row.className = cardOrClassName;
+    labels.forEach((label) => appendTraitVisual(row, sourceArg ?? document, label));
+    if (labels.length) {
+      row.setAttribute('role', 'img');
+      row.setAttribute('aria-label', `${TRAITS_LABEL_PREFIX}${labels.join(', ')}`);
+    } else {
+      row.setAttribute('aria-hidden', 'true');
+    }
+    return row;
+  }
+
+  const labels = traitLabels(cardOrClassName);
+  if (!labels.length) return null;
+  const source = cardOrClassName.querySelector<HTMLElement>(selectors.productTraits);
+  if (!source) return null;
+
+  const group = document.createElement('span');
+  group.className = typeof classNameOrLabels === 'string' && classNameOrLabels
+    ? classNameOrLabels
+    : selectors.productTraits.slice(1);
+  group.setAttribute('aria-label', `${TRAITS_LABEL_PREFIX}${labels.join(', ')}`);
+  labels.forEach((label) => appendTraitVisual(group, source, label));
+  return group;
 }
-SC.productCardData={cleanPriceText:cleanPriceText,ignoredTrait:ignoredTrait,traitLabels:traitLabels,imageSource:imageSource,ensureId:ensureId,createTraitIcon:createTraitIcon,appendTraitVisual:appendTraitVisual,buildTraitGroup:buildTraitGroup,traitsLabelPrefix:TRAIT_LABEL_PREFIX};
-})();

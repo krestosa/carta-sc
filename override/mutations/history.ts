@@ -1,32 +1,53 @@
-(function(){
-'use strict';
-/* Mantiene el historial del navegador bajo control del sitio y limpia hashes internos
-   de categorías después de navegar, sin persistir estado adicional del catálogo. */
-var SC=window.SCOverride;if(!SC||SC.__historyMutationBooted)return;SC.__historyMutationBooted=true;
-SC.mutations=SC.mutations||{};
+export function restoreNativeHistory(): void {
+  try {
+    const prototype = window.History?.prototype;
+    if (!prototype || typeof prototype.replaceState !== 'function') return;
 
-/* Restaura replaceState nativo si código heredado dejó una implementación propia. */
-function restoreNativeHistory():void{
-  try{
-    var proto=window.History&&window.History.prototype;
-    if(!proto||typeof proto.replaceState!=='function')return;
-    if(Object.prototype.hasOwnProperty.call(window.history,'replaceState')){
-      try{Reflect.deleteProperty(window.history,'replaceState');}catch(_){}
+    if (Object.prototype.hasOwnProperty.call(window.history, 'replaceState')) {
+      try {
+        Reflect.deleteProperty(window.history, 'replaceState');
+      } catch {
+        // El objeto History puede estar sellado por el navegador o una extensión.
+      }
     }
-    if(window.history.replaceState!==proto.replaceState){
-      try{Object.defineProperty(window.history,'replaceState',{configurable:true,writable:true,value:proto.replaceState.bind(window.history)});}catch(_){}
+
+    if (window.history.replaceState !== prototype.replaceState) {
+      try {
+        Object.defineProperty(window.history, 'replaceState', {
+          configurable: true,
+          writable: true,
+          value: prototype.replaceState.bind(window.history),
+        });
+      } catch {
+        // Conservar la implementación actual si la propiedad no es redefinible.
+      }
     }
-  }catch(_){}
+  } catch {
+    // La restauración es defensiva; nunca debe bloquear el arranque del catálogo.
+  }
 }
 
-/* Elimina solo hashes técnicos de anchors y conserva pathname y query actuales. */
-function cleanCategoryHash():void{
-  if(!/^#anchor/i.test(location.hash||''))return;
-  try{history.replaceState(history.state,document.title,location.pathname+location.search);}catch(_){}
+export function cleanCategoryHash(): void {
+  if (!/^#anchor/i.test(location.hash)) return;
+  try {
+    history.replaceState(history.state, document.title, location.pathname + location.search);
+  } catch {
+    // La navegación sigue siendo válida aunque el navegador rechace replaceState.
+  }
 }
-SC.mutations.restoreNativeHistory=restoreNativeHistory;
-SC.mutations.cleanCategoryHash=cleanCategoryHash;
-restoreNativeHistory();
-var finish=function():void{restoreNativeHistory();cleanCategoryHash();};
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',finish,{once:true});else finish();
-})();
+
+export function initializeHistoryNormalization(): () => void {
+  restoreNativeHistory();
+  const finish = (): void => {
+    restoreNativeHistory();
+    cleanCategoryHash();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', finish, { once: true });
+    return () => document.removeEventListener('DOMContentLoaded', finish);
+  }
+
+  finish();
+  return () => undefined;
+}

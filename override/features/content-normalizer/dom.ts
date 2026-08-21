@@ -1,40 +1,106 @@
-(function(){
-'use strict';
-var SC=window.SCOverride,CFG=SC&&SC.config,S=CFG&&CFG.selectors,C=SC&&SC.contentNormalizer,R=C&&C.rules,LOCALE:string=C&&C.locale||'es-AR';
-if(!SC||!C||!R||SC.__contentNormalizerDomBooted)return;SC.__contentNormalizerDomBooted=true;
+import { selectors } from '../../core/variables.js';
+import { applyEditorialCase, cleanTitlePeriods, CONTENT_LOCALE, type EditorialState } from './rules.js';
 
-type EditorialOptions={skip?:string;removePeriods?:boolean};
-type EditorialState={sentenceStart:boolean;words:number};
-
-/* Hosts que admiten normalización editorial. */
-var HOST_SELECTOR=S.sectionTitle+','+S.sectionSubtitle+','+S.productCard+' '+S.productTitle+','+S.productCard+' '+S.productDescription;
-
-/* Recorre solo nodos de texto útiles. */
-function textNodes(root:Element,skipSelector?:string):Text[]{
-  var nodes:Text[]=[],walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(node:Node):number{var parent=node.parentElement;if(!parent||parent.closest('script,style')||(skipSelector&&parent.closest(skipSelector)))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}}),node:Node|null;
-  while((node=walker.nextNode()))if(node instanceof Text)nodes.push(node);return nodes;
+export interface EditorialOptions {
+  skip?: string;
+  removePeriods?: boolean;
 }
 
-/* Títulos de sección en mayúsculas y texto editorial en sentence case. */
-function normalizeUpper(root:Element):void{textNodes(root).forEach(function(node:Text):void{var current=node.nodeValue||'',next=R.titlePeriodClean(current).toLocaleUpperCase(LOCALE);if(next!==node.nodeValue)node.nodeValue=next;});}
-function normalizeEditorial(root:Element,options?:EditorialOptions):void{var state:EditorialState={sentenceStart:true,words:0};textNodes(root,options&&options.skip).forEach(function(node:Text):void{var current=node.nodeValue||'',next=R.smartCase(current,state,!!(options&&options.removePeriods));if(next!==node.nodeValue)node.nodeValue=next;});}
+export const CONTENT_HOST_SELECTOR = [
+  selectors.sectionTitle,
+  selectors.sectionSubtitle,
+  `${selectors.productCard} ${selectors.productTitle}`,
+  `${selectors.productCard} ${selectors.productDescription}`,
+].join(',');
 
-/* Elimina formato inline que rompe la tipografía de descripciones. */
-function unwrapTypography(description:Element):void{
-  description.querySelectorAll<HTMLElement>('b,strong').forEach(function(node:HTMLElement):void{var parent=node.parentNode;if(!parent)return;while(node.firstChild)parent.insertBefore(node.firstChild,node);parent.removeChild(node);});
-  description.querySelectorAll<HTMLElement>('[style]').forEach(function(node:HTMLElement):void{['font-family','font-size','font-weight','font-style','text-transform','letter-spacing','line-height'].forEach(function(prop:string):void{node.style.removeProperty(prop);});var style=node.getAttribute('style');if(!style||!style.trim())node.removeAttribute('style');});
+const SKIPPED_TEXT_ANCESTORS = 'script,style';
+const TYPOGRAPHY_PROPERTIES = [
+  'font-family',
+  'font-size',
+  'font-weight',
+  'font-style',
+  'text-transform',
+  'letter-spacing',
+  'line-height',
+] as const;
+
+function editableTextNodes(root: Element, skipSelector?: string): Text[] {
+  const nodes: Text[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent || parent.closest(SKIPPED_TEXT_ANCESTORS) || (skipSelector && parent.closest(skipSelector))) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node instanceof Text) nodes.push(node);
+  }
+  return nodes;
 }
 
-/* Aplica la regla correspondiente según el tipo de host. */
-function normalizeHost(host:Element|null|undefined):void{
-  if(!host||host.nodeType!==1||!document.documentElement.contains(host))return;
-  if(host.matches(S.sectionTitle+','+S.sectionSubtitle)){normalizeUpper(host);return;}
-  if(host.matches(S.productCard+' '+S.productTitle)){normalizeEditorial(host,{skip:S.productTraits,removePeriods:true});return;}
-  if(host.matches(S.productCard+' '+S.productDescription)){unwrapTypography(host);normalizeEditorial(host,{removePeriods:false});}
+function normalizeUppercase(root: Element): void {
+  for (const node of editableTextNodes(root)) {
+    const current = node.nodeValue ?? '';
+    const next = cleanTitlePeriods(current).toLocaleUpperCase(CONTENT_LOCALE);
+    if (next !== current) node.nodeValue = next;
+  }
 }
-function normalizeCatalogue():void{document.querySelectorAll<Element>(HOST_SELECTOR).forEach(normalizeHost);}
 
-/* Reúne hosts afectados por una mutación puntual. */
-function collect(node:Node|null|undefined,target:Set<Element>):void{var el=node&&node.nodeType===1?node as Element:node&&node.parentElement;if(!el)return;var host=el.closest&&el.closest(HOST_SELECTOR);if(host)target.add(host);if(el.querySelectorAll)el.querySelectorAll<Element>(HOST_SELECTOR).forEach(function(item:Element):void{target.add(item);});}
-C.dom={selector:HOST_SELECTOR,normalizeHost:normalizeHost,normalizeCatalogue:normalizeCatalogue,collect:collect};
-})();
+function normalizeEditorial(root: Element, options: EditorialOptions = {}): void {
+  const state: EditorialState = { sentenceStart: true, words: 0 };
+  for (const node of editableTextNodes(root, options.skip)) {
+    const current = node.nodeValue ?? '';
+    const next = applyEditorialCase(current, state, options.removePeriods ?? false);
+    if (next !== current) node.nodeValue = next;
+  }
+}
+
+function unwrapTypography(description: Element): void {
+  for (const node of description.querySelectorAll<HTMLElement>('b,strong')) {
+    const parent = node.parentNode;
+    if (!parent) continue;
+    while (node.firstChild) parent.insertBefore(node.firstChild, node);
+    node.remove();
+  }
+
+  for (const node of description.querySelectorAll<HTMLElement>('[style]')) {
+    for (const property of TYPOGRAPHY_PROPERTIES) node.style.removeProperty(property);
+    if (!node.getAttribute('style')?.trim()) node.removeAttribute('style');
+  }
+}
+
+export function normalizeContentHost(host: Element | null | undefined): void {
+  if (!host?.isConnected) return;
+
+  if (host.matches(`${selectors.sectionTitle},${selectors.sectionSubtitle}`)) {
+    normalizeUppercase(host);
+    return;
+  }
+
+  if (host.matches(`${selectors.productCard} ${selectors.productTitle}`)) {
+    normalizeEditorial(host, { skip: selectors.productTraits, removePeriods: true });
+    return;
+  }
+
+  if (host.matches(`${selectors.productCard} ${selectors.productDescription}`)) {
+    unwrapTypography(host);
+    normalizeEditorial(host);
+  }
+}
+
+export function normalizeCatalogueContent(): void {
+  document.querySelectorAll<Element>(CONTENT_HOST_SELECTOR).forEach(normalizeContentHost);
+}
+
+export function collectContentHosts(node: Node | null | undefined, target: Set<Element>): void {
+  const element = node instanceof Element ? node : node?.parentElement;
+  if (!element) return;
+
+  const containingHost = element.closest(CONTENT_HOST_SELECTOR);
+  if (containingHost) target.add(containingHost);
+  element.querySelectorAll<Element>(CONTENT_HOST_SELECTOR).forEach((host) => target.add(host));
+}

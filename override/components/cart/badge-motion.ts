@@ -1,18 +1,91 @@
-(function(){
-'use strict';
-/* Anima el badge del carrito cuando cambia su contenido. Agrupa mutaciones por frame
-   para evitar pulsos duplicados y usa solo opacidad cuando reduced motion está activo. */
-var SC=window.SCOverride,C=SC&&SC.config,M=C&&C.motion,CFG={badgeReducedDuration:.12,badgeReducedOpacity:.72,badgePulseUpDuration:.07,badgePulseDownDuration:.10,badgePulseScale:1.08};if(!SC||!C||SC.__cartBadgeMotionBooted)return;SC.__cartBadgeMotionBooted=true;
-var parts=SC.cartParts=SC.cartParts||{};
+import { motionTokens } from '../../core/variables.js';
+import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
-parts.setupBadges=function(engine:MotionEngine,reduce:boolean):()=>void{
-  var observers:MutationObserver[]=[],badges=Array.from(document.querySelectorAll<HTMLElement>('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget')),pending=new Set<HTMLElement>(),active=new WeakMap<HTMLElement,MotionHandle[]>(),raf=0;
-  function stop(badge:HTMLElement):void{var list=active.get(badge);if(list)list.forEach(function(handle){handle.cancel();});active.delete(badge);}
-  function clear(badge:HTMLElement):void{badge.style.removeProperty('transform');badge.style.removeProperty('opacity');badge.style.removeProperty('visibility');badge.style.removeProperty('will-change');}
-  function animate(badge:HTMLElement):void{stop(badge);if(reduce){badge.style.opacity=String(CFG.badgeReducedOpacity);var fade=engine.opacity(badge,1,{duration:CFG.badgeReducedDuration,ease:M.easings.out,clear:true,onComplete:function(){active.delete(badge);clear(badge);}});active.set(badge,[fade]);return;}var handles:MotionHandle[]=[],up=engine.transform(badge,{scale:CFG.badgePulseScale},{duration:CFG.badgePulseUpDuration,ease:M.easings.out,onComplete:function(){var down=engine.transform(badge,{scale:1},{duration:CFG.badgePulseDownDuration,ease:M.easings.out,clear:true,onComplete:function(){active.delete(badge);clear(badge);}});handles.push(down);}});handles.push(up);active.set(badge,handles);}
-  function flush():void{raf=0;var batch=Array.from(pending);pending.clear();batch.forEach(animate);}
-  function schedule(badge:HTMLElement):void{pending.add(badge);if(!raf)raf=requestAnimationFrame(flush);}
-  badges.forEach(function(badge){var observer=new MutationObserver(function(){schedule(badge);});observer.observe(badge,{childList:true,characterData:true,subtree:true});observers.push(observer);});
-  return function(){observers.forEach(function(observer){observer.disconnect();});if(raf)cancelAnimationFrame(raf);pending.clear();badges.forEach(function(badge){stop(badge);clear(badge);});};
-};
-})();
+const BADGE_MOTION = {
+  reducedDuration: 0.12,
+  reducedOpacity: 0.72,
+  pulseUpDuration: 0.07,
+  pulseDownDuration: 0.1,
+  pulseScale: 1.08,
+} as const;
+
+export function setupCartBadges(engine: MotionEngine, reduced: boolean): () => void {
+  const badges = Array.from(document.querySelectorAll<HTMLElement>('.shopMenuRightIcon .badge, .shopMenuRightIcon .badget'));
+  const observers: MutationObserver[] = [];
+  const pending = new Set<HTMLElement>();
+  const active = new WeakMap<HTMLElement, MotionHandle[]>();
+  let frame = 0;
+
+  const clear = (badge: HTMLElement): void => {
+    for (const property of ['transform', 'opacity', 'visibility', 'will-change']) badge.style.removeProperty(property);
+  };
+
+  const stop = (badge: HTMLElement): void => {
+    for (const handle of active.get(badge) ?? []) handle.cancel();
+    active.delete(badge);
+  };
+
+  const animate = (badge: HTMLElement): void => {
+    stop(badge);
+    if (reduced) {
+      badge.style.opacity = String(BADGE_MOTION.reducedOpacity);
+      const fade = engine.opacity(badge, 1, {
+        duration: BADGE_MOTION.reducedDuration,
+        ease: motionTokens.easings.out,
+        clear: true,
+        onComplete: () => {
+          active.delete(badge);
+          clear(badge);
+        },
+      });
+      active.set(badge, [fade]);
+      return;
+    }
+
+    const handles: MotionHandle[] = [];
+    const up = engine.transform(badge, { scale: BADGE_MOTION.pulseScale }, {
+      duration: BADGE_MOTION.pulseUpDuration,
+      ease: motionTokens.easings.out,
+      onComplete: () => {
+        const down = engine.transform(badge, { scale: 1 }, {
+          duration: BADGE_MOTION.pulseDownDuration,
+          ease: motionTokens.easings.out,
+          clear: true,
+          onComplete: () => {
+            active.delete(badge);
+            clear(badge);
+          },
+        });
+        handles.push(down);
+      },
+    });
+    handles.push(up);
+    active.set(badge, handles);
+  };
+
+  const flush = (): void => {
+    frame = 0;
+    const batch = Array.from(pending);
+    pending.clear();
+    batch.forEach(animate);
+  };
+
+  for (const badge of badges) {
+    const observer = new MutationObserver(() => {
+      pending.add(badge);
+      if (!frame) frame = requestAnimationFrame(flush);
+    });
+    observer.observe(badge, { childList: true, characterData: true, subtree: true });
+    observers.push(observer);
+  }
+
+  return () => {
+    observers.forEach((observer) => observer.disconnect());
+    if (frame) cancelAnimationFrame(frame);
+    pending.clear();
+    for (const badge of badges) {
+      stop(badge);
+      clear(badge);
+    }
+  };
+}

@@ -1,26 +1,50 @@
-/* Sincroniza la categoría activa entre enlaces, selector e indicador visual. Mantiene un
-   único estado compartido para evitar que desktop y mobile marquen destinos distintos. */
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,N=SC&&SC.categoryNav,I=N&&N.categoryIndicator;
-if(!SC||!U||!N||!I||SC.__categoryNavActiveStateBooted)return;SC.__categoryNavActiveStateBooted=true;
-var each=U.each,active:HTMLElement|null=null;
-function current():HTMLElement|null{return active;}
-/* Actualiza semántica, selector e indicador en una sola escritura lógica. */
-function setActive(target:HTMLElement|null,animate:boolean):void{
-  if(!target)return;var previous=active,changed=target!==previous;active=target;
-  (N.links() as HTMLAnchorElement[]).forEach(function(link:HTMLAnchorElement){
-    var item=link.closest<HTMLElement>('.nav-top-li'),on=N.anchor(link.getAttribute('href'))===target;
-    if(item)item.classList.remove('active');link.classList.toggle('sc-motion-current',on);
-    if(on)link.setAttribute('aria-current','location');else if(link.getAttribute('aria-current')==='location')link.removeAttribute('aria-current');
-  });
-  each(document.querySelectorAll('a.anchorLinkSub.sc-motion-current'),function(link:Element){link.classList.remove('sc-motion-current');link.removeAttribute('aria-current');});
-  each(document.querySelectorAll('select'),function(select:HTMLSelectElement){
-    if(!select.matches(N.selectors.select))return;
-    for(var i=0;i<select.options.length;i++){var option=select.options.item(i);if(option&&N.anchor(option.value)===target){if(select.value!==option.value)select.value=option.value;break;}}
-  });
-  I.move(target,animate&&changed);
-  if(changed&&previous&&N.requestCenterActive)N.requestCenterActive(previous,target);else if(N.scheduleRail)N.scheduleRail();
+import { categoryLinks, anchorForHref, CATEGORY_SELECTORS } from './core.js';
+import { moveCategoryIndicator } from './indicator.js';
+
+export interface CategoryActiveStateOptions {
+  readonly requestCenter: (previous: Element | null, target: Element | null) => void;
+  readonly scheduleRail: () => void;
 }
-N.categoryActive={current:current,set:setActive};N.setActive=setActive;
-})();
+
+export class CategoryActiveState {
+  readonly #options: CategoryActiveStateOptions;
+  #active: HTMLElement | null = null;
+
+  constructor(options: CategoryActiveStateOptions) {
+    this.#options = options;
+  }
+
+  get current(): HTMLElement | null {
+    return this.#active;
+  }
+
+  set(target: HTMLElement | null, animate: boolean): void {
+    if (!target) return;
+    const previous = this.#active;
+    const changed = target !== previous;
+    this.#active = target;
+
+    for (const link of categoryLinks()) {
+      link.closest<HTMLElement>('.nav-top-li')?.classList.remove('active');
+      const on = anchorForHref(link.getAttribute('href')) === target;
+      link.classList.toggle('sc-motion-current', on);
+      if (on) link.setAttribute('aria-current', 'location');
+      else if (link.getAttribute('aria-current') === 'location') link.removeAttribute('aria-current');
+    }
+
+    document.querySelectorAll<HTMLAnchorElement>('a.anchorLinkSub.sc-motion-current').forEach((link) => {
+      link.classList.remove('sc-motion-current');
+      link.removeAttribute('aria-current');
+    });
+
+    for (const select of document.querySelectorAll<HTMLSelectElement>('select')) {
+      if (!select.matches(CATEGORY_SELECTORS.select)) continue;
+      const option = Array.from(select.options).find((candidate) => anchorForHref(candidate.value) === target);
+      if (option && select.value !== option.value) select.value = option.value;
+    }
+
+    moveCategoryIndicator(target, animate && changed);
+    if (changed && previous) this.#options.requestCenter(previous, target);
+    else this.#options.scheduleRail();
+  }
+}

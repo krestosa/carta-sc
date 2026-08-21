@@ -1,54 +1,141 @@
-(function(){
-'use strict';
-var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;if(!SC||!CFG||!C||SC.__catalogThemePaletteBooted)return;SC.__catalogThemePaletteBooted=true;
+import { queries } from '../../core/variables.js';
 
-/* Estado de la transición y animaciones activas. */
-interface PaletteSnapshot{[key:string]:string;}
-interface PaletteContext{from:PaletteSnapshot;to:PaletteSnapshot;duration:number;token:number;fade:boolean;}
-type ActiveMotion={kill?:()=>void;cancel?:()=>void};
-var doc=document.documentElement,overlay:HTMLElement|null=null,active:ActiveMotion[]=[],token=0;
-function reduce():boolean{return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
-function capture():PaletteSnapshot{var s=getComputedStyle(doc);return{'--sc-color-ink':s.getPropertyValue('--sc-color-ink').trim(),'--sc-color-surface':s.getPropertyValue('--sc-color-surface').trim()};}
-
-/* Crea una capa fija para ocultar el cambio de paleta. */
-function ensureOverlay():HTMLElement|null{
-  if(overlay&&document.documentElement.contains(overlay))return overlay;
-  if(!document.body)return null;
-  overlay=document.createElement('div');overlay.setAttribute('aria-hidden','true');overlay.className='sc-theme-fade-layer';
-  var st=overlay.style;st.position='fixed';st.inset='0';st.zIndex='2147483646';st.pointerEvents='none';st.opacity='0';st.backgroundColor='transparent';st.transform='translateZ(0)';st.backfaceVisibility='hidden';st.contain='strict';
-  document.body.appendChild(overlay);return overlay;
+export interface PaletteSnapshot {
+  readonly [property: string]: string;
 }
 
-/* Cancela una transición anterior antes de iniciar otra. */
-function stopActive():void{var list=active;active=[];list.forEach(function(a:ActiveMotion){try{if(a.kill)a.kill();else if(a.cancel)a.cancel();}catch(_error){}});}
-function resetOverlay():void{if(!overlay)return;overlay.style.opacity='0';overlay.style.backgroundColor='transparent';overlay.style.removeProperty('will-change');}
-function kill():void{token++;stopActive();resetOverlay();}
-
-/* El fade usa Web Animations API; no depende de runtimes externos. */
-function waapiFade(node:HTMLElement,from:number,to:number,ms:number,easing:string,done:()=>void,id:number):boolean{
-  if(!node.animate)return false;
-  var a=node.animate([{opacity:from},{opacity:to}],{duration:ms,easing:easing,fill:'forwards'});active.push(a);
-  a.finished.then(function(){if(id!==token)return;node.style.opacity=String(to);done();},function(){});return true;
+export interface PaletteTransitionContext {
+  readonly from: PaletteSnapshot;
+  readonly to: PaletteSnapshot;
+  readonly duration: number;
+  readonly token: number;
+  readonly fade: boolean;
 }
-/* Cubre, aplica el tema y revela la nueva paleta. */
-function animate(_before:PaletteSnapshot,commit:()=>void,prepared?:((context:PaletteContext)=>void)):PaletteContext{
-  var from=capture(),node=ensureOverlay();kill();var id=token,duration=reduce()?.18:.56,half=duration*.5,context={from:from,to:from,duration:duration,token:id,fade:true};
-  if(!node){commit();return context;}
-  var layer=node;
-  layer.style.backgroundColor=from['--sc-color-surface']||'#000';layer.style.opacity='0';layer.style.willChange='opacity';
-  if(typeof prepared==='function')prepared(context);
-  function reveal():void{
-    if(id!==token)return;requestAnimationFrame(function(){
-      if(id!==token)return;
-      if(waapiFade(layer,1,0,half*1000,'cubic-bezier(.37,0,.63,1)',finish,id))return;
-      finish();
-    });
+
+type CancellableAnimation = Pick<Animation, 'cancel'>;
+
+const root = document.documentElement;
+let overlay: HTMLElement | null = null;
+let activeAnimations: CancellableAnimation[] = [];
+let transitionToken = 0;
+
+export function capturePalette(): PaletteSnapshot {
+  const style = getComputedStyle(root);
+  return {
+    '--sc-color-ink': style.getPropertyValue('--sc-color-ink').trim(),
+    '--sc-color-surface': style.getPropertyValue('--sc-color-surface').trim(),
+  };
+}
+
+function overlayElement(): HTMLElement | null {
+  if (overlay && document.documentElement.contains(overlay)) return overlay;
+  if (!document.body) return null;
+
+  overlay = document.createElement('div');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.className = 'sc-theme-fade-layer';
+  Object.assign(overlay.style, {
+    position: 'fixed',
+    inset: '0',
+    zIndex: '2147483646',
+    pointerEvents: 'none',
+    opacity: '0',
+    backgroundColor: 'transparent',
+    transform: 'translateZ(0)',
+    backfaceVisibility: 'hidden',
+    contain: 'strict',
+  });
+  document.body.append(overlay);
+  return overlay;
+}
+
+function stopAnimations(): void {
+  const animations = activeAnimations;
+  activeAnimations = [];
+  for (const animation of animations) {
+    try { animation.cancel(); } catch { /* La animación ya puede haber terminado. */ }
   }
-  function swap():void{if(id!==token)return;commit();reveal();}
-  function finish():void{if(id!==token)return;stopActive();resetOverlay();}
-  if(waapiFade(layer,0,1,half*1000,'cubic-bezier(.37,0,.63,1)',swap,id))return context;
-  commit();resetOverlay();return context;
 }
 
-C.themePalette={animate:animate,kill:kill};
-})();
+function resetOverlay(): void {
+  if (!overlay) return;
+  overlay.style.opacity = '0';
+  overlay.style.backgroundColor = 'transparent';
+  overlay.style.removeProperty('will-change');
+}
+
+export function cancelPaletteTransition(): void {
+  transitionToken += 1;
+  stopAnimations();
+  resetOverlay();
+}
+
+function fade(
+  node: HTMLElement,
+  from: number,
+  to: number,
+  durationMs: number,
+  done: () => void,
+  token: number,
+): boolean {
+  if (typeof node.animate !== 'function') return false;
+  const animation = node.animate([{ opacity: from }, { opacity: to }], {
+    duration: durationMs,
+    easing: 'cubic-bezier(.37,0,.63,1)',
+    fill: 'forwards',
+  });
+  activeAnimations.push(animation);
+  void animation.finished.then(() => {
+    if (token !== transitionToken) return;
+    node.style.opacity = String(to);
+    done();
+  }).catch(() => undefined);
+  return true;
+}
+
+export function transitionPalette(
+  commit: () => void,
+  prepared?: (context: PaletteTransitionContext) => void,
+): PaletteTransitionContext {
+  const from = capturePalette();
+  const node = overlayElement();
+  cancelPaletteTransition();
+  const token = transitionToken;
+  const duration = queries.reducedMotion.matches ? 0.18 : 0.56;
+  const half = duration / 2;
+  const context: PaletteTransitionContext = { from, to: from, duration, token, fade: true };
+
+  if (!node) {
+    commit();
+    return context;
+  }
+
+  node.style.backgroundColor = from['--sc-color-surface'] || '#000';
+  node.style.opacity = '0';
+  node.style.willChange = 'opacity';
+  prepared?.(context);
+
+  const finish = (): void => {
+    if (token !== transitionToken) return;
+    stopAnimations();
+    resetOverlay();
+  };
+  const reveal = (): void => {
+    if (token !== transitionToken) return;
+    requestAnimationFrame(() => {
+      if (token !== transitionToken) return;
+      if (!fade(node, 1, 0, half * 1000, finish, token)) finish();
+    });
+  };
+  const swap = (): void => {
+    if (token !== transitionToken) return;
+    commit();
+    reveal();
+  };
+
+  if (!fade(node, 0, 1, half * 1000, swap, token)) {
+    commit();
+    resetOverlay();
+  }
+  return context;
+}

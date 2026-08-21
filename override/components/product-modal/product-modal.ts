@@ -1,23 +1,183 @@
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,V=SC&&SC.productModalView,A=SC&&SC.productModalA11y,M=SC&&SC.productModalMotion;if(!SC||!U||!V||!A||!M||SC.__productModalBooted)return;SC.__productModalBooted=true;
-var ready=U.ready,activeModal:HTMLElement|null=null,activeLink:HTMLElement|null=null,closingModal:HTMLElement|null=null,closingLink:HTMLElement|null=null,previousFocus:HTMLElement|null=null,releaseBackground:(()=>void)|null=null,closingRelease:(()=>void)|null=null,closingRestore:HTMLElement|null=null,openRaf=0,initialized=false;
-function noop():void{}
-function focus(node:HTMLElement|null):void{if(!node||!document.documentElement.contains(node))return;try{node.focus({preventScroll:true});}catch(_){node.focus();}}
-function cancelOpenRaf():void{if(openRaf){cancelAnimationFrame(openRaf);openRaf=0;}}
-function buildModal(link:HTMLElement):HTMLElement|null{return V.build(link);}
-function finishClose(modal:HTMLElement,restoreFocus:boolean):void{if(closingModal!==modal)return;if(M.cancel)M.cancel(modal);if(modal.parentNode)modal.parentNode.removeChild(modal);document.body.classList.remove('sc-product-modal-open');var release=closingRelease||noop,restore=closingRestore;closingModal=null;closingLink=null;closingRelease=null;closingRestore=null;release();if(restoreFocus!==false)focus(restore);}
-function resumeClosingModal(link:HTMLElement):boolean{if(!closingModal||closingLink!==link)return false;var modal:HTMLElement=closingModal;closingModal=null;closingLink=null;activeModal=modal;activeLink=link;previousFocus=closingRestore||link;releaseBackground=closingRelease||noop;closingRestore=null;closingRelease=null;document.body.classList.add('sc-product-modal-open');modal.classList.add('is-visible');M.reopen(modal,link);focus(modal.querySelector<HTMLElement>('.sc-product-modal__close'));return true;}
-function closeModal(event?:Event):void{if(event)event.preventDefault();if(!activeModal)return;cancelOpenRaf();var modal=activeModal;closingRestore=previousFocus;closingRelease=releaseBackground||noop;closingLink=activeLink;activeModal=null;activeLink=null;closingModal=modal;previousFocus=null;releaseBackground=null;M.close(modal,function():void{finishClose(modal,true);});}
-function openModal(link:HTMLElement):void{if(activeModal||!link)return;if(closingModal){if(resumeClosingModal(link))return;finishClose(closingModal,false);}var built=buildModal(link);if(!built)return;var modal:HTMLElement=built;previousFocus=link;document.body.appendChild(modal);document.body.classList.add('sc-product-modal-open');activeModal=modal;activeLink=link;releaseBackground=A.lockBackground(modal)||noop;focus(modal.querySelector<HTMLElement>('.sc-product-modal__close'));cancelOpenRaf();openRaf=requestAnimationFrame(function():void{openRaf=0;if(activeModal===modal){modal.classList.add('is-visible');M.open(modal,link);}});}
-function eventElement(event:Event):Element|null{return event.target instanceof Element?event.target:null;}
-function onClick(event:MouseEvent):void{var target=eventElement(event),close=target?target.closest<HTMLElement>('.sc-product-modal__close'):null;if(close&&activeModal&&activeModal.contains(close)){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();closeModal();return;}var link=target?target.closest<HTMLElement>(S.productLink):null;if(!link)return;if((event.button&&event.button!==0)||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();if(closingModal&&resumeClosingModal(link))return;openModal(link);}
-function onMouseDown(event:MouseEvent):void{if(!activeModal||event.target!==activeModal)return;event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();closeModal();}
-function onKeyDown(event:KeyboardEvent):void{if(!activeModal)return;if(event.key==='Escape'||event.key==='Esc'){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();closeModal();return;}if(event.key==='Tab')A.trapTab(activeModal,event);}
-function onFocusIn(event:FocusEvent):void{A.containFocus(activeModal,event);}
-function addListeners():void{document.addEventListener('click',onClick,true);document.addEventListener('mousedown',onMouseDown,true);document.addEventListener('keydown',onKeyDown,true);document.addEventListener('focusin',onFocusIn);}
-function removeListeners():void{document.removeEventListener('click',onClick,true);document.removeEventListener('mousedown',onMouseDown,true);document.removeEventListener('keydown',onKeyDown,true);document.removeEventListener('focusin',onFocusIn);}
-function init():void{if(initialized)return;initialized=true;addListeners();}
-function destroy():void{if(initialized){initialized=false;removeListeners();}cancelOpenRaf();var modal=activeModal||closingModal,restore=previousFocus||closingRestore,release=releaseBackground||closingRelease||noop;activeModal=null;activeLink=null;closingModal=null;closingLink=null;previousFocus=null;releaseBackground=null;closingRelease=null;closingRestore=null;if(modal){if(M.cancel)M.cancel(modal);if(modal.parentNode)modal.parentNode.removeChild(modal);}if(document.body)document.body.classList.remove('sc-product-modal-open');release();focus(restore);}
-ready(init);SC.productModal={open:openModal,close:closeModal,getActive:function():HTMLElement|null{return activeModal;},isClosing:function():boolean{return!!closingModal;},init:init,destroy:destroy};
-})();
+import { selectors } from '../../core/variables.js';
+import { containFocus, lockBackground, trapTab, type BackgroundLock } from './a11y.js';
+import { animateModalClose, animateModalOpen, animateModalReopen, cancelModalMotion } from './motion.js';
+import { buildProductModal, PRODUCT_MODAL_SELECTORS } from './view.js';
+
+interface ModalSession {
+  modal: HTMLElement;
+  link: HTMLElement;
+  restoreFocus: HTMLElement | null;
+  background: BackgroundLock;
+}
+
+let active: ModalSession | null = null;
+let closing: ModalSession | null = null;
+let openFrame = 0;
+let initialized = false;
+
+function focus(node: HTMLElement | null): void {
+  if (!node || !document.documentElement.contains(node)) return;
+  try {
+    node.focus({ preventScroll: true });
+  } catch {
+    node.focus();
+  }
+}
+
+function cancelOpenFrame(): void {
+  if (!openFrame) return;
+  cancelAnimationFrame(openFrame);
+  openFrame = 0;
+}
+
+function removeSession(session: ModalSession, restoreFocus: boolean): void {
+  cancelModalMotion(session.modal);
+  session.modal.remove();
+  document.body.classList.remove('sc-product-modal-open');
+  session.background.release();
+  if (restoreFocus) focus(session.restoreFocus);
+}
+
+function finishClosing(session: ModalSession, restoreFocus: boolean): void {
+  if (closing !== session) return;
+  closing = null;
+  removeSession(session, restoreFocus);
+}
+
+function resumeClosingModal(link: HTMLElement): boolean {
+  if (!closing || closing.link !== link) return false;
+  active = closing;
+  closing = null;
+  document.body.classList.add('sc-product-modal-open');
+  active.modal.classList.add('is-visible');
+  animateModalReopen(active.modal, link);
+  focus(active.modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.close));
+  return true;
+}
+
+export function closeProductModal(event?: Event): void {
+  event?.preventDefault();
+  if (!active) return;
+
+  cancelOpenFrame();
+  const session = active;
+  active = null;
+  closing = session;
+  animateModalClose(session.modal, () => finishClosing(session, true));
+}
+
+export function openProductModal(link: HTMLElement): void {
+  if (active) return;
+  if (closing) {
+    if (resumeClosingModal(link)) return;
+    const stale = closing;
+    closing = null;
+    removeSession(stale, false);
+  }
+
+  const modal = buildProductModal(link);
+  if (!modal) return;
+
+  document.body.append(modal);
+  document.body.classList.add('sc-product-modal-open');
+  active = {
+    modal,
+    link,
+    restoreFocus: link,
+    background: lockBackground(modal),
+  };
+  focus(modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.close));
+
+  cancelOpenFrame();
+  openFrame = requestAnimationFrame(() => {
+    openFrame = 0;
+    if (active?.modal !== modal) return;
+    modal.classList.add('is-visible');
+    animateModalOpen(modal, link);
+  });
+}
+
+function targetElement(event: Event): Element | null {
+  return event.target instanceof Element ? event.target : null;
+}
+
+function onClick(event: MouseEvent): void {
+  const target = targetElement(event);
+  const close = target?.closest<HTMLElement>(PRODUCT_MODAL_SELECTORS.close);
+  if (close && active?.modal.contains(close)) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    closeProductModal();
+    return;
+  }
+
+  const link = target?.closest<HTMLElement>(selectors.productLink);
+  if (!link) return;
+  if ((event.button && event.button !== 0) || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  if (!resumeClosingModal(link)) openProductModal(link);
+}
+
+function onMouseDown(event: MouseEvent): void {
+  if (!active || event.target !== active.modal) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  closeProductModal();
+}
+
+function onKeyDown(event: KeyboardEvent): void {
+  if (!active) return;
+  if (event.key === 'Escape' || event.key === 'Esc') {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    closeProductModal();
+  } else if (event.key === 'Tab') {
+    trapTab(active.modal, event, PRODUCT_MODAL_SELECTORS.dialog);
+  }
+}
+
+function onFocusIn(event: FocusEvent): void {
+  containFocus(active?.modal ?? null, event, PRODUCT_MODAL_SELECTORS.dialog);
+}
+
+export function initializeProductModal(): () => void {
+  if (initialized) return destroyProductModal;
+  initialized = true;
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('mousedown', onMouseDown, true);
+  document.addEventListener('keydown', onKeyDown, true);
+  document.addEventListener('focusin', onFocusIn);
+  return destroyProductModal;
+}
+
+export function destroyProductModal(): void {
+  if (initialized) {
+    initialized = false;
+    document.removeEventListener('click', onClick, true);
+    document.removeEventListener('mousedown', onMouseDown, true);
+    document.removeEventListener('keydown', onKeyDown, true);
+    document.removeEventListener('focusin', onFocusIn);
+  }
+
+  cancelOpenFrame();
+  const session = active ?? closing;
+  active = null;
+  closing = null;
+  if (session) removeSession(session, true);
+  else document.body?.classList.remove('sc-product-modal-open');
+}
+
+export function getActiveProductModal(): HTMLElement | null {
+  return active?.modal ?? null;
+}
+
+export function isProductModalClosing(): boolean {
+  return closing !== null;
+}
+

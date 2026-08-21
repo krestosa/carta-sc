@@ -1,62 +1,370 @@
-(function(){
-'use strict';
+import { queries } from '../../core/variables.js';
+import type { CatalogViewMode, ViewportContext } from '../../core/types.js';
+import { scheduleDescriptionMeasure } from '../product-card/content.js';
+import { motion } from '../../motion/main.js';
+import type { MotionHandle } from '../../motion/types.js';
 
-var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;
-if(!SC||!CFG||SC.__catalogToolsViewBooted)return;
-SC.__catalogToolsViewBooted=true;
+type ViewIconKey = 'grid' | 'list';
+type OffsetPair = readonly [number, number];
 
-type CatalogViewMode='compact'|'list';
-type CatalogViewContext='phone'|'tablet'|'desktop';
-type ViewIconKey='grid'|'list';
-type OffsetPair=readonly [number,number];
-type ViewIconHost=SVGElement;
+const STORAGE_KEY = 'scCatalogView:v3';
+const SHAPE_ATTRIBUTES = ['x', 'y', 'width', 'height', 'rx', 'ry'] as const;
+const rootElement = document.documentElement;
+const activeIconMotion = new WeakMap<SVGElement, MotionHandle[]>();
 
-var MODES:readonly CatalogViewMode[]=['compact','list'];
-var STORE_KEY='scCatalogView:v3',doc=document.documentElement,phone=CFG.queries.phone,tablet=CFG.queries.compactWide,raf=0,settleTimer=0,cleanup:(()=>void)|null=null,engine:MotionEngine|null=null;
-var SHAPE_ATTRS=['x','y','width','height','rx','ry'] as const;
+let layoutFrame = 0;
+let settleTimer = 0;
+let installationCleanup: (() => void) | null = null;
 
-function context():CatalogViewContext{return phone.matches?'phone':tablet.matches?'tablet':'desktop';}
-function normalize(mode:string):CatalogViewMode|''{if(mode==='normal')return'compact';return mode==='compact'||mode==='list'?mode:'';}
-function selectedMode():CatalogViewMode{return normalize(doc.getAttribute('data-sc-catalog-view')||'')||'compact';}
-function legacyMode(mode:string):CatalogViewMode|''{return mode==='list'?'list':mode?'compact':'';}
-function columns():number{var ctx=context();return ctx==='phone'?2:ctx==='tablet'?3:4;}
-function effectiveMode(mode:string):CatalogViewMode{return normalize(mode)||'compact';}
-function label(mode:string):string{var effective=effectiveMode(mode),count;if(effective==='list')return'Vista lista. Cambiar a grilla de alta densidad';count=columns();return'Vista grilla de alta densidad: '+count+' '+(count===1?'columna':'columnas')+'. Cambiar a vista lista';}
-function iconKey(mode:string):ViewIconKey{return effectiveMode(mode)==='list'?'list':'grid';}
-function load():CatalogViewMode{var mode=normalize(doc.getAttribute('data-sc-catalog-view')||''),ctx=context(),legacy='';if(mode)return mode;try{mode=normalize(localStorage.getItem(STORE_KEY)||'');if(!mode){legacy=localStorage.getItem('scCatalogView:v2:'+ctx)||localStorage.getItem(ctx==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';mode=legacyMode(legacy);if(mode){try{localStorage.setItem(STORE_KEY,mode);}catch(_){}}}}catch(_){mode='';}return mode||'compact';}
-function save(mode:CatalogViewMode):void{try{localStorage.setItem(STORE_KEY,mode);}catch(_){} }
-function reducedMotion():boolean{return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
-
-function liveShapes(host:ViewIconHost|null):SVGRectElement[]{return host?Array.from(host.querySelectorAll<SVGRectElement>('[data-sc-view-shape]')):[];}
-function targetShapes(host:ViewIconHost,key:ViewIconKey):(SVGRectElement|null)[]{return liveShapes(host).map(function(_,index){return host.querySelector<SVGRectElement>('[data-sc-view-target="'+key+'-'+index+'"]');});}
-function ensureHostPresentation(host:ViewIconHost|null):void{if(!host)return;host.style.setProperty('display','block','important');host.style.setProperty('visibility','visible','important');host.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');host.style.setProperty('fill','var(--sc-color-ink,#0a0a0a)','important');var live=host.querySelector<SVGElement>('[data-sc-view-live]');if(live){live.style.setProperty('display','inline','important');live.style.setProperty('visibility','visible','important');}var targets=host.querySelector<SVGElement>('.sc-view-icon-targets');if(targets){targets.style.setProperty('visibility','hidden','important');targets.style.setProperty('opacity','0','important');targets.style.setProperty('pointer-events','none','important');}liveShapes(host).forEach(function(shape){shape.style.setProperty('display','inline','important');shape.style.setProperty('visibility','visible','important');shape.style.setProperty('fill','var(--sc-color-ink,#0a0a0a)','important');});}
-function clearViewIconMotion(host:ViewIconHost|null):void{if(!host)return;var handles=host.__scViewIconMotion;if(handles)handles.forEach(function(handle){handle.cancel();});host.__scViewIconMotion=null;host.removeAttribute('data-sc-view-icon-animating');ensureHostPresentation(host);}
-function setShapeState(host:ViewIconHost,key:ViewIconKey):void{clearViewIconMotion(host);ensureHostPresentation(host);var live=liveShapes(host),targets=targetShapes(host,key);live.forEach(function(shape,index){var target=targets[index];if(!target)return;var targetShape=target;SHAPE_ATTRS.forEach(function(attr){var value=targetShape.getAttribute(attr);if(value===null)shape.removeAttribute(attr);else shape.setAttribute(attr,value);});shape.style.removeProperty('transform');shape.style.removeProperty('will-change');});host.setAttribute('data-sc-icon-state',key);}
-function targetNumbers(target:SVGRectElement):Record<string,number>{var result:Record<string,number>={};SHAPE_ATTRS.forEach(function(attr){var value=parseFloat(target.getAttribute(attr)||'0');result[attr]=Number.isFinite(value)?value:0;});return result;}
-function animateIconGeometry(host:ViewIconHost|null,from:ViewIconKey,to:ViewIconKey):void{
-  if(!host||from===to){if(host){host.setAttribute('data-sc-icon-state',to);ensureHostPresentation(host);}return;}if(!engine){if(host)setShapeState(host,to);return;}clearViewIconMotion(host);var live=liveShapes(host),targets=targetShapes(host,to),short=reducedMotion(),duration=short?.1:.19,ease=short?'quad.inOut':'cubic.inOut';if(!live.length||targets.some(function(target){return!target;})){setShapeState(host,to);return;}host.setAttribute('data-sc-icon-state',to);host.setAttribute('data-sc-view-icon-animating','true');var handles:MotionHandle[]=[],remaining=live.length;host.__scViewIconMotion=handles;live.forEach(function(shape,index){var target=targets[index];if(!target)return;var targetShape=target,delay=short?0:Math.floor(index/2)*.008,handle=engine!.attributes(shape,targetNumbers(targetShape),{duration:duration,delay:delay,ease:ease,onComplete:function(){remaining--;if(remaining>0||host.__scViewIconMotion!==handles)return;host.__scViewIconMotion=null;host.removeAttribute('data-sc-view-icon-animating');ensureHostPresentation(host);}});handles.push(handle);});
-}
-function sync(root:HTMLElement|null,mode:string,animate?:boolean):void{var button=root&&root.querySelector<HTMLButtonElement>('.sc-catalog-view-toggle'),host=button&&button.querySelector<ViewIconHost>('[data-sc-view-icon]'),key=iconKey(mode),text=label(mode),previous=host&&host.getAttribute('data-sc-icon-state');if(button){button.setAttribute('aria-label',text);button.setAttribute('title',text);button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');}if(!host)return;ensureHostPresentation(host);if(previous===key)return;if(animate!==false&&(previous==='grid'||previous==='list'))animateIconGeometry(host,previous,key);else setShapeState(host,key);}
-
-function bindViewMicroInteraction(button:HTMLButtonElement,host:ViewIconHost):()=>void{
-  if(!engine)return function(){};var shapes=liveShapes(host),handles:MotionHandle[]=[],hover=false,focus=false,pressed=false,destroyed=false;if(shapes.length!==6)return function(){};
-  var hoverOffsets:OffsetPair[]=[[.58,.38],[-.58,.38],[.58,0],[-.58,0],[.58,-.38],[-.58,-.38]],pressOffsets:OffsetPair[]=[[.82,.52],[-.82,.52],[.82,0],[-.82,0],[.82,-.52],[-.82,-.52]],homeOffsets:OffsetPair[]=[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]];
-  function focusVisible():boolean{try{return button.matches(':focus-visible');}catch(_){return document.activeElement===button;}}
-  function stop():void{handles.forEach(function(handle){handle.cancel();});handles=[];}
-  function apply(offsets:readonly OffsetPair[],duration:number,ease:string):void{if(destroyed)return;stop();if(reducedMotion()){shapes.forEach(function(shape){shape.style.removeProperty('transform');shape.style.removeProperty('will-change');});return;}shapes.forEach(function(shape,index){var o=offsets[index]||[0,0];handles.push(engine!.transform(shape,{x:o[0],y:o[1]},{duration:duration,delay:index*.004,ease:ease,onComplete:function(){shape.style.removeProperty('will-change');}}));});}
-  function active():void{apply(hoverOffsets,.068,'quart.out');}function home():void{apply(homeOffsets,.09,'quart.out');}function press():void{apply(pressOffsets,.042,'cubic.out');}
-  function enter(e:PointerEvent):void{if(e.pointerType==='touch')return;hover=true;if(!pressed)active();}function leave():void{hover=false;pressed=false;if(focus)active();else home();}function down():void{pressed=true;press();}function up():void{pressed=false;if(hover||focus)active();else home();}function focusIn():void{if(focusVisible()){focus=true;if(!pressed)active();}}function focusOut():void{focus=false;pressed=false;if(hover)active();else home();}function keyDown(e:KeyboardEvent):void{if(e.repeat||(e.key!=='Enter'&&e.key!==' '))return;pressed=true;press();}function keyUp(e:KeyboardEvent):void{if(e.key!=='Enter'&&e.key!==' ')return;pressed=false;if(hover||focus)active();else home();}
-  button.addEventListener('pointerenter',enter);button.addEventListener('pointerleave',leave);button.addEventListener('pointerdown',down);button.addEventListener('pointerup',up);button.addEventListener('pointercancel',leave);button.addEventListener('focus',focusIn);button.addEventListener('blur',focusOut);button.addEventListener('keydown',keyDown);button.addEventListener('keyup',keyUp);
-  return function(){if(destroyed)return;destroyed=true;button.removeEventListener('pointerenter',enter);button.removeEventListener('pointerleave',leave);button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',leave);button.removeEventListener('focus',focusIn);button.removeEventListener('blur',focusOut);button.removeEventListener('keydown',keyDown);button.removeEventListener('keyup',keyUp);stop();shapes.forEach(function(shape){shape.style.removeProperty('transform');shape.style.removeProperty('will-change');});};
+function viewportContext(): ViewportContext {
+  if (queries.phone.matches) return 'phone';
+  if (queries.compactWide.matches) return 'tablet';
+  return 'desktop';
 }
 
-function refreshMotionNow():void{if(SC.motion)SC.motion.refresh(0);}
-function syncMounted():void{var root=document.querySelector<HTMLElement>('.sc-catalog-tools');if(root)sync(root,selectedMode(),false);}
-function refreshLayout(switching:boolean):void{syncMounted();if(raf)cancelAnimationFrame(raf);if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}raf=requestAnimationFrame(function(){raf=requestAnimationFrame(function(){raf=0;if(SC.productCardContent&&SC.productCardContent.scheduleDescriptionMeasure)SC.productCardContent.scheduleDescriptionMeasure();refreshMotionNow();if(switching){settleTimer=window.setTimeout(function(){settleTimer=0;doc.classList.remove('sc-catalog-view-switching');},80);}});});}
-function apply(root:HTMLElement,mode:string,persist:boolean):void{var normalized=normalize(mode)||'compact';if(persist)doc.classList.add('sc-catalog-view-switching');doc.setAttribute('data-sc-catalog-view',normalized);document.body.setAttribute('data-sc-catalog-view',normalized);root.setAttribute('data-sc-view',normalized);sync(root,normalized,persist);if(persist)save(normalized);refreshLayout(persist);}
-function destroy():void{var host=document.querySelector<ViewIconHost>('.sc-catalog-view-toggle [data-sc-view-icon]');if(host)clearViewIconMotion(host);if(raf){cancelAnimationFrame(raf);raf=0;}if(settleTimer){clearTimeout(settleTimer);settleTimer=0;}doc.classList.remove('sc-catalog-view-switching');if(cleanup){var fn=cleanup;cleanup=null;fn();}}
-function install(root:HTMLElement):()=>void{destroy();var button=root.querySelector<HTMLButtonElement>('.sc-catalog-view-toggle'),host=button&&button.querySelector<ViewIconHost>('[data-sc-view-icon]');if(!button||!host)return function(){};button.style.setProperty('visibility','visible','important');button.style.setProperty('color','var(--sc-color-ink,#0a0a0a)','important');ensureHostPresentation(host);apply(root,load(),false);var microCleanup=bindViewMicroInteraction(button,host);function click():void{var current=selectedMode();apply(root,current==='compact'?'list':'compact',true);}function breakpoint():void{refreshLayout(false);}button.addEventListener('click',click);if(phone.addEventListener)phone.addEventListener('change',breakpoint);else phone.addListener(breakpoint);if(tablet.addEventListener)tablet.addEventListener('change',breakpoint);else tablet.addListener(breakpoint);var mountedButton=button;cleanup=function(){microCleanup();mountedButton.removeEventListener('click',click);if(phone.removeEventListener)phone.removeEventListener('change',breakpoint);else phone.removeListener(breakpoint);if(tablet.removeEventListener)tablet.removeEventListener('change',breakpoint);else tablet.removeListener(breakpoint);};var ownCleanup=cleanup;return function(){if(cleanup===ownCleanup)destroy();};}
+function normalizeMode(value: string | null): CatalogViewMode | null {
+  if (value === 'normal') return 'compact';
+  return value === 'compact' || value === 'list' ? value : null;
+}
 
-if(SC.motion&&typeof SC.motion.whenLoaded==='function')SC.motion.whenLoaded(function(deps:MotionDeps){engine=deps.engine;});else if(SC.motion&&typeof SC.motion.whenReady==='function')SC.motion.whenReady(function(deps:MotionDeps){engine=deps.engine;});
-C.view={install:install,apply:apply,refreshLayout:refreshLayout,sync:syncMounted,destroy:destroy};
-})();
+export function selectedCatalogView(): CatalogViewMode {
+  return normalizeMode(rootElement.getAttribute('data-sc-catalog-view')) ?? 'compact';
+}
+
+function legacyMode(value: string | null): CatalogViewMode | null {
+  if (value === 'list') return 'list';
+  return value ? 'compact' : null;
+}
+
+function columnCount(): number {
+  const context = viewportContext();
+  if (context === 'phone') return 2;
+  if (context === 'tablet') return 3;
+  return 4;
+}
+
+function labelFor(mode: CatalogViewMode): string {
+  if (mode === 'list') return 'Vista lista. Cambiar a grilla de alta densidad';
+  const count = columnCount();
+  return `Vista grilla de alta densidad: ${count} ${count === 1 ? 'columna' : 'columnas'}. Cambiar a vista lista`;
+}
+
+function iconKey(mode: CatalogViewMode): ViewIconKey {
+  return mode === 'list' ? 'list' : 'grid';
+}
+
+function loadView(): CatalogViewMode {
+  const current = normalizeMode(rootElement.getAttribute('data-sc-catalog-view'));
+  if (current) return current;
+
+  const context = viewportContext();
+  try {
+    const stored = normalizeMode(localStorage.getItem(STORAGE_KEY));
+    if (stored) return stored;
+
+    const legacy = localStorage.getItem(`scCatalogView:v2:${context}`) ??
+      localStorage.getItem(context === 'desktop' ? 'scCatalogView:desktop' : 'scCatalogView:mobile');
+    const migrated = legacyMode(legacy);
+    if (migrated) {
+      localStorage.setItem(STORAGE_KEY, migrated);
+      return migrated;
+    }
+  } catch {
+    // El modo por defecto sigue siendo utilizable sin Storage.
+  }
+  return 'compact';
+}
+
+function saveView(mode: CatalogViewMode): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, mode);
+  } catch {
+    // Persistir la preferencia es opcional.
+  }
+}
+
+const liveShapes = (host: SVGElement): SVGRectElement[] =>
+  Array.from(host.querySelectorAll<SVGRectElement>('[data-sc-view-shape]'));
+
+function targetShapes(host: SVGElement, key: ViewIconKey): Array<SVGRectElement | null> {
+  return liveShapes(host).map((_, index) => host.querySelector<SVGRectElement>(`[data-sc-view-target="${key}-${index}"]`));
+}
+
+function ensureIconPresentation(host: SVGElement): void {
+  for (const property of ['display', 'visibility', 'color', 'fill']) {
+    const value = property === 'display' ? 'block' : property === 'visibility' ? 'visible' : 'var(--sc-color-ink,#0a0a0a)';
+    host.style.setProperty(property, value, 'important');
+  }
+
+  const live = host.querySelector<SVGElement>('[data-sc-view-live]');
+  if (live) {
+    live.style.setProperty('display', 'inline', 'important');
+    live.style.setProperty('visibility', 'visible', 'important');
+  }
+
+  const targets = host.querySelector<SVGElement>('.sc-view-icon-targets');
+  if (targets) {
+    targets.style.setProperty('visibility', 'hidden', 'important');
+    targets.style.setProperty('opacity', '0', 'important');
+    targets.style.setProperty('pointer-events', 'none', 'important');
+  }
+
+  for (const shape of liveShapes(host)) {
+    shape.style.setProperty('display', 'inline', 'important');
+    shape.style.setProperty('visibility', 'visible', 'important');
+    shape.style.setProperty('fill', 'var(--sc-color-ink,#0a0a0a)', 'important');
+  }
+}
+
+function stopIconMotion(host: SVGElement): void {
+  for (const handle of activeIconMotion.get(host) ?? []) handle.cancel();
+  activeIconMotion.delete(host);
+  host.removeAttribute('data-sc-view-icon-animating');
+  ensureIconPresentation(host);
+}
+
+function setIconState(host: SVGElement, key: ViewIconKey): void {
+  stopIconMotion(host);
+  const targets = targetShapes(host, key);
+  liveShapes(host).forEach((shape, index) => {
+    const target = targets[index];
+    if (!target) return;
+    for (const attribute of SHAPE_ATTRIBUTES) {
+      const value = target.getAttribute(attribute);
+      if (value === null) shape.removeAttribute(attribute);
+      else shape.setAttribute(attribute, value);
+    }
+    shape.style.removeProperty('transform');
+    shape.style.removeProperty('will-change');
+  });
+  host.setAttribute('data-sc-icon-state', key);
+}
+
+function numericShapeAttributes(target: SVGRectElement): Record<string, number> {
+  return Object.fromEntries(SHAPE_ATTRIBUTES.map((attribute) => {
+    const value = Number.parseFloat(target.getAttribute(attribute) ?? '0');
+    return [attribute, Number.isFinite(value) ? value : 0];
+  }));
+}
+
+function animateIconGeometry(host: SVGElement, from: ViewIconKey, to: ViewIconKey): void {
+  if (from === to) {
+    host.setAttribute('data-sc-icon-state', to);
+    ensureIconPresentation(host);
+    return;
+  }
+
+  stopIconMotion(host);
+  const shapes = liveShapes(host);
+  const targets = targetShapes(host, to);
+  if (shapes.length === 0 || targets.some((target) => target === null)) {
+    setIconState(host, to);
+    return;
+  }
+
+  const reduced = queries.reducedMotion.matches;
+  const handles: MotionHandle[] = [];
+  let remaining = shapes.length;
+  host.setAttribute('data-sc-icon-state', to);
+  host.setAttribute('data-sc-view-icon-animating', 'true');
+  activeIconMotion.set(host, handles);
+
+  shapes.forEach((shape, index) => {
+    const target = targets[index];
+    if (!target) return;
+    handles.push(motion.engine.attributes(shape, numericShapeAttributes(target), {
+      duration: reduced ? 0.1 : 0.19,
+      delay: reduced ? 0 : Math.floor(index / 2) * 0.008,
+      ease: reduced ? 'quad.inOut' : 'cubic.inOut',
+      onComplete: () => {
+        remaining -= 1;
+        if (remaining > 0 || activeIconMotion.get(host) !== handles) return;
+        activeIconMotion.delete(host);
+        host.removeAttribute('data-sc-view-icon-animating');
+        ensureIconPresentation(host);
+      },
+    }));
+  });
+}
+
+function syncControl(root: HTMLElement, mode: CatalogViewMode, animate = false): void {
+  const button = root.querySelector<HTMLButtonElement>('.sc-catalog-view-toggle');
+  const host = button?.querySelector<SVGElement>('[data-sc-view-icon]');
+  const label = labelFor(mode);
+
+  if (button) {
+    button.setAttribute('aria-label', label);
+    button.setAttribute('title', label);
+    button.style.setProperty('visibility', 'visible', 'important');
+    button.style.setProperty('color', 'var(--sc-color-ink,#0a0a0a)', 'important');
+  }
+  if (!host) return;
+
+  ensureIconPresentation(host);
+  const key = iconKey(mode);
+  const previous = host.getAttribute('data-sc-icon-state');
+  if (previous === key) return;
+  if (animate && (previous === 'grid' || previous === 'list')) animateIconGeometry(host, previous, key);
+  else setIconState(host, key);
+}
+
+function bindIconMicroInteraction(button: HTMLButtonElement, host: SVGElement): () => void {
+  const shapes = liveShapes(host);
+  if (shapes.length !== 6) return () => undefined;
+
+  const hoverOffsets: readonly OffsetPair[] = [[0.58, 0.38], [-0.58, 0.38], [0.58, 0], [-0.58, 0], [0.58, -0.38], [-0.58, -0.38]];
+  const pressOffsets: readonly OffsetPair[] = [[0.82, 0.52], [-0.82, 0.52], [0.82, 0], [-0.82, 0], [0.82, -0.52], [-0.82, -0.52]];
+  const homeOffsets: readonly OffsetPair[] = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];
+  let handles: MotionHandle[] = [];
+  let hovering = false;
+  let focused = false;
+  let pressed = false;
+  let destroyed = false;
+
+  const stop = (): void => {
+    handles.forEach((handle) => handle.cancel());
+    handles = [];
+  };
+  const focusVisible = (): boolean => {
+    try { return button.matches(':focus-visible'); }
+    catch { return document.activeElement === button; }
+  };
+  const apply = (offsets: readonly OffsetPair[], duration: number, ease: string): void => {
+    if (destroyed) return;
+    stop();
+    if (queries.reducedMotion.matches) {
+      shapes.forEach((shape) => {
+        shape.style.removeProperty('transform');
+        shape.style.removeProperty('will-change');
+      });
+      return;
+    }
+    handles = shapes.map((shape, index) => {
+      const [x, y] = offsets[index] ?? [0, 0];
+      return motion.engine.transform(shape, { x, y }, {
+        duration,
+        delay: index * 0.004,
+        ease,
+        onComplete: () => shape.style.removeProperty('will-change'),
+      });
+    });
+  };
+
+  const active = (): void => apply(hoverOffsets, 0.068, 'quart.out');
+  const home = (): void => apply(homeOffsets, 0.09, 'quart.out');
+  const press = (): void => apply(pressOffsets, 0.042, 'cubic.out');
+  const enter = (event: PointerEvent): void => { if (event.pointerType !== 'touch') { hovering = true; if (!pressed) active(); } };
+  const leave = (): void => { hovering = false; pressed = false; focused ? active() : home(); };
+  const down = (): void => { pressed = true; press(); };
+  const up = (): void => { pressed = false; hovering || focused ? active() : home(); };
+  const focusIn = (): void => { if (focusVisible()) { focused = true; if (!pressed) active(); } };
+  const focusOut = (): void => { focused = false; pressed = false; hovering ? active() : home(); };
+  const keyDown = (event: KeyboardEvent): void => { if (!event.repeat && (event.key === 'Enter' || event.key === ' ')) { pressed = true; press(); } };
+  const keyUp = (event: KeyboardEvent): void => { if (event.key === 'Enter' || event.key === ' ') { pressed = false; hovering || focused ? active() : home(); } };
+
+  button.addEventListener('pointerenter', enter);
+  button.addEventListener('pointerleave', leave);
+  button.addEventListener('pointerdown', down);
+  button.addEventListener('pointerup', up);
+  button.addEventListener('pointercancel', leave);
+  button.addEventListener('focus', focusIn);
+  button.addEventListener('blur', focusOut);
+  button.addEventListener('keydown', keyDown);
+  button.addEventListener('keyup', keyUp);
+
+  return () => {
+    if (destroyed) return;
+    destroyed = true;
+    button.removeEventListener('pointerenter', enter);
+    button.removeEventListener('pointerleave', leave);
+    button.removeEventListener('pointerdown', down);
+    button.removeEventListener('pointerup', up);
+    button.removeEventListener('pointercancel', leave);
+    button.removeEventListener('focus', focusIn);
+    button.removeEventListener('blur', focusOut);
+    button.removeEventListener('keydown', keyDown);
+    button.removeEventListener('keyup', keyUp);
+    stop();
+    shapes.forEach((shape) => {
+      shape.style.removeProperty('transform');
+      shape.style.removeProperty('will-change');
+    });
+  };
+}
+
+export function syncCatalogView(): void {
+  const root = document.querySelector<HTMLElement>('.sc-catalog-tools');
+  if (root) syncControl(root, selectedCatalogView());
+}
+
+export function refreshCatalogViewLayout(switching = false): void {
+  syncCatalogView();
+  if (layoutFrame) cancelAnimationFrame(layoutFrame);
+  if (settleTimer) clearTimeout(settleTimer);
+
+  layoutFrame = requestAnimationFrame(() => {
+    layoutFrame = requestAnimationFrame(() => {
+      layoutFrame = 0;
+      scheduleDescriptionMeasure();
+      motion.refresh(0);
+      if (switching) {
+        settleTimer = window.setTimeout(() => {
+          settleTimer = 0;
+          rootElement.classList.remove('sc-catalog-view-switching');
+        }, 80);
+      }
+    });
+  });
+}
+
+export function applyCatalogView(root: HTMLElement, requested: string, persist = false): void {
+  const mode = normalizeMode(requested) ?? 'compact';
+  if (persist) rootElement.classList.add('sc-catalog-view-switching');
+  rootElement.setAttribute('data-sc-catalog-view', mode);
+  document.body.setAttribute('data-sc-catalog-view', mode);
+  root.setAttribute('data-sc-view', mode);
+  syncControl(root, mode, persist);
+  if (persist) saveView(mode);
+  refreshCatalogViewLayout(persist);
+}
+
+export function destroyCatalogView(): void {
+  const host = document.querySelector<SVGElement>('.sc-catalog-view-toggle [data-sc-view-icon]');
+  if (host) stopIconMotion(host);
+  if (layoutFrame) cancelAnimationFrame(layoutFrame);
+  if (settleTimer) clearTimeout(settleTimer);
+  layoutFrame = 0;
+  settleTimer = 0;
+  rootElement.classList.remove('sc-catalog-view-switching');
+  const cleanup = installationCleanup;
+  installationCleanup = null;
+  cleanup?.();
+}
+
+export function installCatalogView(root: HTMLElement): () => void {
+  destroyCatalogView();
+  const button = root.querySelector<HTMLButtonElement>('.sc-catalog-view-toggle');
+  const host = button?.querySelector<SVGElement>('[data-sc-view-icon]');
+  if (!button || !host) return () => undefined;
+
+  ensureIconPresentation(host);
+  applyCatalogView(root, loadView());
+  const cleanMicroInteraction = bindIconMicroInteraction(button, host);
+  const onClick = (): void => applyCatalogView(root, selectedCatalogView() === 'compact' ? 'list' : 'compact', true);
+  const onBreakpoint = (): void => refreshCatalogViewLayout();
+
+  button.addEventListener('click', onClick);
+  queries.phone.addEventListener('change', onBreakpoint);
+  queries.compactWide.addEventListener('change', onBreakpoint);
+
+  installationCleanup = () => {
+    cleanMicroInteraction();
+    button.removeEventListener('click', onClick);
+    queries.phone.removeEventListener('change', onBreakpoint);
+    queries.compactWide.removeEventListener('change', onBreakpoint);
+  };
+  const ownedCleanup = installationCleanup;
+  return () => {
+    if (installationCleanup === ownedCleanup) destroyCatalogView();
+  };
+}

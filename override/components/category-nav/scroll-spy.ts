@@ -1,35 +1,140 @@
-/* Calcula qué sección está activa según el scroll y sincroniza el riel sin leer geometría
-   en cada frame. Las métricas se recalculan solo cuando cambia el layout o la estructura. */
-(function(){
-'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,K=C&&C.classes,N=SC&&SC.categoryNav,A=N&&N.categoryActive,I=N&&N.categoryIndicator,scrollState=SC&&SC.scrollState;
-if(!SC||!C||!N||!A||!I||SC.__categoryNavScrollSpyBooted)return;SC.__categoryNavScrollSpyBooted=true;
-interface SectionMetric { node:HTMLElement; top:number; }
-var metrics:SectionMetric[]=[],spyOffset=0,spyRaf=0,measureRaf=0,heldTarget:HTMLElement|null=null,heldUntil=0,SPY_HOLD_MS=2200;
-function locked():boolean{return document.body.classList.contains(K.catalogSearching);}
-function pageY():number{return window.pageYOffset||document.documentElement.scrollTop||0;}
-function measureMetrics():void{
-  measureRaf=0;if(locked()){I.markDirty();return;}var seen:HTMLElement[]=[],next:SectionMetric[]=[],y=pageY();
-  (N.links() as HTMLAnchorElement[]).forEach(function(link:HTMLAnchorElement){var target=N.anchor(link.getAttribute('href')) as HTMLElement|null;if(!target||seen.indexOf(target)>=0)return;seen.push(target);var rect=target.getBoundingClientRect();next.push({node:target,top:rect.top+y});});
-  next.sort(function(a:SectionMetric,b:SectionMetric){return a.top-b.top;});metrics=next;spyOffset=N.offset();I.markDirty();scheduleSpy();
+import { classes } from '../../core/variables.js';
+import { scrollState } from '../../core/state.js';
+import { categoryLinks, anchorForHref, categoryOffset, CATEGORY_SCROLL } from './core.js';
+import { isCategoryIndicatorDirty, markCategoryIndicatorDirty, moveCategoryIndicator } from './indicator.js';
+import type { CategoryActiveState } from './active-state.js';
+
+interface SectionMetric {
+  readonly node: HTMLElement;
+  readonly top: number;
 }
-function refreshMetrics():void{if(locked()){I.markDirty();return;}if(measureRaf)cancelAnimationFrame(measureRaf);measureRaf=requestAnimationFrame(function(){measureRaf=requestAnimationFrame(measureMetrics);});}
-/* Busca por binaria la última sección cuyo inicio ya cruzó la marca visual del viewport. */
-function current():HTMLElement|null{
-  if(!metrics.length)return null;var mark=pageY()+spyOffset+N.currentMarkOffset,lo=0,hi=metrics.length-1,best=-1;
-  while(lo<=hi){var mid=(lo+hi)>>1,item=metrics[mid];if(item&&item.top<=mark){best=mid;lo=mid+1;}else hi=mid-1;}
-  var currentItem=metrics[best>=0?best:0];if(!currentItem||!document.documentElement.contains(currentItem.node)){refreshMetrics();return null;}return currentItem.node;
+
+const SPY_HOLD_MS = 2200;
+
+export class CategoryScrollSpy {
+  readonly #activeState: CategoryActiveState;
+  #metrics: SectionMetric[] = [];
+  #offset = 0;
+  #spyFrame = 0;
+  #measureFrame = 0;
+  #heldTarget: HTMLElement | null = null;
+  #heldUntil = 0;
+
+  constructor(activeState: CategoryActiveState) {
+    this.#activeState = activeState;
+  }
+
+  hold = (target: HTMLElement | null): void => {
+    this.#heldTarget = target;
+    this.#heldUntil = target ? performance.now() + SPY_HOLD_MS : 0;
+  };
+
+  release = (): void => {
+    this.#heldTarget = null;
+    this.#heldUntil = 0;
+  };
+
+  refresh = (): void => {
+    if (this.#locked()) {
+      markCategoryIndicatorDirty();
+      return;
+    }
+    if (this.#measureFrame) cancelAnimationFrame(this.#measureFrame);
+    this.#measureFrame = requestAnimationFrame(() => {
+      this.#measureFrame = requestAnimationFrame(this.#measureMetrics);
+    });
+  };
+
+  schedule = (): void => {
+    if (!this.#locked() && !this.#spyFrame) this.#spyFrame = requestAnimationFrame(this.#spy);
+  };
+
+  stop(): void {
+    if (this.#spyFrame) cancelAnimationFrame(this.#spyFrame);
+    if (this.#measureFrame) cancelAnimationFrame(this.#measureFrame);
+    this.#spyFrame = 0;
+    this.#measureFrame = 0;
+    this.#metrics = [];
+    this.release();
+  }
+
+  current(): HTMLElement | null {
+    if (this.#metrics.length === 0) return null;
+    const mark = this.#pageY() + this.#offset + CATEGORY_SCROLL.currentMarkOffset;
+    let low = 0;
+    let high = this.#metrics.length - 1;
+    let best = -1;
+    while (low <= high) {
+      const middle = (low + high) >> 1;
+      const item = this.#metrics[middle];
+      if (item && item.top <= mark) {
+        best = middle;
+        low = middle + 1;
+      } else {
+        high = middle - 1;
+      }
+    }
+    const item = this.#metrics[best >= 0 ? best : 0];
+    if (!item || !document.documentElement.contains(item.node)) {
+      this.refresh();
+      return null;
+    }
+    return item.node;
+  }
+
+  #locked(): boolean {
+    return document.body.classList.contains(classes.catalogSearching);
+  }
+
+  #pageY(): number {
+    return window.pageYOffset || document.documentElement.scrollTop || 0;
+  }
+
+  #measureMetrics = (): void => {
+    this.#measureFrame = 0;
+    if (this.#locked()) {
+      markCategoryIndicatorDirty();
+      return;
+    }
+
+    const seen = new Set<HTMLElement>();
+    const pageY = this.#pageY();
+    const metrics: SectionMetric[] = [];
+    for (const link of categoryLinks()) {
+      const target = anchorForHref(link.getAttribute('href'));
+      if (!target || seen.has(target)) continue;
+      seen.add(target);
+      metrics.push({ node: target, top: target.getBoundingClientRect().top + pageY });
+    }
+    metrics.sort((a, b) => a.top - b.top);
+    this.#metrics = metrics;
+    this.#offset = categoryOffset();
+    markCategoryIndicatorDirty();
+    this.schedule();
+  };
+
+  #spy = (): void => {
+    this.#spyFrame = 0;
+    if (this.#locked()) return;
+
+    const active = this.#activeState.current;
+    if (this.#heldTarget && scrollState.programmatic) {
+      if (active !== this.#heldTarget) this.#activeState.set(this.#heldTarget, false);
+      else if (isCategoryIndicatorDirty()) moveCategoryIndicator(this.#heldTarget, false);
+      return;
+    }
+
+    const target = this.current();
+    if (this.#heldTarget) {
+      if (target === this.#heldTarget || performance.now() >= this.#heldUntil) {
+        this.release();
+      } else {
+        if (active && isCategoryIndicatorDirty()) moveCategoryIndicator(active, false);
+        return;
+      }
+    }
+
+    if (target && target !== active) this.#activeState.set(target, true);
+    else if (target && isCategoryIndicatorDirty()) moveCategoryIndicator(target, false);
+  };
 }
-/* Durante scroll programático mantiene el destino elegido y evita rebotes del estado activo. */
-function hold(target:HTMLElement|null):void{heldTarget=target||null;heldUntil=heldTarget?performance.now()+SPY_HOLD_MS:0;}
-function release():void{heldTarget=null;heldUntil=0;}
-function spy():void{
-  spyRaf=0;if(locked())return;var active=A.current() as HTMLElement|null,target:HTMLElement|null;
-  if(heldTarget&&scrollState&&scrollState.programmatic){if(active!==heldTarget)A.set(heldTarget,false);else if(I.isDirty())I.move(heldTarget,false);return;}
-  target=current();if(heldTarget){if(target===heldTarget||performance.now()>=heldUntil)release();else{if(active&&I.isDirty())I.move(active,false);return;}}
-  if(target&&target!==active)A.set(target,true);else if(target&&I.isDirty())I.move(target,false);
-}
-function scheduleSpy():void{if(locked())return;if(!spyRaf)spyRaf=requestAnimationFrame(spy);}
-function stop():void{if(spyRaf)cancelAnimationFrame(spyRaf);if(measureRaf)cancelAnimationFrame(measureRaf);spyRaf=measureRaf=0;metrics=[];release();}
-N.holdSpy=hold;N.releaseSpyHold=release;N.refreshMetrics=refreshMetrics;N.refreshSections=refreshMetrics;N.current=current;N.scheduleSpy=scheduleSpy;N.stopSpy=stop;
-})();

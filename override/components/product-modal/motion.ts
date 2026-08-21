@@ -1,23 +1,192 @@
-/* Controla apertura, reapertura y cierre del modal con animaciones interrumpibles. */
-(function(){
-'use strict';
-var SC=window.SCOverride,C=SC&&SC.config,MS=SC&&SC.productModalSelectors,M=C&&C.motion,CFG={openOffsetY:10,openScale:.992,closeOffsetY:6,closeScale:.994,openBackdropDuration:.14,openDialogDuration:.20,openDialogDelay:.015,closeDialogDuration:.11,closeBackdropDuration:.13,closeBackdropDelay:.005};if(!SC||!C||!MS||SC.__productModalMotionBooted)return;SC.__productModalMotionBooted=true;
-var active=new WeakMap<HTMLElement,MotionHandle[]>();
-function nextToken(modal:HTMLElement):number{var token=(modal.__scModalMotionToken||0)+1;modal.__scModalMotionToken=token;return token;}
-function current(modal:HTMLElement|null,token:number):boolean{return!!(modal&&modal.__scModalMotionToken===token);}
-function origin(dialog:HTMLElement|null,source:HTMLElement|null):void{if(!dialog)return;var value='50% 50%';if(source&&document.documentElement.contains(source)){var a=source.getBoundingClientRect(),d=dialog.getBoundingClientRect();if(d.width>0&&d.height>0){var x=((a.left+a.width*.5-d.left)/d.width)*100,y=((a.top+a.height*.5-d.top)/d.height)*100;x=Math.max(12,Math.min(88,x));y=Math.max(10,Math.min(90,y));value=x.toFixed(2)+'% '+y.toFixed(2)+'%';}}dialog.style.transformOrigin=value;}
-function stop(modal:HTMLElement):void{var list=active.get(modal);if(list)list.forEach(function(handle){handle.cancel();});active.delete(modal);}
-function clear(modal:HTMLElement|null,dialog:HTMLElement|null):void{if(!modal||!dialog)return;modal.style.removeProperty('opacity');modal.style.removeProperty('visibility');modal.style.removeProperty('will-change');dialog.style.removeProperty('transform');dialog.style.removeProperty('opacity');dialog.style.removeProperty('visibility');dialog.style.removeProperty('will-change');}
-function register(modal:HTMLElement,handles:MotionHandle[]):void{active.set(modal,handles);}
-function cancel(modal:HTMLElement|null):void{if(!modal)return;nextToken(modal);stop(modal);}
-function open(modal:HTMLElement|null,source:HTMLElement|null):void{
-  if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.run&&SC.motion.run(function(deps:MotionDeps):void{var engine=deps.engine,dialog=modal.querySelector<HTMLElement>(MS.dialog);if(!dialog)return;stop(modal);origin(dialog,source);modal.style.opacity='0';modal.style.visibility='visible';dialog.style.opacity='0';dialog.style.visibility='visible';dialog.style.transform='translate3d(0,'+CFG.openOffsetY+'px,0) scale('+CFG.openScale+')';var handles:MotionHandle[]=[];handles.push(engine.opacity(modal,1,{duration:CFG.openBackdropDuration,ease:M.easings.out}));handles.push(engine.opacity(dialog,1,{duration:CFG.openDialogDuration,delay:CFG.openDialogDelay,ease:M.easings.strongOut}));handles.push(engine.transform(dialog,{y:0,scale:1},{duration:CFG.openDialogDuration,delay:CFG.openDialogDelay,ease:M.easings.strongOut,onComplete:function(){if(!current(modal,token))return;active.delete(modal);clear(modal,dialog);}}));register(modal,handles);});if(!ran)origin(modal.querySelector<HTMLElement>(MS.dialog),source);
+import { motionTokens } from '../../core/variables.js';
+import { motion } from '../../motion/main.js';
+import type { MotionHandle } from '../../motion/types.js';
+import { PRODUCT_MODAL_SELECTORS } from './view.js';
+
+const MOTION = {
+  openOffsetY: 10,
+  openScale: 0.992,
+  closeOffsetY: 6,
+  closeScale: 0.994,
+  openBackdropDuration: 0.14,
+  openDialogDuration: 0.2,
+  openDialogDelay: 0.015,
+  closeDialogDuration: 0.11,
+  closeBackdropDuration: 0.13,
+  closeBackdropDelay: 0.005,
+  reopenBackdropDuration: 0.11,
+  reopenDialogDuration: 0.16,
+} as const;
+
+interface ModalMotionState {
+  token: number;
+  handles: MotionHandle[];
 }
-function reopen(modal:HTMLElement|null,source:HTMLElement|null):void{
-  if(!modal)return;var token=nextToken(modal),ran=SC.motion&&SC.motion.runLoaded&&SC.motion.runLoaded(function(deps:MotionDeps):void{var engine=deps.engine,dialog=modal.querySelector<HTMLElement>(MS.dialog);if(!dialog)return;stop(modal);origin(dialog,source);modal.style.visibility='visible';dialog.style.visibility='visible';var handles:MotionHandle[]=[];handles.push(engine.opacity(modal,1,{duration:.11,ease:M.easings.out}));handles.push(engine.opacity(dialog,1,{duration:.16,ease:M.easings.strongOut}));handles.push(engine.transform(dialog,{y:0,scale:1},{duration:.16,ease:M.easings.strongOut,onComplete:function(){if(!current(modal,token))return;active.delete(modal);clear(modal,dialog);}}));register(modal,handles);});if(!ran){origin(modal.querySelector<HTMLElement>(MS.dialog),source);modal.style.removeProperty('opacity');modal.style.removeProperty('visibility');}
+
+const states = new WeakMap<HTMLElement, ModalMotionState>();
+
+function stateFor(modal: HTMLElement): ModalMotionState {
+  const existing = states.get(modal);
+  if (existing) return existing;
+  const created: ModalMotionState = { token: 0, handles: [] };
+  states.set(modal, created);
+  return created;
 }
-function close(modal:HTMLElement|null,done:(()=>void)|null|undefined):void{
-  if(!modal){if(done)done();return;}var token=nextToken(modal);if(SC.motion&&SC.motion.reduced&&SC.motion.reduced()){stop(modal);if(done)done();return;}var ran=SC.motion&&SC.motion.runLoaded&&SC.motion.runLoaded(function(deps:MotionDeps):void{var engine=deps.engine,dialog=modal.querySelector<HTMLElement>(MS.dialog);if(!dialog){if(done)done();return;}stop(modal);var handles:MotionHandle[]=[];handles.push(engine.opacity(dialog,0,{duration:CFG.closeDialogDuration,ease:M.easings.in}));handles.push(engine.transform(dialog,{y:CFG.closeOffsetY,scale:CFG.closeScale},{duration:CFG.closeDialogDuration,ease:M.easings.in}));handles.push(engine.opacity(modal,0,{duration:CFG.closeBackdropDuration,delay:CFG.closeBackdropDelay,ease:M.easings.inOut,onComplete:function(){if(!current(modal,token))return;active.delete(modal);if(done)done();}}));register(modal,handles);});if(!ran&&done)done();
+
+function nextToken(modal: HTMLElement): number {
+  const state = stateFor(modal);
+  state.token += 1;
+  return state.token;
 }
-SC.productModalMotion={open:open,reopen:reopen,close:close,cancel:cancel};
-})();
+
+function isCurrent(modal: HTMLElement, token: number): boolean {
+  return stateFor(modal).token === token;
+}
+
+function stop(modal: HTMLElement): void {
+  const state = stateFor(modal);
+  for (const handle of state.handles) handle.cancel();
+  state.handles = [];
+}
+
+function register(modal: HTMLElement, handles: MotionHandle[]): void {
+  stateFor(modal).handles = handles;
+}
+
+function clear(modal: HTMLElement, dialog: HTMLElement): void {
+  for (const property of ['opacity', 'visibility', 'will-change']) modal.style.removeProperty(property);
+  for (const property of ['transform', 'opacity', 'visibility', 'will-change']) dialog.style.removeProperty(property);
+}
+
+function setTransformOrigin(dialog: HTMLElement, source: HTMLElement | null): void {
+  let value = '50% 50%';
+  if (source && document.documentElement.contains(source)) {
+    const sourceRect = source.getBoundingClientRect();
+    const dialogRect = dialog.getBoundingClientRect();
+    if (dialogRect.width > 0 && dialogRect.height > 0) {
+      const x = Math.max(12, Math.min(88, ((sourceRect.left + sourceRect.width / 2 - dialogRect.left) / dialogRect.width) * 100));
+      const y = Math.max(10, Math.min(90, ((sourceRect.top + sourceRect.height / 2 - dialogRect.top) / dialogRect.height) * 100));
+      value = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+    }
+  }
+  dialog.style.transformOrigin = value;
+}
+
+export function cancelModalMotion(modal: HTMLElement | null): void {
+  if (!modal) return;
+  nextToken(modal);
+  stop(modal);
+}
+
+export function animateModalOpen(modal: HTMLElement | null, source: HTMLElement | null): void {
+  if (!modal) return;
+  const token = nextToken(modal);
+  const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
+  if (!dialog) return;
+
+  setTransformOrigin(dialog, source);
+  const ran = motion.run(({ engine }) => {
+    stop(modal);
+    modal.style.opacity = '0';
+    modal.style.visibility = 'visible';
+    dialog.style.opacity = '0';
+    dialog.style.visibility = 'visible';
+    dialog.style.transform = `translate3d(0,${MOTION.openOffsetY}px,0) scale(${MOTION.openScale})`;
+
+    register(modal, [
+      engine.opacity(modal, 1, { duration: MOTION.openBackdropDuration, ease: motionTokens.easings.out }),
+      engine.opacity(dialog, 1, {
+        duration: MOTION.openDialogDuration,
+        delay: MOTION.openDialogDelay,
+        ease: motionTokens.easings.strongOut,
+      }),
+      engine.transform(dialog, { y: 0, scale: 1 }, {
+        duration: MOTION.openDialogDuration,
+        delay: MOTION.openDialogDelay,
+        ease: motionTokens.easings.strongOut,
+        onComplete: () => {
+          if (!isCurrent(modal, token)) return;
+          stateFor(modal).handles = [];
+          clear(modal, dialog);
+        },
+      }),
+    ]);
+  });
+
+  if (!ran) setTransformOrigin(dialog, source);
+}
+
+export function animateModalReopen(modal: HTMLElement | null, source: HTMLElement | null): void {
+  if (!modal) return;
+  const token = nextToken(modal);
+  const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
+  if (!dialog) return;
+
+  setTransformOrigin(dialog, source);
+  const ran = motion.runLoaded(({ engine }) => {
+    stop(modal);
+    modal.style.visibility = 'visible';
+    dialog.style.visibility = 'visible';
+    register(modal, [
+      engine.opacity(modal, 1, { duration: MOTION.reopenBackdropDuration, ease: motionTokens.easings.out }),
+      engine.opacity(dialog, 1, { duration: MOTION.reopenDialogDuration, ease: motionTokens.easings.strongOut }),
+      engine.transform(dialog, { y: 0, scale: 1 }, {
+        duration: MOTION.reopenDialogDuration,
+        ease: motionTokens.easings.strongOut,
+        onComplete: () => {
+          if (!isCurrent(modal, token)) return;
+          stateFor(modal).handles = [];
+          clear(modal, dialog);
+        },
+      }),
+    ]);
+  });
+
+  if (!ran) {
+    modal.style.removeProperty('opacity');
+    modal.style.removeProperty('visibility');
+  }
+}
+
+export function animateModalClose(modal: HTMLElement | null, done?: () => void): void {
+  if (!modal) {
+    done?.();
+    return;
+  }
+
+  const token = nextToken(modal);
+  if (motion.reduced()) {
+    stop(modal);
+    done?.();
+    return;
+  }
+
+  const ran = motion.runLoaded(({ engine }) => {
+    const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
+    if (!dialog) {
+      done?.();
+      return;
+    }
+
+    stop(modal);
+    register(modal, [
+      engine.opacity(dialog, 0, { duration: MOTION.closeDialogDuration, ease: motionTokens.easings.in }),
+      engine.transform(dialog, { y: MOTION.closeOffsetY, scale: MOTION.closeScale }, {
+        duration: MOTION.closeDialogDuration,
+        ease: motionTokens.easings.in,
+      }),
+      engine.opacity(modal, 0, {
+        duration: MOTION.closeBackdropDuration,
+        delay: MOTION.closeBackdropDelay,
+        ease: motionTokens.easings.inOut,
+        onComplete: () => {
+          if (!isCurrent(modal, token)) return;
+          stateFor(modal).handles = [];
+          done?.();
+        },
+      }),
+    ]);
+  });
+
+  if (!ran) done?.();
+}

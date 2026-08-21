@@ -1,30 +1,64 @@
-(function(){
-'use strict';
-var SC=window.SCOverride=window.SCOverride||{},C=SC.contentNormalizer=SC.contentNormalizer||{};
-if(SC.__contentNormalizerRulesBooted)return;SC.__contentNormalizerRulesBooted=true;
-
-type EditorialState={sentenceStart:boolean;words:number};
-
-/* Reglas editoriales para español de Argentina. */
-var LOCALE:string=C.locale||'es-AR';C.locale=LOCALE;
-var CONNECTORS=new Set<string>(['a','al','ante','bajo','con','contra','de','del','desde','durante','e','el','en','entre','hacia','hasta','la','las','los','mediante','ni','o','para','por','que','según','sin','sobre','su','sus','tras','tu','tus','u','un','una','unos','unas','y']);
-var PROTECTED:Readonly<Record<string,string>>={'aqa':'AQA','sushiclub':'SushiClub'};
-
-/* Quita puntos decorativos sin romper decimales. */
-function titlePeriodClean(text:string):string{return text.replace(/\./g,function(dot:string,index:number,source:string):string{var before=source.charAt(index-1),after=source.charAt(index+1);return /\d/.test(before)&&/\d/.test(after)?dot:'';});}
-function capitalize(lower:string):string{var protectedValue=PROTECTED[lower];if(protectedValue)return protectedValue;return lower.replace(/[a-záéíóúüñ]/i,function(letter:string):string{return letter.toLocaleUpperCase(LOCALE);});}
-
-/* Aplica mayúsculas respetando conectores y marcas protegidas. */
-function smartCase(text:string,state:EditorialState,removePeriods:boolean):string{
-  if(removePeriods)text=titlePeriodClean(text);
-  var rx=/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+(?:['’][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*/g,out='',last=0,match:RegExpExecArray|null;
-  while((match=rx.exec(text))){
-    var separator=text.slice(last,match.index);out+=separator;if(/[.!?¡¿:]/.test(separator))state.sentenceStart=true;
-    var raw=match[0]||'',lower=raw.toLocaleLowerCase(LOCALE),numeric=/^\d/.test(raw),word:string;
-    if(numeric)word=lower;else if(CONNECTORS.has(lower)&&!state.sentenceStart)word=lower;else word=capitalize(lower);
-    out+=word;state.sentenceStart=false;state.words++;last=rx.lastIndex;
-  }
-  return out+text.slice(last);
+export interface EditorialState {
+  sentenceStart: boolean;
+  words: number;
 }
-C.rules={titlePeriodClean:titlePeriodClean,smartCase:smartCase};
-})();
+
+export const CONTENT_LOCALE = 'es-AR' as const;
+
+const CONNECTORS = new Set([
+  'a', 'al', 'ante', 'bajo', 'con', 'contra', 'de', 'del', 'desde', 'durante', 'e', 'el', 'en', 'entre',
+  'hacia', 'hasta', 'la', 'las', 'los', 'mediante', 'ni', 'o', 'para', 'por', 'que', 'según', 'sin', 'sobre',
+  'su', 'sus', 'tras', 'tu', 'tus', 'u', 'un', 'una', 'unos', 'unas', 'y',
+]);
+
+const PROTECTED_WORDS: Readonly<Record<string, string>> = Object.freeze({
+  aqa: 'AQA',
+  sushiclub: 'SushiClub',
+});
+
+const WORD_PATTERN = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+(?:['’][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*/g;
+const SENTENCE_BOUNDARY_PATTERN = /[.!?¡¿:]/;
+const LEADING_NUMBER_PATTERN = /^\d/;
+
+export function cleanTitlePeriods(value: string): string {
+  return value.replace(/\./g, (period, index, source) => {
+    const previous = source.charAt(index - 1);
+    const next = source.charAt(index + 1);
+    return /\d/.test(previous) && /\d/.test(next) ? period : '';
+  });
+}
+
+function capitalize(value: string): string {
+  const protectedValue = PROTECTED_WORDS[value];
+  if (protectedValue) return protectedValue;
+  return value.replace(/[a-záéíóúüñ]/i, (letter) => letter.toLocaleUpperCase(CONTENT_LOCALE));
+}
+
+export function applyEditorialCase(value: string, state: EditorialState, removePeriods = false): string {
+  const source = removePeriods ? cleanTitlePeriods(value) : value;
+  let output = '';
+  let lastIndex = 0;
+  WORD_PATTERN.lastIndex = 0;
+
+  let match: RegExpExecArray | null;
+  while ((match = WORD_PATTERN.exec(source))) {
+    const separator = source.slice(lastIndex, match.index);
+    output += separator;
+    if (SENTENCE_BOUNDARY_PATTERN.test(separator)) state.sentenceStart = true;
+
+    const raw = match[0] ?? '';
+    const lower = raw.toLocaleLowerCase(CONTENT_LOCALE);
+    const normalized = LEADING_NUMBER_PATTERN.test(raw)
+      ? lower
+      : CONNECTORS.has(lower) && !state.sentenceStart
+        ? lower
+        : capitalize(lower);
+
+    output += normalized;
+    state.sentenceStart = false;
+    state.words += 1;
+    lastIndex = WORD_PATTERN.lastIndex;
+  }
+
+  return output + source.slice(lastIndex);
+}

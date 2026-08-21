@@ -1,67 +1,105 @@
-/* Reubica el riel legacy dentro de la barra propia según el breakpoint. Conserva el nodo
-   original para no duplicar listeners y restaura su ubicación exacta al volver a mobile. */
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,K=C&&C.classes,N=SC&&SC.categoryNav,T=SC&&SC.templates;if(!SC||!U||!N||!T||SC.__categoryNavLayoutBooted)return;SC.__categoryNavLayoutBooted=true;
-var each=U.each,nav:HTMLElement|null=null,home:Node|null=null,next:Node|null=null,toolbar:HTMLElement|null=null,styles=new Map<HTMLElement,string|null>();
+import { classes, selectors } from '../../core/variables.js';
+import { cloneTemplate } from '../../templates/registry.js';
+import { CATEGORY_SELECTORS, desktopCategories } from './core.js';
 
-function toolbarNode(container:HTMLElement):HTMLElement{var node=T.clone('category-toolbar') as HTMLElement;container.insertBefore(node,container.firstChild);return node;}
-/* Descarta referencias de una estructura legacy reemplazada y adopta el riel vigente. */
-function captureNav():boolean{
-  var candidate=document.querySelector<HTMLElement>(N.selectors.mobileWrapper+' '+'.wrapp-nav-tabsTopShop');
-  if(candidate&&candidate!==nav){
-    restoreStyles();styles.clear();
-    if(nav&&document.documentElement.contains(nav)&&nav.parentNode)nav.parentNode.removeChild(nav);
-    nav=candidate;home=nav.parentNode;next=nav.nextSibling;return true;
-  }
-  if(nav&&document.documentElement.contains(nav))return true;
-  restoreStyles();styles.clear();nav=candidate;home=nav&&nav.parentNode;next=nav&&nav.nextSibling;return!!nav;
+const originalStyles = new Map<HTMLElement, string | null>();
+let navigation: HTMLElement | null = null;
+let originalParent: Node | null = null;
+let originalNextSibling: Node | null = null;
+let toolbar: HTMLElement | null = null;
+
+function createToolbar(container: HTMLElement): HTMLElement {
+  const node = cloneTemplate<HTMLElement>('category-toolbar');
+  container.insertBefore(node, container.firstChild);
+  return node;
 }
-/* Quita referencias a links que ya no pertenecen al DOM activo. */
-function pruneStyles():void{styles.forEach(function(_value: string|null,link:HTMLElement){if(!document.documentElement.contains(link))styles.delete(link);});}
-/* Quita tamaños inline del legacy mientras el riel está bajo control del override. */
-function normalize(root:ParentNode):void{
-  pruneStyles();
-  each(root.querySelectorAll<HTMLElement>(".nav-top-li > a.anchorLink"),function(link:HTMLElement){
-    if(!styles.has(link))styles.set(link,link.getAttribute('style'));
+
+function restoreStyles(): void {
+  for (const [link, value] of originalStyles) {
+    if (!document.documentElement.contains(link)) continue;
+    if (value === null) link.removeAttribute('style');
+    else link.setAttribute('style', value);
+  }
+}
+
+function captureNavigation(): boolean {
+  const candidate = document.querySelector<HTMLElement>(`${CATEGORY_SELECTORS.mobileWrapper} .wrapp-nav-tabsTopShop`);
+  if (candidate && candidate !== navigation) {
+    restoreStyles();
+    originalStyles.clear();
+    if (navigation && document.documentElement.contains(navigation)) navigation.remove();
+    navigation = candidate;
+    originalParent = candidate.parentNode;
+    originalNextSibling = candidate.nextSibling;
+    return true;
+  }
+  if (navigation && document.documentElement.contains(navigation)) return true;
+  restoreStyles();
+  originalStyles.clear();
+  navigation = candidate;
+  originalParent = candidate?.parentNode ?? null;
+  originalNextSibling = candidate?.nextSibling ?? null;
+  return Boolean(candidate);
+}
+
+function normalizeLegacyStyles(root: ParentNode): void {
+  for (const link of root.querySelectorAll<HTMLElement>('.nav-top-li > a.anchorLink')) {
+    if (!originalStyles.has(link)) originalStyles.set(link, link.getAttribute('style'));
     link.style.removeProperty('font-size');
-  });
-}
-function restoreStyles():void{
-  styles.forEach(function(value:string|null,link:HTMLElement){
-    if(!document.documentElement.contains(link))return;
-    value===null?link.removeAttribute('style'):link.setAttribute('style',value);
-  });
-}
-/* Monta o desmonta la barra desktop sin recrear la navegación original. */
-function layout():void{
-  if(N.mq.matches){
-    var container=document.querySelector<HTMLElement>(S.container);if(!container)return;
-    each(container.querySelectorAll<HTMLElement>(S.productList+'.'+"sc-first-catalog-section"),function(node:HTMLElement){node.classList.remove("sc-first-catalog-section");});
-    var first=Array.from(container.querySelectorAll<HTMLElement>(S.productList)).find(function(node:HTMLElement){return!!node.querySelector(S.productCard+','+S.sectionTitle);});
-    if(first)first.classList.add("sc-first-catalog-section");
-    if(!captureNav()||!nav)return;
-    if(!toolbar||!document.documentElement.contains(toolbar))toolbar=toolbarNode(container);
-    var scroller=toolbar.querySelector<HTMLElement>(N.selectors.scroller);if(!scroller)return;if(nav.parentNode!==scroller)scroller.appendChild(nav);
-    normalize(nav);document.body.classList.add(K.catalogLayoutReady);
-  }else{
-    document.body&&document.body.classList.remove(K.catalogLayoutReady);
-    each(document.querySelectorAll<HTMLElement>(S.productList+'.'+"sc-first-catalog-section"),function(node:HTMLElement){node.classList.remove("sc-first-catalog-section");});
-    captureNav();
-    if(nav&&home&&document.documentElement.contains(home)){next&&next.parentNode===home?home.insertBefore(nav,next):home.appendChild(nav);}
-    restoreStyles();if(toolbar&&toolbar.parentNode)toolbar.parentNode.removeChild(toolbar);toolbar=null;
   }
-  if(N.refreshMetrics)N.refreshMetrics();
-  if(N.scheduleRail)N.scheduleRail();
-}
-/* Expone navegación semántica aunque el contenedor provenga del DOM legacy. */
-function semantics():void{
-  var node=document.querySelector<HTMLElement>(N.selectors.mobileWrapper);
-  if(node){node.setAttribute('role','navigation');node.setAttribute('aria-label','Categorías de la carta');}
+  for (const link of originalStyles.keys()) {
+    if (!document.documentElement.contains(link)) originalStyles.delete(link);
+  }
 }
 
-N.layout=layout;
-N.syncLayout=layout;
-N.semantics=semantics;
-N.restoreStyles=restoreStyles;
-})();
+function markFirstCatalogSection(container: HTMLElement): void {
+  container.querySelectorAll<HTMLElement>(`${selectors.productList}.sc-first-catalog-section`)
+    .forEach((node) => node.classList.remove('sc-first-catalog-section'));
+  const first = Array.from(container.querySelectorAll<HTMLElement>(selectors.productList))
+    .find((node) => Boolean(node.querySelector(`${selectors.productCard},${selectors.sectionTitle}`)));
+  first?.classList.add('sc-first-catalog-section');
+}
+
+export interface CategoryLayoutCallbacks {
+  readonly refreshMetrics: () => void;
+  readonly scheduleRail: () => void;
+}
+
+export function syncCategoryLayout(callbacks: CategoryLayoutCallbacks): void {
+  if (desktopCategories.matches) {
+    const container = document.querySelector<HTMLElement>(selectors.container);
+    if (!container) return;
+    markFirstCatalogSection(container);
+    if (!captureNavigation() || !navigation) return;
+    if (!toolbar || !document.documentElement.contains(toolbar)) toolbar = createToolbar(container);
+    const scroller = toolbar.querySelector<HTMLElement>(CATEGORY_SELECTORS.scroller);
+    if (!scroller) return;
+    if (navigation.parentNode !== scroller) scroller.append(navigation);
+    normalizeLegacyStyles(navigation);
+    document.body.classList.add(classes.catalogLayoutReady);
+  } else {
+    document.body?.classList.remove(classes.catalogLayoutReady);
+    document.querySelectorAll<HTMLElement>(`${selectors.productList}.sc-first-catalog-section`)
+      .forEach((node) => node.classList.remove('sc-first-catalog-section'));
+    captureNavigation();
+    if (navigation && originalParent && document.documentElement.contains(originalParent)) {
+      if (originalNextSibling?.parentNode === originalParent) originalParent.insertBefore(navigation, originalNextSibling);
+      else originalParent.appendChild(navigation);
+    }
+    restoreStyles();
+    toolbar?.remove();
+    toolbar = null;
+  }
+  callbacks.refreshMetrics();
+  callbacks.scheduleRail();
+}
+
+export function applyCategorySemantics(): void {
+  const wrapper = document.querySelector<HTMLElement>(CATEGORY_SELECTORS.mobileWrapper);
+  wrapper?.setAttribute('role', 'navigation');
+  wrapper?.setAttribute('aria-label', 'Categorías de la carta');
+}
+
+export function restoreCategoryLayoutStyles(): void {
+  restoreStyles();
+}

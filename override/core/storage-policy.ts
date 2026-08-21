@@ -1,35 +1,130 @@
-(function(){
-'use strict';
-if(window.__scStoragePolicyBooted)return;window.__scStoragePolicyBooted=true;
+import type { Cleanup } from './types.js';
 
-/* Solo tema y vista pueden persistir en localStorage. */
-var VIEW_KEY='scCatalogView:v3',THEME_KEY='scTheme:v1',nativeSet=window.Storage&&Storage.prototype&&Storage.prototype.setItem,purgeTimer=0;
-function safeStore(name:'localStorage'|'sessionStorage'):Storage|null{try{return window[name];}catch(_){return null;}}
-function owned(key:string):boolean{key=String(key||'');return key.indexOf('scTheme:')===0||key.indexOf('scCatalogView:')===0||key.indexOf('scCatalogSearch:')===0;}
-function allowedLocal(key:string):boolean{return key===THEME_KEY||key===VIEW_KEY;}
-function removeMatching(store:Storage|null,test:(key:string)=>boolean):void{if(!store)return;try{for(var i=store.length-1;i>=0;i--){var key=store.key(i);if(key&&test(key))store.removeItem(key);}}catch(_){} }
+const VIEW_KEY = 'scCatalogView:v3';
+const THEME_KEY = 'scTheme:v1';
+const AUDIT_DELAY = 220;
+const OWNED_PREFIXES = ['scTheme:', 'scCatalogView:', 'scCatalogSearch:'] as const;
 
-/* Bloquea escrituras persistentes fuera de las claves permitidas. */
-function installGuard():void{
-  var proto=window.Storage&&Storage.prototype;if(!proto||!nativeSet||proto.__scPersistenceGuard)return;
-  var guarded=function(this:Storage,key:string,value:string):void{var k=String(key||'');if(owned(k)){if(this===safeStore('localStorage')&&allowedLocal(k)){nativeSet.call(this,k,value);return;}return;}nativeSet.call(this,key,value);};
-  try{Object.defineProperty(proto,'setItem',{configurable:true,writable:true,value:guarded});Object.defineProperty(proto,'__scPersistenceGuard',{configurable:true,value:true});}catch(_){}
-}
+const nativeSetItem = Storage.prototype.setItem;
+let purgeTimer = 0;
+let started = false;
 
-/* Limpia estados propios que no deben sobrevivir la sesión. */
-function purgeSession():void{removeMatching(safeStore('sessionStorage'),owned);}
-function purgeLocal():void{
-  var store=safeStore('localStorage');if(!store)return;
-  removeMatching(store,function(key:string):boolean{if(key.indexOf('scCatalogSearch:')===0)return true;if(key.indexOf('scTheme:')===0)return key!==THEME_KEY;return false;});
-  var hasCurrentView=false;try{hasCurrentView=!!store.getItem(VIEW_KEY);}catch(_){}
-  if(hasCurrentView)removeMatching(store,function(key:string):boolean{return key.indexOf('scCatalogView:')===0&&key!==VIEW_KEY;});
-}
-function audit():void{purgeSession();purgeLocal();}
+const safeStorage = (name: 'localStorage' | 'sessionStorage'): Storage | null => {
+  try {
+    return window[name];
+  } catch {
+    return null;
+  }
+};
 
-/* Agrupa limpiezas disparadas por escritura en búsqueda. */
-function scheduleAudit():void{if(purgeTimer)clearTimeout(purgeTimer);purgeTimer=window.setTimeout(function(){purgeTimer=0;audit();},220);}
-function onInput(event:Event):void{var node=event.target instanceof Element?event.target:null;if(node&&node.matches('.sc-catalog-search-input'))scheduleAudit();}
+const isOwnedKey = (key: string): boolean => OWNED_PREFIXES.some((prefix) => key.startsWith(prefix));
+const isAllowedLocalKey = (key: string): boolean => key === THEME_KEY || key === VIEW_KEY;
 
-installGuard();audit();document.addEventListener('input',onInput,true);window.addEventListener('pagehide',audit);if(document.readyState==='complete')setTimeout(audit,0);else window.addEventListener('load',audit,{once:true});
-window.SCOverride=window.SCOverride||{};window.SCOverride.storagePolicy={allowedLocalStorage:[THEME_KEY,VIEW_KEY],audit:audit};
-})();
+const removeMatching = (storage: Storage | null, predicate: (key: string) => boolean): void => {
+  if (!storage) return;
+  try {
+    for (let index = storage.length - 1; index >= 0; index -= 1) {
+      const key = storage.key(index);
+      if (key && predicate(key)) storage.removeItem(key);
+    }
+  } catch {
+    // Storage puede estar bloqueado por privacidad del navegador.
+  }
+};
+
+const guardedSetItem: typeof Storage.prototype.setItem = function guardedSetItem(this: Storage, key, value): void {
+  const normalizedKey = String(key ?? '');
+  if (!isOwnedKey(normalizedKey)) {
+    nativeSetItem.call(this, key, value);
+    return;
+  }
+
+  if (this === safeStorage('localStorage') && isAllowedLocalKey(normalizedKey)) {
+    nativeSetItem.call(this, normalizedKey, value);
+  }
+};
+
+const purgeSession = (): void => removeMatching(safeStorage('sessionStorage'), isOwnedKey);
+
+const purgeLocal = (): void => {
+  const storage = safeStorage('localStorage');
+  if (!storage) return;
+
+  removeMatching(storage, (key) =>
+    key.startsWith('scCatalogSearch:') || (key.startsWith('scTheme:') && key !== THEME_KEY),
+  );
+
+  let hasCurrentView = false;
+  try {
+    hasCurrentView = Boolean(storage.getItem(VIEW_KEY));
+  } catch {
+    return;
+  }
+
+  if (hasCurrentView) {
+    removeMatching(storage, (key) => key.startsWith('scCatalogView:') && key !== VIEW_KEY);
+  }
+};
+
+export const auditStorage = (): void => {
+  purgeSession();
+  purgeLocal();
+};
+
+const scheduleAudit = (): void => {
+  if (purgeTimer) clearTimeout(purgeTimer);
+  purgeTimer = window.setTimeout(() => {
+    purgeTimer = 0;
+    auditStorage();
+  }, AUDIT_DELAY);
+};
+
+const onInput = (event: Event): void => {
+  if (event.target instanceof Element && event.target.matches('.sc-catalog-search-input')) {
+    scheduleAudit();
+  }
+};
+
+export const initializeStoragePolicy = (): Cleanup => {
+  if (started) return () => undefined;
+  started = true;
+
+  try {
+    Object.defineProperty(Storage.prototype, 'setItem', {
+      configurable: true,
+      writable: true,
+      value: guardedSetItem,
+    });
+  } catch {
+    // Algunos navegadores no permiten redefinir Storage.prototype.
+  }
+
+  auditStorage();
+  document.addEventListener('input', onInput, true);
+  window.addEventListener('pagehide', auditStorage);
+  if (document.readyState === 'complete') window.setTimeout(auditStorage, 0);
+  else window.addEventListener('load', auditStorage, { once: true });
+
+  return () => {
+    if (!started) return;
+    started = false;
+    if (purgeTimer) clearTimeout(purgeTimer);
+    purgeTimer = 0;
+    document.removeEventListener('input', onInput, true);
+    window.removeEventListener('pagehide', auditStorage);
+    try {
+      Object.defineProperty(Storage.prototype, 'setItem', {
+        configurable: true,
+        writable: true,
+        value: nativeSetItem,
+      });
+    } catch {
+      // Mantener el último estado válido si el prototipo está sellado.
+    }
+  };
+};
+
+export const storagePolicy = Object.freeze({
+  allowedLocalStorage: [THEME_KEY, VIEW_KEY] as const,
+  audit: auditStorage,
+});

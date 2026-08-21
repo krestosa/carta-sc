@@ -1,149 +1,527 @@
-/* Coordina lifecycle, submenús, listeners y cambios estructurales del riel de categorías.
-   Los cálculos específicos viven en módulos menores; este archivo conecta sus contratos. */
-(function(){
-'use strict';
-var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,S=C&&C.selectors,M=C&&C.motion,N=SC&&SC.categoryNav;
-if(!SC||!U||!N||!N.layout||!N.scheduleRail||!N.refreshMetrics||SC.__categoryNavBooted)return;SC.__categoryNavBooted=true;
-var each=U.each,ready=U.ready,mq=N.mq as MediaQueryList,onRailScroll:()=>void=N.scheduleOverflow||N.scheduleRail,boundScrollers=new Set<HTMLElement>(),resizeRaf=0,structureObserver:MutationObserver|null=null,structureRaf=0,motionRefreshRaf=0,geometryTimer=0,initialized=false;
-var submenuHost:HTMLElement|null=null,submenuParent:HTMLAnchorElement|null=null,submenuPinned=false,submenuCloseTimer=0,submenuPositionRaf=0,submenuScroller:HTMLElement|null=null;
+import { motionTokens, selectors } from '../../core/variables.js';
+import { motion } from '../../motion/main.js';
+import { CategoryActiveState } from './active-state.js';
+import {
+  anchorForHref,
+  categoryScrollPlan,
+  categoryLinks,
+  cleanCategoryHash,
+  closeLegacyCategoryMenus,
+  CATEGORY_SELECTORS,
+  desktopCategories,
+  invalidateCategoryOffset,
+  ProgrammaticCategoryScroll,
+  subcategoryOwner,
+} from './core.js';
+import {
+  isCategoryIndicatorDirty,
+  markCategoryIndicatorDirty,
+  moveCategoryIndicator,
+  pauseCategoryIndicator,
+  resumeCategoryIndicator,
+} from './indicator.js';
+import { applyCategorySemantics, syncCategoryLayout } from './layout.js';
+import { CategoryRailController } from './rail.js';
+import { CategoryScrollSpy } from './scroll-spy.js';
 
-/* Construye el submenú flotante desde la estructura legacy sin mover sus enlaces originales. */
-function submenuLinks(parent:HTMLAnchorElement|null):HTMLAnchorElement[]{
-  if(!parent)return[];var item=parent.closest<HTMLElement>('.nav-top-li'),source=item&&item.querySelector<HTMLElement>('.topPullDown .topPullChild');if(!source)return[];
-  return Array.from(source.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')).filter(function(link:HTMLAnchorElement){return!!N.anchor(link.getAttribute('href'));});
-}
-function hasSubmenu(parent:HTMLAnchorElement|null):boolean{return submenuLinks(parent).length>0;}
-function clearCloseTimer():void{if(submenuCloseTimer){clearTimeout(submenuCloseTimer);submenuCloseTimer=0;}}
-function clearPositionRaf():void{if(submenuPositionRaf){cancelAnimationFrame(submenuPositionRaf);submenuPositionRaf=0;}}
-function unbindSubmenuScroller():void{if(submenuScroller){submenuScroller.removeEventListener('scroll',scheduleSubmenuPosition);submenuScroller=null;}}
-function setParentExpanded(parent:HTMLAnchorElement|null,on:boolean):void{
-  if(!parent)return;var item=parent.closest<HTMLElement>('.nav-top-li');if(item)item.classList.toggle('sc-submenu-open',!!on);parent.setAttribute('aria-expanded',on?'true':'false');
-}
-function ensureSubmenu():HTMLElement{
-  if(submenuHost&&document.documentElement.contains(submenuHost))return submenuHost;
-  submenuHost=document.createElement('div');submenuHost.id='sc-category-submenu';submenuHost.className='sc-category-submenu';submenuHost.setAttribute('role','menu');submenuHost.setAttribute('aria-hidden','true');
-  var list=document.createElement('div');list.className='sc-category-submenu-list';submenuHost.appendChild(list);document.body.appendChild(submenuHost);
-  submenuHost.addEventListener('pointerenter',clearCloseTimer);
-  submenuHost.addEventListener('pointerleave',function(){if(!submenuPinned)scheduleSubmenuClose();});
-  return submenuHost;
-}
-function renderSubmenu(parent:HTMLAnchorElement):HTMLElement{
-  var host=ensureSubmenu(),list=host.querySelector<HTMLElement>('.sc-category-submenu-list'),parentHref=parent.getAttribute('href')||'',label=(parent.textContent||'').trim();if(!list)return host;var listNode=list;listNode.textContent='';
-  submenuLinks(parent).forEach(function(source:HTMLAnchorElement){
-    var link=document.createElement('a');link.className='sc-category-submenu-link';link.setAttribute('role','menuitem');link.setAttribute('href',source.getAttribute('href')||'');link.setAttribute('data-sc-parent-href',parentHref);link.textContent=(source.textContent||'').trim();listNode.appendChild(link);
-  });
-  host.setAttribute('aria-label','Subcategorías de '+label);return host;
-}
-function bindSubmenuScroller(parent:HTMLAnchorElement):void{
-  unbindSubmenuScroller();submenuScroller=parent.closest<HTMLElement>(N.selectors.scroller+','+N.selectors.mobileScroller);if(submenuScroller)submenuScroller.addEventListener('scroll',scheduleSubmenuPosition,{passive:true});
-}
-function positionSubmenu():void{
-  submenuPositionRaf=0;if(!submenuHost||!submenuParent||!submenuHost.classList.contains('sc-category-submenu-open'))return;
-  if(!document.documentElement.contains(submenuParent)){closeSubmenu(false);return;}
-  var rect=submenuParent.getBoundingClientRect(),rail=submenuParent.closest<HTMLElement>(S.categoryToolbar+','+N.selectors.mobileWrapper),railRect=rail&&rail.getBoundingClientRect(),gap=7,edge=12,width=submenuHost.offsetWidth,height=submenuHost.offsetHeight,above=false;
-  var left=Math.max(edge,Math.min(rect.left,innerWidth-width-edge)),top=(railRect?railRect.bottom:rect.bottom)+gap;
-  if(top+height>innerHeight-edge&&rect.top-height-gap>=edge){top=rect.top-height-gap;above=true;}
-  top=Math.max(edge,top);submenuHost.style.left=Math.round(left)+'px';submenuHost.style.top=Math.round(top)+'px';
-  var originX=Math.max(12,Math.min(Math.max(12,width-12),(rect.left+rect.width*.5)-left));submenuHost.style.setProperty('--sc-submenu-origin-x',Math.round(originX)+'px');submenuHost.style.setProperty('--sc-submenu-origin-y',above?Math.round(height)+'px':'0px');
-}
-function scheduleSubmenuPosition():void{if(submenuHost&&submenuHost.classList.contains('sc-category-submenu-open')&&!submenuPositionRaf)submenuPositionRaf=requestAnimationFrame(positionSubmenu);}
-function openSubmenu(parent:HTMLAnchorElement,pin:boolean):boolean{
-  if(!hasSubmenu(parent))return false;clearCloseTimer();var same=parent===submenuParent;
-  if(!same&&submenuParent)setParentExpanded(submenuParent,false);
-  submenuParent=parent;submenuPinned=!!pin||(same&&submenuPinned);var host=renderSubmenu(parent);setParentExpanded(parent,true);parent.setAttribute('aria-controls',host.id);host.classList.add('sc-category-submenu-open');host.setAttribute('aria-hidden','false');bindSubmenuScroller(parent);scheduleSubmenuPosition();return true;
-}
-function closeSubmenu(restoreFocus:boolean):void{
-  clearCloseTimer();clearPositionRaf();unbindSubmenuScroller();if(submenuHost){submenuHost.classList.remove('sc-category-submenu-open');submenuHost.setAttribute('aria-hidden','true');}
-  var parent=submenuParent;submenuParent=null;submenuPinned=false;if(parent)setParentExpanded(parent,false);if(restoreFocus&&parent&&document.documentElement.contains(parent))parent.focus();
-}
-function scheduleSubmenuClose():void{clearCloseTimer();submenuCloseTimer=setTimeout(function(){submenuCloseTimer=0;if(!submenuPinned)closeSubmenu(false);},110);}
-function scanSubmenus():void{
-  each(document.querySelectorAll<HTMLAnchorElement>('.nav-top-li > a.anchorLink[href^="#"]'),function(link:HTMLAnchorElement){
-    var item=link.closest<HTMLElement>('.nav-top-li'),has=hasSubmenu(link);if(item)item.classList.toggle('sc-has-subcategories',has);
-    if(has){link.setAttribute('aria-haspopup','menu');link.setAttribute('aria-controls','sc-category-submenu');if(link!==submenuParent)link.setAttribute('aria-expanded','false');}
-    else{link.removeAttribute('aria-haspopup');link.removeAttribute('aria-controls');link.removeAttribute('aria-expanded');}
-  });
-  if(submenuParent&&!document.documentElement.contains(submenuParent))closeSubmenu(false);
-}
-function categoryParentFromEvent(event:Event):HTMLAnchorElement|null{var target=event.target instanceof Element?event.target:null,link=target?target.closest<HTMLAnchorElement>('.nav-top-li > a.anchorLink[href^="#"]'):null;return link&&hasSubmenu(link)?link:null;}
-function pointerOver(event:PointerEvent):void{if(event.pointerType==='touch')return;var parent=categoryParentFromEvent(event);if(!parent)return;if(submenuPinned&&submenuParent&&submenuParent!==parent)return;openSubmenu(parent,false);}
-function pointerOut(event:PointerEvent):void{
-  if(event.pointerType==='touch'||submenuPinned)return;var parent=categoryParentFromEvent(event);if(!parent||parent!==submenuParent)return;var next=event.relatedTarget;if(next instanceof Node&&(parent.closest<HTMLElement>('.nav-top-li')?.contains(next as Node)||(submenuHost&&submenuHost.contains(next))))return;scheduleSubmenuClose();
-}
-function focusIn(event:FocusEvent):void{var parent=categoryParentFromEvent(event);if(parent&&!submenuPinned)openSubmenu(parent,false);}
-function focusOut(event:FocusEvent):void{if(submenuPinned||!submenuParent)return;var next=event.relatedTarget;if(next instanceof Node&&((submenuHost&&submenuHost.contains(next))||submenuParent.closest<HTMLElement>('.nav-top-li')?.contains(next as Node)))return;scheduleSubmenuClose();}
-function outsidePointer(event:PointerEvent):void{if(!submenuParent)return;var target=event.target;if(!(target instanceof Node))return;if((submenuHost&&submenuHost.contains(target))||submenuParent.closest<HTMLElement>('.nav-top-li')?.contains(target as Node))return;closeSubmenu(false);}
-function keydown(event:KeyboardEvent):void{if(event.key==='Escape'&&submenuParent){event.preventDefault();closeSubmenu(true);}}
-function destroySubmenu():void{closeSubmenu(false);if(submenuHost&&submenuHost.parentNode)submenuHost.parentNode.removeChild(submenuHost);submenuHost=null;}
-N.categorySubmenu={scan:scanSubmenus,has:hasSubmenu,open:function(parent:HTMLAnchorElement,pin?:boolean):boolean{return openSubmenu(parent,pin!==false);},close:closeSubmenu,position:scheduleSubmenuPosition};
+class CategorySubmenu {
+  #host: HTMLElement | null = null;
+  #parent: HTMLAnchorElement | null = null;
+  #pinned = false;
+  #closeTimer = 0;
+  #positionFrame = 0;
+  #scroller: HTMLElement | null = null;
 
-function pruneRailScrollers():void{boundScrollers.forEach(function(scroller:HTMLElement){if(document.documentElement.contains(scroller))return;scroller.removeEventListener('scroll',onRailScroll);boundScrollers.delete(scroller);});}
-function bindRailScrollers():void{
+  links(parent: HTMLAnchorElement | null): HTMLAnchorElement[] {
+    const source = parent?.closest<HTMLElement>('.nav-top-li')?.querySelector<HTMLElement>('.topPullDown .topPullChild');
+    if (!source) return [];
+    return Array.from(source.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'))
+      .filter((link) => Boolean(anchorForHref(link.getAttribute('href'))));
+  }
+
+  has(parent: HTMLAnchorElement | null): boolean {
+    return this.links(parent).length > 0;
+  }
+
+  scan(): void {
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('.nav-top-li > a.anchorLink[href^="#"]')) {
+      const item = link.closest<HTMLElement>('.nav-top-li');
+      const hasChildren = this.has(link);
+      item?.classList.toggle('sc-has-subcategories', hasChildren);
+      if (hasChildren) {
+        link.setAttribute('aria-haspopup', 'menu');
+        link.setAttribute('aria-controls', 'sc-category-submenu');
+        if (link !== this.#parent) link.setAttribute('aria-expanded', 'false');
+      } else {
+        link.removeAttribute('aria-haspopup');
+        link.removeAttribute('aria-controls');
+        link.removeAttribute('aria-expanded');
+      }
+    }
+    if (this.#parent && !document.documentElement.contains(this.#parent)) this.close(false);
+  }
+
+  open(parent: HTMLAnchorElement, pin = true): boolean {
+    if (!this.has(parent)) return false;
+    this.#clearCloseTimer();
+    const same = parent === this.#parent;
+    if (!same && this.#parent) this.#setExpanded(this.#parent, false);
+    this.#parent = parent;
+    this.#pinned = pin || (same && this.#pinned);
+
+    const host = this.#render(parent);
+    this.#setExpanded(parent, true);
+    parent.setAttribute('aria-controls', host.id);
+    host.classList.add('sc-category-submenu-open');
+    host.setAttribute('aria-hidden', 'false');
+    this.#bindScroller(parent);
+    this.schedulePosition();
+    return true;
+  }
+
+  close(restoreFocus: boolean): void {
+    this.#clearCloseTimer();
+    this.#clearPositionFrame();
+    this.#unbindScroller();
+    this.#host?.classList.remove('sc-category-submenu-open');
+    this.#host?.setAttribute('aria-hidden', 'true');
+
+    const parent = this.#parent;
+    this.#parent = null;
+    this.#pinned = false;
+    if (parent) this.#setExpanded(parent, false);
+    if (restoreFocus && parent && document.documentElement.contains(parent)) parent.focus();
+  }
+
+  destroy(): void {
+    this.close(false);
+    this.#host?.remove();
+    this.#host = null;
+  }
+
+  schedulePosition = (): void => {
+    if (this.#host?.classList.contains('sc-category-submenu-open') && !this.#positionFrame) {
+      this.#positionFrame = requestAnimationFrame(this.#position);
+    }
+  };
+
+  parentFromEvent(event: Event): HTMLAnchorElement | null {
+    const target = event.target instanceof Element ? event.target : null;
+    const link = target?.closest<HTMLAnchorElement>('.nav-top-li > a.anchorLink[href^="#"]') ?? null;
+    return link && this.has(link) ? link : null;
+  }
+
+  onPointerOver = (event: PointerEvent): void => {
+    if (event.pointerType === 'touch') return;
+    const parent = this.parentFromEvent(event);
+    if (!parent || (this.#pinned && this.#parent && this.#parent !== parent)) return;
+    this.open(parent, false);
+  };
+
+  onPointerOut = (event: PointerEvent): void => {
+    if (event.pointerType === 'touch' || this.#pinned) return;
+    const parent = this.parentFromEvent(event);
+    if (!parent || parent !== this.#parent) return;
+    const next = event.relatedTarget;
+    if (next instanceof Node && (parent.closest<HTMLElement>('.nav-top-li')?.contains(next) || this.#host?.contains(next))) return;
+    this.#scheduleClose();
+  };
+
+  onFocusIn = (event: FocusEvent): void => {
+    const parent = this.parentFromEvent(event);
+    if (parent && !this.#pinned) this.open(parent, false);
+  };
+
+  onFocusOut = (event: FocusEvent): void => {
+    if (this.#pinned || !this.#parent) return;
+    const next = event.relatedTarget;
+    if (next instanceof Node && (this.#host?.contains(next) || this.#parent.closest<HTMLElement>('.nav-top-li')?.contains(next))) return;
+    this.#scheduleClose();
+  };
+
+  onOutsidePointer = (event: PointerEvent): void => {
+    if (!this.#parent || !(event.target instanceof Node)) return;
+    if (this.#host?.contains(event.target) || this.#parent.closest<HTMLElement>('.nav-top-li')?.contains(event.target)) return;
+    this.close(false);
+  };
+
+  onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !this.#parent) return;
+    event.preventDefault();
+    this.close(true);
+  };
+
+  #ensureHost(): HTMLElement {
+    if (this.#host && document.documentElement.contains(this.#host)) return this.#host;
+    const host = document.createElement('div');
+    host.id = 'sc-category-submenu';
+    host.className = 'sc-category-submenu';
+    host.setAttribute('role', 'menu');
+    host.setAttribute('aria-hidden', 'true');
+    const list = document.createElement('div');
+    list.className = 'sc-category-submenu-list';
+    host.append(list);
+    document.body.append(host);
+    host.addEventListener('pointerenter', this.#clearCloseTimer);
+    host.addEventListener('pointerleave', () => { if (!this.#pinned) this.#scheduleClose(); });
+    this.#host = host;
+    return host;
+  }
+
+  #render(parent: HTMLAnchorElement): HTMLElement {
+    const host = this.#ensureHost();
+    const list = host.querySelector<HTMLElement>('.sc-category-submenu-list');
+    if (!list) return host;
+    list.textContent = '';
+    const parentHref = parent.getAttribute('href') ?? '';
+    for (const source of this.links(parent)) {
+      const link = document.createElement('a');
+      link.className = 'sc-category-submenu-link';
+      link.setAttribute('role', 'menuitem');
+      link.href = source.getAttribute('href') ?? '';
+      link.dataset.scParentHref = parentHref;
+      link.textContent = source.textContent?.trim() ?? '';
+      list.append(link);
+    }
+    host.setAttribute('aria-label', `Subcategorías de ${parent.textContent?.trim() ?? ''}`);
+    return host;
+  }
+
+  #setExpanded(parent: HTMLAnchorElement, expanded: boolean): void {
+    parent.closest<HTMLElement>('.nav-top-li')?.classList.toggle('sc-submenu-open', expanded);
+    parent.setAttribute('aria-expanded', String(expanded));
+  }
+
+  #bindScroller(parent: HTMLAnchorElement): void {
+    this.#unbindScroller();
+    this.#scroller = parent.closest<HTMLElement>(`${CATEGORY_SELECTORS.scroller},${CATEGORY_SELECTORS.mobileScroller}`);
+    this.#scroller?.addEventListener('scroll', this.schedulePosition, { passive: true });
+  }
+
+  #unbindScroller(): void {
+    this.#scroller?.removeEventListener('scroll', this.schedulePosition);
+    this.#scroller = null;
+  }
+
+  #position = (): void => {
+    this.#positionFrame = 0;
+    const host = this.#host;
+    const parent = this.#parent;
+    if (!host || !parent || !host.classList.contains('sc-category-submenu-open')) return;
+    if (!document.documentElement.contains(parent)) {
+      this.close(false);
+      return;
+    }
+
+    const rect = parent.getBoundingClientRect();
+    const railRect = parent.closest<HTMLElement>(`${selectors.categoryToolbar},${CATEGORY_SELECTORS.mobileWrapper}`)?.getBoundingClientRect();
+    const gap = 7;
+    const edge = 12;
+    const width = host.offsetWidth;
+    const height = host.offsetHeight;
+    const left = Math.max(edge, Math.min(rect.left, innerWidth - width - edge));
+    let top = (railRect?.bottom ?? rect.bottom) + gap;
+    let above = false;
+    if (top + height > innerHeight - edge && rect.top - height - gap >= edge) {
+      top = rect.top - height - gap;
+      above = true;
+    }
+    top = Math.max(edge, top);
+    host.style.left = `${Math.round(left)}px`;
+    host.style.top = `${Math.round(top)}px`;
+    const originX = Math.max(12, Math.min(Math.max(12, width - 12), rect.left + rect.width / 2 - left));
+    host.style.setProperty('--sc-submenu-origin-x', `${Math.round(originX)}px`);
+    host.style.setProperty('--sc-submenu-origin-y', above ? `${Math.round(height)}px` : '0px');
+  };
+
+  #clearCloseTimer = (): void => {
+    if (this.#closeTimer) clearTimeout(this.#closeTimer);
+    this.#closeTimer = 0;
+  };
+
+  #clearPositionFrame(): void {
+    if (this.#positionFrame) cancelAnimationFrame(this.#positionFrame);
+    this.#positionFrame = 0;
+  }
+
+  #scheduleClose(): void {
+    this.#clearCloseTimer();
+    this.#closeTimer = window.setTimeout(() => {
+      this.#closeTimer = 0;
+      if (!this.#pinned) this.close(false);
+    }, 110);
+  }
+}
+
+let scrollSpy: CategoryScrollSpy;
+const rail = new CategoryRailController({
+  invalidateOffset: invalidateCategoryOffset,
+  refreshMetrics: () => scrollSpy.refresh(),
+});
+const activeState = new CategoryActiveState({
+  requestCenter: rail.requestCenter,
+  scheduleRail: rail.scheduleRail,
+});
+scrollSpy = new CategoryScrollSpy(activeState);
+const programmaticScroll = new ProgrammaticCategoryScroll({
+  refreshMetrics: scrollSpy.refresh,
+  releaseSpyHold: scrollSpy.release,
+  scheduleSpy: scrollSpy.schedule,
+});
+const submenu = new CategorySubmenu();
+
+const boundScrollers = new Set<HTMLElement>();
+let resizeFrame = 0;
+let structureFrame = 0;
+let motionRefreshFrame = 0;
+let geometryTimer = 0;
+let structureObserver: MutationObserver | null = null;
+let initialized = false;
+
+function activateAndScroll(target: HTMLElement, activeTarget: HTMLElement = target): void {
+  invalidateCategoryOffset();
+  const plan = categoryScrollPlan(target);
+  scrollSpy.hold(activeTarget);
+  activeState.set(activeTarget, true);
+  programmaticScroll.scrollTo(target, plan);
+}
+
+function onCategory(event: MouseEvent): void {
+  if (event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const origin = event.target instanceof Element ? event.target : null;
+  const link = origin?.closest<HTMLAnchorElement>('a.anchorLink, a.anchorLinkSub, a.sc-category-submenu-link');
+  if (!link) return;
+
+  const submenuLink = link.classList.contains('sc-category-submenu-link');
+  if (link.closest('.topPullDown,.dropdown-menu') && !submenuLink) return;
+  const inManagedNav = link.closest(selectors.categoryToolbar) ||
+    link.closest(`${CATEGORY_SELECTORS.mobileWrapper} ${CATEGORY_SELECTORS.mobileRail}`) ||
+    link.closest('.sc-category-submenu');
+  if (!inManagedNav) return;
+
+  const target = anchorForHref(link.getAttribute('href'));
+  if (!target) return;
+  const owner = submenuLink ? subcategoryOwner(link) : null;
+  const hasChildren = !submenuLink && submenu.has(link);
+  const compact = !desktopCategories.matches;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  closeLegacyCategoryMenus();
+  cleanCategoryHash();
+
+  if (submenuLink) {
+    submenu.close(false);
+    activateAndScroll(target, owner ?? target);
+    return;
+  }
+  if (hasChildren && compact) {
+    submenu.open(link, true);
+    return;
+  }
+  if (hasChildren) submenu.open(link, true);
+  activateAndScroll(target);
+}
+
+function onSelect(event: Event): void {
+  const select = event.target instanceof HTMLSelectElement ? event.target : null;
+  if (!select?.matches(CATEGORY_SELECTORS.select)) return;
+  const target = anchorForHref(select.value);
+  if (!target) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  closeLegacyCategoryMenus();
+  cleanCategoryHash();
+  submenu.close(false);
+  activateAndScroll(target);
+}
+
+function pruneRailScrollers(): void {
+  for (const scroller of boundScrollers) {
+    if (document.documentElement.contains(scroller)) continue;
+    scroller.removeEventListener('scroll', rail.scheduleOverflow);
+    boundScrollers.delete(scroller);
+  }
+}
+
+function bindRailScrollers(): void {
   pruneRailScrollers();
-  each(document.querySelectorAll<HTMLElement>(N.selectors.scroller+','+N.selectors.mobileScroller),function(scroller:HTMLElement){
-    if(boundScrollers.has(scroller))return;boundScrollers.add(scroller);scroller.addEventListener('scroll',onRailScroll,{passive:true});
+  for (const scroller of document.querySelectorAll<HTMLElement>(`${CATEGORY_SELECTORS.scroller},${CATEGORY_SELECTORS.mobileScroller}`)) {
+    if (boundScrollers.has(scroller)) continue;
+    boundScrollers.add(scroller);
+    scroller.addEventListener('scroll', rail.scheduleOverflow, { passive: true });
+  }
+}
+
+function unbindRailScrollers(): void {
+  for (const scroller of boundScrollers) scroller.removeEventListener('scroll', rail.scheduleOverflow);
+  boundScrollers.clear();
+}
+
+function refreshGeometry(): void {
+  if (!initialized) return;
+  invalidateCategoryOffset();
+  scrollSpy.refresh();
+  rail.scheduleRail();
+  submenu.schedulePosition();
+}
+
+function runResize(): void {
+  resizeFrame = 0;
+  refreshGeometry();
+}
+
+function resize(): void {
+  if (initialized && !resizeFrame) resizeFrame = requestAnimationFrame(runResize);
+}
+
+function windowScroll(): void {
+  rail.scheduleSticky();
+  scrollSpy.schedule();
+  submenu.schedulePosition();
+}
+
+function interrupt(): void {
+  programmaticScroll.interrupt();
+  scrollSpy.release();
+}
+
+function observeStructure(): void {
+  if (structureObserver && document.body) structureObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+function refreshMotionSafely(): void {
+  if (!initialized || motionRefreshFrame) return;
+  motionRefreshFrame = requestAnimationFrame(() => {
+    motionRefreshFrame = 0;
+    if (!initialized) return;
+    structureObserver?.disconnect();
+    motion.refresh(0);
+    structureObserver?.takeRecords();
+    observeStructure();
   });
 }
-function unbindRailScrollers():void{boundScrollers.forEach(function(scroller:HTMLElement){scroller.removeEventListener('scroll',onRailScroll);});boundScrollers.clear();}
-function invalidateOffset():void{if(N.invalidateOffset)N.invalidateOffset();}
-function runResize():void{resizeRaf=0;if(!initialized)return;invalidateOffset();N.refreshMetrics();N.scheduleRail();scheduleSubmenuPosition();}
-function resize():void{if(initialized&&!resizeRaf)resizeRaf=requestAnimationFrame(runResize);}
-function windowScroll():void{(N.scheduleSticky||N.scheduleRail)();N.scheduleSpy();scheduleSubmenuPosition();}
-function interrupt():void{if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.releaseSpyHold)N.releaseSpyHold();}
-function observeStructure():void{if(structureObserver&&document.body)structureObserver.observe(document.body,{childList:true,subtree:true});}
-function refreshMotionSafely():void{
-  if(!initialized||motionRefreshRaf)return;
-  motionRefreshRaf=requestAnimationFrame(function(){
-    motionRefreshRaf=0;if(!initialized||!SC.motion)return;
-    if(structureObserver)structureObserver.disconnect();
-    SC.motion.refresh(0);
-    if(structureObserver){structureObserver.takeRecords();observeStructure();}
-  });
-}
-function syncStructure():void{
-  if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(!initialized)return;invalidateOffset();N.layout();N.semantics();scanSubmenus();bindRailScrollers();scheduleSubmenuPosition();
-  if(structureObserver)structureObserver.takeRecords();
+
+function syncStructure(): void {
+  if (structureFrame) cancelAnimationFrame(structureFrame);
+  structureFrame = 0;
+  if (!initialized) return;
+  invalidateCategoryOffset();
+  syncCategoryLayout({ refreshMetrics: scrollSpy.refresh, scheduleRail: rail.scheduleRail });
+  applyCategorySemantics();
+  submenu.scan();
+  bindRailScrollers();
+  submenu.schedulePosition();
+  structureObserver?.takeRecords();
   refreshMotionSafely();
 }
-function breakpoint():void{closeSubmenu(false);syncStructure();}
-function refreshGeometry():void{if(!initialized)return;invalidateOffset();N.refreshMetrics();N.scheduleRail();scheduleSubmenuPosition();}
-function scheduleStructure():void{if(initialized&&!structureRaf)structureRaf=requestAnimationFrame(syncStructure);}
-function structural(node:Node):boolean{
-  if(!node||node.nodeType!==1)return false;
-  var selector=S.container+', '+S.categoryToolbar+', '+N.selectors.mobileWrapper+', .wrapp-nav-tabsTopShop';
-  var element=node as Element;if(element.matches(selector))return true;
-  return !!element.querySelector(S.container);
-}
-function watchStructure():void{
-  if(structureObserver||!window.MutationObserver||!document.body)return;
-  structureObserver=new MutationObserver(function(mutations:MutationRecord[]){for(var i=0;i<mutations.length;i++){var mutation=mutations[i];if(!mutation)continue;var nodes:Node[]=Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes));if(nodes.some(structural)){scheduleStructure();return;}}});
-  observeStructure();
-}
-function addListeners():void{
-  document.addEventListener('click',N.onCategory,true);document.addEventListener('change',N.onSelect,true);
-  document.addEventListener('pointerover',pointerOver,true);document.addEventListener('pointerout',pointerOut,true);document.addEventListener('pointerdown',outsidePointer,true);document.addEventListener('focusin',focusIn,true);document.addEventListener('focusout',focusOut,true);document.addEventListener('keydown',keydown,true);
-  window.addEventListener('scroll',windowScroll,{passive:true});window.addEventListener('resize',resize,{passive:true});
-  window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});
-  if(mq.addEventListener)mq.addEventListener('change',breakpoint);else mq.addListener(breakpoint);
-}
-function removeListeners():void{
-  document.removeEventListener('click',N.onCategory,true);document.removeEventListener('change',N.onSelect,true);
-  document.removeEventListener('pointerover',pointerOver,true);document.removeEventListener('pointerout',pointerOut,true);document.removeEventListener('pointerdown',outsidePointer,true);document.removeEventListener('focusin',focusIn,true);document.removeEventListener('focusout',focusOut,true);document.removeEventListener('keydown',keydown,true);
-  window.removeEventListener('scroll',windowScroll);window.removeEventListener('resize',resize);window.removeEventListener('wheel',interrupt);window.removeEventListener('touchstart',interrupt);
-  if(mq.removeEventListener)mq.removeEventListener('change',breakpoint);else mq.removeListener(breakpoint);
-}
-function init():void{
-  if(initialized)return;initialized=true;addListeners();syncStructure();if(N.categoryIndicator&&N.categoryIndicator.resume)N.categoryIndicator.resume();watchStructure();if(N.installMotion)N.installMotion();
-  geometryTimer=window.setTimeout(function(){geometryTimer=0;if(!initialized)return;N.semantics();scanSubmenus();refreshGeometry();},M.geometryRefreshDelay);
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refreshGeometry).catch(function(){});
-}
-function destroy():void{
-  if(!initialized)return;initialized=false;removeListeners();unbindRailScrollers();destroySubmenu();
-  if(structureObserver){structureObserver.disconnect();structureObserver=null;}
-  if(resizeRaf){cancelAnimationFrame(resizeRaf);resizeRaf=0;}if(structureRaf){cancelAnimationFrame(structureRaf);structureRaf=0;}if(motionRefreshRaf){cancelAnimationFrame(motionRefreshRaf);motionRefreshRaf=0;}if(geometryTimer){clearTimeout(geometryTimer);geometryTimer=0;}
-  if(N.cancelRailState)N.cancelRailState();if(N.stopSpy)N.stopSpy();if(N.interruptAutoScroll)N.interruptAutoScroll();if(N.categoryIndicator&&N.categoryIndicator.pause)N.categoryIndicator.pause();
+
+function scheduleStructure(): void {
+  if (initialized && !structureFrame) structureFrame = requestAnimationFrame(syncStructure);
 }
 
-ready(init);
-N.syncLayout=N.layout;N.scheduleRailState=N.scheduleRail;N.resolveAnchor=N.anchor;N.refreshSections=N.refreshMetrics;N.repairStructure=scheduleStructure;N.init=init;N.destroy=destroy;
-})();
+function structural(node: Node): boolean {
+  if (!(node instanceof Element)) return false;
+  const selector = `${selectors.container}, ${selectors.categoryToolbar}, ${CATEGORY_SELECTORS.mobileWrapper}, .wrapp-nav-tabsTopShop`;
+  return node.matches(selector) || Boolean(node.querySelector(selectors.container));
+}
+
+function watchStructure(): void {
+  if (structureObserver || !document.body) return;
+  structureObserver = new MutationObserver((mutations) => {
+    if (mutations.some((mutation) => [...mutation.addedNodes, ...mutation.removedNodes].some(structural))) scheduleStructure();
+  });
+  observeStructure();
+}
+
+function breakpoint(): void {
+  submenu.close(false);
+  syncStructure();
+}
+
+function addListeners(): void {
+  document.addEventListener('click', onCategory, true);
+  document.addEventListener('change', onSelect, true);
+  document.addEventListener('pointerover', submenu.onPointerOver, true);
+  document.addEventListener('pointerout', submenu.onPointerOut, true);
+  document.addEventListener('pointerdown', submenu.onOutsidePointer, true);
+  document.addEventListener('focusin', submenu.onFocusIn, true);
+  document.addEventListener('focusout', submenu.onFocusOut, true);
+  document.addEventListener('keydown', submenu.onKeyDown, true);
+  window.addEventListener('scroll', windowScroll, { passive: true });
+  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('wheel', interrupt, { passive: true });
+  window.addEventListener('touchstart', interrupt, { passive: true });
+  desktopCategories.addEventListener('change', breakpoint);
+}
+
+function removeListeners(): void {
+  document.removeEventListener('click', onCategory, true);
+  document.removeEventListener('change', onSelect, true);
+  document.removeEventListener('pointerover', submenu.onPointerOver, true);
+  document.removeEventListener('pointerout', submenu.onPointerOut, true);
+  document.removeEventListener('pointerdown', submenu.onOutsidePointer, true);
+  document.removeEventListener('focusin', submenu.onFocusIn, true);
+  document.removeEventListener('focusout', submenu.onFocusOut, true);
+  document.removeEventListener('keydown', submenu.onKeyDown, true);
+  window.removeEventListener('scroll', windowScroll);
+  window.removeEventListener('resize', resize);
+  window.removeEventListener('wheel', interrupt);
+  window.removeEventListener('touchstart', interrupt);
+  desktopCategories.removeEventListener('change', breakpoint);
+}
+
+export function initializeCategoryNavigation(): () => void {
+  if (initialized) return destroyCategoryNavigation;
+  initialized = true;
+  addListeners();
+  syncStructure();
+  resumeCategoryIndicator();
+  watchStructure();
+  geometryTimer = window.setTimeout(() => {
+    geometryTimer = 0;
+    if (!initialized) return;
+    applyCategorySemantics();
+    submenu.scan();
+    refreshGeometry();
+  }, motionTokens.geometryRefreshDelay);
+  void document.fonts?.ready.then(refreshGeometry).catch(() => undefined);
+  return destroyCategoryNavigation;
+}
+
+export function destroyCategoryNavigation(): void {
+  if (!initialized) return;
+  initialized = false;
+  removeListeners();
+  unbindRailScrollers();
+  submenu.destroy();
+  structureObserver?.disconnect();
+  structureObserver = null;
+  if (resizeFrame) cancelAnimationFrame(resizeFrame);
+  if (structureFrame) cancelAnimationFrame(structureFrame);
+  if (motionRefreshFrame) cancelAnimationFrame(motionRefreshFrame);
+  if (geometryTimer) clearTimeout(geometryTimer);
+  resizeFrame = structureFrame = motionRefreshFrame = geometryTimer = 0;
+  rail.cancel();
+  scrollSpy.stop();
+  programmaticScroll.interrupt();
+  pauseCategoryIndicator();
+}
+
+export function refreshCategoryNavMetrics(): void {
+  scrollSpy.refresh();
+}
+
+export function repairCategoryNavigation(): void {
+  scheduleStructure();
+}
+
+export function currentCategory(): HTMLElement | null {
+  return scrollSpy.current();
+}
+
+export function setActiveCategory(target: HTMLElement | null, animate = true): void {
+  activeState.set(target, animate);
+}
+
+export { markCategoryIndicatorDirty, moveCategoryIndicator, isCategoryIndicatorDirty, categoryLinks, anchorForHref };

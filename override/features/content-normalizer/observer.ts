@@ -1,23 +1,52 @@
-(function(){
-'use strict';
-var SC=window.SCOverride,CFG=SC&&SC.config,S=CFG&&CFG.selectors,C=SC&&SC.contentNormalizer,D=C&&C.dom;
-if(!SC||!C||!D||SC.__contentNormalizerObserverBooted)return;SC.__contentNormalizerObserverBooted=true;
+import { selectors } from '../../core/variables.js';
+import { collectContentHosts, CONTENT_HOST_SELECTOR, normalizeContentHost } from './dom.js';
 
-/* Agrupa hosts mutados y los procesa una vez por frame. */
-var observer:MutationObserver|null=null,raf=0,pending=new Set<Element>();
-function flush():void{raf=0;var hosts=Array.from(pending);pending.clear();hosts.forEach(function(host:Element):void{D.normalizeHost(host);});if(observer)observer.takeRecords();}
-function schedule():void{if(raf)return;raf=requestAnimationFrame(flush);}
-function collect(node:Node):void{D.collect(node,pending);}
-function collectHost(node:Node):void{var el=node.nodeType===1?node as Element:node.parentElement,host:Element|null;if(!el||!el.closest)return;host=el.closest(D.selector);if(host)pending.add(host);}
+export class ContentMutationObserver {
+  #observer: MutationObserver | null = null;
+  #frame = 0;
+  readonly #pending = new Set<Element>();
 
-/* Desconecta y limpia trabajo pendiente. */
-function disconnect():void{if(observer)observer.disconnect();observer=null;if(raf)cancelAnimationFrame(raf);raf=0;pending.clear();}
+  observe(): void {
+    this.disconnect();
+    const root = document.querySelector(selectors.container) ?? document.body;
+    if (!root) return;
 
-/* Observa solo el contenedor del catálogo. */
-function observe():void{
-  disconnect();var root=document.querySelector(S.container)||document.body;if(!root)return;
-  observer=new MutationObserver(function(mutations:MutationRecord[]):void{mutations.forEach(function(mutation:MutationRecord):void{collectHost(mutation.target);if(mutation.type==='childList')Array.prototype.forEach.call(mutation.addedNodes||[],collect);});if(pending.size)schedule();});
-  observer.observe(root,{subtree:true,childList:true,characterData:true});
+    this.#observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        this.#collectContainingHost(mutation.target);
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) collectContentHosts(node, this.#pending);
+        }
+      }
+      if (this.#pending.size) this.#schedule();
+    });
+    this.#observer.observe(root, { subtree: true, childList: true, characterData: true });
+  }
+
+  disconnect(): void {
+    this.#observer?.disconnect();
+    this.#observer = null;
+    if (this.#frame) cancelAnimationFrame(this.#frame);
+    this.#frame = 0;
+    this.#pending.clear();
+  }
+
+  #collectContainingHost(node: Node): void {
+    const element = node instanceof Element ? node : node.parentElement;
+    const host = element?.closest(CONTENT_HOST_SELECTOR);
+    if (host) this.#pending.add(host);
+  }
+
+  #schedule(): void {
+    if (this.#frame) return;
+    this.#frame = requestAnimationFrame(() => this.#flush());
+  }
+
+  #flush(): void {
+    this.#frame = 0;
+    const hosts = [...this.#pending];
+    this.#pending.clear();
+    hosts.forEach(normalizeContentHost);
+    this.#observer?.takeRecords();
+  }
 }
-C.observer={observe:observe,disconnect:disconnect};
-})();
