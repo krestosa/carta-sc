@@ -50,6 +50,26 @@ function validateOverrideCoverage(issues: string[]): void {
   }
 }
 
+function validateProductImageContract(html: string, issues: string[]): void {
+  if (!/<div\b[^>]*class=["'][^"']*\bimgShop\b[^"']*["'][^>]*>\s*<img\b[^>]*\bdata-sc-src=["'][^"']+["']/i.test(html)) {
+    issues.push('final product cards do not expose deferred image sources inside imgShop');
+  }
+
+  const dataRuntime = path.join(SITE, 'override', 'components', 'product-card', 'data.js');
+  if (!fs.existsSync(dataRuntime)) {
+    issues.push('compiled product-card data runtime is missing');
+    return;
+  }
+
+  const runtime = read(dataRuntime);
+  if (!runtime.includes("card.querySelector('.imgShop img, img.productoImageShop')")) {
+    issues.push('product modal image resolver is not compatible with rendered imgShop markup');
+  }
+  if (!runtime.includes("image.getAttribute('data-sc-src')")) {
+    issues.push('product modal image resolver does not read deferred product image sources');
+  }
+}
+
 export function validateFinalInvariants(): void {
   const sha = githubSha();
   const index = path.join(SITE, 'index.html');
@@ -59,6 +79,7 @@ export function validateFinalInvariants(): void {
   const issues: string[] = [];
   validateRequiredFiles(issues);
   validateOverrideCoverage(issues);
+  validateProductImageContract(html, issues);
 
   if (html.includes('unversioned')) issues.push('unversioned cache token remains in final Pages HTML');
   if (!html.includes(`_critical-media/sushiclub-logo.svg?v=${sha}`)) {
