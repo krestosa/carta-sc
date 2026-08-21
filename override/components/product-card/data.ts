@@ -27,7 +27,12 @@ export const traitLabels = (card: Element): string[] => {
 
 export const imageSource = (card: Element): string => {
   const image = card.querySelector<HTMLImageElement>('img.productoImageShop');
-  return image ? image.currentSrc || image.src || image.getAttribute('data-src') || '' : '';
+  if (!image) return '';
+  return image.getAttribute('data-sc-src')
+    || image.currentSrc
+    || image.getAttribute('src')
+    || image.getAttribute('data-src')
+    || '';
 };
 
 export const ensureId = (node: Element | null, id: string): string => {
