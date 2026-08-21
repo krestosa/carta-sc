@@ -1,7 +1,9 @@
-import { tween } from './scheduler.js';
+import { spring, tween } from './scheduler.js';
 import type {
   MotionHandle,
   MotionPropertyOptions,
+  MotionSpringPropertyOptions,
+  MotionSpringSpec,
   MotionTransformState,
 } from './types.js';
 
@@ -23,27 +25,42 @@ function writeTransform(target: HTMLElement | SVGElement, state: MotionTransform
   target.style.transform = `translate3d(${state.x}px,${state.y}px,0) rotate(${state.rotation}deg) scale(${state.scale})`;
 }
 
+function transformEndpoints(
+  target: HTMLElement | SVGElement,
+  to: Partial<MotionTransformState>,
+): readonly [MotionTransformState, MotionTransformState] {
+  const from = currentTransform(target);
+  return [from, {
+    x: to.x ?? from.x,
+    y: to.y ?? from.y,
+    scale: to.scale ?? from.scale,
+    rotation: to.rotation ?? from.rotation,
+  }];
+}
+
+function interpolateTransform(
+  from: MotionTransformState,
+  end: MotionTransformState,
+  progress: number,
+): MotionTransformState {
+  return {
+    x: from.x + (end.x - from.x) * progress,
+    y: from.y + (end.y - from.y) * progress,
+    scale: from.scale + (end.scale - from.scale) * progress,
+    rotation: from.rotation + (end.rotation - from.rotation) * progress,
+  };
+}
+
 export function animateTransform(
   target: HTMLElement | SVGElement,
   to: Partial<MotionTransformState>,
   options: MotionPropertyOptions,
 ): MotionHandle {
-  const from = currentTransform(target);
-  const end: MotionTransformState = {
-    x: to.x ?? from.x,
-    y: to.y ?? from.y,
-    scale: to.scale ?? from.scale,
-    rotation: to.rotation ?? from.rotation,
-  };
+  const [from, end] = transformEndpoints(target, to);
   target.style.willChange = 'transform';
 
   return tween(options.duration, options.ease, (progress) => {
-    writeTransform(target, {
-      x: from.x + (end.x - from.x) * progress,
-      y: from.y + (end.y - from.y) * progress,
-      scale: from.scale + (end.scale - from.scale) * progress,
-      rotation: from.rotation + (end.rotation - from.rotation) * progress,
-    });
+    writeTransform(target, interpolateTransform(from, end, progress));
   }, {
     delay: options.delay,
     onComplete: () => {
@@ -54,19 +71,67 @@ export function animateTransform(
   });
 }
 
+export function animateSpringTransform(
+  target: HTMLElement | SVGElement,
+  to: Partial<MotionTransformState>,
+  spec: MotionSpringSpec,
+  options: MotionSpringPropertyOptions = {},
+): MotionHandle {
+  const [from, end] = transformEndpoints(target, to);
+  target.style.willChange = 'transform';
+
+  return spring(spec, (progress) => {
+    writeTransform(target, interpolateTransform(from, end, progress));
+  }, {
+    delay: options.delay,
+    initialVelocity: options.initialVelocity,
+    onComplete: () => {
+      target.style.removeProperty('will-change');
+      if (options.clear) target.style.removeProperty('transform');
+      options.onComplete?.();
+    },
+  });
+}
+
+function currentOpacity(target: HTMLElement | SVGElement): number {
+  const parsed = Number.parseFloat(getComputedStyle(target).opacity);
+  return Number.isFinite(parsed) ? parsed : 1;
+}
+
 export function animateOpacity(
   target: HTMLElement | SVGElement,
   to: number,
   options: MotionPropertyOptions,
 ): MotionHandle {
-  const parsed = Number.parseFloat(getComputedStyle(target).opacity);
-  const from = Number.isFinite(parsed) ? parsed : 1;
+  const from = currentOpacity(target);
   target.style.willChange = 'opacity';
 
   return tween(options.duration, options.ease, (progress) => {
     target.style.opacity = String(from + (to - from) * progress);
   }, {
     delay: options.delay,
+    onComplete: () => {
+      target.style.removeProperty('will-change');
+      if (options.clear) target.style.removeProperty('opacity');
+      options.onComplete?.();
+    },
+  });
+}
+
+export function animateSpringOpacity(
+  target: HTMLElement | SVGElement,
+  to: number,
+  spec: MotionSpringSpec,
+  options: MotionSpringPropertyOptions = {},
+): MotionHandle {
+  const from = currentOpacity(target);
+  target.style.willChange = 'opacity';
+
+  return spring(spec, (progress) => {
+    target.style.opacity = String(from + (to - from) * progress);
+  }, {
+    delay: options.delay,
+    initialVelocity: options.initialVelocity,
     onComplete: () => {
       target.style.removeProperty('will-change');
       if (options.clear) target.style.removeProperty('opacity');
