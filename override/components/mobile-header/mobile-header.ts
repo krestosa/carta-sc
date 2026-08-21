@@ -13,8 +13,8 @@ interface MenuBinding {
   syncKey:((event:KeyboardEvent)=>void)|null;
 }
 /* Estado de reparación, bindings y geometría del icono. */
-var desktopQuery=C.queries.desktop as MediaQueryList,retryTimer=0,syncTimers=new Set<number>(),bindings:MenuBinding[]=[],initialized=false,SVG_NS='http://www.w3.org/2000/svg';
-var MENU_ICON='M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z';
+var desktopQuery=C.queries.desktop as MediaQueryList,retryTimer=0,syncTimers=new Set<number>(),bindings:MenuBinding[]=[],iconMotion=new WeakMap<SVGPathElement,MotionHandle>(),initialized=false,SVG_NS='http://www.w3.org/2000/svg';
+var MENU_ICON='M3 16H21V18H3V16Z M3 11H21V13H3V11Z M3 6H21V8H3V6Z';
 var CLOSE_ICON='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 
 /* Crea el SVG único del botón de menú. */
@@ -29,7 +29,8 @@ function ensureMenuIcon(button:HTMLElement|null):SVGPathElement|null{
 /* Sincroniza menú/cerrar y sus atributos accesibles. */
 function syncIcon(button:HTMLElement,open:boolean):void{
   var path=ensureMenuIcon(button),state=open?'close':'menu',shape=open?CLOSE_ICON:MENU_ICON,previous=path&&path.getAttribute('data-sc-icon-state');if(!path)return;
-  if(previous&&previous!==state&&SC.motion&&SC.motion.morphIcon)SC.motion.morphIcon(path,shape,{duration:.24});else path.setAttribute('d',shape);
+  var iconPath=path,current=iconMotion.get(iconPath);if(current){current.cancel();iconMotion.delete(iconPath);}
+  if(previous&&previous!==state&&SC.motion&&SC.motion.runLoaded){var ran=SC.motion.runLoaded(function(deps:MotionDeps){var handle=deps.engine.path(iconPath,shape,{duration:.24,ease:'cubic.inOut',onComplete:function(){iconMotion.delete(iconPath);}});iconMotion.set(iconPath,handle);});if(!ran)iconPath.setAttribute('d',shape);}else iconPath.setAttribute('d',shape);
   path.setAttribute('data-sc-icon-state',state);
 }
 function menuOpen(button:HTMLElement,nav:HTMLElement):boolean{

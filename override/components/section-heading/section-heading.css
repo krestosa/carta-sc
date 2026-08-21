@@ -49,6 +49,11 @@ body.sushiShop .listadoShop .titleShopSeccion > div::after {
   pointer-events: none;
 }
 
+body.sushiShop .sc-section-text-mask {
+  display: block;
+  overflow: hidden;
+}
+
 body.sushiShop .sc-section-text-line {
   display: block;
 }

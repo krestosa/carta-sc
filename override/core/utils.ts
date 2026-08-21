@@ -21,11 +21,7 @@ SC.utils.visible=function(node:HTMLElement|null|undefined):boolean{
 /* Recalcula motion después del próximo frame. */
 SC.utils.refreshMotion=function(delay:number|null|undefined):void{
   requestAnimationFrame(function(){
-    if(SC.motion&&typeof SC.motion.refresh==='function'){
-      SC.motion.refresh(delay==null?0:delay);
-      return;
-    }
-    if(window.ScrollTrigger&&typeof window.ScrollTrigger.refresh==='function')window.ScrollTrigger.refresh();
+    if(SC.motion&&typeof SC.motion.refresh==='function')SC.motion.refresh(delay==null?0:delay);
   });
 };
 })();

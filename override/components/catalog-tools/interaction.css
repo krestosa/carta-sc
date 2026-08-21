@@ -1,5 +1,5 @@
 /* Estados de interacción de los controles del catálogo.
-   GSAP mantiene las transformaciones de los iconos. */
+   el motor local mantiene las transformaciones de los iconos. */
 body.sushiShop {
   --sc-state-hover-opacity: .08;
   --sc-state-focus-opacity: .10;

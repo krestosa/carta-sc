@@ -1,5 +1,5 @@
 /* Orquestador de carga del override. Monta dependencias por etapas, desbloquea motion cuando
-   módulos y GSAP están listos y usa la estabilización posterior sólo para refrescar geometría. */
+   módulos y motion local están listos y usa la estabilización posterior sólo para refrescar geometría. */
 (function(){
 'use strict';
 
@@ -13,7 +13,7 @@ type Stages=Stage[];
 var version=window.__scCatalogAssetVersion||'unversioned';
 var basePath='override/';
 
-/* La primera etapa habilita infraestructura sin esperar la descarga externa de GSAP. */
+/* La primera etapa habilita infraestructura y el motor local de motion. */
 var foundationStages:Stages=[
   [
     ['features/image-preloader/image-preloader.js','sc-image-preloader-js'],

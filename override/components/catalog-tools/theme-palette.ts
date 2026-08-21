@@ -6,7 +6,7 @@ var SC=window.SCOverride,CFG=SC&&SC.config,C=SC&&SC.catalogTools;if(!SC||!CFG||!
 interface PaletteSnapshot{[key:string]:string;}
 interface PaletteContext{from:PaletteSnapshot;to:PaletteSnapshot;duration:number;token:number;fade:boolean;}
 type ActiveMotion={kill?:()=>void;cancel?:()=>void};
-var doc=document.documentElement,deps:MotionDeps|null=null,overlay:HTMLElement|null=null,active:ActiveMotion[]=[],token=0;
+var doc=document.documentElement,overlay:HTMLElement|null=null,active:ActiveMotion[]=[],token=0;
 function reduce():boolean{return!!(CFG.queries&&CFG.queries.reducedMotion&&CFG.queries.reducedMotion.matches);}
 function capture():PaletteSnapshot{var s=getComputedStyle(doc);return{'--sc-color-ink':s.getPropertyValue('--sc-color-ink').trim(),'--sc-color-surface':s.getPropertyValue('--sc-color-surface').trim()};}
 
@@ -24,17 +24,12 @@ function stopActive():void{var list=active;active=[];list.forEach(function(a:Act
 function resetOverlay():void{if(!overlay)return;overlay.style.opacity='0';overlay.style.backgroundColor='transparent';overlay.style.removeProperty('will-change');}
 function kill():void{token++;stopActive();resetOverlay();}
 
-/* Usa WAAPI primero y GSAP como respaldo. */
+/* El fade usa Web Animations API; no depende de runtimes externos. */
 function waapiFade(node:HTMLElement,from:number,to:number,ms:number,easing:string,done:()=>void,id:number):boolean{
   if(!node.animate)return false;
   var a=node.animate([{opacity:from},{opacity:to}],{duration:ms,easing:easing,fill:'forwards'});active.push(a);
   a.finished.then(function(){if(id!==token)return;node.style.opacity=String(to);done();},function(){});return true;
 }
-function gsapFade(node:HTMLElement,to:number,seconds:number,ease:string,done:()=>void,id:number):boolean{
-  var g=deps&&deps.gsap;if(!g)return false;
-  var a=g.to(node,{opacity:to,duration:seconds,ease:ease,overwrite:'auto',onComplete:function(){if(id!==token)return;done();}});active.push(a);return true;
-}
-
 /* Cubre, aplica el tema y revela la nueva paleta. */
 function animate(_before:PaletteSnapshot,commit:()=>void,prepared?:((context:PaletteContext)=>void)):PaletteContext{
   var from=capture(),node=ensureOverlay();kill();var id=token,duration=reduce()?.18:.56,half=duration*.5,context={from:from,to:from,duration:duration,token:id,fade:true};
@@ -46,18 +41,14 @@ function animate(_before:PaletteSnapshot,commit:()=>void,prepared?:((context:Pal
     if(id!==token)return;requestAnimationFrame(function(){
       if(id!==token)return;
       if(waapiFade(layer,1,0,half*1000,'cubic-bezier(.37,0,.63,1)',finish,id))return;
-      if(gsapFade(layer,0,half,'sine.inOut',finish,id))return;
       finish();
     });
   }
   function swap():void{if(id!==token)return;commit();reveal();}
   function finish():void{if(id!==token)return;stopActive();resetOverlay();}
   if(waapiFade(layer,0,1,half*1000,'cubic-bezier(.37,0,.63,1)',swap,id))return context;
-  if(gsapFade(layer,1,half,'sine.inOut',swap,id))return context;
   commit();resetOverlay();return context;
 }
 
-/* Toma GSAP cuando termina de cargar motion. */
-if(SC.motion&&SC.motion.whenLoaded)SC.motion.whenLoaded(function(d:MotionDeps){deps=d;});else if(SC.motion&&SC.motion.whenReady)SC.motion.whenReady(function(d:MotionDeps){deps=d;});
 C.themePalette={animate:animate,kill:kill};
 })();

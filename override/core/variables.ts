@@ -1,8 +1,8 @@
 (function(){
 'use strict';
-/* Configuración compartida del runtime: breakpoints, selectores y dependencias de motion.
+/* Configuración compartida del runtime: breakpoints, selectores y motion.
    Centralizar estos contratos evita que cada componente duplique valores o detecciones. */
-var SC=window.SCOverride=window.SCOverride||{},config=SC.config=SC.config||{},GSAP_VERSION='3.15.0',GSAP_DIST='https://cdn.jsdelivr.net/npm/gsap@'+GSAP_VERSION+'/dist/';
+var SC=window.SCOverride=window.SCOverride||{},config=SC.config=SC.config||{};
 function merged<T extends object>(defaults:T,current:Partial<T>|null|undefined):T{return Object.assign({},defaults,current||{});}
 
 /* Define media queries una sola vez y conserva instancias reutilizables de matchMedia. */
@@ -24,14 +24,6 @@ mediaNames.forEach(function(name:keyof SCMediaConfig){
   var queries=config.queries as Partial<SCQueries>;
   if(!queries[name])queries[name]=window.matchMedia(config.media[name]);
 });
-
-/* Manifiesto de GSAP usado por motion/main.js antes de montar módulos interactivos. */
-config.urls=merged({
-  gsap:GSAP_DIST+'gsap.min.js',
-  morphSVG:GSAP_DIST+'MorphSVGPlugin.min.js',
-  scrollTrigger:GSAP_DIST+'ScrollTrigger.min.js',
-  splitText:GSAP_DIST+'SplitText.min.js'
-},config.urls);
 
 /* Selectores comunes para que los módulos apunten al mismo DOM y al mismo estado legacy. */
 config.selectors=merged({
@@ -58,7 +50,7 @@ config.classes=merged({
 },config.classes);
 
 /* Ajustes de motion realmente globales; cada componente conserva sus propios tiempos. */
-var defaultEasings={out:'power2.out',strongOut:'power3.out',in:'power2.in',inOut:'power2.inOut'};
+var defaultEasings={out:'cubic.out',strongOut:'quart.out',in:'cubic.in',inOut:'cubic.inOut'};
 config.motion=merged({geometryRefreshDelay:180,easings:defaultEasings},config.motion);
 config.motion.easings=merged(defaultEasings,config.motion.easings);
 })();

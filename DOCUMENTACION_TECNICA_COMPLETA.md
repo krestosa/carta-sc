@@ -242,9 +242,9 @@ Densidad:
 
 ## 14. Motion
 
-Motion es progressive enhancement. La UI funcional no depende de que GSAP o plugins externos carguen correctamente.
+Motion es progressive enhancement y se implementa con un motor TypeScript local basado en `requestAnimationFrame`, Web Animations API donde ya era la ruta primaria y primitivas propias de interpolación. No carga runtimes de animación externos.
 
-Cada componente es owner de sus tweens/timelines y debe manejar cancelación/cleanup. `prefers-reduced-motion` se centraliza mediante `SC.motion.reduced()`.
+El motor conserva las curvas matemáticas, duraciones, delays, stagger, interrupción y cleanup de los efectos existentes. Los paths SVG usan sampling/alineación de puntos; las geometrías rectangulares interpolan atributos SVG nativos. Cada componente es owner de sus `MotionHandle` y `prefers-reduced-motion` se centraliza mediante `SC.motion.reduced()`.
 
 ## 15. Reglas para cambios futuros
 
@@ -252,6 +252,7 @@ Cada componente es owner de sus tweens/timelines y debe manejar cancelación/cle
 - no reintroducir `.js/.mjs/.py/.sh` propios;
 - no usar `@ts-ignore`, `@ts-nocheck` ni `any` como escape de tipos;
 - mantener `js/` y `_js_dev/` inmutables;
+- no reintroducir runtimes o plugins externos de animación;
 - mantener el lab separado del contrato de producción;
 - ejecutar `npm run ci` antes de considerar un cambio entregable.
 

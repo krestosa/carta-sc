@@ -2,10 +2,6 @@ interface Window {
   SCOverride: SCOverrideApi;
   jQuery?: JQueryStaticCompat;
   $?: JQueryStaticCompat;
-  gsap?: GsapLike;
-  ScrollTrigger?: ScrollTriggerLike;
-  MorphSVGPlugin?: MorphSVGPluginLike;
-  SplitText?: SplitTextLike;
   __scCatalogAssetVersion?: string;
   __scInitialTheme?: string;
   __scOverrideMainBooted?: boolean;
@@ -43,7 +39,6 @@ interface SCQueries {
   phone: MediaQueryList; mobile: MediaQueryList; tablet: MediaQueryList; compact: MediaQueryList; compactWide: MediaQueryList; desktop: MediaQueryList;
   reducedMotion: MediaQueryList; reducedTransparency: MediaQueryList; moreContrast: MediaQueryList; forcedColors: MediaQueryList;
 }
-interface SCUrls { gsap: string; morphSVG: string; scrollTrigger: string; splitText: string; }
 interface SCSelectors {
   container: string; productList: string; productCard: string; productCards: string; productLink: string; productTitle: string;
   productDescription: string; productTraits: string; sectionTitle: string; sectionSubtitle: string; categoryToolbar: string;
@@ -51,7 +46,7 @@ interface SCSelectors {
 }
 interface SCClasses { catalogLayoutReady: string; catalogSearching: string; staticInitialSection: string; }
 interface SCMotionConfig { geometryRefreshDelay: number; easings: { out: string; strongOut: string; in: string; inOut: string; }; }
-interface SCConfig { media: SCMediaConfig; queries: SCQueries; urls: SCUrls; selectors: SCSelectors; classes: SCClasses; motion: SCMotionConfig; }
+interface SCConfig { media: SCMediaConfig; queries: SCQueries; selectors: SCSelectors; classes: SCClasses; motion: SCMotionConfig; }
 
 interface SCUtilsApi {
   text(node: Node | null | undefined): string;
@@ -62,13 +57,12 @@ interface SCUtilsApi {
   refreshMotion(delay?: number | null): void;
 }
 interface SCMotionApi {
-  ready(): Promise<MotionDeps | null>; prepare(): Promise<MotionDeps | null>;
+  ready(): Promise<MotionDeps>; prepare(): Promise<MotionDeps>;
   whenLoaded(fn: (deps: MotionDeps) => void): void; whenReady(fn: (deps: MotionDeps) => void): void;
   run(fn: (deps: MotionDeps) => void): boolean; runLoaded(fn: (deps: MotionDeps) => void): boolean;
   refresh(delay?: number | null): void; reduced(): boolean;
-  morphIcon(path: SVGPathElement, shape: string | Element, options?: Record<string, unknown>): boolean;
   bindMicroInteraction?(control: HTMLElement, target: HTMLElement | SVGElement, options?: Record<string, unknown>): Cleanup;
-  unlock(): void; isReady(): boolean; isLoaded(): boolean; isMorphReady(): boolean;
+  unlock(): void; isReady(): boolean; isLoaded(): boolean;
 }
 interface SCTemplatesApi { ready(): Promise<void>; has(name: string): boolean; clone(name: string): Element; }
 interface SCScrollState { programmatic: boolean; suppressRevealUntil: number; }
@@ -91,7 +85,7 @@ interface SCProductCardApi {
   imageSource(card: HTMLElement): string; traitLabels(source: ParentNode | null): string[]; buildTraitGroup(card: HTMLElement, className?: string): HTMLElement | null;
   enhanceProductLinks(root?: ParentNode): void; refresh(root?: ParentNode): void; repair(): void; init(): void; destroy(): void;
 }
-interface SCProductCardMotionPartsApi { setupReveal(gsap: GsapLike, trigger: ScrollTriggerLike, profile: { initialY?: number; revealY?: number; threshold?: number }, reduce: boolean): Cleanup; revealViewport?: (() => void) | null; }
+interface SCProductCardMotionPartsApi { setupReveal(engine: MotionEngine, profile: { initialY?: number; revealY?: number; threshold?: number }, reduce: boolean): Cleanup; revealViewport?: (() => void) | null; }
 
 interface SCProductModalSelectors { dialog: string; }
 interface SCProductModalViewApi { build(link: HTMLElement): HTMLElement | null; }
@@ -104,9 +98,9 @@ interface SCProductModalApi { open(link: HTMLElement): void; close(): void; getA
 
 interface SCCartScrollProfile { maxLag: number; velocityScale: number; }
 interface SCCartPartsApi {
-  setupBadges(gsap: GsapLike, reduce: boolean): Cleanup;
-  setupList(gsap: GsapLike, trigger: ScrollTriggerLike, reduce: boolean): Cleanup;
-  setupScroll(gsap: GsapLike, trigger: ScrollTriggerLike, profile: SCCartScrollProfile, reduce: boolean): Cleanup;
+  setupBadges(engine: MotionEngine, reduce: boolean): Cleanup;
+  setupList(engine: MotionEngine, reduce: boolean): Cleanup;
+  setupScroll(engine: MotionEngine, profile: SCCartScrollProfile, reduce: boolean): Cleanup;
 }
 
 interface SCThemePaletteSnapshot { [key: string]: string; }
@@ -169,96 +163,34 @@ interface SCOverrideApi {
   __productCardA11yBooted?: boolean; __productCardBooted?: boolean; __productCardContentBooted?: boolean; __productCardDataBooted?: boolean; __productCardMotionBooted?: boolean; __productCardRevealMotionBooted?: boolean; __productModalA11yBooted?: boolean; __productModalBooted?: boolean; __productModalMotionBooted?: boolean; __productModalViewBooted?: boolean; __renderLifecycleBooted?: boolean; __sectionHeadingBooted?: boolean; __templateRegistryBooted?: boolean;
 }
 
-declare var gsap: GsapLike;
-declare var ScrollTrigger: ScrollTriggerLike;
-declare var MorphSVGPlugin: MorphSVGPluginLike;
-declare var SplitText: SplitTextLike;
 interface Window {
   __scLegacyMainLoaderBooted?: boolean;
 }
 interface Storage {
   __scPersistenceGuard?: boolean;
 }
-interface IconMotionState { timeline: GsapTimeline | null; }
-interface ViewIconMotionState { timeline: GsapTimeline | null; }
-interface SVGElement { __scIconMotion?: IconMotionState | null; __scViewMorphReady?: boolean; __scViewIconMotion?: ViewIconMotionState | null; }
+interface SVGElement { __scViewIconMotion?: MotionHandle[] | null; }
 interface HTMLElement {
   __scCategoryConfirm?: Animation | null;
   __scModalMotionToken?: number;
   __scImagePriorityAssigned?: boolean;
 }
-type GsapVars = Record<string, unknown>;
-interface GsapTween {
-  kill(): void;
-  pause(position?: number): GsapTween;
-  restart(includeDelay?: boolean): GsapTween;
+interface MotionHandle {
+  cancel(): void;
+  finish(): void;
+  active(): boolean;
 }
-interface GsapTimeline extends GsapTween {
-  progress(value?: number): number | GsapTimeline;
-  to(target: unknown, vars: GsapVars, position?: number | string): GsapTimeline;
-  fromTo(target: unknown, fromVars: GsapVars, toVars: GsapVars, position?: number | string): GsapTimeline;
-  set(target: unknown, vars: GsapVars, position?: number | string): GsapTimeline;
-  call(callback: () => void, params?: unknown[] | null, position?: number | string): GsapTimeline;
+interface MotionTweenOptions { delay?: number; onComplete?: () => void; }
+interface MotionPropertyOptions extends MotionTweenOptions { duration: number; ease?: string; clear?: boolean; }
+interface MotionTransformState { x: number; y: number; scale: number; rotation: number; }
+interface MotionEngine {
+  tween(duration: number, ease: string | undefined, update: (progress: number) => void, options?: MotionTweenOptions): MotionHandle;
+  delay(seconds: number, callback: () => void): MotionHandle;
+  transform(target: HTMLElement | SVGElement, to: Partial<MotionTransformState>, options: MotionPropertyOptions): MotionHandle;
+  opacity(target: HTMLElement | SVGElement, to: number, options: MotionPropertyOptions): MotionHandle;
+  attributes(target: Element, to: Record<string, number>, options: MotionPropertyOptions): MotionHandle;
+  path(target: SVGPathElement, toD: string, options: MotionPropertyOptions): MotionHandle;
+  currentTransform(target: HTMLElement | SVGElement): MotionTransformState;
+  ease(name: string | undefined, progress: number): number;
 }
-interface GsapQuickTo {
-  (value: number): void;
-  tween?: GsapTween;
-}
-interface GsapMatchMediaContext {
-  conditions: Record<string, boolean>;
-}
-interface GsapMatchMedia {
-  add(conditions: Record<string, string>, callback: (context: GsapMatchMediaContext) => void | (() => void)): void;
-  revert(): void;
-}
-interface GsapUtils {
-  toArray<T extends Element = Element>(target: string | T | ArrayLike<T>): T[];
-  clamp(min: number, max: number): (value: number) => number;
-  selector(root: Element | Document | DocumentFragment): (selector: string) => Element[];
-  wrap(min: number, max: number, value: number): number;
-}
-interface GsapLike {
-  utils: GsapUtils;
-  killTweensOf(target: unknown, properties?: string): void;
-  set(target: unknown, vars: GsapVars): void;
-  to(target: unknown, vars: GsapVars): GsapTween;
-  fromTo(target: unknown, fromVars: GsapVars, toVars: GsapVars): GsapTween;
-  timeline(vars?: GsapVars): GsapTimeline;
-  quickTo(target: object, property: string, vars: GsapVars): GsapQuickTo;
-  delayedCall(delay: number, callback: () => void): GsapTween;
-  matchMedia(): GsapMatchMedia;
-  registerPlugin(...plugins: unknown[]): void;
-}
-interface ScrollTriggerInstance {
-  direction: number;
-  progress: number;
-  kill(): void;
-  getVelocity(): number;
-}
-interface ScrollTriggerLike {
-  create(config: GsapVars): ScrollTriggerInstance;
-  refresh(): void;
-  config(config: GsapVars): void;
-}
-
-interface MorphSVGPluginLike { convertToPath(element: Element): unknown; }
-interface SplitTextInstance {
-  lines: HTMLElement[];
-  revert(): void;
-}
-interface SplitTextLike {
-  create(element: HTMLElement, options: {
-    type: string;
-    mask?: string;
-    linesClass?: string;
-    autoSplit?: boolean;
-    aria?: string;
-    onSplit?: (instance: SplitTextInstance) => unknown;
-  }): SplitTextInstance;
-}
-interface MotionDeps {
-  gsap: GsapLike;
-  ScrollTrigger: ScrollTriggerLike;
-  MorphSVGPlugin?: MorphSVGPluginLike;
-  SplitText?: SplitTextLike;
-}
+interface MotionDeps { engine: MotionEngine; }

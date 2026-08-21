@@ -4,14 +4,13 @@ var SC=window.SCOverride,U=SC&&SC.utils,C=SC&&SC.config,N=SC&&SC.categoryNav,T=S
 
 /* Parámetros del spring y deformación por velocidad. */
 interface IndicatorState{x:number;width:number;warp:number;}
-interface IndicatorEntry{root:HTMLElement;host:HTMLElement;line:HTMLElement;state:IndicatorState;targetX:number;targetWidth:number;dir:number;init:boolean;visible:boolean;moveRaf:number;lastMoveT:number;vx:number;vw:number;scrollEl:HTMLElement|null;onScroll:(()=>void)|null;scrollX:number;scrollT:number;warpTo:GsapQuickTo|null;settleCall:GsapTween|null;}
-var CFG={minWidth:6,maxWarp:11,minWarp:4.5,warpWidthRatio:.13,leadingShare:.92,trailingShare:.08,scrollSampleMin:.003,scrollSampleMax:.16,scrollVelocityScale:700,scrollWarpDuration:.14,scrollSettleDelay:.065,textInsetMax:1.25,textInsetRatio:.025,springResponse:.34,springDamping:1,springMaxDt:.032,springPositionEpsilon:.06,springVelocityEpsilon:.45,springWarpResponse:18},entries:IndicatorEntry[]=[],dirty=true,deps:MotionDeps|null=null;
+interface IndicatorEntry{root:HTMLElement;host:HTMLElement;line:HTMLElement;state:IndicatorState;targetX:number;targetWidth:number;dir:number;init:boolean;visible:boolean;moveRaf:number;lastMoveT:number;vx:number;vw:number;scrollEl:HTMLElement|null;onScroll:(()=>void)|null;scrollX:number;scrollT:number;warpTween:MotionHandle|null;settle:MotionHandle|null;}
+var CFG={minWidth:6,maxWarp:11,minWarp:4.5,warpWidthRatio:.13,leadingShare:.92,trailingShare:.08,scrollSampleMin:.003,scrollSampleMax:.16,scrollVelocityScale:700,scrollWarpDuration:.14,scrollSettleDelay:.065,textInsetMax:1.25,textInsetRatio:.025,springResponse:.34,springDamping:1,springMaxDt:.032,springPositionEpsilon:.06,springVelocityEpsilon:.45,springWarpResponse:18},entries:IndicatorEntry[]=[],dirty=true,engine:MotionEngine|null=null;
 function now():number{return window.performance&&performance.now?performance.now():Date.now();}
 function clamp(v:number,min:number,max:number):number{return Math.max(min,Math.min(max,v));}
 function physicalPixel():number{return 1/Math.max(1,window.devicePixelRatio||1);}
 function floorPhysical(v:number):number{var dpr=Math.max(1,window.devicePixelRatio||1);return Math.floor(v*dpr+1e-6)/dpr;}
 function reduced():boolean{return SC.motion&&SC.motion.reduced?SC.motion.reduced():C.queries.reducedMotion.matches;}
-function gsap():GsapLike|null{return deps&&deps.gsap;}
 
 /* Resuelve geometría visible del texto y su scroller. */
 function mount(root:HTMLElement):HTMLElement{return root.closest<HTMLElement>(N.selectors.mobileScroller)||root;}
@@ -24,22 +23,20 @@ function rootsFor(target:Element|null):HTMLElement[]{var roots:HTMLElement[]=[];
 function transform(x:number,width:number):string{return'translate3d('+x+'px,0,0) scaleX('+Math.max(1,width)+')';}
 function render(item:IndicatorEntry):void{var s=item.state,stretch=Math.abs(s.warp),left=s.x,width=s.width+stretch;if(s.warp>=0)left-=stretch*CFG.trailingShare;else left-=stretch*CFG.leadingShare;if(!item.visible){item.line.style.opacity='1';item.visible=true;}item.line.style.transform=transform(left,width);}
 
-/* Gestiona deformación temporal producida por scroll. */
-function pauseSettle(item:IndicatorEntry):void{if(item.settleCall)item.settleCall.pause(0);}
-function killSettle(item:IndicatorEntry):void{if(item.settleCall){item.settleCall.kill();item.settleCall=null;}}
-function ensureSettle(item:IndicatorEntry):GsapTween|null{var g=gsap();if(!g)return null;if(!item.settleCall)item.settleCall=g.delayedCall(CFG.scrollSettleDelay,function(){if(item.warpTo)item.warpTo(0);}).pause();return item.settleCall;}
-function stopWarp(item:IndicatorEntry):void{pauseSettle(item);if(item.warpTo&&item.warpTo.tween)item.warpTo.tween.kill();item.warpTo=null;}
+/* Gestiona deformación temporal producida por scroll con el motor local. */
+function stopSettle(item:IndicatorEntry):void{if(item.settle){item.settle.cancel();item.settle=null;}}
+function stopWarp(item:IndicatorEntry):void{stopSettle(item);if(item.warpTween){item.warpTween.cancel();item.warpTween=null;}}
 function stopMove(item:IndicatorEntry):void{if(item.moveRaf){cancelAnimationFrame(item.moveRaf);item.moveRaf=0;}item.lastMoveT=0;}
 function stopMotion(item:IndicatorEntry):void{stopMove(item);stopWarp(item);}
-function unbind(item:IndicatorEntry):void{if(item.scrollEl&&item.onScroll)item.scrollEl.removeEventListener('scroll',item.onScroll);item.scrollEl=null;item.onScroll=null;pauseSettle(item);}
-function destroy(item:IndicatorEntry):void{unbind(item);stopMotion(item);killSettle(item);if(item.line&&item.line.parentNode)item.line.parentNode.removeChild(item.line);}
+function unbind(item:IndicatorEntry):void{if(item.scrollEl&&item.onScroll)item.scrollEl.removeEventListener('scroll',item.onScroll);item.scrollEl=null;item.onScroll=null;stopSettle(item);}
+function destroy(item:IndicatorEntry):void{unbind(item);stopMotion(item);if(item.line&&item.line.parentNode)item.line.parentNode.removeChild(item.line);}
 function maxWarp(width:number):number{return Math.min(CFG.maxWarp,Math.max(CFG.minWarp,width*CFG.warpWidthRatio));}
-function ensureWarpTo(item:IndicatorEntry):void{var g=gsap();if(!g||item.warpTo)return;item.warpTo=g.quickTo(item.state,'warp',{duration:CFG.scrollWarpDuration,ease:'power3.out',overwrite:'auto',onUpdate:function(){render(item);}});}
-function pulseScroll(item:IndicatorEntry,velocity:number):void{var g=gsap();if(!g||reduced()||item.moveRaf)return;var amount=maxWarp(item.targetWidth||item.state.width)*clamp(Math.abs(velocity)/CFG.scrollVelocityScale,0,1);if(amount<.2)return;item.dir=velocity>0?1:-1;ensureWarpTo(item);if(!item.warpTo)return;item.warpTo(item.dir*amount);var settle=ensureSettle(item);if(settle)settle.restart(true);}
+function tweenWarp(item:IndicatorEntry,target:number):void{if(!engine)return;if(item.warpTween)item.warpTween.cancel();var from=item.state.warp;item.warpTween=engine.tween(CFG.scrollWarpDuration,'quart.out',function(p){item.state.warp=from+(target-from)*p;render(item);},{onComplete:function(){item.warpTween=null;}});}
+function pulseScroll(item:IndicatorEntry,velocity:number):void{if(!engine||reduced()||item.moveRaf)return;var amount=maxWarp(item.targetWidth||item.state.width)*clamp(Math.abs(velocity)/CFG.scrollVelocityScale,0,1);if(amount<.2)return;item.dir=velocity>0?1:-1;tweenWarp(item,item.dir*amount);stopSettle(item);item.settle=engine.delay(CFG.scrollSettleDelay,function(){item.settle=null;tweenWarp(item,0);});}
 function bindScroll(item:IndicatorEntry):void{var el=scrollNode(item.root,item.host);if(el===item.scrollEl)return;unbind(item);item.scrollEl=el;if(!el)return;var scrollEl=el;item.scrollX=scrollEl.scrollLeft||0;item.scrollT=now();item.onScroll=function(){var t=now(),x=scrollEl.scrollLeft||0,dt=(t-item.scrollT)/1000;if(dt>CFG.scrollSampleMin&&dt<CFG.scrollSampleMax)pulseScroll(item,-(x-item.scrollX)/dt);item.scrollX=x;item.scrollT=t;};scrollEl.addEventListener('scroll',item.onScroll,{passive:true});}
 
 /* Crea un indicador por riel visible y lo reutiliza. */
-function entry(root:HTMLElement):IndicatorEntry{var host=mount(root),item:IndicatorEntry|null=null;for(var i=entries.length-1;i>=0;i--){var current=entries[i];if(!current||current.root!==root)continue;if(current.host===host){item=current;break;}destroy(current);entries.splice(i,1);}if(!item){var line=T.clone('category-indicator') as HTMLElement;host.classList.add('sc-category-motion-root');host.appendChild(line);if(host.matches(N.selectors.mobileScroller))line.style.setProperty('bottom','0','important');item={root:root,host:host,line:line,state:{x:0,width:1,warp:0},targetX:0,targetWidth:1,dir:1,init:false,visible:false,moveRaf:0,lastMoveT:0,vx:0,vw:0,scrollEl:null,onScroll:null,scrollX:0,scrollT:0,warpTo:null,settleCall:null};entries.push(item);}bindScroll(item);return item;}
+function entry(root:HTMLElement):IndicatorEntry{var host=mount(root),item:IndicatorEntry|null=null;for(var i=entries.length-1;i>=0;i--){var current=entries[i];if(!current||current.root!==root)continue;if(current.host===host){item=current;break;}destroy(current);entries.splice(i,1);}if(!item){var line=T.clone('category-indicator') as HTMLElement;host.classList.add('sc-category-motion-root');host.appendChild(line);if(host.matches(N.selectors.mobileScroller))line.style.setProperty('bottom','0','important');item={root:root,host:host,line:line,state:{x:0,width:1,warp:0},targetX:0,targetWidth:1,dir:1,init:false,visible:false,moveRaf:0,lastMoveT:0,vx:0,vw:0,scrollEl:null,onScroll:null,scrollX:0,scrollT:0,warpTween:null,settle:null};entries.push(item);}bindScroll(item);return item;}
 
 /* Snap inmediato para primer estado o movimiento reducido. */
 function snap(item:IndicatorEntry,x:number,width:number):void{stopMotion(item);item.targetX=x;item.targetWidth=width;item.state.x=x;item.state.width=width;item.state.warp=0;item.vx=0;item.vw=0;item.init=true;render(item);}
@@ -65,7 +62,7 @@ function markDirty():void{dirty=true;}function isDirty():boolean{return dirty;}
 function pause():void{entries.forEach(function(item:IndicatorEntry){unbind(item);stopMotion(item);});}
 function resume():void{for(var i=entries.length-1;i>=0;i--){var item=entries[i];if(!item)continue;if(!document.documentElement.contains(item.root)||!document.documentElement.contains(item.host)){destroy(item);entries.splice(i,1);continue;}bindScroll(item);render(item);}}
 
-/* GSAP se usa solo para el settle de deformación por scroll. */
-if(SC.motion&&SC.motion.whenLoaded)SC.motion.whenLoaded(function(x:MotionDeps){deps=x;});else if(SC.motion&&SC.motion.whenReady)SC.motion.whenReady(function(x:MotionDeps){deps=x;});
+/* El settle de scroll usa el mismo motor local que el resto de la interfaz. */
+if(SC.motion&&SC.motion.whenLoaded)SC.motion.whenLoaded(function(x:MotionDeps){engine=x.engine;});else if(SC.motion&&SC.motion.whenReady)SC.motion.whenReady(function(x:MotionDeps){engine=x.engine;});
 N.categoryIndicator={move:move,markDirty:markDirty,isDirty:isDirty,pause:pause,resume:resume};N.moveIndicator=move;
 })();

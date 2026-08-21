@@ -1,4 +1,4 @@
-/* CSS define estados; GSAP interpola apertura y cierre. */
+/* CSS define estados; el motor local interpola apertura y cierre. */
 .sushiShop .sc-product-modal {
   opacity: 0;
   visibility: hidden;

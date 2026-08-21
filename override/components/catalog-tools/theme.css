@@ -6,7 +6,7 @@ body.sushiShop .sc-theme-toggle:hover,body.sushiShop .sc-theme-toggle[aria-expan
 body.sushiShop .sc-theme-toggle:focus:not(:focus-visible),body.sushiShop .sc-theme-toggle:active{outline:0;background:transparent;box-shadow:none;}
 body.sushiShop .sc-theme-toggle:focus-visible{outline:var(--sc-focus-ring-width-subtle) solid var(--sc-focus-ring-color);outline-offset:var(--sc-focus-ring-offset-tight);}
 
-/* Icono único de 24px; GSAP anima la geometría. */
+/* Icono único de 24px; el motor local interpola la geometría. */
 body.sushiShop .sc-theme-icon{display:block;width:24px;min-width:24px;max-width:24px;height:24px;min-height:24px;max-height:24px;overflow:visible;color:currentColor;pointer-events:none;transform-box:view-box;transform-origin:50% 50%;}
 body.sushiShop .sc-theme-rotor{transform-box:view-box;transform-origin:12px 12px;}
 body.sushiShop .sc-theme-core{fill:currentColor;}

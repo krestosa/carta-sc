@@ -48,7 +48,7 @@ La única excepción de JavaScript versionado son las fronteras legacy `js/` y `
 2. `override/main.css` mantiene el manifest de estilos.
 3. `override/main.ts` define el bootstrap propio y el manifest de módulos.
 4. `override/runtime-main.ts` posee el orden de carga: foundation → features → templates → integrations.
-5. `override/motion/main.ts` carga dependencias de motion sin bloquear la UI funcional.
+5. `override/motion/main.ts` inicializa sincrónicamente el motor local de RAF, easings e interpolación.
 6. `override/templates/registry.ts` resuelve templates antes de montar consumidores.
 7. `override/core/render-lifecycle.ts` coordina viewport inicial, desbloqueo de motion y estabilidad de layout.
 
@@ -90,12 +90,14 @@ Todo listener, observer, timer, RAF, tween o nodo generado debe tener owner, gua
 
 ## Motion
 
-Motion es progressive enhancement. La UI funcional no puede depender de que GSAP cargue correctamente.
+Motion es progressive enhancement y se ejecuta exclusivamente con el motor local del proyecto, sin dependencias de animación externas.
 
-- `whenLoaded`: dependencias cargadas.
-- `whenReady`: dependencias + gate de layout inicial.
+- `whenLoaded`: el motor local está disponible.
+- `whenReady`: el motor local está disponible y el gate de layout inicial fue liberado.
 - `SC.motion.reduced()`: fuente compartida para reduced motion.
-- Cada componente cancela sus tweens/timelines antes de retargetear o desmontar.
+- `MotionHandle` define cancelación/finalización uniforme para RAFs, delays y propiedades interpoladas.
+- SVG paths se interpolan con sampling y alineación de puntos implementados en el repo; los iconos basados en rectángulos interpolan sus atributos nativos.
+- Cada componente cancela sus handles antes de retargetear o desmontar.
 
 ## Responsive
 
@@ -146,7 +148,7 @@ Para inspeccionar el navegador se verá el `.js` generado correspondiente, pero 
 - No duplicar listeners/observers/timers/nodos al reinicializar.
 - No introducir dependencias del host de GitHub Pages en producción.
 - No reintroducir una tercera vista de catálogo.
-- Las dependencias externas de animación no bloquean la UI funcional.
+- No introducir dependencias externas de animación; el runtime de motion debe seguir siendo propiedad del repositorio.
 
 ## Validación
 
@@ -158,4 +160,4 @@ npm run typecheck
 npm run validate
 ```
 
-`npm run validate` compila browser/tooling y ejecuta `validate-source-boundary`, `validate-overrides`, `validate-production-boundary` y `validate-responsive-contract`. La frontera de source rechaza `.js`, `.mjs`, `.py`, `.sh` y `requirements.txt` propios fuera de `js/` y `_js_dev/`.
+`npm run validate` compila browser/tooling y ejecuta `validate-source-boundary`, `validate-overrides`, `validate-production-boundary` y `validate-responsive-contract`. La frontera de source rechaza `.js`, `.mjs`, `.py`, `.sh` y `requirements.txt` propios fuera de `js/` y `_js_dev/`, y bloquea la reintroducción del stack de animación externo retirado.
