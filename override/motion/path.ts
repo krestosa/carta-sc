@@ -1,5 +1,10 @@
-import { delay, tween } from './scheduler.js';
-import type { MotionHandle, MotionPropertyOptions } from './types.js';
+import { delay, spring, tween } from './scheduler.js';
+import type {
+  MotionHandle,
+  MotionPropertyOptions,
+  MotionSpringOptions,
+  MotionSpringSpec,
+} from './types.js';
 
 type Point = readonly [x: number, y: number];
 
@@ -80,25 +85,14 @@ function alignPoints(source: Point[], target: Point[]): Point[] {
   return best;
 }
 
-export function animatePath(
-  target: SVGPathElement,
-  toD: string,
-  options: MotionPropertyOptions,
-): MotionHandle {
+function pathRenderer(target: SVGPathElement, toD: string): ((progress: number) => void) | null {
   const svg = target.ownerSVGElement;
-  if (!svg || !toD) {
-    target.setAttribute('d', toD);
-    return delay(0, () => options.onComplete?.());
-  }
+  if (!svg || !toD) return null;
 
   const fromD = target.getAttribute('d') ?? '';
   const fromSet = samplePathSet(svg, fromD, PATH_SAMPLE_COUNT);
   const toSet = samplePathSet(svg, toD, PATH_SAMPLE_COUNT);
-  if (!fromSet?.length || !toSet?.length) {
-    return tween(options.duration, options.ease, (progress) => {
-      if (progress >= 1) target.setAttribute('d', toD);
-    }, { delay: options.delay, onComplete: options.onComplete });
-  }
+  if (!fromSet?.length || !toSet?.length) return null;
 
   const pairCount = Math.max(fromSet.length, toSet.length);
   const pairs = Array.from({ length: pairCount }, (_, index) => {
@@ -110,7 +104,7 @@ export function animatePath(
     };
   });
 
-  return tween(options.duration, options.ease, (progress) => {
+  return (progress: number): void => {
     let data = '';
     for (const pair of pairs) {
       pair.from.points.forEach((fromPoint, index) => {
@@ -123,8 +117,59 @@ export function animatePath(
       if (pair.from.closed || pair.to.closed) data += 'Z';
     }
     target.setAttribute('d', data);
-  }, {
+  };
+}
+
+export function animatePath(
+  target: SVGPathElement,
+  toD: string,
+  options: MotionPropertyOptions,
+): MotionHandle {
+  const render = pathRenderer(target, toD);
+  if (!render) {
+    return tween(options.duration, options.ease, () => undefined, {
+      delay: options.delay,
+      onComplete: () => {
+        target.setAttribute('d', toD);
+        options.onComplete?.();
+      },
+    });
+  }
+
+  return tween(options.duration, options.ease, render, {
     delay: options.delay,
+    onComplete: () => {
+      target.setAttribute('d', toD);
+      options.onComplete?.();
+    },
+  });
+}
+
+export function animateSpringPath(
+  target: SVGPathElement,
+  toD: string,
+  spec: MotionSpringSpec,
+  options: MotionSpringOptions = {},
+): MotionHandle {
+  const render = pathRenderer(target, toD);
+  if (!render) {
+    if (!target.ownerSVGElement || !toD) {
+      target.setAttribute('d', toD);
+      return delay(0, () => options.onComplete?.());
+    }
+    return spring(spec, () => undefined, {
+      delay: options.delay,
+      initialVelocity: options.initialVelocity,
+      onComplete: () => {
+        target.setAttribute('d', toD);
+        options.onComplete?.();
+      },
+    });
+  }
+
+  return spring(spec, render, {
+    delay: options.delay,
+    initialVelocity: options.initialVelocity,
     onComplete: () => {
       target.setAttribute('d', toD);
       options.onComplete?.();
