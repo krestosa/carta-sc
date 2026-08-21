@@ -13,12 +13,7 @@ import type {
 
 type MotionCallback = (dependencies: MotionDependencies) => void;
 
-const readyQueue: MotionCallback[] = [];
 const root = document.documentElement;
-
-let unlocked = false;
-let refreshTimer = 0;
-
 root.classList.add('sc-motion-engine-ready');
 
 export const prefersReducedMotion = (): boolean =>
@@ -35,64 +30,89 @@ export const motionEngine: MotionEngine = Object.freeze({
   ease: easeValue,
 });
 
-const dependencies: MotionDependencies = Object.freeze({ engine: motionEngine });
-const dependencyPromise = Promise.resolve(dependencies);
+class LocalMotionRuntime implements MotionRuntime {
+  readonly engine = motionEngine;
+  readonly #dependencies: MotionDependencies = Object.freeze({ engine: this.engine });
+  readonly #dependencyPromise = Promise.resolve(this.#dependencies);
+  readonly #readyQueue: MotionCallback[] = [];
 
-function execute(callback: MotionCallback): void {
-  try {
-    callback(dependencies);
-  } catch (error) {
-    console.error('[SushiClub motion]', error);
+  #unlocked = false;
+  #refreshTimer = 0;
+
+  ready(): Promise<MotionDependencies> {
+    return this.#dependencyPromise;
+  }
+
+  prepare(): Promise<MotionDependencies> {
+    return this.#dependencyPromise;
+  }
+
+  whenLoaded(callback: MotionCallback): void {
+    this.#execute(callback);
+  }
+
+  whenReady(callback: MotionCallback): void {
+    if (this.#unlocked) this.#execute(callback);
+    else this.#readyQueue.push(callback);
+  }
+
+  run(callback: MotionCallback): boolean {
+    if (!this.#unlocked) return false;
+    this.#execute(callback);
+    return true;
+  }
+
+  runLoaded(callback: MotionCallback): boolean {
+    this.#execute(callback);
+    return true;
+  }
+
+  refresh(delayMs: number | null = 0): void {
+    if (this.#refreshTimer) clearTimeout(this.#refreshTimer);
+    this.#refreshTimer = window.setTimeout(() => {
+      this.#refreshTimer = 0;
+      window.dispatchEvent(new CustomEvent('sc:motionrefresh'));
+    }, Math.max(0, delayMs ?? 0));
+  }
+
+  reduced(): boolean {
+    return prefersReducedMotion();
+  }
+
+  bindMicroInteraction(
+    control: HTMLElement,
+    target: HTMLElement | SVGElement,
+    options: MicroInteractionOptions = {},
+  ): () => void {
+    return bindMicroInteractionBehavior(this.engine, prefersReducedMotion, control, target, options);
+  }
+
+  unlock(): void {
+    if (this.#unlocked) return;
+    this.#unlocked = true;
+    this.#flushReadyQueue();
+    this.refresh(0);
+  }
+
+  isReady(): boolean {
+    return this.#unlocked;
+  }
+
+  isLoaded(): boolean {
+    return true;
+  }
+
+  #execute(callback: MotionCallback): void {
+    try {
+      callback(this.#dependencies);
+    } catch (error) {
+      console.error('[SushiClub motion]', error);
+    }
+  }
+
+  #flushReadyQueue(): void {
+    for (const callback of this.#readyQueue.splice(0)) this.#execute(callback);
   }
 }
 
-function flushReadyQueue(): void {
-  for (const callback of readyQueue.splice(0)) execute(callback);
-}
-
-function refresh(delayMs: number | null = 0): void {
-  if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = window.setTimeout(() => {
-    refreshTimer = 0;
-    window.dispatchEvent(new CustomEvent('sc:motionrefresh'));
-  }, Math.max(0, delayMs ?? 0));
-}
-
-function bindMicroInteraction(
-  control: HTMLElement,
-  target: HTMLElement | SVGElement,
-  options: MicroInteractionOptions = {},
-): () => void {
-  return bindMicroInteractionBehavior(motionEngine, prefersReducedMotion, control, target, options);
-}
-
-export const motion: MotionRuntime = Object.freeze({
-  engine: motionEngine,
-  ready: () => dependencyPromise,
-  prepare: () => dependencyPromise,
-  whenLoaded: execute,
-  whenReady(callback: MotionCallback): void {
-    if (unlocked) execute(callback);
-    else readyQueue.push(callback);
-  },
-  run(callback: MotionCallback): boolean {
-    if (!unlocked) return false;
-    execute(callback);
-    return true;
-  },
-  runLoaded(callback: MotionCallback): boolean {
-    execute(callback);
-    return true;
-  },
-  refresh,
-  reduced: prefersReducedMotion,
-  bindMicroInteraction,
-  unlock(): void {
-    if (unlocked) return;
-    unlocked = true;
-    flushReadyQueue();
-    refresh(0);
-  },
-  isReady: () => unlocked,
-  isLoaded: () => true,
-});
+export const motion: MotionRuntime = new LocalMotionRuntime();

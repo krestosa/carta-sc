@@ -27,8 +27,6 @@ const MOTION = {
   rowDelayMax: 0.14,
 } as const;
 
-export let revealViewport: (() => void) | null = null;
-
 class ProductCardRevealController {
   readonly #engine: MotionEngine;
   readonly #profile: RevealProfile;
@@ -52,12 +50,8 @@ class ProductCardRevealController {
   }
 
   start(): Cleanup {
-    if (this.#cards.length === 0) {
-      revealViewport = null;
-      return () => undefined;
-    }
+    if (this.#cards.length === 0) return () => undefined;
 
-    revealViewport = this.revealVisibleCards;
     window.addEventListener('scroll', this.#trackScroll, { passive: true });
     this.#createIntersectionObserver();
     this.#cards.forEach(this.#arm);
@@ -66,7 +60,6 @@ class ProductCardRevealController {
   }
 
   destroy(): void {
-    if (revealViewport === this.revealVisibleCards) revealViewport = null;
     window.removeEventListener('scroll', this.#trackScroll);
     if (this.#scrollFrame) cancelAnimationFrame(this.#scrollFrame);
     this.#scrollFrame = 0;
