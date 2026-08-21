@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import { SITE, assert, escapeRegExp, githubSha, read, remove, write } from '../lib/core.js';
 import {
   SYSTEM_LOGO_FILE,
   SYSTEM_LOGO_MAX_SVG_BYTES,
@@ -69,7 +69,7 @@ function removeObsoleteRasterLogos(): void {
     path.join(SITE, '_critical-media', 'mobile-logo.webp'),
     path.join(SITE, '_chrome-media', 'desktop-logo.webp'),
   ]) {
-    if (fs.existsSync(file)) fs.rmSync(file);
+    remove(file);
   }
 }
 
