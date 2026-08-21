@@ -1,8 +1,8 @@
 import { classes, queries, selectors } from './variables.js';
 
 interface Waiter {
-  predicate: () => boolean;
-  resolve: () => void;
+  readonly predicate: () => boolean;
+  readonly resolve: () => void;
   timer: number;
   settled: boolean;
 }
@@ -11,157 +11,164 @@ const STABLE_LAYOUT_TIMEOUT = 900;
 const FONT_TIMEOUT = 1100;
 const MOBILE_HEADER_TIMEOUT = 500;
 
-const waiters: Waiter[] = [];
-let waitObserver: MutationObserver | null = null;
-let initialViewportObserver: IntersectionObserver | null = null;
-let initialViewportStarted = false;
-let initialViewportFrozen = false;
+class PredicateWaitRegistry {
+  readonly #waiters: Waiter[] = [];
+  #observer: MutationObserver | null = null;
 
-const markStaticInitial = (node: Element | null | undefined): void => {
-  if (!node) return;
-  node.classList.add(classes.staticInitialSection);
-  const host = node.matches(selectors.sectionTitle) ? node.querySelector(':scope > div') : node;
-  host?.classList.add(classes.staticInitialSection);
-};
+  waitFor(predicate: () => boolean, timeoutMs: number): Promise<void> {
+    return new Promise((resolve) => {
+      const start = (): void => {
+        if (predicate()) {
+          resolve();
+          return;
+        }
+        const waiter: Waiter = { predicate, resolve, timer: 0, settled: false };
+        this.#waiters.push(waiter);
+        this.#ensureObserver();
+        waiter.timer = window.setTimeout(() => this.#finish(waiter), timeoutMs);
+      };
 
-const applyInitialViewportEntries = (entries: readonly IntersectionObserverEntry[]): void => {
-  for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
-    markStaticInitial(entry.target);
-    initialViewportObserver?.unobserve(entry.target);
+      if (document.documentElement) start();
+      else document.addEventListener('DOMContentLoaded', start, { once: true });
+    });
   }
-};
 
-export const markInitialViewport = (): void => {
-  if (initialViewportFrozen || initialViewportStarted || !('IntersectionObserver' in window)) return;
+  #ensureObserver(): void {
+    if (this.#observer || !('MutationObserver' in window) || !document.documentElement) return;
+    this.#observer = new MutationObserver(() => this.#evaluate());
+    this.#observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['class', 'src', 'srcset'],
+    });
+  }
 
-  const nodes = document.querySelectorAll<Element>(
-    `${selectors.productList} ${selectors.sectionTitle},${selectors.productList} ${selectors.sectionSubtitle}`,
-  );
-  if (!nodes.length) return;
+  #evaluate(): void {
+    for (const waiter of [...this.#waiters]) {
+      if (!waiter.settled && waiter.predicate()) this.#finish(waiter);
+    }
+  }
 
-  initialViewportStarted = true;
-  initialViewportObserver = new IntersectionObserver(applyInitialViewportEntries, {
-    root: null,
-    threshold: 0,
-  });
-  nodes.forEach((node) => initialViewportObserver?.observe(node));
-};
+  #finish(waiter: Waiter): void {
+    if (waiter.settled) return;
+    waiter.settled = true;
+    if (waiter.timer) clearTimeout(waiter.timer);
 
-export const freezeInitialViewport = (): void => {
-  if (initialViewportFrozen) return;
-  initialViewportFrozen = true;
-  if (!initialViewportObserver) return;
-  applyInitialViewportEntries(initialViewportObserver.takeRecords());
-  initialViewportObserver.disconnect();
-  initialViewportObserver = null;
-};
+    const index = this.#waiters.indexOf(waiter);
+    if (index >= 0) this.#waiters.splice(index, 1);
+    if (this.#waiters.length === 0) {
+      this.#observer?.disconnect();
+      this.#observer = null;
+    }
+    waiter.resolve();
+  }
+}
 
-const whenDomReady = (): Promise<void> => {
+class InitialViewportTracker {
+  #observer: IntersectionObserver | null = null;
+  #started = false;
+  #frozen = false;
+
+  mark = (): void => {
+    if (this.#frozen || this.#started || !('IntersectionObserver' in window)) return;
+    const nodes = document.querySelectorAll<Element>(
+      `${selectors.productList} ${selectors.sectionTitle},${selectors.productList} ${selectors.sectionSubtitle}`,
+    );
+    if (!nodes.length) return;
+
+    this.#started = true;
+    this.#observer = new IntersectionObserver(this.#apply, { root: null, threshold: 0 });
+    nodes.forEach((node) => this.#observer?.observe(node));
+  };
+
+  freeze = (): void => {
+    if (this.#frozen) return;
+    this.#frozen = true;
+    if (!this.#observer) return;
+    this.#apply(this.#observer.takeRecords());
+    this.#observer.disconnect();
+    this.#observer = null;
+  };
+
+  #apply = (entries: readonly IntersectionObserverEntry[]): void => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      this.#markStatic(entry.target);
+      this.#observer?.unobserve(entry.target);
+    }
+  };
+
+  #markStatic(node: Element | null | undefined): void {
+    if (!node) return;
+    node.classList.add(classes.staticInitialSection);
+    const host = node.matches(selectors.sectionTitle) ? node.querySelector(':scope > div') : node;
+    host?.classList.add(classes.staticInitialSection);
+  }
+}
+
+const waits = new PredicateWaitRegistry();
+const initialViewport = new InitialViewportTracker();
+
+function whenDomReady(): Promise<void> {
   if (document.readyState !== 'loading') return Promise.resolve();
   return new Promise((resolve) => {
     document.addEventListener('DOMContentLoaded', () => resolve(), { once: true });
   });
-};
+}
 
-const withTimeout = (promise: PromiseLike<unknown>, timeoutMs: number): Promise<void> =>
-  Promise.race([
+function withTimeout(promise: PromiseLike<unknown>, timeoutMs: number): Promise<void> {
+  return Promise.race([
     Promise.resolve(promise).then(() => undefined, () => undefined),
     new Promise<void>((resolve) => window.setTimeout(resolve, timeoutMs)),
   ]);
+}
 
-const disconnectWaitObserver = (): void => {
-  waitObserver?.disconnect();
-  waitObserver = null;
-};
-
-const removeWaiter = (waiter: Waiter): void => {
-  const index = waiters.indexOf(waiter);
-  if (index >= 0) waiters.splice(index, 1);
-  if (!waiters.length) disconnectWaitObserver();
-};
-
-const finishWaiter = (waiter: Waiter): void => {
-  if (waiter.settled) return;
-  waiter.settled = true;
-  if (waiter.timer) clearTimeout(waiter.timer);
-  removeWaiter(waiter);
-  waiter.resolve();
-};
-
-const evaluateWaiters = (): void => {
-  for (const waiter of [...waiters]) {
-    if (!waiter.settled && waiter.predicate()) finishWaiter(waiter);
-  }
-};
-
-const ensureWaitObserver = (): void => {
-  if (waitObserver || !('MutationObserver' in window) || !document.documentElement) return;
-  waitObserver = new MutationObserver(evaluateWaiters);
-  waitObserver.observe(document.documentElement, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['class', 'src', 'srcset'],
-  });
-};
-
-const waitFor = (predicate: () => boolean, timeoutMs: number): Promise<void> =>
-  new Promise((resolve) => {
-    const start = (): void => {
-      if (predicate()) {
-        resolve();
-        return;
-      }
-      const waiter: Waiter = { predicate, resolve, timer: 0, settled: false };
-      waiters.push(waiter);
-      ensureWaitObserver();
-      waiter.timer = window.setTimeout(() => finishWaiter(waiter), timeoutMs);
-    };
-
-    if (document.documentElement) start();
-    else document.addEventListener('DOMContentLoaded', start, { once: true });
-  });
-
-const waitForCatalogLayout = (): Promise<void> => {
+function waitForCatalogLayout(): Promise<void> {
   if (!queries.desktop.matches) return Promise.resolve();
-  return waitFor(
+  return waits.waitFor(
     () => Boolean(document.body?.classList.contains(classes.catalogLayoutReady)),
     STABLE_LAYOUT_TIMEOUT,
   );
-};
+}
 
-const waitForCatalogTools = (): Promise<void> =>
-  waitFor(
+function waitForCatalogTools(): Promise<void> {
+  return waits.waitFor(
     () => Boolean(document.body?.classList.contains('sc-catalog-tools-ready')),
     STABLE_LAYOUT_TIMEOUT,
   );
+}
 
-const waitForMobileHeader = (): Promise<void> => {
+function waitForMobileHeader(): Promise<void> {
   if (queries.desktop.matches) return Promise.resolve();
-  return waitFor(
+  return waits.waitFor(
     () => Boolean(document.querySelector('body > .slicknav_menu.sc-mobile-main-menu')),
     MOBILE_HEADER_TIMEOUT,
   );
-};
+}
 
-const waitForFonts = (): Promise<void> => {
+function waitForFonts(): Promise<void> {
   if (!document.fonts?.ready) return Promise.resolve();
   return withTimeout(document.fonts.ready, FONT_TIMEOUT);
-};
+}
 
-const afterLayoutFrame = (): Promise<void> => new Promise((resolve) => {
-  requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-});
+function afterLayoutFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
 
-export const waitForStableLayout = async (): Promise<void> => {
+export const markInitialViewport = initialViewport.mark;
+export const freezeInitialViewport = initialViewport.freeze;
+
+export async function waitForStableLayout(): Promise<void> {
   await whenDomReady();
-  const waits = [waitForCatalogLayout(), waitForCatalogTools(), waitForMobileHeader()];
-  if (queries.desktop.matches) waits.push(waitForFonts());
-  await Promise.all(waits);
+  const pending = [waitForCatalogLayout(), waitForCatalogTools(), waitForMobileHeader()];
+  if (queries.desktop.matches) pending.push(waitForFonts());
+  await Promise.all(pending);
   await afterLayoutFrame();
   window.dispatchEvent(new CustomEvent('sc:layoutstable'));
-};
+}
 
 export const renderLifecycle = Object.freeze({
   markInitialViewport,
@@ -169,10 +176,10 @@ export const renderLifecycle = Object.freeze({
   waitForStableLayout,
 });
 
-export const initializeRenderLifecycle = (): void => {
+export function initializeRenderLifecycle(): void {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', markInitialViewport, { once: true });
   } else {
     markInitialViewport();
   }
-};
+}
