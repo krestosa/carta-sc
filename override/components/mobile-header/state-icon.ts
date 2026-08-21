@@ -3,7 +3,7 @@ import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-const MENU_ICON = 'M3 16H21V18H3V16Z M3 11H21V13H3V11Z M3 6H21V8H3V6Z';
+const MENU_ICON = 'M 3 16 H 21 V 18 H 3 V 16 Z M 3 11 H 21 V 13 H 3 V 11 Z M 3 6 H 21 V 8 H 3 V 6 Z';
 const CLOSE_ICON = 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 
 export class MobileMenuIconController {
