@@ -68,88 +68,115 @@ interface RuntimeSyntaxTarget {
   readonly mode: JavaScriptSyntaxMode;
 }
 
-function stageRuntime(): void {
-  remove(SITE);
-  ensureDir(SITE);
-  copyTree(ROOT, SITE, (relative, absolute) => {
+type ValidationStage = 'pre' | 'final';
+
+class PagesBuildPipeline {
+  run = async (): Promise<void> => {
+    validateSnapshotIntegration();
+    this.stageRuntime();
+    await this.prepareBaseArtifact();
+    this.validateArtifact('pre');
+    await this.optimizeArtifact();
+    this.validateArtifact('final');
+    this.reportSuccess();
+  };
+
+  private stageRuntime(): void {
+    remove(SITE);
+    ensureDir(SITE);
+    copyTree(ROOT, SITE, (relative, absolute) => this.shouldStageSource(relative, absolute));
+
+    const generatedOverride = path.join(ROOT, '.generated', 'browser', 'override');
+    assert(fs.existsSync(generatedOverride), 'Browser TypeScript output is missing; run build:runtime first');
+    copyTree(generatedOverride, path.join(SITE, 'override'));
+    copyFile(path.join(LAB, '.nojekyll'), path.join(SITE, '.nojekyll'));
+  }
+
+  private shouldStageSource(relative: string, absolute: string): boolean {
     const normalized = relative.replaceAll(path.sep, '/');
     const topLevel = normalized.split('/', 1)[0] ?? normalized;
     if (ROOT_EXCLUDES.has(topLevel)) return false;
     if (absolute === SITE || absolute.startsWith(`${SITE}${path.sep}`)) return false;
-    if (normalized.endsWith('.ts')) return false;
-    return true;
-  });
-
-  const generatedOverride = path.join(ROOT, '.generated', 'browser', 'override');
-  assert(fs.existsSync(generatedOverride), 'Browser TypeScript output is missing; run build:runtime first');
-  copyTree(generatedOverride, path.join(SITE, 'override'));
-  copyFile(path.join(LAB, '.nojekyll'), path.join(SITE, '.nojekyll'));
-}
-
-function runtimeSyntaxTargets(final: boolean): RuntimeSyntaxTarget[] {
-  const targets: RuntimeSyntaxTarget[] = [
-    { file: path.join(SITE, 'override', 'main.js'), mode: 'module' },
-    { file: path.join(SITE, '_pages', 'legacy.js'), mode: 'classic' },
-    { file: path.join(SITE, '_pages', 'shop.js'), mode: 'classic' },
-  ];
-
-  if (final) {
-    targets.push(
-      { file: path.join(SITE, '_pages', 'php-guard.js'), mode: 'classic' },
-      { file: path.join(SITE, '_js_dev', 'main-legacy.js'), mode: 'classic' },
-    );
+    return !normalized.endsWith('.ts');
   }
-  return targets;
+
+  private async prepareBaseArtifact(): Promise<void> {
+    applyLabOverrides();
+    compileTemplates();
+    prepareArtifact();
+    optimizeCriticalPath();
+    cleanProductImages();
+    cleanSnapshot();
+    flattenBootstrap();
+    bundleLegacyCss();
+    bundleLegacyJs();
+    await bundleShopJs(externalizeStaticAssets);
+  }
+
+  private async optimizeArtifact(): Promise<void> {
+    await optimizeDelivery();
+    await optimizeFirstPaint();
+    seedTheme();
+    await optimizeFirstViewportMedia();
+    await optimizeBreakpointMedia();
+    await measureSystemLogo();
+    replaceSystemLogo();
+    applySystemLogoOptics();
+    pruneSupersededMedia();
+    await optimizeLcp();
+    disablePhpRuntime();
+  }
+
+  private validateArtifact(stage: ValidationStage): void {
+    this.validateRuntimeSyntax(stage === 'final');
+    validateLocalAssets();
+    validateHtml();
+
+    if (stage === 'pre') {
+      validatePerformanceBudget('pre');
+      return;
+    }
+
+    validateSystemLoad();
+    validateFinalInvariants();
+  }
+
+  private validateRuntimeSyntax(final: boolean): void {
+    for (const target of this.runtimeSyntaxTargets(final)) nodeCheck(target.file, target.mode);
+    validateJsSyntax();
+  }
+
+  private runtimeSyntaxTargets(final: boolean): RuntimeSyntaxTarget[] {
+    const targets: RuntimeSyntaxTarget[] = [
+      { file: path.join(SITE, 'override', 'main.js'), mode: 'module' },
+      { file: path.join(SITE, '_pages', 'legacy.js'), mode: 'classic' },
+      { file: path.join(SITE, '_pages', 'shop.js'), mode: 'classic' },
+    ];
+
+    if (final) {
+      targets.push(
+        { file: path.join(SITE, '_pages', 'php-guard.js'), mode: 'classic' },
+        { file: path.join(SITE, '_js_dev', 'main-legacy.js'), mode: 'classic' },
+      );
+    }
+    return targets;
+  }
+
+  private reportSuccess(): void {
+    process.stdout.write(`Pages lab artifact built at .pages-site for ${process.env.GITHUB_SHA ?? 'unknown'}\n`);
+  }
 }
 
-function validateRuntimeSyntax(final = false): void {
-  for (const target of runtimeSyntaxTargets(final)) nodeCheck(target.file, target.mode);
-  validateJsSyntax();
+export function buildPages(): Promise<void> {
+  return new PagesBuildPipeline().run();
 }
 
-export async function buildPages(): Promise<void> {
-  validateSnapshotIntegration();
-  stageRuntime();
-
-  applyLabOverrides();
-  compileTemplates();
-  prepareArtifact();
-  optimizeCriticalPath();
-  cleanProductImages();
-  cleanSnapshot();
-  flattenBootstrap();
-  bundleLegacyCss();
-  bundleLegacyJs();
-  await bundleShopJs(externalizeStaticAssets);
-
-  validateRuntimeSyntax();
-  validateLocalAssets();
-  validateHtml();
-  validatePerformanceBudget('pre');
-
-  await optimizeDelivery();
-  await optimizeFirstPaint();
-  seedTheme();
-  await optimizeFirstViewportMedia();
-  await optimizeBreakpointMedia();
-  await measureSystemLogo();
-  replaceSystemLogo();
-  applySystemLogoOptics();
-  pruneSupersededMedia();
-  await optimizeLcp();
-  disablePhpRuntime();
-
-  validateRuntimeSyntax(true);
-  validateLocalAssets();
-  validateHtml();
-  validateSystemLoad();
-  validateFinalInvariants();
-
-  process.stdout.write(`Pages lab artifact built at .pages-site for ${process.env.GITHUB_SHA ?? 'unknown'}\n`);
+function isDirectExecution(): boolean {
+  const entry = process.argv[1];
+  return Boolean(entry && import.meta.url === pathToFileURL(path.resolve(entry)).href);
 }
 
-const entry = process.argv[1];
-if (entry && import.meta.url === pathToFileURL(path.resolve(entry)).href) {
+if (isDirectExecution()) {
   buildPages().catch((error: unknown) => {
     console.error(error instanceof Error ? error.stack ?? error.message : error);
     process.exitCode = 1;
