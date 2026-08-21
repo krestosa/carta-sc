@@ -1,6 +1,6 @@
 # GitHub Pages / Lighthouse lab
 
-`lab/pages/` es el harness TypeScript/Node que construye la réplica estática usada por GitHub Pages y Lighthouse. No es código de aplicación de producción y no puede convertirse en dependencia de `override/`.
+`lab/pages/` es el harness TypeScript/Node que construye la réplica estática usada para validar Pages/Lighthouse. No es código de aplicación de producción y no puede convertirse en dependencia de `override/`.
 
 ## Ownership
 
@@ -38,6 +38,8 @@ GITHUB_SHA=<sha-git-de-40-caracteres> npm run build:pages
 
 `npm run validate` comprueba también la frontera de lenguaje: JavaScript versionado sólo puede existir en `js/` y `_js_dev/`.
 
-## CI y deploy
+## CI
 
-`.github/workflows/lab-pages-replica.yml` se ejecuta sobre `type`, usa Node 22, instala con `npm ci`, ejecuta typecheck/validaciones, construye `.pages-site`, verifica que el run no esté stale y despliega el artifact exacto a GitHub Pages. Después verifica públicamente que el HTML servido contiene el SHA exacto del HEAD desplegado.
+`.github/workflows/lab-pages-replica.yml` se ejecuta sobre `type`, usa Node 22, instala con `npm ci`, ejecuta typecheck/validaciones, construye `.pages-site`, verifica que el run no esté stale y publica el resultado como artifact normal de GitHub Actions (`pages-lab-<sha>`).
+
+La rama `type` no intenta desplegar al environment `github-pages`: las reglas de protección actuales del repositorio rechazan deployments desde `type` antes de iniciar el job. El deploy público debe ejecutarse únicamente desde una rama autorizada por esas reglas o después de modificar explícitamente la protección del environment en la configuración del repositorio.
