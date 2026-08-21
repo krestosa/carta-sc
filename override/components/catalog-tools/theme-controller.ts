@@ -136,8 +136,6 @@ export function installThemeControl(root: HTMLElement): () => void {
     ? motion.bindMicroInteraction(menu.button, parts.svg, {
         active: { rotation: 12 },
         press: { rotation: -6 },
-        enterDuration: 0.1,
-        exitDuration: 0.15,
       })
     : () => undefined;
   const cleanMenu = menu.install();
