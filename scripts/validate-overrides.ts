@@ -37,7 +37,7 @@ class OverrideValidator {
       this.#validateCatalogViewContract();
       this.#validateSharedResponsiveStructure();
       this.#validateTemplateSources();
-      this.#validateCssManifest();
+      this.#validateCssManifest(inventory.cssFiles);
 
       if (this.#validation.errors.length === 0) {
         console.log(
@@ -157,20 +157,40 @@ class OverrideValidator {
     }
   }
 
-  #validateCssManifest(): void {
+  #validateCssManifest(cssFiles: readonly string[]): void {
     const manifest = readProjectFile('override/main.css');
     const references = [...manifest.matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;/g)]
       .map((match) => match[1])
       .filter((reference): reference is string => Boolean(reference));
+    const imported = new Set<string>();
+
+    this.#validation.check(
+      new Set(references).size === references.length,
+      'CSS manifest must not contain duplicate imports',
+    );
 
     for (const reference of references) {
       const [assetPath = '', query = ''] = reference.split('?');
+      const normalized = assetPath.replace(/^\.\//, '').replaceAll('\\', '/');
+      imported.add(normalized);
       this.#validation.check(query === 'v=unversioned', `CSS import must use ?v=unversioned: ${reference}`);
       this.#validation.check(
         fs.existsSync(path.resolve(OVERRIDE_DIR, assetPath)),
         `Missing CSS import target: ${assetPath}`,
       );
     }
+
+    const expected = new Set(
+      cssFiles
+        .filter((file) => file !== path.join(OVERRIDE_DIR, 'main.css'))
+        .map((file) => this.#relativeOverride(file)),
+    );
+    const missing = [...expected].filter((file) => !imported.has(file)).sort();
+    const unexpected = [...imported].filter((file) => !expected.has(file)).sort();
+    this.#validation.check(
+      missing.length === 0 && unexpected.length === 0,
+      `CSS manifest must cover every override stylesheet exactly once; missing=${missing.join(',') || 'none'}, unexpected=${unexpected.join(',') || 'none'}`,
+    );
   }
 }
 
