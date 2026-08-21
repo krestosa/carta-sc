@@ -9,23 +9,34 @@ interface ValidationInputs {
   readonly referenceRoot: string | null;
 }
 
-const REQUIRED_PATHS = [
-  'source',
+const REQUIRED_ROOT_ENTRIES = [
+  'build.ps1',
+  'build.sh',
   'compiled',
-  'BUILD_SHA',
-  'README.md',
-  'build-local.sh',
-  'serve-local.sh',
-  'build-local.ps1',
-  'serve-local.ps1',
+  'source',
+] as const;
+
+const REQUIRED_SOURCE_PATHS = [
+  'index.html',
+  'package.json',
+  'package-lock.json',
+  'tsconfig.base.json',
+  'tsconfig.browser.json',
+  'tsconfig.tooling.json',
+  'override',
+  'types',
+  'lab/pages/build.ts',
+  'scripts/sync-runtime.ts',
+  'scripts/lib',
 ] as const;
 
 class HandoffValidator {
   constructor(private readonly inputs: ValidationInputs) {}
 
   run(): void {
-    this.#requireHandoffPaths();
+    this.#requireHandoffShape();
     this.#validateSourceBoundary(path.join(this.inputs.handoffRoot, 'source'));
+    this.#validateCompiledBoundary(path.join(this.inputs.handoffRoot, 'compiled'));
     if (this.inputs.referenceRoot) {
       this.#validateCompiledReference(
         path.join(this.inputs.handoffRoot, 'compiled'),
@@ -35,10 +46,16 @@ class HandoffValidator {
     console.log('Handoff validation passed.');
   }
 
-  #requireHandoffPaths(): void {
-    for (const relativePath of REQUIRED_PATHS) {
-      if (!fs.existsSync(path.join(this.inputs.handoffRoot, relativePath))) {
-        throw new Error(`Missing handoff contract path: ${relativePath}`);
+  #requireHandoffShape(): void {
+    const actual = fs.readdirSync(this.inputs.handoffRoot).sort();
+    const expected = [...REQUIRED_ROOT_ENTRIES].sort();
+    if (actual.length !== expected.length || actual.some((entry, index) => entry !== expected[index])) {
+      throw new Error(`Unexpected handoff root contents: ${actual.join(', ')}`);
+    }
+
+    for (const relativePath of REQUIRED_SOURCE_PATHS) {
+      if (!fs.existsSync(path.join(this.inputs.handoffRoot, 'source', relativePath))) {
+        throw new Error(`Missing handoff source path: ${relativePath}`);
       }
     }
   }
@@ -46,11 +63,38 @@ class HandoffValidator {
   #validateSourceBoundary(sourceRoot: string): void {
     for (const file of walkFiles(sourceRoot)) {
       const relativePath = normalizePath(path.relative(sourceRoot, file));
-      if (/\.(?:py|mjs)$/i.test(relativePath) || /requirements\.txt$/i.test(relativePath)) {
-        throw new Error(`Forbidden legacy tooling leaked into handoff source: ${relativePath}`);
+      const segments = relativePath.split('/');
+      const extension = path.extname(relativePath).toLowerCase();
+
+      if (segments.some((segment) => segment === '.git' || segment === '.github' || segment === 'node_modules')) {
+        throw new Error(`Repository metadata leaked into handoff source: ${relativePath}`);
+      }
+      if (['.md', '.map', '.mjs', '.py', '.ps1', '.sh'].includes(extension) || /requirements(?:\.txt)?$/i.test(relativePath)) {
+        throw new Error(`Non-build source leaked into handoff source: ${relativePath}`);
+      }
+      if (relativePath.startsWith('lab/') && !relativePath.startsWith('lab/pages/')) {
+        throw new Error(`Non-pages lab tooling leaked into handoff source: ${relativePath}`);
+      }
+      if (relativePath.startsWith('scripts/')
+        && relativePath !== 'scripts/sync-runtime.ts'
+        && !relativePath.startsWith('scripts/lib/')) {
+        throw new Error(`Unrelated build script leaked into handoff source: ${relativePath}`);
       }
       if (file.endsWith('.js') && !relativePath.startsWith('js/') && !relativePath.startsWith('_js_dev/')) {
         throw new Error(`Owned JS source leaked into handoff source: ${relativePath}`);
+      }
+    }
+  }
+
+  #validateCompiledBoundary(compiledRoot: string): void {
+    for (const file of walkFiles(compiledRoot)) {
+      const relativePath = normalizePath(path.relative(compiledRoot, file));
+      const extension = path.extname(relativePath).toLowerCase();
+      if (extension === '.md' || extension === '.ts') {
+        throw new Error(`Source-only file leaked into compiled handoff: ${relativePath}`);
+      }
+      if (relativePath.startsWith('lab/') || relativePath.startsWith('scripts/') || relativePath.startsWith('types/')) {
+        throw new Error(`Build tooling leaked into compiled handoff: ${relativePath}`);
       }
     }
   }
@@ -60,13 +104,13 @@ class HandoffValidator {
   }
 
   #validateCompiledReference(compiledRoot: string, referenceRoot: string): void {
-    const referenceFiles = listRelativeFiles(referenceRoot);
+    const referenceFiles = listRelativeFiles(referenceRoot).filter((file) => path.extname(file).toLowerCase() !== '.md');
     const compiledFiles = listRelativeFiles(compiledRoot);
     if (
       referenceFiles.length !== compiledFiles.length
       || referenceFiles.some((file, index) => file !== compiledFiles[index])
     ) {
-      throw new Error('Clean-room handoff file set differs from reference');
+      throw new Error('Handoff compiled file set differs from the active web artifact');
     }
 
     for (const relativePath of referenceFiles) {
@@ -74,7 +118,7 @@ class HandoffValidator {
         this.#sha256(path.join(referenceRoot, relativePath))
         !== this.#sha256(path.join(compiledRoot, relativePath))
       ) {
-        throw new Error(`Clean-room handoff mismatch: ${relativePath}`);
+        throw new Error(`Handoff compiled mismatch: ${relativePath}`);
       }
     }
   }
