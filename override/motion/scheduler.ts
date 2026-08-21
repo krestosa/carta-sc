@@ -6,16 +6,14 @@ import type {
   MotionTweenOptions,
 } from './types.js';
 
-const MOTION_RATE = 1.05;
-
 export function tween(
   duration: number,
   easing: string | undefined,
   update: (progress: number) => void,
   options: MotionTweenOptions = {},
 ): MotionHandle {
-  const delayMs = Math.max(0, ((options.delay ?? 0) * 1000) / MOTION_RATE);
-  const durationMs = Math.max(0, (duration * 1000) / MOTION_RATE);
+  const delayMs = Math.max(0, (options.delay ?? 0) * 1000);
+  const durationMs = Math.max(0, duration * 1000);
   let frameId = 0;
   let startTime: number | undefined;
   let running = true;
@@ -116,7 +114,7 @@ export function spring(
   update: (progress: number) => void,
   options: MotionSpringOptions = {},
 ): MotionHandle {
-  const delayMs = Math.max(0, ((options.delay ?? 0) * 1000) / MOTION_RATE);
+  const delayMs = Math.max(0, (options.delay ?? 0) * 1000);
   const initialVelocity = options.initialVelocity ?? 0;
   let frameId = 0;
   let startTime: number | undefined;
@@ -140,7 +138,7 @@ export function spring(
       return;
     }
 
-    const seconds = ((elapsed - delayMs) / 1000) * MOTION_RATE;
+    const seconds = (elapsed - delayMs) / 1000;
     const sample = sampleSpring(spec, seconds, initialVelocity);
     update(sample.progress);
     const settled = Math.abs(1 - sample.progress) <= 0.001 && Math.abs(sample.velocity) <= 0.001;
@@ -173,7 +171,7 @@ export function delay(seconds: number, callback: () => void): MotionHandle {
     if (!running) return;
     running = false;
     callback();
-  }, Math.max(0, (seconds * 1000) / MOTION_RATE));
+  }, Math.max(0, seconds * 1000));
 
   return {
     cancel(): void {
