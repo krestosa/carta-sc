@@ -1,4 +1,4 @@
-name: TypeScript CI and Handoff
+name: TypeScript CI and Optional Handoff
 
 on:
   push:
@@ -43,26 +43,21 @@ jobs:
       - name: Run full TypeScript CI
         run: npm run ci
 
-      - name: Verify handoff contract
-        run: |
-          set -euo pipefail
-          test -s handoff/README.md
-          test -s handoff/BUILD_SHA
-          test -s handoff/compiled/index.html
-          test -s handoff/compiled/.nojekyll
-          test -d handoff/source/override
-          test -s handoff/source/lab/pages/build.ts
-          test -s handoff/source/package.json
-          test -s handoff/source/package-lock.json
-          test "$(cat handoff/BUILD_SHA)" = "$GITHUB_SHA"
-          ! find handoff/source -type f \( -name '*.py' -o -name '*.mjs' -o -name '*.sh' -o -name 'requirements.txt' \) -print -quit | grep -q .
+      - name: Build temporary handoff
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run handoff:temporary
 
-      - name: Upload handoff
+      - name: Verify temporary handoff
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run validate:handoff -- handoff .pages-site
+
+      - name: Upload temporary handoff
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           name: handoff-${{ github.sha }}
           path: handoff
           if-no-files-found: error
           include-hidden-files: true
-          retention-days: 30
+          retention-days: 7
           compression-level: 6
