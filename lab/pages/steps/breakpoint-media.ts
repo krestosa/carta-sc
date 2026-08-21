@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import { SITE, assert, escapeRegExp, githubSha, read, remove, write } from '../lib/core.js';
 
 const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 const DESKTOP_ONLY_MEDIA = [
@@ -35,8 +35,9 @@ async function convertMobileLogo(html: string, sha: string): Promise<MediaTransf
   const pngPath = path.join(SITE, '_critical-media/mobile-logo.png');
   assert(fs.existsSync(pngPath), 'mobile LCP PNG missing');
 
-  const metadata = await sharp(pngPath).metadata();
-  const bytes = await sharp(pngPath).webp({ lossless: true, effort: 6 }).toBuffer();
+  const input = fs.readFileSync(pngPath);
+  const metadata = await sharp(input, { failOn: 'error' }).metadata();
+  const bytes = await sharp(input, { failOn: 'error' }).webp({ lossless: true, effort: 6 }).toBuffer();
   assert(bytes.length > 0 && bytes.length <= MOBILE_LOGO_BUDGET, `mobile LCP WebP budget exceeded: ${bytes.length}`);
 
   const webpPath = path.join(SITE, '_critical-media/mobile-logo.webp');
@@ -45,7 +46,7 @@ async function convertMobileLogo(html: string, sha: string): Promise<MediaTransf
   const newReference = `_critical-media/mobile-logo.webp?v=${sha}`;
   assert(html.split(oldReference).length - 1 >= 2, 'mobile LCP image/preload references missing');
 
-  fs.rmSync(pngPath);
+  remove(pngPath);
   return {
     html: html.split(oldReference).join(newReference),
     summary: `${metadata.width}x${metadata.height}/${bytes.length}B`,
@@ -56,10 +57,11 @@ async function createResponsiveBanner(html: string, sha: string): Promise<MediaT
   const desktopPath = path.join(SITE, '_critical-media/desktop-banner.webp');
   assert(fs.existsSync(desktopPath), 'desktop banner missing');
 
-  const metadata = await sharp(desktopPath).metadata();
+  const input = fs.readFileSync(desktopPath);
+  const metadata = await sharp(input, { failOn: 'error' }).metadata();
   assert(metadata.width && metadata.height, 'desktop banner metadata missing');
   const mobileHeight = Math.max(1, Math.round(metadata.height * MOBILE_BANNER_WIDTH / metadata.width));
-  const mobileBytes = await sharp(desktopPath)
+  const mobileBytes = await sharp(input, { failOn: 'error' })
     .resize({ width: MOBILE_BANNER_WIDTH, height: mobileHeight, kernel: sharp.kernel.lanczos3 })
     .webp({ quality: 78, effort: 6 })
     .toBuffer();
