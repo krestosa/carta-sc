@@ -1,32 +1,15 @@
-import { queries } from '../../core/variables.js';
 import type { ResolvedTheme, ThemeMode } from '../../core/types.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
+import { ThemeIconController } from './theme-icon.js';
 import { cancelPaletteTransition, transitionPalette, type PaletteTransitionContext } from './theme-palette.js';
 
-interface ThemeIconParts {
-  readonly button: HTMLButtonElement;
-  readonly svg: SVGElement;
-  readonly rotor: SVGGraphicsElement;
-  readonly core: SVGPathElement;
-  readonly bite: SVGElement;
-  readonly ring: SVGElement;
-  readonly rays: SVGElement;
-  readonly lines: SVGLineElement[];
-}
-
 const STORAGE_KEY = 'scTheme:v1';
-const SUN_PATH = 'M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z';
-const MOON_PATH = 'M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z';
-const AUTO_PATH = 'M12 3.6a8.4 8.4 0 0 1 0 16.8z';
-const MOON_BITE = { cx: 18.3, cy: 6.2, radius: 8.6 } as const;
 const rootElement = document.documentElement;
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
-const partsCache = new WeakMap<HTMLElement, ThemeIconParts>();
 const optionsCache = new WeakMap<HTMLElement, HTMLElement[]>();
+const themeIcon = new ThemeIconController();
 
-let geometryToken = 0;
-let mainHandles: MotionHandle[] = [];
 let contrastHandles: MotionHandle[] = [];
 let contrastNode: HTMLButtonElement | null = null;
 
@@ -91,42 +74,6 @@ function syncMetadata(root: HTMLElement, mode: ThemeMode): void {
   }
 }
 
-function iconParts(root: HTMLElement | null): ThemeIconParts | null {
-  if (!root) return null;
-  const cached = partsCache.get(root);
-  if (cached) return cached;
-
-  const button = root.querySelector<HTMLButtonElement>('.sc-theme-toggle');
-  const svg = button?.querySelector<SVGElement>('[data-sc-theme-icon]');
-  const rotor = button?.querySelector<SVGGraphicsElement>('[data-sc-theme-rotor]');
-  const core = button?.querySelector<SVGPathElement>('[data-sc-theme-core]');
-  const bite = button?.querySelector<SVGElement>('[data-sc-theme-bite]');
-  const ring = button?.querySelector<SVGElement>('[data-sc-theme-auto-ring]');
-  const rays = button?.querySelector<SVGElement>('[data-sc-theme-rays]');
-  const lines = button ? Array.from(button.querySelectorAll<SVGLineElement>('[data-sc-theme-rays] line')) : [];
-  if (!button || !svg || !rotor || !core || !bite || !ring || !rays || lines.length !== 8) return null;
-
-  const parts = { button, svg, rotor, core, bite, ring, rays, lines };
-  partsCache.set(root, parts);
-  return parts;
-}
-
-function setAttributes(node: Element, values: Readonly<Record<string, string | number>>): void {
-  for (const [name, value] of Object.entries(values)) node.setAttribute(name, String(value));
-}
-
-function track(handle: MotionHandle): MotionHandle {
-  mainHandles.push(handle);
-  return handle;
-}
-
-function stopMainMotion(): void {
-  geometryToken += 1;
-  const handles = mainHandles;
-  mainHandles = [];
-  handles.forEach((handle) => handle.cancel());
-}
-
 function stopContrastMotion(): void {
   const handles = contrastHandles;
   contrastHandles = [];
@@ -137,7 +84,7 @@ function stopContrastMotion(): void {
 
 function lockButtonContrast(root: HTMLElement | null, context: PaletteTransitionContext): void {
   stopContrastMotion();
-  const parts = iconParts(root);
+  const parts = themeIcon.parts(root);
   const from = context.from['--sc-color-ink'];
   const to = context.to['--sc-color-ink'];
   if (!parts || !from || !to || from === to || context.duration <= 0) return;
@@ -157,42 +104,11 @@ function lockButtonContrast(root: HTMLElement | null, context: PaletteTransition
   }));
 }
 
-function prepareRays(parts: ThemeIconParts, offset: number): void {
-  for (const line of parts.lines) {
-    if (line.getAttribute('pathLength') !== '1') line.setAttribute('pathLength', '1');
-    line.style.strokeDasharray = '1';
-    line.style.strokeDashoffset = String(offset);
-  }
-}
-
-function applyStaticIcon(root: HTMLElement, mode: ThemeMode): void {
-  const parts = iconParts(root);
-  if (!parts) return;
-
-  parts.core.setAttribute('d', mode === 'system' ? AUTO_PATH : mode === 'dark' ? MOON_PATH : SUN_PATH);
-  setAttributes(parts.bite, { cx: MOON_BITE.cx, cy: MOON_BITE.cy, r: mode === 'dark' ? MOON_BITE.radius : 0 });
-  setAttributes(parts.ring, { r: 8.4 });
-  parts.ring.style.opacity = mode === 'system' ? '1' : '0';
-  prepareRays(parts, mode === 'light' ? 0 : 1);
-  parts.rays.style.opacity = mode === 'light' ? '1' : '0';
-  parts.rotor.style.transform = 'rotate(0deg)';
-  parts.rotor.style.removeProperty('will-change');
-  parts.svg.setAttribute('data-sc-theme-glyph-state', mode);
-  root.setAttribute('data-sc-theme-prepaint-ready', '1');
-  root.removeAttribute('data-sc-theme-animating');
-}
-
 export function seedTheme(root: HTMLElement): ThemeMode {
   const mode = loadTheme();
   syncMetadata(root, mode);
-  applyStaticIcon(root, mode);
+  themeIcon.applyStatic(root, mode);
   return mode;
-}
-
-function setStaticTheme(root: HTMLElement, mode: ThemeMode): void {
-  stopMainMotion();
-  stopContrastMotion();
-  applyStaticIcon(root, mode);
 }
 
 function commitTheme(root: HTMLElement | null, mode: ThemeMode, persist: boolean, keepIcon: boolean): void {
@@ -204,65 +120,13 @@ function commitTheme(root: HTMLElement | null, mode: ThemeMode, persist: boolean
   rootElement.setAttribute('data-sc-theme-resolved', after);
   if (root) {
     syncMetadata(root, mode);
-    if (!keepIcon) setStaticTheme(root, mode);
+    if (!keepIcon) {
+      stopContrastMotion();
+      themeIcon.setStatic(root, mode);
+    }
   }
   if (before !== after) emitThemeChange(mode, after);
   if (persist && previous !== mode) saveTheme(mode);
-}
-
-function tweenRay(line: SVGLineElement, to: number, duration: number, ease: string, delay: number): void {
-  const from = Number.parseFloat(line.style.strokeDashoffset || line.getAttribute('stroke-dashoffset') || '0');
-  track(motion.engine.tween(duration, ease, (progress) => {
-    line.style.strokeDashoffset = String(from + (to - from) * progress);
-  }, { delay }));
-}
-
-function animateThemeIcon(root: HTMLElement, from: ThemeMode, to: ThemeMode): void {
-  const parts = iconParts(root);
-  if (!parts || from === to) return;
-  if (queries.reducedMotion.matches) {
-    setStaticTheme(root, to);
-    return;
-  }
-
-  const continuing = root.hasAttribute('data-sc-theme-animating');
-  stopMainMotion();
-  const token = geometryToken;
-  if (!continuing) applyStaticIcon(root, from);
-
-  root.setAttribute('data-sc-theme-animating', 'true');
-  parts.svg.setAttribute('data-sc-theme-glyph-state', to);
-  parts.rotor.style.willChange = 'transform';
-  const path = to === 'system' ? AUTO_PATH : to === 'dark' ? MOON_PATH : SUN_PATH;
-  const direction = to === 'dark' ? -1 : 1;
-
-  track(motion.engine.path(parts.core, path, { duration: 0.18, ease: 'cubic.inOut' }));
-  track(motion.engine.attributes(parts.bite, { cx: MOON_BITE.cx, cy: MOON_BITE.cy, r: to === 'dark' ? MOON_BITE.radius : 0 }, { duration: 0.16, ease: 'cubic.inOut' }));
-  track(motion.engine.attributes(parts.ring, { r: 8.4 }, { duration: 0.14, ease: 'cubic.out' }));
-  track(motion.engine.opacity(parts.ring, to === 'system' ? 1 : 0, { duration: 0.14, ease: 'cubic.out' }));
-  track(motion.engine.transform(parts.rotor, { rotation: direction * 5.5 }, { duration: 0.075, ease: 'cubic.out' }));
-  track(motion.engine.delay(0.06, () => {
-    if (token !== geometryToken) return;
-    track(motion.engine.transform(parts.rotor, { rotation: 0 }, { duration: 0.12, ease: 'quart.out' }));
-  }));
-
-  for (const line of parts.lines) {
-    if (line.getAttribute('pathLength') !== '1') line.setAttribute('pathLength', '1');
-    line.style.strokeDasharray = '1';
-  }
-  if (to === 'light') {
-    parts.rays.style.opacity = '1';
-    parts.lines.forEach((line, index) => tweenRay(line, 0, 0.14, 'quart.out', 0.015 + index * 0.006));
-  } else {
-    [...parts.lines].reverse().forEach((line, index) => tweenRay(line, 1, 0.09, 'cubic.in', index * 0.004));
-    track(motion.engine.opacity(parts.rays, 0, { duration: 0.08, delay: 0.055, ease: 'cubic.out' }));
-  }
-
-  track(motion.engine.delay(0.2, () => {
-    if (token !== geometryToken) return;
-    mainHandles = [];
-    applyStaticIcon(root, to);
-  }));
 }
 
 function transitionTheme(root: HTMLElement, requested: string, persist: boolean): void {
@@ -271,7 +135,7 @@ function transitionTheme(root: HTMLElement, requested: string, persist: boolean)
   const before = normalizeTheme(rootElement.getAttribute('data-sc-theme-resolved')) ?? resolveTheme(selectedTheme());
   const after = resolveTheme(mode);
   stopContrastMotion();
-  animateThemeIcon(root, from, mode);
+  themeIcon.animate(root, from, mode);
   if (before === after) {
     commitTheme(root, mode, persist, true);
   } else {
@@ -305,7 +169,7 @@ export function installThemeControl(root: HTMLElement): () => void {
 
   applyTheme(root, loadTheme());
   const items = themeOptions(root);
-  const parts = iconParts(root);
+  const parts = themeIcon.parts(root);
   const cleanMicro = parts
     ? motion.bindMicroInteraction(button, parts.svg, { active: { rotation: 12 }, press: { rotation: -6 }, enterDuration: 0.1, exitDuration: 0.15 })
     : () => undefined;
@@ -366,7 +230,7 @@ export function installThemeControl(root: HTMLElement): () => void {
 
   return () => {
     cleanMicro();
-    stopMainMotion();
+    themeIcon.stop();
     stopContrastMotion();
     cancelPaletteTransition();
     button.removeEventListener('click', toggle);
@@ -381,7 +245,8 @@ export function syncThemeControl(): void {
   if (!root) return;
   const mode = selectedTheme();
   syncMetadata(root, mode);
-  setStaticTheme(root, mode);
+  stopContrastMotion();
+  themeIcon.setStatic(root, mode);
 }
 
 export function resolvedTheme(): ResolvedTheme {
