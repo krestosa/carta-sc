@@ -19,8 +19,7 @@ const mediaEntries = Object.entries(MEDIA) as Array<[MediaName, string]>;
 export const media = MEDIA;
 export const queries = Object.freeze(
   Object.fromEntries(mediaEntries.map(([name, query]) => [name, window.matchMedia(query)])),
-) as MediaQueries,
-);
+) as MediaQueries;
 
 export const selectors = Object.freeze({
   container: '.containerShop',
