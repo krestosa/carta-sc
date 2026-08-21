@@ -53,11 +53,11 @@ function validateCatalogViewContract(): void {
     `CatalogViewMode must expose only compact and list; found ${JSON.stringify([...modes])}`,
   );
 
-  const view = readProjectFile('override/components/catalog-tools/view.ts');
+  const viewState = readProjectFile('override/components/catalog-tools/view-state.ts');
   const runtime = readProjectFile('override/runtime-main.ts');
   const stability = readProjectFile('override/components/catalog-tools/view-stability.css');
   validation.check(
-    /if\s*\(value\s*===\s*['"]normal['"]\)\s*return\s*['"]compact['"]/.test(view),
+    /if\s*\(value\s*===\s*['"]normal['"]\)\s*return\s*['"]compact['"]/.test(viewState),
     'Catalog view migration must normalize the legacy normal value to compact',
   );
   validation.check(
