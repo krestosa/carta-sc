@@ -28,7 +28,6 @@ function applyInitialTheme(): void {
   const theme = storedTheme();
   root.setAttribute('data-sc-theme', theme);
   root.setAttribute('data-sc-theme-resolved', resolvedTheme(theme));
-  window.__scInitialTheme = theme;
 }
 
 function releasePrepaint(error: unknown): void {

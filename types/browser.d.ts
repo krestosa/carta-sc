@@ -24,5 +24,4 @@ interface JQueryStaticCompat {
 interface Window {
   jQuery?: JQueryStaticCompat;
   $?: JQueryStaticCompat;
-  __scInitialTheme?: string;
 }

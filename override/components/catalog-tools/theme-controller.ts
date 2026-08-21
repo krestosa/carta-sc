@@ -42,9 +42,7 @@ export function selectedTheme(): ThemeMode {
   return normalizeTheme(rootElement.getAttribute('data-sc-theme')) ?? loadTheme();
 }
 
-function memoryTheme(): ThemeMode | null {
-  const bootstrapTheme = normalizeTheme(window.__scInitialTheme ?? null);
-  if (bootstrapTheme) return bootstrapTheme;
+function storedTheme(): ThemeMode | null {
   try {
     return normalizeTheme(localStorage.getItem(STORAGE_KEY));
   } catch {
@@ -53,11 +51,10 @@ function memoryTheme(): ThemeMode | null {
 }
 
 function loadTheme(): ThemeMode {
-  return memoryTheme() ?? normalizeTheme(rootElement.getAttribute('data-sc-theme')) ?? 'system';
+  return normalizeTheme(rootElement.getAttribute('data-sc-theme')) ?? storedTheme() ?? 'system';
 }
 
 function saveTheme(mode: ThemeMode): void {
-  window.__scInitialTheme = mode;
   try { localStorage.setItem(STORAGE_KEY, mode); } catch { /* Persistencia opcional. */ }
 }
 
@@ -205,7 +202,6 @@ function commitTheme(root: HTMLElement | null, mode: ThemeMode, persist: boolean
 
   rootElement.setAttribute('data-sc-theme', mode);
   rootElement.setAttribute('data-sc-theme-resolved', after);
-  window.__scInitialTheme = mode;
   if (root) {
     syncMetadata(root, mode);
     if (!keepIcon) setStaticTheme(root, mode);
