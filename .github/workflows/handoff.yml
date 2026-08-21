@@ -31,7 +31,7 @@ jobs:
             node: '24'
     name: ci-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 50
     env:
       TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -69,11 +69,17 @@ jobs:
           $env:GITHUB_SHA = $env:TYPE_SHA
           npm run build:handoff
 
-      - name: Validate handoff
+      - name: Validate handoff structure
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
           npm run validate:handoff -- .pages-site
+
+      - name: Validate handoff browser parity with Pages
+        shell: pwsh
+        run: |
+          $env:GITHUB_SHA = $env:TYPE_SHA
+          npm run validate:handoff:browser
 
       - name: Upload Windows handoff
         if: github.event_name == 'workflow_dispatch' && matrix.platform == 'windows'
