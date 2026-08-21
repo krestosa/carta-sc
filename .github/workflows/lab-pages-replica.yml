@@ -76,7 +76,7 @@ jobs:
           grep -Fq 'const RESET_OUTGOING_MS = 150;' .pages-site/override/features/image-preloader/motion.js
           grep -Fq 'const RESET_INCOMING_MS = 250;' .pages-site/override/features/image-preloader/motion.js
           ! grep -Fq 'card.style.top' .pages-site/override/components/product-card/reveal-motion.js
-          grep -Fq 'this.#engine.opacity' .pages-site/override/components/product-card/reveal-motion.js
+          grep -Fq '.opacity(card, 1, {' .pages-site/override/components/product-card/reveal-motion.js
           ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' .pages-site/override/components/product-modal/motion.js
           ! grep -Fq 'clipPath' .pages-site/override/components/product-modal/motion.js
           ! grep -Fq 'springTransform' .pages-site/override/components/product-modal/motion.js
@@ -182,7 +182,7 @@ jobs:
               && grep -Fq 'const RESET_OUTGOING_MS = 150;' <<<"$preloader" \
               && grep -Fq 'const RESET_INCOMING_MS = 250;' <<<"$preloader" \
               && ! grep -Fq 'card.style.top' <<<"$card_reveal" \
-              && grep -Fq 'this.#engine.opacity' <<<"$card_reveal" \
+              && grep -Fq '.opacity(card, 1, {' <<<"$card_reveal" \
               && ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' <<<"$modal" \
               && ! grep -Fq 'clipPath' <<<"$modal" \
               && ! grep -Fq 'springTransform' <<<"$modal" \
