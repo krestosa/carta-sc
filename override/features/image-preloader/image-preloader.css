@@ -126,6 +126,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   will-change: background-position, opacity;
   animation-name: sc-image-preloader-shimmer-position, sc-image-preloader-shimmer-alpha;
   animation-duration: var(--sc-image-preloader-cycle), var(--sc-image-preloader-cycle);
+  animation-delay: var(--sc-image-preloader-phase, 0ms), var(--sc-image-preloader-phase, 0ms);
   animation-timing-function: linear, linear;
   animation-iteration-count: infinite, infinite;
 }
