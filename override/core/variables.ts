@@ -73,6 +73,10 @@ const springs = Object.freeze({
     default: Object.freeze({ stiffness: 1600, damping: 1 }),
     slow: Object.freeze({ stiffness: 800, damping: 1 }),
   }),
+  indicator: Object.freeze({
+    soft: Object.freeze({ stiffness: 50, damping: 1 }),
+    firm: Object.freeze({ stiffness: 1000, damping: 1 }),
+  }),
 });
 
 const cssEasings = Object.freeze({
