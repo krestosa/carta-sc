@@ -1,6 +1,6 @@
 import { scrollState } from '../../core/state.js';
-import { selectors } from '../../core/variables.js';
 import type { Cleanup } from '../../core/types.js';
+import { selectors } from '../../core/variables.js';
 import { imagePreloader } from '../../features/image-preloader/image-preloader.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
@@ -18,57 +18,120 @@ interface RevealState {
   observed: boolean;
 }
 
-const MOTION = Object.freeze({
+const MOTION = {
   baseDuration: 0.56,
   fastDuration: 0.2,
   velocityFloor: 180,
   velocityCeil: 2800,
   rowDelay: 0.045,
   rowDelayMax: 0.14,
-});
+} as const;
 
 export let revealViewport: (() => void) | null = null;
 
-export const setupReveal = (
-  engine: MotionEngine,
-  profile: RevealProfile,
-  reduce: boolean,
-): Cleanup => {
-  const cards = [...document.querySelectorAll<HTMLElement>(selectors.productCards)];
-  const states = new WeakMap<HTMLElement, RevealState>();
-  let observer: IntersectionObserver | null = null;
-  let mutationObserver: MutationObserver | null = null;
-  let lastY = window.scrollY || window.pageYOffset || 0;
-  let lastTime = performance.now();
-  let velocity = 0;
-  let direction = 1;
-  let scrollFrame = 0;
+class ProductCardRevealController {
+  readonly #engine: MotionEngine;
+  readonly #profile: RevealProfile;
+  readonly #reduce: boolean;
+  readonly #cards: HTMLElement[];
+  readonly #states = new WeakMap<HTMLElement, RevealState>();
 
-  const stateFor = (card: HTMLElement): RevealState => {
-    const existing = states.get(card);
+  #observer: IntersectionObserver | null = null;
+  #mutationObserver: MutationObserver | null = null;
+  #lastY = window.scrollY || window.pageYOffset || 0;
+  #lastTime = performance.now();
+  #velocity = 0;
+  #direction = 1;
+  #scrollFrame = 0;
+
+  constructor(engine: MotionEngine, profile: RevealProfile, reduce: boolean) {
+    this.#engine = engine;
+    this.#profile = profile;
+    this.#reduce = reduce;
+    this.#cards = [...document.querySelectorAll<HTMLElement>(selectors.productCards)];
+  }
+
+  start(): Cleanup {
+    if (this.#cards.length === 0) {
+      revealViewport = null;
+      return () => undefined;
+    }
+
+    revealViewport = this.revealVisibleCards;
+    window.addEventListener('scroll', this.#trackScroll, { passive: true });
+    this.#createIntersectionObserver();
+    this.#cards.forEach(this.#arm);
+    this.#observeVisibilityChanges();
+    return () => this.destroy();
+  }
+
+  destroy(): void {
+    if (revealViewport === this.revealVisibleCards) revealViewport = null;
+    window.removeEventListener('scroll', this.#trackScroll);
+    if (this.#scrollFrame) cancelAnimationFrame(this.#scrollFrame);
+    this.#scrollFrame = 0;
+    this.#observer?.disconnect();
+    this.#mutationObserver?.disconnect();
+    this.#observer = null;
+    this.#mutationObserver = null;
+
+    for (const card of this.#cards) {
+      this.#stop(card);
+      this.#clear(card);
+    }
+  }
+
+  revealVisibleCards = (): void => {
+    for (const card of this.#cards) {
+      const state = this.#stateFor(card);
+      if (!state.prepared) this.#arm(card);
+      if (state.done || state.started || !this.#renderable(card)) continue;
+
+      const rect = card.getBoundingClientRect();
+      if (rect.bottom <= 0) {
+        this.#finish(card);
+      } else if (!this.#observer && rect.top < innerHeight) {
+        if (this.#direction < 0 || this.#programmatic()) this.#finish(card);
+        else this.#reveal(card, this.#velocity);
+      }
+    }
+  };
+
+  #stateFor(card: HTMLElement): RevealState {
+    const existing = this.#states.get(card);
     if (existing) return existing;
-    const created: RevealState = { prepared: false, done: false, started: false, handles: [], observed: false };
-    states.set(card, created);
-    return created;
-  };
+    const state: RevealState = {
+      prepared: false,
+      done: false,
+      started: false,
+      handles: [],
+      observed: false,
+    };
+    this.#states.set(card, state);
+    return state;
+  }
 
-  const renderable = (card: HTMLElement): boolean =>
-    !card.hidden && card.offsetParent !== null && card.getBoundingClientRect().height > 0;
+  #renderable(card: HTMLElement): boolean {
+    return !card.hidden && card.offsetParent !== null && card.getBoundingClientRect().height > 0;
+  }
 
-  const programmatic = (): boolean =>
-    scrollState.programmatic || performance.now() < scrollState.suppressRevealUntil;
+  #programmatic(): boolean {
+    return scrollState.programmatic || performance.now() < scrollState.suppressRevealUntil;
+  }
 
-  const stop = (card: HTMLElement): void => {
-    const state = stateFor(card);
-    state.handles.forEach((handle) => handle.cancel());
+  #stop(card: HTMLElement): void {
+    const state = this.#stateFor(card);
+    for (const handle of state.handles) handle.cancel();
     state.handles = [];
-  };
+  }
 
-  const clear = (card: HTMLElement): void => {
-    ['top', 'opacity', 'visibility', 'will-change'].forEach((property) => card.style.removeProperty(property));
-  };
+  #clear(card: HTMLElement): void {
+    for (const property of ['top', 'opacity', 'visibility', 'will-change']) {
+      card.style.removeProperty(property);
+    }
+  }
 
-  const rowPhase = (card: HTMLElement): number => {
+  #rowPhase(card: HTMLElement): number {
     const top = card.offsetTop;
     let count = 0;
     let node = card.previousElementSibling;
@@ -81,188 +144,177 @@ export const setupReveal = (
       node = node.previousElementSibling;
     }
     return Math.min(count, 5);
-  };
+  }
 
-  const velocityFactor = (speed: number): number => Math.max(
-    0,
-    Math.min(1, (Math.abs(speed) - MOTION.velocityFloor) / (MOTION.velocityCeil - MOTION.velocityFloor)),
-  );
+  #velocityFactor(speed: number): number {
+    return Math.max(
+      0,
+      Math.min(
+        1,
+        (Math.abs(speed) - MOTION.velocityFloor) / (MOTION.velocityCeil - MOTION.velocityFloor),
+      ),
+    );
+  }
 
-  const durationFor = (speed: number): number =>
-    MOTION.baseDuration + (MOTION.fastDuration - MOTION.baseDuration) * velocityFactor(speed);
+  #durationFor(speed: number): number {
+    return MOTION.baseDuration
+      + (MOTION.fastDuration - MOTION.baseDuration) * this.#velocityFactor(speed);
+  }
 
-  const delayFor = (card: HTMLElement, speed: number): number =>
-    Math.min(MOTION.rowDelayMax, rowPhase(card) * MOTION.rowDelay) * (1 - 0.8 * velocityFactor(speed));
+  #delayFor(card: HTMLElement, speed: number): number {
+    return Math.min(MOTION.rowDelayMax, this.#rowPhase(card) * MOTION.rowDelay)
+      * (1 - 0.8 * this.#velocityFactor(speed));
+  }
 
-  const finish = (card: HTMLElement): void => {
-    const state = stateFor(card);
+  #finish(card: HTMLElement): void {
+    const state = this.#stateFor(card);
     if (state.done) return;
     state.done = true;
     state.started = true;
-    if (observer && state.observed) {
-      observer.unobserve(card);
+    if (this.#observer && state.observed) {
+      this.#observer.unobserve(card);
       state.observed = false;
     }
-    stop(card);
+    this.#stop(card);
     card.style.opacity = '1';
     card.style.visibility = 'visible';
     card.style.top = '0px';
-    clear(card);
-  };
+    this.#clear(card);
+  }
 
-  const reveal = (card: HTMLElement, speed: number): void => {
-    const state = stateFor(card);
+  #reveal(card: HTMLElement, speed: number): void {
+    const state = this.#stateFor(card);
     if (state.done || state.started) return;
     state.started = true;
-    if (observer && state.observed) {
-      observer.unobserve(card);
+    if (this.#observer && state.observed) {
+      this.#observer.unobserve(card);
       state.observed = false;
     }
 
     imagePreloader.scan(card);
-    if (reduce || programmatic()) {
-      finish(card);
+    if (this.#reduce || this.#programmatic()) {
+      this.#finish(card);
       return;
     }
 
-    const duration = durationFor(speed);
-    const delay = delayFor(card, speed);
+    const duration = this.#durationFor(speed);
+    const delay = this.#delayFor(card, speed);
     const startTop = Number.parseFloat(card.style.top) || 0;
-    stop(card);
+    this.#stop(card);
     state.handles = [
-      engine.tween(duration * 0.92, 'quad.out', (progress) => {
+      this.#engine.tween(duration * 0.92, 'quad.out', (progress) => {
         card.style.opacity = String(progress);
       }, { delay }),
-      engine.tween(duration, 'quart.out', (progress) => {
+      this.#engine.tween(duration, 'quart.out', (progress) => {
         card.style.top = `${startTop * (1 - progress)}px`;
       }, {
         delay,
         onComplete: () => {
           state.handles = [];
-          finish(card);
+          this.#finish(card);
         },
       }),
     ];
-  };
+  }
 
-  const prepare = (card: HTMLElement): boolean => {
-    const state = stateFor(card);
-    if (state.prepared || state.done || !renderable(card)) return false;
+  #prepare(card: HTMLElement): boolean {
+    const state = this.#stateFor(card);
+    if (state.prepared || state.done || !this.#renderable(card)) return false;
+
     const rect = card.getBoundingClientRect();
     state.prepared = true;
     if (rect.bottom <= 0) {
-      finish(card);
+      this.#finish(card);
       return false;
     }
+
     card.style.opacity = '0';
     card.style.visibility = 'visible';
-    card.style.top = `${rect.top < innerHeight ? profile.initialY ?? 14 : profile.revealY ?? 18}px`;
+    card.style.top = `${rect.top < innerHeight ? this.#profile.initialY ?? 14 : this.#profile.revealY ?? 18}px`;
     card.style.willChange = 'top,opacity';
     return true;
-  };
+  }
 
-  const arm = (card: HTMLElement): void => {
-    const state = stateFor(card);
-    if (!prepare(card) || state.done) return;
-    if (reduce) {
-      finish(card);
+  #arm = (card: HTMLElement): void => {
+    const state = this.#stateFor(card);
+    if (!this.#prepare(card) || state.done) return;
+    if (this.#reduce) {
+      this.#finish(card);
       return;
     }
-    if (observer) {
-      observer.observe(card);
+    if (this.#observer) {
+      this.#observer.observe(card);
       state.observed = true;
     }
   };
 
-  const armNode = (node: Node): void => {
+  #armNode(node: Node): void {
     if (!(node instanceof HTMLElement) || node.hidden) return;
     if (node.matches(selectors.productList)) {
-      node.querySelectorAll<HTMLElement>(selectors.productCard).forEach(arm);
+      node.querySelectorAll<HTMLElement>(selectors.productCard).forEach(this.#arm);
     } else if (node.matches(selectors.productCard)) {
-      arm(node);
+      this.#arm(node);
     }
-  };
-
-  const revealVisibleCards = (): void => {
-    cards.forEach((card) => {
-      const state = stateFor(card);
-      if (!state.prepared) arm(card);
-      if (state.done || state.started || !renderable(card)) return;
-      const rect = card.getBoundingClientRect();
-      if (rect.bottom <= 0) finish(card);
-      else if (!observer && rect.top < innerHeight) {
-        if (direction < 0 || programmatic()) finish(card);
-        else reveal(card, velocity);
-      }
-    });
-  };
-
-  const trackScroll = (): void => {
-    const now = performance.now();
-    const y = window.scrollY || window.pageYOffset || 0;
-    const elapsed = Math.max(16, now - lastTime);
-    const delta = y - lastY;
-    if (Math.abs(delta) > 0.5) direction = delta > 0 ? 1 : -1;
-    velocity = Math.abs(delta) * 1000 / elapsed;
-    lastY = y;
-    lastTime = now;
-
-    if (scrollFrame) cancelAnimationFrame(scrollFrame);
-    scrollFrame = requestAnimationFrame(() => {
-      scrollFrame = 0;
-      revealVisibleCards();
-    });
-  };
-
-  if (!cards.length) {
-    revealViewport = null;
-    return () => undefined;
   }
 
-  revealViewport = revealVisibleCards;
-  window.addEventListener('scroll', trackScroll, { passive: true });
+  #trackScroll = (): void => {
+    const now = performance.now();
+    const y = window.scrollY || window.pageYOffset || 0;
+    const elapsed = Math.max(16, now - this.#lastTime);
+    const delta = y - this.#lastY;
+    if (Math.abs(delta) > 0.5) this.#direction = delta > 0 ? 1 : -1;
+    this.#velocity = Math.abs(delta) * 1000 / elapsed;
+    this.#lastY = y;
+    this.#lastTime = now;
 
-  if ('IntersectionObserver' in window) {
-    const threshold = profile.threshold ?? 0.05;
-    observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
+    if (this.#scrollFrame) cancelAnimationFrame(this.#scrollFrame);
+    this.#scrollFrame = requestAnimationFrame(() => {
+      this.#scrollFrame = 0;
+      this.revealVisibleCards();
+    });
+  };
+
+  #createIntersectionObserver(): void {
+    if (!('IntersectionObserver' in window)) return;
+    const threshold = this.#profile.threshold ?? 0.05;
+    this.#observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
         const card = entry.target as HTMLElement;
-        const state = stateFor(card);
-        if (state.done || state.started) return;
-        if (direction < 0 || programmatic()) {
-          finish(card);
-          return;
+        const state = this.#stateFor(card);
+        if (state.done || state.started) continue;
+        if (this.#direction < 0 || this.#programmatic()) {
+          this.#finish(card);
+          continue;
         }
-        if (entry.intersectionRatio + 1e-4 < threshold) return;
-        reveal(card, velocity);
-      });
+        if (entry.intersectionRatio + 1e-4 < threshold) continue;
+        this.#reveal(card, this.#velocity);
+      }
     }, { root: null, rootMargin: '0px', threshold: [0, threshold] });
   }
 
-  cards.forEach(arm);
-  const container = document.querySelector<HTMLElement>(selectors.container);
-  if (container && 'MutationObserver' in window) {
-    mutationObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'hidden') {
-          const target = mutation.target as HTMLElement;
-          if (!target.hidden) armNode(target);
-        }
-      });
+  #observeVisibilityChanges(): void {
+    const container = document.querySelector<HTMLElement>(selectors.container);
+    if (!container || !('MutationObserver' in window)) return;
+    this.#mutationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type !== 'attributes' || mutation.attributeName !== 'hidden') continue;
+        const target = mutation.target as HTMLElement;
+        if (!target.hidden) this.#armNode(target);
+      }
     });
-    mutationObserver.observe(container, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+    this.#mutationObserver.observe(container, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['hidden'],
+    });
   }
+}
 
-  return () => {
-    if (revealViewport === revealVisibleCards) revealViewport = null;
-    window.removeEventListener('scroll', trackScroll);
-    if (scrollFrame) cancelAnimationFrame(scrollFrame);
-    observer?.disconnect();
-    mutationObserver?.disconnect();
-    cards.forEach((card) => {
-      stop(card);
-      clear(card);
-    });
-  };
-};
+export function setupReveal(
+  engine: MotionEngine,
+  profile: RevealProfile,
+  reduce: boolean,
+): Cleanup {
+  return new ProductCardRevealController(engine, profile, reduce).start();
+}
