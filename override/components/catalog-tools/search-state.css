@@ -56,14 +56,14 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleS
   to { opacity: 1; transform: scaleX(1); }
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) > a.fancyboxModalAddProd {
-  animation: sc-search-card-reveal 160ms cubic-bezier(.22,1,.36,1) both;
+  animation: sc-search-card-reveal var(--sc-motion-short3) var(--sc-motion-ease-decelerate) both;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .subTitleShopSeccion:not([hidden]) {
-  animation: sc-search-heading-reveal 180ms cubic-bezier(.22,1,.36,1) both;
+  animation: sc-search-heading-reveal var(--sc-motion-short4) var(--sc-motion-ease-decelerate) both;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div::after {
-  animation: sc-search-rule-reveal 220ms cubic-bezier(.22,1,.36,1) both;
+  animation: sc-search-rule-reveal var(--sc-motion-medium1) var(--sc-motion-ease-decelerate) both;
   transform-origin: 0 50% !important;
 }
 
@@ -94,7 +94,7 @@ body.sushiShop .sc-catalog-search-clear svg {
   fill: currentColor;
   pointer-events: none;
   transform-origin: 50% 50%;
-  transition: transform 100ms var(--sc-motion-ease-out),color 100ms var(--sc-motion-ease-out);
+  transition: transform var(--sc-motion-short2) var(--sc-motion-ease-decelerate),color var(--sc-motion-short2) var(--sc-motion-ease-standard);
 }
 body.sushiShop .sc-catalog-search-clear:hover,
 body.sushiShop .sc-catalog-search-clear:focus-visible { color: var(--sc-color-ink); }
@@ -130,7 +130,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   white-space: nowrap !important;
   cursor: pointer !important;
   opacity: .78 !important;
-  transition: color var(--sc-motion-fast) ease,opacity var(--sc-motion-fast) ease !important;
+  transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard),opacity var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
   -webkit-tap-highlight-color: transparent !important;
 }
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::after {
@@ -143,7 +143,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   background: currentColor !important;
   transform: scaleX(0) !important;
   transform-origin: 0 50% !important;
-  transition: transform 180ms var(--sc-motion-ease-out) !important;
+  transition: transform var(--sc-motion-short4) var(--sc-motion-ease-decelerate) !important;
 }
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:hover,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:focus-visible,
