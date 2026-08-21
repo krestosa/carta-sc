@@ -26,7 +26,7 @@ export const traitLabels = (card: Element): string[] => {
 };
 
 export const imageSource = (card: Element): string => {
-  const image = card.querySelector<HTMLImageElement>('img.productoImageShop');
+  const image = card.querySelector<HTMLImageElement>('.imgShop img, img.productoImageShop');
   if (!image) return '';
   return image.getAttribute('data-sc-src')
     || image.currentSrc
