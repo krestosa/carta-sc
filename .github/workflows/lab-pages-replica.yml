@@ -56,13 +56,15 @@ jobs:
           test -s .pages-site/override/main.js
           test -s .pages-site/override/components/product-modal/motion.js
           test -s .pages-site/override/components/catalog-tools/catalog-tools.js
-          test -s .pages-site/override/components/catalog-tools/icon-control-motion.js
+          ! test -e .pages-site/override/components/catalog-tools/icon-control-motion.js
+          ! test -e .pages-site/override/components/catalog-tools/view-icon-interaction.js
           grep -Fq "const VERSION = '${GITHUB_SHA}';" .pages-site/index.html
           grep -Fq 'body.sushiShop .sc-product-modal__cart-button' .pages-site/override/main.css
           grep -Fq 'border-radius: 24px !important;' .pages-site/override/main.css
-          grep -Fq -- '--sc-icon-control-radius: 20px;' .pages-site/override/main.css
+          grep -Fq 'border-radius: 50%;' .pages-site/override/main.css
+          ! grep -Fq -- '--sc-icon-control-radius' .pages-site/override/main.css
           grep -Fq 'translate3d(-42px,0,0) scale(1.08)' .pages-site/override/components/product-modal/motion.js
-          grep -Fq "./icon-control-motion.js?v=${GITHUB_SHA}" .pages-site/override/components/catalog-tools/catalog-tools.js
+          ! grep -Fq 'icon-control-motion' .pages-site/override/components/catalog-tools/catalog-tools.js
 
       - name: Create deployment manifest
         shell: bash
@@ -145,9 +147,10 @@ jobs:
               && grep -Fq "const VERSION = '${GITHUB_SHA}';" <<<"$html" \
               && grep -Fq 'body.sushiShop .sc-product-modal__cart-button' <<<"$css" \
               && grep -Fq 'border-radius: 24px !important;' <<<"$css" \
-              && grep -Fq -- '--sc-icon-control-radius: 20px;' <<<"$css" \
+              && grep -Fq 'border-radius: 50%;' <<<"$css" \
+              && ! grep -Fq -- '--sc-icon-control-radius' <<<"$css" \
               && grep -Fq 'translate3d(-42px,0,0) scale(1.08)' <<<"$modal" \
-              && grep -Fq "./icon-control-motion.js?v=${GITHUB_SHA}" <<<"$catalog"; then
+              && ! grep -Fq 'icon-control-motion' <<<"$catalog"; then
               echo "Verified public Pages is serving exact workflow commit $GITHUB_SHA"
               rm -f "$remote_manifest"
               exit 0
