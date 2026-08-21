@@ -9,8 +9,9 @@ interface CubicBezier {
   readonly y2: number;
 }
 
+const STANDARD_BEZIER: CubicBezier = Object.freeze({ x1: 0.2, y1: 0, x2: 0, y2: 1 });
 const BEZIERS: Readonly<Record<string, CubicBezier>> = Object.freeze({
-  standard: { x1: 0.2, y1: 0, x2: 0, y2: 1 },
+  standard: STANDARD_BEZIER,
   'standard.accelerate': { x1: 0.3, y1: 0, x2: 1, y2: 1 },
   'standard.decelerate': { x1: 0, y1: 0, x2: 0, y2: 1 },
 });
@@ -77,6 +78,6 @@ export function easeValue(name: string | undefined, progress: number): number {
     case 'sine.in': return 1 - Math.cos((x * Math.PI) / 2);
     case 'sine.out': return Math.sin((x * Math.PI) / 2);
     case 'sine.inout': return -(Math.cos(Math.PI * x) - 1) / 2;
-    default: return cubicBezierValue(BEZIERS.standard, x);
+    default: return cubicBezierValue(STANDARD_BEZIER, x);
   }
 }
