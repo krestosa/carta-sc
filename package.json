@@ -18,6 +18,7 @@
     "handoff:temporary": "npm run build:runtime && node .build/tooling/lab/handoff/build-handoff.js",
     "build:handoff": "npm run handoff:temporary",
     "validate:handoff": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff.js handoff",
+    "validate:handoff:browser": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff-browser.js .pages-site handoff/compiled",
     "build": "npm run validate",
     "ci": "npm run typecheck && npm run validate && npm run build:pages"
   },
