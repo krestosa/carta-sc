@@ -28,6 +28,7 @@ const darkLogoRule = rule(
 );
 
 function desktopBrandRules(width: number): string[] {
+  const height = SYSTEM_LOGO_SIZE.height;
   return [
     rule('body.sushiShop .newVer17topBar>.container', [
       'position:relative!important',
@@ -35,9 +36,10 @@ function desktopBrandRules(width: number): string[] {
     rule('body.sushiShop .newVer17topBar .brandCol:has(.sc-system-brand-logo)', [
       'display:flex!important',
       'position:absolute!important',
-      'top:20px!important',
+      'top:40px!important',
       'right:0!important',
       'left:0!important',
+      'z-index:2!important',
       'align-items:center!important',
       'justify-content:center!important',
       'width:100%!important',
@@ -54,8 +56,8 @@ function desktopBrandRules(width: number): string[] {
       'justify-content:center!important',
       `width:${width}px!important`,
       `max-width:${width}px!important`,
-      'height:55px!important',
-      'max-height:55px!important',
+      `height:${height}px!important`,
+      `max-height:${height}px!important`,
       'margin:0!important',
       'padding:0!important',
       'line-height:0!important',
@@ -66,16 +68,27 @@ function desktopBrandRules(width: number): string[] {
       'display:flex!important',
       'position:static!important',
       'top:auto!important',
+      'right:auto!important',
+      'bottom:auto!important',
       'left:auto!important',
       'align-items:center!important',
       'justify-content:center!important',
-      'width:100%!important',
-      'height:100%!important',
+      `width:${width}px!important`,
+      `max-width:${width}px!important`,
+      `height:${height}px!important`,
+      `max-height:${height}px!important`,
       'margin:0!important',
       'padding:0!important',
       'line-height:0!important',
       'transform:none!important',
       'pointer-events:auto!important',
+    ]),
+    rule('body.sushiShop .newVer17topBar .brand:has(.sc-system-brand-logo)>a>.sc-system-brand-logo', [
+      `width:${width}px!important`,
+      `max-width:${width}px!important`,
+      `height:${height}px!important`,
+      `max-height:${height}px!important`,
+      'flex:0 0 auto!important',
     ]),
   ];
 }
@@ -155,7 +168,7 @@ export function createCalibratedSystemLogoCss(mobileWidth: number, desktopWidth:
       rule('body.sushiShop .newVer17topBar .sc-system-brand-logo', [
         `width:${desktopWidth}px!important`,
         `max-width:${desktopWidth}px!important`,
-        'height:auto!important',
+        `height:${height}px!important`,
         `max-height:${height}px!important`,
       ]),
     ]),
