@@ -14,9 +14,10 @@ interface IndicatorEntry {
   readonly host: HTMLElement;
   readonly line: HTMLElement;
   readonly state: IndicatorState;
-  targetX: number;
-  targetWidth: number;
-  direction: number;
+  targetStart: number;
+  targetEnd: number;
+  startSpec: MotionSpringSpec;
+  endSpec: MotionSpringSpec;
   initialized: boolean;
   visible: boolean;
   moveFrame: number;
@@ -72,7 +73,7 @@ function visibleRoots(target: Element | null): HTMLElement[] {
   return Array.from(roots);
 }
 
-function springAxis(
+function criticalSpringAxis(
   position: number,
   velocity: number,
   target: number,
@@ -80,10 +81,12 @@ function springAxis(
   spec: MotionSpringSpec,
 ): [number, number] {
   const omega = Math.sqrt(spec.stiffness);
-  const acceleration = -2 * spec.damping * omega * velocity - spec.stiffness * (position - target);
-  velocity += acceleration * deltaTime;
-  position += velocity * deltaTime;
-  return [position, velocity];
+  const displacement = position - target;
+  const coefficient = velocity + omega * displacement;
+  const decay = Math.exp(-omega * deltaTime);
+  const nextDisplacement = (displacement + coefficient * deltaTime) * decay;
+  const nextVelocity = (velocity - omega * coefficient * deltaTime) * decay;
+  return [target + nextDisplacement, nextVelocity];
 }
 
 export class CategoryIndicatorController {
@@ -185,9 +188,10 @@ export class CategoryIndicatorController {
       host,
       line,
       state: { x: 0, width: 1 },
-      targetX: 0,
-      targetWidth: 1,
-      direction: 1,
+      targetStart: 0,
+      targetEnd: 1,
+      startSpec: motionTokens.springs.indicator.firm,
+      endSpec: motionTokens.springs.indicator.firm,
       initialized: false,
       visible: false,
       moveFrame: 0,
@@ -201,8 +205,8 @@ export class CategoryIndicatorController {
 
   #snap(entry: IndicatorEntry, x: number, width: number): void {
     this.#stopMove(entry);
-    entry.targetX = x;
-    entry.targetWidth = width;
+    entry.targetStart = x;
+    entry.targetEnd = x + width;
     entry.state.x = x;
     entry.state.width = width;
     entry.velocityStart = 0;
@@ -213,9 +217,8 @@ export class CategoryIndicatorController {
 
   #settled(entry: IndicatorEntry): boolean {
     const currentEnd = entry.state.x + entry.state.width;
-    const targetEnd = entry.targetX + entry.targetWidth;
-    return Math.abs(entry.state.x - entry.targetX) < INDICATOR.springPositionEpsilon &&
-      Math.abs(currentEnd - targetEnd) < INDICATOR.springPositionEpsilon &&
+    return Math.abs(entry.state.x - entry.targetStart) < INDICATOR.springPositionEpsilon &&
+      Math.abs(currentEnd - entry.targetEnd) < INDICATOR.springPositionEpsilon &&
       Math.abs(entry.velocityStart) < INDICATOR.springVelocityEpsilon &&
       Math.abs(entry.velocityEnd) < INDICATOR.springVelocityEpsilon;
   }
@@ -229,34 +232,29 @@ export class CategoryIndicatorController {
 
     let start = entry.state.x;
     let end = entry.state.x + entry.state.width;
-    const targetStart = entry.targetX;
-    const targetEnd = entry.targetX + entry.targetWidth;
-    const forward = entry.direction >= 0;
-    const startSpec = forward ? motionTokens.springs.indicator.soft : motionTokens.springs.indicator.firm;
-    const endSpec = forward ? motionTokens.springs.indicator.firm : motionTokens.springs.indicator.soft;
 
-    [start, entry.velocityStart] = springAxis(
+    [start, entry.velocityStart] = criticalSpringAxis(
       start,
       entry.velocityStart,
-      targetStart,
+      entry.targetStart,
       deltaTime,
-      startSpec,
+      entry.startSpec,
     );
-    [end, entry.velocityEnd] = springAxis(
+    [end, entry.velocityEnd] = criticalSpringAxis(
       end,
       entry.velocityEnd,
-      targetEnd,
+      entry.targetEnd,
       deltaTime,
-      endSpec,
+      entry.endSpec,
     );
 
-    entry.state.x = Math.min(start, end - 1);
-    entry.state.width = Math.max(1, end - start);
+    entry.state.x = start;
+    entry.state.width = end - start;
     this.#render(entry);
 
     if (this.#settled(entry)) {
-      entry.state.x = entry.targetX;
-      entry.state.width = entry.targetWidth;
+      entry.state.x = entry.targetStart;
+      entry.state.width = entry.targetEnd - entry.targetStart;
       entry.velocityStart = 0;
       entry.velocityEnd = 0;
       entry.moveFrame = 0;
@@ -272,11 +270,24 @@ export class CategoryIndicatorController {
       this.#snap(entry, x, width);
       return;
     }
-    const from = entry.state.x + entry.state.width / 2;
-    const to = x + width / 2;
-    entry.targetX = x;
-    entry.targetWidth = width;
-    entry.direction = to >= from ? 1 : -1;
+
+    const newStart = x;
+    const newEnd = x + width;
+
+    if (entry.targetEnd !== newEnd) {
+      entry.endSpec = entry.targetEnd < newEnd
+        ? motionTokens.springs.indicator.firm
+        : motionTokens.springs.indicator.soft;
+      entry.targetEnd = newEnd;
+    }
+
+    if (entry.targetStart !== newStart) {
+      entry.startSpec = entry.targetStart < newStart
+        ? motionTokens.springs.indicator.soft
+        : motionTokens.springs.indicator.firm;
+      entry.targetStart = newStart;
+    }
+
     entry.initialized = true;
     if (!entry.moveFrame) {
       entry.lastMoveTime = 0;
