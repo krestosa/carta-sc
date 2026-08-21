@@ -1,6 +1,6 @@
 /* Resguardo geométrico previo al primer pintado de SushiClub.
-   El primer viewport ya muestra contenido real desde el inicio. Estas reglas sólo
-   conservan la geometría final hasta que termina la hidratación del runtime. */
+   Las cards visibles pueden mostrar placeholder desde el primer frame mientras su media
+   real todavía no está disponible; el resto conserva únicamente la geometría final. */
 
 html {
   --sc-banner-ratio: 1500 / 157;
@@ -286,7 +286,6 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     height: 100%;
   }
 
-  /* El placeholder raster del producto sigue bajo responsabilidad de image-preloader.css. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop .productoShop .imgShop {
     box-sizing: border-box;
     width: 100% !important;
@@ -299,7 +298,101 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
   }
 }
 
+html.sc-image-preloader-active {
+  --sc-image-preloader-base: #e3e3e2;
+  --sc-image-preloader-cycle: 1500ms;
+}
+
+html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
+  --sc-image-preloader-base: #292926;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading > a.fancyboxModalAddProd {
+  position: relative !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--sc-image-preloader-base);
+  opacity: 1;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active > img,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active > img {
+  opacity: 0 !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading > a.fancyboxModalAddProd::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading > a.fancyboxModalAddProd::after {
+  content: '';
+  display: block;
+  z-index: 4;
+  justify-self: stretch;
+  align-self: start;
+  pointer-events: none;
+  background: var(--sc-image-preloader-base);
+  border-radius: 999px;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading > a.fancyboxModalAddProd::before {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  height: 12px;
+  margin-top: var(--sc-card-title-padding-top,13px);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading > a.fancyboxModalAddProd::after {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  width: 86%;
+  height: 8px;
+  margin-top: calc(var(--sc-card-description-offset,10px) + 1px);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading :is(
+  .title-shop1,
+  .priceRow,
+  .descrip,
+  .sc-product-flavors
+) {
+  opacity: 0 !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading .descrip {
+  border-top-color: transparent !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading {
+  animation: sc-image-preloader-pulse var(--sc-image-preloader-cycle) linear infinite;
+  animation-delay: var(--sc-image-preloader-phase,0ms);
+}
+
+@keyframes sc-image-preloader-pulse {
+  0% { opacity: 1; }
+  20% { opacity: 0; }
+  40% { opacity: 0; }
+  80% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading {
+    animation: none !important;
+  }
+
   html.sc-catalog-prepaint body.sushiShop :where(
     .topBar.newVer17topBar .bord-line,
     .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile,
