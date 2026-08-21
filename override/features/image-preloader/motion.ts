@@ -25,7 +25,10 @@ interface CubicBezier {
 
 interface StageMotionState {
   token: number;
-  frame: number;
+  startedAt: number;
+  duration: number;
+  update: (elapsed: number) => void;
+  complete: () => void;
 }
 
 interface WaveEntry {
@@ -84,20 +87,34 @@ function phaseDelay(waveDelay = 0): string {
   return `${-(performance.now() % PULSE_CYCLE_MS) + waveDelay}ms`;
 }
 
+function cardFor(stage: HTMLElement): HTMLElement | null {
+  return stage.closest<HTMLElement>('.productoShop');
+}
+
+function setSharedProperty(stage: HTMLElement, property: string, value: string): void {
+  stage.style.setProperty(property, value);
+  cardFor(stage)?.style.setProperty(property, value);
+}
+
+function removeSharedProperty(stage: HTMLElement, property: string): void {
+  stage.style.removeProperty(property);
+  cardFor(stage)?.style.removeProperty(property);
+}
+
 function setAlpha(stage: HTMLElement, cover: number, content: number): void {
-  stage.style.setProperty(COVER_ALPHA_PROPERTY, String(clamp(cover)));
-  stage.style.setProperty(CONTENT_ALPHA_PROPERTY, String(clamp(content)));
+  setSharedProperty(stage, COVER_ALPHA_PROPERTY, String(clamp(cover)));
+  setSharedProperty(stage, CONTENT_ALPHA_PROPERTY, String(clamp(content)));
 }
 
 function clearAlpha(stage: HTMLElement): void {
-  stage.style.removeProperty(COVER_ALPHA_PROPERTY);
-  stage.style.removeProperty(CONTENT_ALPHA_PROPERTY);
+  removeSharedProperty(stage, COVER_ALPHA_PROPERTY);
+  removeSharedProperty(stage, CONTENT_ALPHA_PROPERTY);
 }
 
 function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
   const entries: WaveEntry[] = [];
   for (const stage of stages) {
-    const card = stage.closest<HTMLElement>('.productoShop');
+    const card = cardFor(stage);
     if (!card || card.hidden) continue;
     const rect = card.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) continue;
@@ -108,13 +125,81 @@ function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
     : a.left - b.left);
 }
 
+class PlaceholderFrameCoordinator {
+  readonly #states = new Map<HTMLElement, StageMotionState>();
+  #frame = 0;
+
+  start(
+    stage: HTMLElement,
+    duration: number,
+    update: (elapsed: number) => void,
+    complete: () => void,
+  ): void {
+    this.cancel(stage);
+    const state: StageMotionState = {
+      token: 1,
+      startedAt: performance.now(),
+      duration,
+      update,
+      complete,
+    };
+    this.#states.set(stage, state);
+    update(0);
+    this.#requestFrame();
+  }
+
+  cancel(stage: HTMLElement): void {
+    const state = this.#states.get(stage);
+    if (!state) return;
+    state.token += 1;
+    this.#states.delete(stage);
+    this.#cancelFrameIfIdle();
+  }
+
+  clear(): void {
+    this.#states.clear();
+    if (this.#frame) cancelAnimationFrame(this.#frame);
+    this.#frame = 0;
+  }
+
+  #requestFrame(): void {
+    if (!this.#frame && this.#states.size) this.#frame = requestAnimationFrame(this.#tick);
+  }
+
+  #cancelFrameIfIdle(): void {
+    if (this.#states.size || !this.#frame) return;
+    cancelAnimationFrame(this.#frame);
+    this.#frame = 0;
+  }
+
+  #tick = (now: number): void => {
+    this.#frame = 0;
+    const completed: Array<[HTMLElement, StageMotionState]> = [];
+
+    for (const [stage, state] of this.#states) {
+      const elapsed = Math.min(state.duration, Math.max(0, now - state.startedAt));
+      state.update(elapsed);
+      if (elapsed >= state.duration) completed.push([stage, state]);
+    }
+
+    for (const [stage, state] of completed) {
+      if (this.#states.get(stage) !== state) continue;
+      this.#states.delete(stage);
+      state.complete();
+    }
+
+    this.#requestFrame();
+  };
+}
+
 export function synchronizeImagePlaceholderCycle(): void {
   document.documentElement.style.setProperty(CLOCK_PROPERTY, phaseDelay());
 }
 
 export class ImagePlaceholderMotion {
   readonly #initialized = new WeakSet<HTMLElement>();
-  readonly #states = new Map<HTMLElement, StageMotionState>();
+  readonly #registered = new Set<HTMLElement>();
+  readonly #coordinator = new PlaceholderFrameCoordinator();
 
   synchronize(stages: readonly HTMLElement[]): void {
     synchronizeImagePlaceholderCycle();
@@ -130,13 +215,15 @@ export class ImagePlaceholderMotion {
         column = 0;
       }
       const delay = (row * WAVE_ROW_DELAY_MS + column * WAVE_COLUMN_DELAY_MS) % PULSE_CYCLE_MS;
-      entry.stage.style.setProperty(WAVE_DELAY_PROPERTY, `${delay}ms`);
+      setSharedProperty(entry.stage, WAVE_DELAY_PROPERTY, `${delay}ms`);
       if (entry.stage.classList.contains('sc-image-active')) this.#syncPhase(entry.stage);
       column += 1;
     }
   }
 
   markLoading(stage: HTMLElement, active: boolean): void {
+    this.#registered.add(stage);
+    const card = cardFor(stage);
     const wasReady = stage.classList.contains('sc-image-ready');
     const wasRevealing = stage.classList.contains('sc-image-revealing');
     const alreadyLoading = stage.classList.contains('sc-image-loading') && !wasRevealing;
@@ -151,15 +238,19 @@ export class ImagePlaceholderMotion {
     this.#cancel(stage);
     stage.classList.remove('sc-image-ready', 'sc-image-revealing');
     stage.classList.add('sc-image-loading');
+    card?.classList.remove('sc-card-placeholder-ready', 'sc-card-placeholder-revealing');
+    card?.classList.add('sc-card-placeholder-loading');
     this.#setActive(stage, active);
 
     if (queries.reducedMotion.matches || firstLoading || (!wasReady && !wasRevealing)) {
       stage.classList.remove('sc-image-transitioning');
+      card?.classList.remove('sc-card-placeholder-transitioning');
       clearAlpha(stage);
       return;
     }
 
     stage.classList.add('sc-image-transitioning');
+    card?.classList.add('sc-card-placeholder-transitioning');
     this.#animate(stage, RESET_DURATION_MS, (elapsed) => {
       const content = elapsed < RESET_OUTGOING_MS
         ? cubicBezierValue(ACCELERATE, 1 - elapsed / RESET_OUTGOING_MS)
@@ -174,15 +265,18 @@ export class ImagePlaceholderMotion {
     }, () => {
       clearAlpha(stage);
       stage.classList.remove('sc-image-transitioning');
+      card?.classList.remove('sc-card-placeholder-transitioning');
       if (stage.classList.contains('sc-image-active')) this.#syncPhase(stage);
     });
   }
 
   markReady(stage: HTMLElement): void {
+    this.#registered.add(stage);
+    const card = cardFor(stage);
     const wasLoading = stage.classList.contains('sc-image-loading');
     if (stage.querySelector('img[src],img[srcset]')) this.#initialized.add(stage);
     this.#cancel(stage);
-    stage.classList.remove('sc-image-active');
+    this.#setActive(stage, false);
 
     if (queries.reducedMotion.matches || !wasLoading) {
       this.#settleReady(stage);
@@ -191,6 +285,12 @@ export class ImagePlaceholderMotion {
 
     stage.classList.add('sc-image-loading', 'sc-image-revealing', 'sc-image-transitioning');
     stage.classList.remove('sc-image-ready');
+    card?.classList.add(
+      'sc-card-placeholder-loading',
+      'sc-card-placeholder-revealing',
+      'sc-card-placeholder-transitioning',
+    );
+    card?.classList.remove('sc-card-placeholder-ready');
 
     this.#animate(stage, REVEAL_DURATION_MS, (elapsed) => {
       const reveal = cubicBezierValue(WIPE, clamp(elapsed / REVEAL_ALPHA_DURATION_MS));
@@ -201,6 +301,7 @@ export class ImagePlaceholderMotion {
   release(stage: HTMLElement): void {
     this.#cancel(stage);
     this.#initialized.delete(stage);
+    this.#registered.delete(stage);
     stage.classList.remove(
       'sc-image-loading',
       'sc-image-active',
@@ -208,25 +309,34 @@ export class ImagePlaceholderMotion {
       'sc-image-revealing',
       'sc-image-transitioning',
     );
+    const card = cardFor(stage);
+    card?.classList.remove(
+      'sc-card-placeholder-loading',
+      'sc-card-placeholder-active',
+      'sc-card-placeholder-ready',
+      'sc-card-placeholder-revealing',
+      'sc-card-placeholder-transitioning',
+    );
     clearAlpha(stage);
-    stage.style.removeProperty(PHASE_PROPERTY);
-    stage.style.removeProperty(WAVE_DELAY_PROPERTY);
+    removeSharedProperty(stage, PHASE_PROPERTY);
+    removeSharedProperty(stage, WAVE_DELAY_PROPERTY);
   }
 
   destroy(): void {
-    for (const stage of [...this.#states.keys()]) this.release(stage);
-    this.#states.clear();
+    for (const stage of [...this.#registered]) this.release(stage);
+    this.#coordinator.clear();
     document.documentElement.style.removeProperty(CLOCK_PROPERTY);
   }
 
   #setActive(stage: HTMLElement, active: boolean): void {
     stage.classList.toggle('sc-image-active', active);
+    cardFor(stage)?.classList.toggle('sc-card-placeholder-active', active);
     if (active && !stage.classList.contains('sc-image-transitioning')) this.#syncPhase(stage);
   }
 
   #syncPhase(stage: HTMLElement): void {
     const waveDelay = Number.parseFloat(stage.style.getPropertyValue(WAVE_DELAY_PROPERTY)) || 0;
-    stage.style.setProperty(PHASE_PROPERTY, phaseDelay(waveDelay));
+    setSharedProperty(stage, PHASE_PROPERTY, phaseDelay(waveDelay));
   }
 
   #settleReady(stage: HTMLElement): void {
@@ -238,16 +348,20 @@ export class ImagePlaceholderMotion {
       'sc-image-transitioning',
     );
     stage.classList.add('sc-image-ready');
+    const card = cardFor(stage);
+    card?.classList.remove(
+      'sc-card-placeholder-loading',
+      'sc-card-placeholder-active',
+      'sc-card-placeholder-revealing',
+      'sc-card-placeholder-transitioning',
+    );
+    card?.classList.add('sc-card-placeholder-ready');
     clearAlpha(stage);
-    stage.style.removeProperty(PHASE_PROPERTY);
+    removeSharedProperty(stage, PHASE_PROPERTY);
   }
 
   #cancel(stage: HTMLElement): void {
-    const state = this.#states.get(stage);
-    if (!state) return;
-    state.token += 1;
-    if (state.frame) cancelAnimationFrame(state.frame);
-    this.#states.delete(stage);
+    this.#coordinator.cancel(stage);
   }
 
   #animate(
@@ -256,26 +370,6 @@ export class ImagePlaceholderMotion {
     update: (elapsed: number) => void,
     complete: () => void,
   ): void {
-    const state: StageMotionState = { token: 1, frame: 0 };
-    const token = state.token;
-    const startedAt = performance.now();
-    this.#states.set(stage, state);
-
-    const frame = (now: number): void => {
-      const current = this.#states.get(stage);
-      if (!current || current !== state || current.token !== token) return;
-
-      const elapsed = Math.min(duration, Math.max(0, now - startedAt));
-      update(elapsed);
-      if (elapsed >= duration) {
-        this.#states.delete(stage);
-        complete();
-        return;
-      }
-      current.frame = requestAnimationFrame(frame);
-    };
-
-    update(0);
-    state.frame = requestAnimationFrame(frame);
+    this.#coordinator.start(stage, duration, update, complete);
   }
 }
