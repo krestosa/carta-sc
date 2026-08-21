@@ -6,6 +6,7 @@ import {
   MOBILE_LOGO_URL,
   NEAR_VIEWPORT_MARGIN,
 } from './config.js';
+import { ImagePlaceholderMotion } from './motion.js';
 
 interface ImageBinding {
   stage: HTMLElement;
@@ -18,6 +19,7 @@ export class ImagePreloaderController {
   readonly #assignedPriority = new WeakSet<HTMLImageElement>();
   readonly #bindings = new Map<HTMLImageElement, ImageBinding>();
   readonly #cacheWarmUrls = new Set<string>();
+  readonly #placeholderMotion = new ImagePlaceholderMotion();
 
   #observer: MutationObserver | null = null;
   #intersection: IntersectionObserver | null = null;
@@ -103,6 +105,7 @@ export class ImagePreloaderController {
     this.#observer = null;
     this.#intersection = null;
     this.#unbindNativeImages();
+    this.#placeholderMotion.destroy();
     document.documentElement.classList.remove('sc-image-preloader-active');
   }
 
@@ -123,15 +126,12 @@ export class ImagePreloaderController {
 
   #markLoading(stage: HTMLElement | null, active: boolean): void {
     if (!stage) return;
-    stage.classList.remove('sc-image-ready');
-    stage.classList.add('sc-image-loading');
-    stage.classList.toggle('sc-image-active', active);
+    this.#placeholderMotion.markLoading(stage, active);
   }
 
   #markReady(stage: HTMLElement | null): void {
     if (!stage) return;
-    stage.classList.remove('sc-image-loading', 'sc-image-active');
-    stage.classList.add('sc-image-ready');
+    this.#placeholderMotion.markReady(stage);
   }
 
   #stageFor(image: HTMLImageElement | null): HTMLElement | null {
@@ -211,6 +211,7 @@ export class ImagePreloaderController {
 
   #release(root: Node): void {
     if (!(root instanceof Element)) return;
+    this.#stagesIn(root).forEach((stage) => this.#placeholderMotion.release(stage));
     if (root instanceof HTMLImageElement) this.#unbindNativeImage(root);
     root.querySelectorAll<HTMLImageElement>('img').forEach((image) => this.#unbindNativeImage(image));
   }
