@@ -49,7 +49,7 @@ export function ensureDir(dir: string): void {
 export function remove(target: string): void {
   if (!fs.existsSync(target)) return;
 
-  const options: fs.RmDirOptions = {
+  const options = {
     recursive: true,
     force: true,
     maxRetries: process.platform === 'win32' ? 20 : 3,
