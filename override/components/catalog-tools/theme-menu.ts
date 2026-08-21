@@ -1,4 +1,5 @@
 import type { Cleanup } from '../../core/types.js';
+import { anchoredPopoverMotion } from '../../motion/popover-motion.js';
 
 export interface ThemeMenuCallbacks {
   readonly select: (value: string) => void;
@@ -48,17 +49,30 @@ export class ThemeMenuController {
       this.#menu.removeEventListener('click', this.#onChoose);
       this.#root.removeEventListener('keydown', this.#onKeyDown);
       document.removeEventListener('pointerdown', this.#onOutsidePointer, true);
+      anchoredPopoverMotion.cancel(this.#menu);
+      this.#menu.classList.remove('sc-theme-menu-open');
+      this.#menu.setAttribute('aria-hidden', 'true');
     };
   }
 
   setOpen(open: boolean, focusOption = false): void {
     this.#button.setAttribute('aria-expanded', String(open));
-    this.#menu.setAttribute('aria-hidden', String(!open));
-    this.#menu.classList.toggle('sc-theme-menu-open', open);
-    if (open && focusOption) {
-      (this.#menu.querySelector<HTMLElement>('[aria-checked="true"]')
-        ?? this.#menu.querySelector<HTMLElement>('.sc-theme-option'))?.focus();
+
+    if (open) {
+      this.#menu.classList.add('sc-theme-menu-open');
+      this.#menu.setAttribute('aria-hidden', 'false');
+      anchoredPopoverMotion.open(this.#menu, this.#button);
+      if (focusOption) {
+        (this.#menu.querySelector<HTMLElement>('[aria-checked="true"]')
+          ?? this.#menu.querySelector<HTMLElement>('.sc-theme-option'))?.focus();
+      }
+      return;
     }
+
+    anchoredPopoverMotion.close(this.#menu, this.#button, () => {
+      this.#menu.classList.remove('sc-theme-menu-open');
+      this.#menu.setAttribute('aria-hidden', 'true');
+    });
   }
 
   #onToggle = (event: MouseEvent): void => {
