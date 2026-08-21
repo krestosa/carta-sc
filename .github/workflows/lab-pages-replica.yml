@@ -57,6 +57,7 @@ jobs:
           test -s .pages-site/override/components/product-modal/motion.js
           test -s .pages-site/override/components/catalog-tools/catalog-tools.js
           test -s .pages-site/override/features/image-preloader/motion.js
+          test -s .pages-site/override/features/image-preloader/controller.js
           test -s .pages-site/override/components/product-card/reveal-motion.js
           ! test -e .pages-site/override/components/catalog-tools/icon-control-motion.js
           ! test -e .pages-site/override/components/catalog-tools/view-icon-interaction.js
@@ -68,13 +69,18 @@ jobs:
           grep -Fq -- '--sc-image-preloader-cycle: 1500ms;' .pages-site/override/main.css
           grep -Fq 'sc-image-preloader-pulse' .pages-site/override/main.css
           grep -Fq 'sc-card-placeholder-loading' .pages-site/override/main.css
-          grep -Fq 'border-top-color: transparent !important;' .pages-site/override/main.css
+          grep -Fq 'height: 12px;' .pages-site/override/main.css
+          grep -Fq 'height: 8px;' .pages-site/override/main.css
+          grep -Fq 'width: 86%;' .pages-site/override/main.css
           grep -Fq 'const PULSE_CYCLE_MS = 1500;' .pages-site/override/features/image-preloader/motion.js
           grep -Fq 'const WAVE_ROW_DELAY_MS = 200;' .pages-site/override/features/image-preloader/motion.js
           grep -Fq 'const WAVE_COLUMN_DELAY_MS = 100;' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq 'const REVEAL_ALPHA_DURATION_MS = 80;' .pages-site/override/features/image-preloader/motion.js
+          grep -Fq 'const REVEAL_DURATION_MS = 300;' .pages-site/override/features/image-preloader/motion.js
+          ! grep -Fq 'REVEAL_ALPHA_DURATION_MS' .pages-site/override/features/image-preloader/motion.js
           grep -Fq 'const RESET_OUTGOING_MS = 150;' .pages-site/override/features/image-preloader/motion.js
           grep -Fq 'const RESET_INCOMING_MS = 250;' .pages-site/override/features/image-preloader/motion.js
+          grep -Fq "img[src],img[srcset],img[data-sc-src]" .pages-site/override/features/image-preloader/controller.js
+          grep -Fq 'naturalWidth > 0' .pages-site/override/features/image-preloader/controller.js
           ! grep -Fq 'card.style.top' .pages-site/override/components/product-card/reveal-motion.js
           grep -Fq '.opacity(card, 1, {' .pages-site/override/components/product-card/reveal-motion.js
           ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' .pages-site/override/components/product-modal/motion.js
@@ -157,6 +163,9 @@ jobs:
             preloader=$(curl -fsSL --retry 3 --retry-delay 1 \
               -H 'Cache-Control: no-cache, no-store, max-age=0' \
               "${PAGE_URL%/}/override/features/image-preloader/motion.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
+            preloader_controller=$(curl -fsSL --retry 3 --retry-delay 1 \
+              -H 'Cache-Control: no-cache, no-store, max-age=0' \
+              "${PAGE_URL%/}/override/features/image-preloader/controller.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
             card_reveal=$(curl -fsSL --retry 3 --retry-delay 1 \
               -H 'Cache-Control: no-cache, no-store, max-age=0' \
               "${PAGE_URL%/}/override/components/product-card/reveal-motion.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
@@ -174,13 +183,18 @@ jobs:
               && grep -Fq -- '--sc-image-preloader-cycle: 1500ms;' <<<"$css" \
               && grep -Fq 'sc-image-preloader-pulse' <<<"$css" \
               && grep -Fq 'sc-card-placeholder-loading' <<<"$css" \
-              && grep -Fq 'border-top-color: transparent !important;' <<<"$css" \
+              && grep -Fq 'height: 12px;' <<<"$css" \
+              && grep -Fq 'height: 8px;' <<<"$css" \
+              && grep -Fq 'width: 86%;' <<<"$css" \
               && grep -Fq 'const PULSE_CYCLE_MS = 1500;' <<<"$preloader" \
               && grep -Fq 'const WAVE_ROW_DELAY_MS = 200;' <<<"$preloader" \
               && grep -Fq 'const WAVE_COLUMN_DELAY_MS = 100;' <<<"$preloader" \
-              && grep -Fq 'const REVEAL_ALPHA_DURATION_MS = 80;' <<<"$preloader" \
+              && grep -Fq 'const REVEAL_DURATION_MS = 300;' <<<"$preloader" \
+              && ! grep -Fq 'REVEAL_ALPHA_DURATION_MS' <<<"$preloader" \
               && grep -Fq 'const RESET_OUTGOING_MS = 150;' <<<"$preloader" \
               && grep -Fq 'const RESET_INCOMING_MS = 250;' <<<"$preloader" \
+              && grep -Fq "img[src],img[srcset],img[data-sc-src]" <<<"$preloader_controller" \
+              && grep -Fq 'naturalWidth > 0' <<<"$preloader_controller" \
               && ! grep -Fq 'card.style.top' <<<"$card_reveal" \
               && grep -Fq '.opacity(card, 1, {' <<<"$card_reveal" \
               && ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' <<<"$modal" \
