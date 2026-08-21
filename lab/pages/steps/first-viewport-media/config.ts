@@ -6,12 +6,6 @@ export interface EncodedImageAsset {
   readonly size: ImageSize;
 }
 
-export interface FirstViewportStat {
-  readonly index: number;
-  readonly bytes: number;
-  readonly size: ImageSize;
-}
-
 export interface ChromeMediaStat extends EncodedImageAsset {
   readonly name: string;
   readonly count: number;
@@ -31,19 +25,10 @@ export interface DesktopMediaStats {
   readonly dimensions: readonly DimensionStat[];
 }
 
-export const FIRST_VIEWPORT_COUNT = 4;
-export const MAX_PRODUCT_DIMENSION = 420;
-export const MAX_PRODUCT_BYTES = 36_000;
 export const MAX_DOWNLOAD_BYTES = 3_000_000;
 export const MAX_CHROME_BYTES = 28_000;
 export const MAX_CHROME_TOTAL_BYTES = 90_000;
 export const MAX_BANNER_BYTES = 120_000;
-
-export const PRODUCT_ENCODINGS = [
-  { dimension: MAX_PRODUCT_DIMENSION, quality: 72 },
-  { dimension: 384, quality: 70 },
-  { dimension: 352, quality: 68 },
-] as const;
 
 export const CHROME_QUALITIES = [88, 82, 76] as const;
 
