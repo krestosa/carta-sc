@@ -16,6 +16,7 @@ import {
 
 const RUNTIME_ENTRY = 'override/runtime-main.js';
 const RUNTIME_OUTPUT = '_static/runtime.js';
+const DELIVERY_LOADER_ID = 'sc-pages-delivery-loader';
 
 const REQUIRED_COMPILED_PATHS = [
   'index.html',
@@ -122,17 +123,9 @@ function runtimeBundle(siteRoot: string): string {
     `})();\n`;
 }
 
-function removeModuleScriptType(html: string): string {
-  const pattern = /<script\b[^>]*\btype=["']module["'][^>]*>/gi;
-  const matches = html.match(pattern) ?? [];
-  assert(matches.length <= 1, `Expected at most one delivery module script in compiled index; found ${matches.length}`);
-  if (matches.length === 0) return html;
-  return html.replace(pattern, (tag) => tag.replace(/\s+type=["']module["']/i, ''));
-}
-
 function patchIndex(compiledRoot: string): void {
   const indexFile = path.join(compiledRoot, 'index.html');
-  let html = removeModuleScriptType(read(indexFile));
+  let html = read(indexFile);
 
   html = replaceRegexOnce(
     html,
@@ -189,8 +182,12 @@ function validateCompiledShape(compiledRoot: string): void {
   }
 
   const html = read(path.join(compiledRoot, 'index.html'));
-  assert(!/<script\b[^>]*\btype=["']module["'][^>]*>/i.test(html), 'Compiled handoff still contains module script tags');
-  assert(!/kind:\s*["']module["']/i.test(html), 'Compiled handoff still contains module runtime descriptors');
+  const deliveryLoader = new RegExp(
+    `<script\\b(?=[^>]*\\bid=["']${DELIVERY_LOADER_ID}["'])(?=[^>]*\\btype=["']module["'])[^>]*>`,
+    'i',
+  );
+  assert(deliveryLoader.test(html), 'Compiled handoff delivery loader must remain an HTTP-served module');
+  assert(!/kind:\s*["']module["']/i.test(html), 'Compiled handoff still contains a module runtime descriptor');
   assert(!/override\/main\.js/i.test(html), 'Compiled handoff still references the source module runtime');
   assert(html.includes("_static/runtime.js?v=' + VERSION"), 'Compiled handoff does not reference the static runtime');
   assert((html.match(/productoShop/g) ?? []).length > 100, 'Compiled handoff is missing the product grid');
