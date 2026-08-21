@@ -41,6 +41,8 @@ export function buildProductModal(link: HTMLElement): HTMLElement | null {
   dialog.setAttribute('aria-labelledby', titleId);
 
   if (source) {
+    image.loading = 'eager';
+    image.fetchPriority = 'high';
     image.src = source;
     image.alt = name;
   } else {
