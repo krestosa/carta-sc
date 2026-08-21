@@ -1,7 +1,7 @@
-import { queries } from '../../core/variables.js';
+import { motionTokens, queries } from '../../core/variables.js';
 import { visible } from '../../core/utils.js';
 import { motion } from '../../motion/main.js';
-import type { MotionHandle } from '../../motion/types.js';
+import type { MotionHandle, MotionSpringSpec } from '../../motion/types.js';
 import { cloneTemplate } from '../../templates/registry.js';
 import { anchorForHref, categoryLinks, CATEGORY_SELECTORS } from './core.js';
 
@@ -25,6 +25,7 @@ interface IndicatorEntry {
   lastMoveTime: number;
   velocityX: number;
   velocityWidth: number;
+  velocityWarp: number;
   scrollElement: HTMLElement | null;
   onScroll: (() => void) | null;
   scrollX: number;
@@ -43,16 +44,12 @@ const INDICATOR = {
   scrollSampleMin: 0.003,
   scrollSampleMax: 0.16,
   scrollVelocityScale: 700,
-  scrollWarpDuration: 0.14,
-  scrollSettleDelay: 0.065,
+  scrollSettleDelay: motionTokens.durations.short1,
   textInsetMax: 1.25,
   textInsetRatio: 0.025,
-  springResponse: 0.34,
-  springDamping: 1,
   springMaxDt: 0.032,
   springPositionEpsilon: 0.06,
   springVelocityEpsilon: 0.45,
-  springWarpResponse: 18,
 } as const;
 
 const now = (): number => performance.now();
@@ -104,9 +101,15 @@ function maxWarp(width: number): number {
   return Math.min(INDICATOR.maxWarp, Math.max(INDICATOR.minWarp, width * INDICATOR.warpWidthRatio));
 }
 
-function springAxis(position: number, velocity: number, target: number, deltaTime: number): [number, number] {
-  const omega = (Math.PI * 2) / INDICATOR.springResponse;
-  const acceleration = -2 * INDICATOR.springDamping * omega * velocity - omega * omega * (position - target);
+function springAxis(
+  position: number,
+  velocity: number,
+  target: number,
+  deltaTime: number,
+  spec: MotionSpringSpec,
+): [number, number] {
+  const omega = Math.sqrt(spec.stiffness);
+  const acceleration = -2 * spec.damping * omega * velocity - spec.stiffness * (position - target);
   velocity += acceleration * deltaTime;
   position += velocity * deltaTime;
   return [position, velocity];
@@ -152,13 +155,8 @@ export class CategoryIndicatorController {
     this.#dirty = false;
   }
 
-  markDirty(): void {
-    this.#dirty = true;
-  }
-
-  isDirty(): boolean {
-    return this.#dirty;
-  }
+  markDirty(): void { this.#dirty = true; }
+  isDirty(): boolean { return this.#dirty; }
 
   pause(): void {
     for (const entry of this.#entries) {
@@ -228,10 +226,10 @@ export class CategoryIndicatorController {
     entry.line.remove();
   }
 
-  #tweenWarp(entry: IndicatorEntry, target: number): void {
+  #springWarp(entry: IndicatorEntry, target: number): void {
     entry.warpTween?.cancel();
     const from = entry.state.warp;
-    entry.warpTween = motion.engine.tween(INDICATOR.scrollWarpDuration, 'quart.out', (progress) => {
+    entry.warpTween = motion.engine.spring(motionTokens.springs.effects.fast, (progress) => {
       entry.state.warp = from + (target - from) * progress;
       this.#render(entry);
     }, { onComplete: () => { entry.warpTween = null; } });
@@ -242,11 +240,11 @@ export class CategoryIndicatorController {
     const amount = maxWarp(entry.targetWidth || entry.state.width) * clamp(Math.abs(velocity) / INDICATOR.scrollVelocityScale, 0, 1);
     if (amount < 0.2) return;
     entry.direction = velocity > 0 ? 1 : -1;
-    this.#tweenWarp(entry, entry.direction * amount);
+    this.#springWarp(entry, entry.direction * amount);
     this.#stopSettle(entry);
     entry.settle = motion.engine.delay(INDICATOR.scrollSettleDelay, () => {
       entry.settle = null;
-      this.#tweenWarp(entry, 0);
+      this.#springWarp(entry, 0);
     });
   }
 
@@ -304,6 +302,7 @@ export class CategoryIndicatorController {
       lastMoveTime: 0,
       velocityX: 0,
       velocityWidth: 0,
+      velocityWarp: 0,
       scrollElement: null,
       onScroll: null,
       scrollX: 0,
@@ -325,6 +324,7 @@ export class CategoryIndicatorController {
     entry.state.warp = 0;
     entry.velocityX = 0;
     entry.velocityWidth = 0;
+    entry.velocityWarp = 0;
     entry.initialized = true;
     this.#render(entry);
   }
@@ -343,14 +343,31 @@ export class CategoryIndicatorController {
       : 1 / 60;
     entry.lastMoveTime = timestamp;
 
-    [entry.state.x, entry.velocityX] = springAxis(entry.state.x, entry.velocityX, entry.targetX, deltaTime);
-    [entry.state.width, entry.velocityWidth] = springAxis(entry.state.width, entry.velocityWidth, entry.targetWidth, deltaTime);
+    [entry.state.x, entry.velocityX] = springAxis(
+      entry.state.x,
+      entry.velocityX,
+      entry.targetX,
+      deltaTime,
+      motionTokens.springs.spatial.default,
+    );
+    [entry.state.width, entry.velocityWidth] = springAxis(
+      entry.state.width,
+      entry.velocityWidth,
+      entry.targetWidth,
+      deltaTime,
+      motionTokens.springs.spatial.default,
+    );
     entry.state.width = Math.max(1, entry.state.width);
 
     const centerVelocity = entry.velocityX + entry.velocityWidth * 0.5;
     const warpTarget = clamp(centerVelocity / 900, -1, 1) * maxWarp(entry.state.width);
-    const blend = Math.min(1, deltaTime * INDICATOR.springWarpResponse);
-    entry.state.warp += (warpTarget - entry.state.warp) * blend;
+    [entry.state.warp, entry.velocityWarp] = springAxis(
+      entry.state.warp,
+      entry.velocityWarp,
+      warpTarget,
+      deltaTime,
+      motionTokens.springs.effects.fast,
+    );
     this.#render(entry);
 
     if (this.#settled(entry)) {
@@ -359,6 +376,7 @@ export class CategoryIndicatorController {
       entry.state.warp = 0;
       entry.velocityX = 0;
       entry.velocityWidth = 0;
+      entry.velocityWarp = 0;
       entry.moveFrame = 0;
       entry.lastMoveTime = 0;
       this.#render(entry);
