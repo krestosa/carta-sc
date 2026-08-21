@@ -17,6 +17,11 @@ const MOBILE_BANNER_WIDTH = 764;
 const MOBILE_LOGO_BUDGET = 6_000;
 const MOBILE_BANNER_BUDGET = 14_000;
 
+interface MediaTransformResult {
+  readonly html: string;
+  readonly summary: string;
+}
+
 function closeToken(tag: string): '/>' | '>' {
   return tag.endsWith('/>') ? '/>' : '>';
 }
@@ -26,7 +31,7 @@ function addAttribute(tag: string, attribute: string): string {
   return `${tag.slice(0, -close.length).trimEnd()} ${attribute}${close}`;
 }
 
-async function convertMobileLogo(html: string, sha: string): Promise<{ html: string; summary: string }> {
+async function convertMobileLogo(html: string, sha: string): Promise<MediaTransformResult> {
   const pngPath = path.join(SITE, '_critical-media/mobile-logo.png');
   assert(fs.existsSync(pngPath), 'mobile LCP PNG missing');
 
@@ -47,7 +52,7 @@ async function convertMobileLogo(html: string, sha: string): Promise<{ html: str
   };
 }
 
-async function createResponsiveBanner(html: string, sha: string): Promise<{ html: string; summary: string }> {
+async function createResponsiveBanner(html: string, sha: string): Promise<MediaTransformResult> {
   const desktopPath = path.join(SITE, '_critical-media/desktop-banner.webp');
   assert(fs.existsSync(desktopPath), 'desktop banner missing');
 
@@ -122,19 +127,35 @@ function verify(html: string, sha: string): void {
   }
 }
 
+class BreakpointMediaOptimizer {
+  readonly #sha = githubSha();
+  readonly #file = path.join(SITE, 'index.html');
+  #html = read(this.#file);
+  #logoSummary = '';
+  #bannerSummary = '';
+
+  async run(): Promise<void> {
+    await this.#optimizeCriticalMedia();
+    this.#html = deferDesktopOnlyMedia(this.#html, this.#sha);
+    this.#html = lazyBrandImages(this.#html);
+    verify(this.#html, this.#sha);
+    write(this.#file, this.#html);
+    console.log(
+      `Breakpoint media optimized: mobile LCP ${this.#logoSummary}; mobile banner ${this.#bannerSummary}.`,
+    );
+  }
+
+  async #optimizeCriticalMedia(): Promise<void> {
+    const logo = await convertMobileLogo(this.#html, this.#sha);
+    this.#html = logo.html;
+    this.#logoSummary = logo.summary;
+
+    const banner = await createResponsiveBanner(this.#html, this.#sha);
+    this.#html = banner.html;
+    this.#bannerSummary = banner.summary;
+  }
+}
+
 export async function optimizeBreakpointMedia(): Promise<void> {
-  const sha = githubSha();
-  const file = path.join(SITE, 'index.html');
-  let html = read(file);
-
-  const logo = await convertMobileLogo(html, sha);
-  html = logo.html;
-  const banner = await createResponsiveBanner(html, sha);
-  html = banner.html;
-  html = deferDesktopOnlyMedia(html, sha);
-  html = lazyBrandImages(html);
-
-  verify(html, sha);
-  write(file, html);
-  console.log(`Breakpoint media optimized: mobile LCP ${logo.summary}; mobile banner ${banner.summary}.`);
+  await new BreakpointMediaOptimizer().run();
 }
