@@ -2,8 +2,15 @@ import { media, queries } from '../core/variables.js';
 import { easeValue } from './easing.js';
 import { bindMicroInteraction as bindMicroInteractionBehavior } from './micro-interaction.js';
 import { animatePath } from './path.js';
-import { animateAttributes, animateOpacity, animateTransform, currentTransform } from './properties.js';
-import { delay, tween } from './scheduler.js';
+import {
+  animateAttributes,
+  animateOpacity,
+  animateSpringOpacity,
+  animateSpringTransform,
+  animateTransform,
+  currentTransform,
+} from './properties.js';
+import { delay, spring, tween } from './scheduler.js';
 import type {
   MicroInteractionOptions,
   MotionDependencies,
@@ -21,9 +28,12 @@ export const prefersReducedMotion = (): boolean =>
 
 export const motionEngine: MotionEngine = Object.freeze({
   tween,
+  spring,
   delay,
   transform: animateTransform,
+  springTransform: animateSpringTransform,
   opacity: animateOpacity,
+  springOpacity: animateSpringOpacity,
   attributes: animateAttributes,
   path: animatePath,
   currentTransform,
