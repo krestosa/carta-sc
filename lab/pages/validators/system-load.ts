@@ -109,8 +109,9 @@ function validateRuntimeLoader(html: string, issues: string[]): void {
     }
   }
 
-  if (!/await\s+loadStylesheet\(\s*['_"]_pages\/deferred\.css\?v=['"]\s*\+\s*VERSION\s*\)/.test(html)) {
-    issues.push('optimized deferred stylesheet loader is missing');
+  const deferredStylesheet = "'_pages/deferred.css?v=' + VERSION";
+  if (countLiteral(html, deferredStylesheet) !== 1) {
+    issues.push('optimized deferred stylesheet loader is missing or duplicated');
   }
   if (!/dispatchEvent\(\s*new\s+CustomEvent\(\s*['"]sc:runtime-ready['"]\s*\)\s*\)/.test(html)) {
     issues.push('runtime-ready event dispatch is missing');
