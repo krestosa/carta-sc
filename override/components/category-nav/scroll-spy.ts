@@ -46,7 +46,8 @@ export class CategoryScrollSpy {
   };
 
   schedule = (): void => {
-    if (!this.#locked() && !this.#spyFrame) this.#spyFrame = requestAnimationFrame(this.#spy);
+    if (this.#locked() || (scrollState.programmatic && this.#heldTarget)) return;
+    if (!this.#spyFrame) this.#spyFrame = requestAnimationFrame(this.#spy);
   };
 
   stop(): void {
