@@ -37,7 +37,7 @@ body.sushiShop .sc-product-modal {
 body.sushiShop .sc-product-modal__dialog {
   box-sizing: border-box !important;
   position: relative !important;
-  width: min(560px,calc(100vw - 24px)) !important;
+  width: min(560px,100%) !important;
   max-height: calc(100vh - var(--sc-modal-dialog-block-space)) !important;
   max-height: calc(100dvh - var(--sc-modal-dialog-block-space)) !important;
   overflow-x: hidden !important;
