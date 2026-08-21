@@ -12,10 +12,6 @@ export const CATEGORY_SCROLL = {
   offsetGap: 12,
   currentMarkOffset: 2,
   programmaticGraceMs: 180,
-  minDuration: 0.72,
-  maxDuration: 1.36,
-  distanceScale: 2400,
-  distancePower: 0.62,
   settleTolerance: 0.75,
 } as const;
 
