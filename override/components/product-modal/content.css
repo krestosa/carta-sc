@@ -13,14 +13,15 @@ body.sushiShop .sc-product-modal__title {
 body.sushiShop .sc-product-modal__price-row {
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
   column-gap: 6px !important;
-  row-gap: 2px !important;
+  row-gap: 0 !important;
+  white-space: nowrap !important;
 }
 
-/* Tachado + rasgos forman una unidad; si falta ancho bajan juntos. */
+/* Tachado + rasgos forman una unidad compacta. */
 body.sushiShop .sc-product-modal__secondary-meta {
   display: inline-flex !important;
   order: 2 !important;
