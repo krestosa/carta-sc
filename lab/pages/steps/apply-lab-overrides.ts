@@ -11,6 +11,8 @@ const SHARED_COMPONENT_FILES = [
   'override/components/section-heading/section-heading.css',
 ] as const;
 
+const CATEGORY_CONTROLS_IMPORT = /(@import\s+["']\.\/components\/category-nav\/controls\.css\?v=unversioned["'];)(\r?\n)/;
+
 export function applyLabOverrides(): void {
   const mainCss = path.join(SITE, 'override', 'main.css');
   assert(isDir(SITE) && isFile(mainCss), 'lab Pages staging context is incomplete');
@@ -19,14 +21,16 @@ export function applyLabOverrides(): void {
     copyFile(path.join(PAGE_ASSETS, name), path.join(SITE, 'override', 'core', name));
   }
 
-  const anchor = '@import "./components/category-nav/controls.css?v=unversioned";\n';
-  const labImports = LAB_STYLES
-    .map((name) => `@import "./core/${name}?v=unversioned";`)
-    .join('\n') + '\n';
   const manifest = read(mainCss);
   assert(!LAB_STYLES.some((name) => manifest.includes(`core/${name}`)), 'lab first-paint CSS already present in staged override manifest');
-  assert(manifest.includes(anchor), 'category controls import anchor missing from staged override manifest');
-  write(mainCss, manifest.replace(anchor, anchor + labImports));
+
+  const anchor = manifest.match(CATEGORY_CONTROLS_IMPORT);
+  assert(anchor, 'category controls import anchor missing from staged override manifest');
+  const newline = anchor[2] ?? '\n';
+  const labImports = LAB_STYLES
+    .map((name) => `@import "./core/${name}?v=unversioned";`)
+    .join(newline);
+  write(mainCss, manifest.replace(CATEGORY_CONTROLS_IMPORT, `$1${newline}${labImports}${newline}`));
 
   for (const relativePath of SHARED_COMPONENT_FILES) {
     const staged = path.join(SITE, relativePath);
