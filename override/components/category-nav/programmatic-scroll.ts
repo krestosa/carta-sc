@@ -96,7 +96,7 @@ export class ProgrammaticCategoryScroll {
 
   #animate(target: HTMLElement, token: number, destination: number): void {
     const startY = currentPageY();
-    this.#move = motion.engine.spring(motionTokens.springs.spatial.default, (progress) => {
+    this.#move = motion.engine.spring(motionTokens.springs.effects.slow, (progress) => {
       if (token !== this.#token) return;
       if (categoryOffsetIsDirty()) destination = targetYFromOffset(target);
       window.scrollTo(0, startY + (destination - startY) * progress);
