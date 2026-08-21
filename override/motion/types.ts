@@ -80,6 +80,12 @@ export interface MotionEngine {
     options?: MotionSpringOptions,
   ): MotionHandle;
   path(target: SVGPathElement, toD: string, options: MotionPropertyOptions): MotionHandle;
+  springPath(
+    target: SVGPathElement,
+    toD: string,
+    spec: MotionSpringSpec,
+    options?: MotionSpringOptions,
+  ): MotionHandle;
   currentTransform(target: HTMLElement | SVGElement): MotionTransformState;
   ease(name: string | undefined, progress: number): number;
 }
