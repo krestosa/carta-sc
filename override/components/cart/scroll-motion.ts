@@ -13,9 +13,8 @@ interface CartScrollEntry {
 }
 
 const SCROLL_MOTION = {
-  quickDuration: 0.14,
   velocityFloor: 55,
-  settleDelay: 0.07,
+  settleDelay: motionTokens.durations.short1,
 } as const;
 
 export function setupCartScroll(engine: MotionEngine, profile: CartScrollProfile, reduced: boolean): () => void {
@@ -56,9 +55,7 @@ export function setupCartScroll(engine: MotionEngine, profile: CartScrollProfile
     for (const entry of entries) {
       if (!entry.target) continue;
       stopMove(entry);
-      entry.move = engine.transform(entry.target, { y }, {
-        duration: SCROLL_MOTION.quickDuration,
-        ease: motionTokens.easings.strongOut,
+      entry.move = engine.springTransform(entry.target, { y }, motionTokens.springs.spatial.fast, {
         onComplete: () => { entry.move = null; },
       });
     }
