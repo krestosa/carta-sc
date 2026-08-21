@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ROOT, readText, relativeTo, walkFiles } from './lib/files.js';
-import { createValidationReporter } from './lib/validation.js';
+import { createValidationReporter, type ValidationReporter } from './lib/validation.js';
 
 interface BoundaryRule {
   readonly label: string;
@@ -28,18 +29,39 @@ const RULES: readonly BoundaryRule[] = [
   { label: 'lab directory dependency', pattern: /(?:^|["'`(\s])lab\/pages\// },
 ];
 
-const validation = createValidationReporter();
-if (!fs.existsSync(OVERRIDE_ROOT)) validation.fail('override/ is missing');
+class ProductionBoundaryValidator {
+  readonly #validation: ValidationReporter = createValidationReporter();
 
-for (const file of walkFiles(OVERRIDE_ROOT)) {
-  const relativePath = relativeTo(ROOT, file);
-  if (file.endsWith('.js')) validation.fail(`${relativePath}: project-owned JavaScript source is forbidden`);
-  if (!RUNTIME_EXTENSIONS.has(path.extname(file))) continue;
+  run(): void {
+    if (!fs.existsSync(OVERRIDE_ROOT)) this.#validation.fail('override/ is missing');
+    else this.#validateFiles();
+    this.#validation.finish(
+      'Production/lab boundary validation failed',
+      'Production/lab boundary validation passed.',
+    );
+  }
 
-  const source = readText(file);
-  for (const rule of RULES) {
-    if (rule.pattern.test(source)) validation.fail(`${relativePath}: contains ${rule.label}`);
+  #validateFiles(): void {
+    for (const file of walkFiles(OVERRIDE_ROOT)) {
+      const relativePath = relativeTo(ROOT, file);
+      if (file.endsWith('.js')) {
+        this.#validation.fail(`${relativePath}: project-owned JavaScript source is forbidden`);
+      }
+      if (!RUNTIME_EXTENSIONS.has(path.extname(file))) continue;
+
+      const source = readText(file);
+      for (const rule of RULES) {
+        if (rule.pattern.test(source)) this.#validation.fail(`${relativePath}: contains ${rule.label}`);
+      }
+    }
   }
 }
 
-validation.finish('Production/lab boundary validation failed', 'Production/lab boundary validation passed.');
+export function validateProductionBoundary(): void {
+  new ProductionBoundaryValidator().run();
+}
+
+const entry = process.argv[1];
+if (entry && import.meta.url === pathToFileURL(path.resolve(entry)).href) {
+  validateProductionBoundary();
+}
