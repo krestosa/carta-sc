@@ -74,7 +74,7 @@ const springs = Object.freeze({
     slow: Object.freeze({ stiffness: 800, damping: 1 }),
   }),
   indicator: Object.freeze({
-    soft: Object.freeze({ stiffness: 50, damping: 1 }),
+    soft: Object.freeze({ stiffness: 500, damping: 1 }),
     firm: Object.freeze({ stiffness: 1000, damping: 1 }),
   }),
   focus: Object.freeze({ stiffness: 1500, damping: 1 }),
