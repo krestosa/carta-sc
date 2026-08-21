@@ -3,16 +3,19 @@ import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';
 
-const MOTION = {
-  openOffsetY: 10,
-  openScale: 0.992,
-  closeOffsetY: 6,
-  closeScale: 0.994,
+const EASING = {
+  open: 'cubic-bezier(.3,0,0,1)',
+  close: 'cubic-bezier(.3,0,.8,.15)',
+  linear: 'linear',
 } as const;
+
+interface CancelableMotion {
+  cancel(): void;
+}
 
 interface ModalMotionState {
   token: number;
-  handles: MotionHandle[];
+  handles: CancelableMotion[];
 }
 
 const states = new WeakMap<HTMLElement, ModalMotionState>();
@@ -41,27 +44,108 @@ function stop(modal: HTMLElement): void {
   state.handles = [];
 }
 
-function register(modal: HTMLElement, handles: MotionHandle[]): void {
+function register(modal: HTMLElement, handles: CancelableMotion[]): void {
   stateFor(modal).handles = handles;
+}
+
+function animate(
+  target: Element,
+  keyframes: Keyframe[] | PropertyIndexedKeyframes,
+  options: KeyframeAnimationOptions,
+): Animation {
+  return target.animate(keyframes, { ...options, fill: 'both' });
+}
+
+function visualParts(dialog: HTMLElement): HTMLElement[] {
+  return [
+    dialog.querySelector<HTMLElement>('.sc-product-modal__image-stage'),
+    dialog.querySelector<HTMLElement>('.sc-product-modal__title'),
+    dialog.querySelector<HTMLElement>('.sc-product-modal__description'),
+  ].filter((node): node is HTMLElement => Boolean(node));
+}
+
+function actionPart(dialog: HTMLElement): HTMLElement | null {
+  return dialog.querySelector<HTMLElement>('.sc-product-modal__footer');
+}
+
+function imagePart(dialog: HTMLElement): HTMLElement | null {
+  return dialog.querySelector<HTMLElement>('.sc-product-modal__image');
 }
 
 function clear(modal: HTMLElement, dialog: HTMLElement): void {
   for (const property of ['opacity', 'visibility', 'will-change']) modal.style.removeProperty(property);
-  for (const property of ['transform', 'opacity', 'visibility', 'will-change']) dialog.style.removeProperty(property);
+  for (const property of ['transform', 'opacity', 'visibility', 'will-change', 'clip-path']) {
+    dialog.style.removeProperty(property);
+  }
+  for (const node of [...visualParts(dialog), actionPart(dialog), imagePart(dialog)]) {
+    if (!node) continue;
+    node.style.removeProperty('opacity');
+    node.style.removeProperty('transform');
+    node.style.removeProperty('will-change');
+  }
 }
 
-function setTransformOrigin(dialog: HTMLElement, source: HTMLElement | null): void {
-  let value = '50% 50%';
-  if (source && document.documentElement.contains(source)) {
-    const sourceRect = source.getBoundingClientRect();
-    const dialogRect = dialog.getBoundingClientRect();
-    if (dialogRect.width > 0 && dialogRect.height > 0) {
-      const x = Math.max(12, Math.min(88, ((sourceRect.left + sourceRect.width / 2 - dialogRect.left) / dialogRect.width) * 100));
-      const y = Math.max(10, Math.min(90, ((sourceRect.top + sourceRect.height / 2 - dialogRect.top) / dialogRect.height) * 100));
-      value = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
-    }
+function finishOpen(modal: HTMLElement, dialog: HTMLElement, token: number): void {
+  if (!isCurrent(modal, token)) return;
+  stateFor(modal).handles = [];
+  clear(modal, dialog);
+}
+
+function imageEntrance(dialog: HTMLElement): MotionHandle | null {
+  const image = imagePart(dialog);
+  if (!image) return null;
+  image.style.transform = 'translate3d(18px,0,0) scale(1.04)';
+  return motion.engine.springTransform(
+    image,
+    { x: 0, scale: 1 },
+    motionTokens.springs.focus,
+    { clear: true },
+  );
+}
+
+function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): void {
+  stop(modal);
+  modal.style.visibility = 'visible';
+  dialog.style.visibility = 'visible';
+
+  const handles: CancelableMotion[] = [
+    animate(modal, [{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: EASING.linear }),
+    animate(dialog, [{ transform: 'translateY(-50px)' }, { transform: 'translateY(0)' }], {
+      duration: 500,
+      easing: EASING.open,
+    }),
+    animate(dialog, [{ clipPath: 'inset(0 0 65% 0 round 28px)' }, { clipPath: 'inset(0 0 0 0 round 28px)' }], {
+      duration: 500,
+      easing: EASING.open,
+    }),
+    animate(dialog, [{ opacity: 0 }, { opacity: 1 }], { duration: 50, easing: EASING.linear }),
+  ];
+
+  for (const node of visualParts(dialog)) {
+    handles.push(animate(node, [
+      { opacity: 0 },
+      { opacity: 0, offset: 0.2 },
+      { opacity: 1 },
+    ], { duration: 250, easing: EASING.linear }));
   }
-  dialog.style.transformOrigin = value;
+
+  const actions = actionPart(dialog);
+  if (actions) {
+    handles.push(animate(actions, [
+      { opacity: 0 },
+      { opacity: 0, offset: 0.5 },
+      { opacity: 1 },
+    ], { duration: 300, easing: EASING.linear }));
+  }
+
+  const imageMotion = imageEntrance(dialog);
+  if (imageMotion) handles.push(imageMotion);
+
+  register(modal, handles);
+  const primary = handles[1];
+  if (primary instanceof Animation) {
+    primary.finished.then(() => finishOpen(modal, dialog, token)).catch(() => undefined);
+  }
 }
 
 export function cancelModalMotion(modal: HTMLElement | null): void {
@@ -70,81 +154,42 @@ export function cancelModalMotion(modal: HTMLElement | null): void {
   stop(modal);
 }
 
-export function animateModalOpen(modal: HTMLElement | null, source: HTMLElement | null): void {
+export function animateModalOpen(modal: HTMLElement | null, _source: HTMLElement | null): void {
   if (!modal) return;
-  const token = nextToken(modal);
   const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
   if (!dialog) return;
+  const token = nextToken(modal);
 
-  setTransformOrigin(dialog, source);
-  const ran = motion.run(({ engine }) => {
-    stop(modal);
-    modal.style.opacity = '0';
-    modal.style.visibility = 'visible';
-    dialog.style.opacity = '0';
-    dialog.style.visibility = 'visible';
-    dialog.style.transform = `translate3d(0,${MOTION.openOffsetY}px,0) scale(${MOTION.openScale})`;
+  if (motion.reduced()) {
+    clear(modal, dialog);
+    return;
+  }
 
-    register(modal, [
-      engine.opacity(modal, 1, {
-        duration: motionTokens.durations.short3,
-        ease: motionTokens.easings.decelerate,
-      }),
-      engine.opacity(dialog, 1, {
-        duration: motionTokens.durations.short4,
-        ease: motionTokens.easings.decelerate,
-      }),
-      engine.springTransform(dialog, { y: 0, scale: 1 }, motionTokens.springs.spatial.default, {
-        onComplete: () => {
-          if (!isCurrent(modal, token)) return;
-          stateFor(modal).handles = [];
-          clear(modal, dialog);
-        },
-      }),
-    ]);
-  });
-
-  if (!ran) setTransformOrigin(dialog, source);
+  openSequence(modal, dialog, token);
 }
 
-export function animateModalReopen(modal: HTMLElement | null, source: HTMLElement | null): void {
+export function animateModalReopen(modal: HTMLElement | null, _source: HTMLElement | null): void {
   if (!modal) return;
-  const token = nextToken(modal);
   const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
   if (!dialog) return;
+  const token = nextToken(modal);
 
-  setTransformOrigin(dialog, source);
-  const ran = motion.runLoaded(({ engine }) => {
-    stop(modal);
-    modal.style.visibility = 'visible';
-    dialog.style.visibility = 'visible';
-    register(modal, [
-      engine.opacity(modal, 1, {
-        duration: motionTokens.durations.short2,
-        ease: motionTokens.easings.decelerate,
-      }),
-      engine.opacity(dialog, 1, {
-        duration: motionTokens.durations.short3,
-        ease: motionTokens.easings.decelerate,
-      }),
-      engine.springTransform(dialog, { y: 0, scale: 1 }, motionTokens.springs.spatial.fast, {
-        onComplete: () => {
-          if (!isCurrent(modal, token)) return;
-          stateFor(modal).handles = [];
-          clear(modal, dialog);
-        },
-      }),
-    ]);
-  });
-
-  if (!ran) {
-    modal.style.removeProperty('opacity');
-    modal.style.removeProperty('visibility');
+  if (motion.reduced()) {
+    clear(modal, dialog);
+    return;
   }
+
+  openSequence(modal, dialog, token);
 }
 
 export function animateModalClose(modal: HTMLElement | null, done?: () => void): void {
   if (!modal) {
+    done?.();
+    return;
+  }
+
+  const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
+  if (!dialog) {
     done?.();
     return;
   }
@@ -156,34 +201,46 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
     return;
   }
 
-  const ran = motion.runLoaded(({ engine }) => {
-    const dialog = modal.querySelector<HTMLElement>(PRODUCT_MODAL_SELECTORS.dialog);
-    if (!dialog) {
+  stop(modal);
+  const handles: CancelableMotion[] = [
+    animate(modal, [{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: EASING.linear }),
+    animate(dialog, [{ transform: 'translateY(0)' }, { transform: 'translateY(-50px)' }], {
+      duration: 150,
+      easing: EASING.close,
+    }),
+    animate(dialog, [{ clipPath: 'inset(0 0 0 0 round 28px)' }, { clipPath: 'inset(0 0 65% 0 round 28px)' }], {
+      duration: 150,
+      easing: EASING.close,
+    }),
+    animate(dialog, [{ opacity: 1 }, { opacity: 0 }], {
+      delay: 100,
+      duration: 50,
+      easing: EASING.linear,
+    }),
+  ];
+
+  for (const node of visualParts(dialog)) {
+    handles.push(animate(node, [{ opacity: 1 }, { opacity: 0 }], {
+      duration: 100,
+      easing: EASING.linear,
+    }));
+  }
+
+  const actions = actionPart(dialog);
+  if (actions) {
+    handles.push(animate(actions, [{ opacity: 1 }, { opacity: 0 }], {
+      duration: 100,
+      easing: EASING.linear,
+    }));
+  }
+
+  register(modal, handles);
+  const primary = handles[1];
+  if (primary instanceof Animation) {
+    primary.finished.then(() => {
+      if (!isCurrent(modal, token)) return;
+      stateFor(modal).handles = [];
       done?.();
-      return;
-    }
-
-    stop(modal);
-    register(modal, [
-      engine.opacity(dialog, 0, {
-        duration: motionTokens.durations.short2,
-        ease: motionTokens.easings.accelerate,
-      }),
-      engine.springTransform(dialog, {
-        y: MOTION.closeOffsetY,
-        scale: MOTION.closeScale,
-      }, motionTokens.springs.spatial.fast),
-      engine.opacity(modal, 0, {
-        duration: motionTokens.durations.short3,
-        ease: motionTokens.easings.accelerate,
-        onComplete: () => {
-          if (!isCurrent(modal, token)) return;
-          stateFor(modal).handles = [];
-          done?.();
-        },
-      }),
-    ]);
-  });
-
-  if (!ran) done?.();
+    }).catch(() => undefined);
+  }
 }
