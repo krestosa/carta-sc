@@ -1,11 +1,20 @@
 import { motionTokens } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
-import type { MotionHandle } from '../../motion/types.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';
 
+const TIMING = {
+  open: 220,
+  close: 150,
+} as const;
+
+const OFFSET = {
+  open: 20,
+  close: -10,
+} as const;
+
 const EASING = {
-  open: 'cubic-bezier(.3,0,0,1)',
-  close: 'cubic-bezier(.3,0,.8,.15)',
+  open: 'cubic-bezier(0.2,0,0,1)',
+  close: 'cubic-bezier(0.3,0,1,1)',
   linear: 'linear',
 } as const;
 
@@ -40,8 +49,9 @@ function isCurrent(modal: HTMLElement, token: number): boolean {
 
 function stop(modal: HTMLElement): void {
   const state = stateFor(modal);
-  for (const handle of state.handles) handle.cancel();
+  const handles = state.handles;
   state.handles = [];
+  for (const handle of handles) handle.cancel();
 }
 
 function register(modal: HTMLElement, handles: CancelableMotion[]): void {
@@ -60,43 +70,41 @@ function imageStagePart(dialog: HTMLElement): HTMLElement | null {
   return dialog.querySelector<HTMLElement>('.sc-product-modal__image-stage');
 }
 
-function visualParts(dialog: HTMLElement): HTMLElement[] {
-  return [
-    imageStagePart(dialog),
-    dialog.querySelector<HTMLElement>('.sc-product-modal__title'),
-    dialog.querySelector<HTMLElement>('.sc-product-modal__description'),
-  ].filter((node): node is HTMLElement => Boolean(node));
-}
-
-function actionPart(dialog: HTMLElement): HTMLElement | null {
-  return dialog.querySelector<HTMLElement>('.sc-product-modal__footer');
-}
-
 function imagePart(dialog: HTMLElement): HTMLElement | null {
   return dialog.querySelector<HTMLElement>('.sc-product-modal__image');
 }
 
 function clear(modal: HTMLElement, dialog: HTMLElement): void {
-  for (const property of ['opacity', 'visibility', 'will-change']) modal.style.removeProperty(property);
-  for (const property of ['transform', 'opacity', 'visibility', 'will-change', 'clip-path']) {
+  for (const property of ['opacity', 'visibility', 'will-change']) {
+    modal.style.removeProperty(property);
+  }
+  for (const property of ['transform', 'opacity', 'visibility', 'will-change']) {
     dialog.style.removeProperty(property);
   }
-  for (const node of [...visualParts(dialog), actionPart(dialog), imagePart(dialog)]) {
-    if (!node) continue;
-    node.style.removeProperty('opacity');
-    node.style.removeProperty('transform');
-    node.style.removeProperty('clip-path');
-    node.style.removeProperty('will-change');
+
+  const stage = imageStagePart(dialog);
+  if (stage) {
+    stage.style.removeProperty('clip-path');
+    stage.style.removeProperty('will-change');
+  }
+
+  const image = imagePart(dialog);
+  if (image) {
+    image.style.removeProperty('transform');
+    image.style.removeProperty('will-change');
   }
 }
 
 function finishOpen(modal: HTMLElement, dialog: HTMLElement, token: number): void {
   if (!isCurrent(modal, token)) return;
-  stateFor(modal).handles = [];
+  stop(modal);
   clear(modal, dialog);
 }
 
-function imageEntrance(dialog: HTMLElement): CancelableMotion[] {
+function imageEntrance(
+  dialog: HTMLElement,
+  onComplete: () => void,
+): CancelableMotion[] {
   const stage = imageStagePart(dialog);
   const image = imagePart(dialog);
   if (!stage || !image) return [];
@@ -112,13 +120,13 @@ function imageEntrance(dialog: HTMLElement): CancelableMotion[] {
         { clipPath: 'inset(0 18% 0 18% round 28px)' },
         { clipPath: 'inset(0 0 0 0 round 28px)' },
       ],
-      { duration: 476, easing: EASING.open },
+      { duration: TIMING.open, easing: EASING.open },
     ),
     motion.engine.springTransform(
       image,
       { x: 0, scale: 1 },
       motionTokens.springs.focus,
-      { clear: true },
+      { clear: true, onComplete },
     ),
   ];
 }
@@ -128,42 +136,32 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
   modal.style.visibility = 'visible';
   dialog.style.visibility = 'visible';
 
-  const handles: CancelableMotion[] = [
-    animate(modal, [{ opacity: 0 }, { opacity: 1 }], { duration: 476, easing: EASING.linear }),
-    animate(dialog, [{ transform: 'translateY(-50px)' }, { transform: 'translateY(0)' }], {
-      duration: 476,
-      easing: EASING.open,
-    }),
-    animate(dialog, [{ clipPath: 'inset(0 0 65% 0 round 28px)' }, { clipPath: 'inset(0 0 0 0 round 28px)' }], {
-      duration: 476,
-      easing: EASING.open,
-    }),
-    animate(dialog, [{ opacity: 0 }, { opacity: 1 }], { duration: 48, easing: EASING.linear }),
-  ];
+  const overlay = animate(
+    modal,
+    [{ opacity: 0 }, { opacity: 1 }],
+    { duration: TIMING.open, easing: EASING.linear },
+  );
+  const surfaceOpacity = animate(
+    dialog,
+    [{ opacity: 0 }, { opacity: 1 }],
+    { duration: TIMING.open, easing: EASING.open },
+  );
+  const surfacePosition = animate(
+    dialog,
+    [
+      { transform: `translateY(${OFFSET.open}px)` },
+      { transform: 'translateY(0)' },
+    ],
+    { duration: TIMING.open, easing: EASING.open },
+  );
 
-  for (const node of visualParts(dialog)) {
-    handles.push(animate(node, [
-      { opacity: 0 },
-      { opacity: 0, offset: 0.2 },
-      { opacity: 1 },
-    ], { duration: 238, easing: EASING.linear }));
-  }
-
-  const actions = actionPart(dialog);
-  if (actions) {
-    handles.push(animate(actions, [
-      { opacity: 0 },
-      { opacity: 0, offset: 0.5 },
-      { opacity: 1 },
-    ], { duration: 286, easing: EASING.linear }));
-  }
-
-  handles.push(...imageEntrance(dialog));
-
+  const finish = (): void => finishOpen(modal, dialog, token);
+  const imageHandles = imageEntrance(dialog, finish);
+  const handles: CancelableMotion[] = [overlay, surfaceOpacity, surfacePosition, ...imageHandles];
   register(modal, handles);
-  const primary = handles[1];
-  if (primary instanceof Animation) {
-    primary.finished.then(() => finishOpen(modal, dialog, token)).catch(() => undefined);
+
+  if (imageHandles.length === 0) {
+    surfacePosition.finished.then(finish).catch(() => undefined);
   }
 }
 
@@ -221,45 +219,30 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
   }
 
   stop(modal);
-  const handles: CancelableMotion[] = [
-    animate(modal, [{ opacity: 1 }, { opacity: 0 }], { duration: 143, easing: EASING.linear }),
-    animate(dialog, [{ transform: 'translateY(0)' }, { transform: 'translateY(-50px)' }], {
-      duration: 143,
-      easing: EASING.close,
-    }),
-    animate(dialog, [{ clipPath: 'inset(0 0 0 0 round 28px)' }, { clipPath: 'inset(0 0 65% 0 round 28px)' }], {
-      duration: 143,
-      easing: EASING.close,
-    }),
-    animate(dialog, [{ opacity: 1 }, { opacity: 0 }], {
-      delay: 95,
-      duration: 48,
-      easing: EASING.linear,
-    }),
-  ];
 
-  for (const node of visualParts(dialog)) {
-    handles.push(animate(node, [{ opacity: 1 }, { opacity: 0 }], {
-      duration: 95,
-      easing: EASING.linear,
-    }));
-  }
+  const overlay = animate(
+    modal,
+    [{ opacity: 1 }, { opacity: 0 }],
+    { duration: TIMING.close, easing: EASING.linear },
+  );
+  const surfaceOpacity = animate(
+    dialog,
+    [{ opacity: 1 }, { opacity: 0 }],
+    { duration: TIMING.close, easing: EASING.close },
+  );
+  const surfacePosition = animate(
+    dialog,
+    [
+      { transform: 'translateY(0)' },
+      { transform: `translateY(${OFFSET.close}px)` },
+    ],
+    { duration: TIMING.close, easing: EASING.close },
+  );
 
-  const actions = actionPart(dialog);
-  if (actions) {
-    handles.push(animate(actions, [{ opacity: 1 }, { opacity: 0 }], {
-      duration: 95,
-      easing: EASING.linear,
-    }));
-  }
-
-  register(modal, handles);
-  const primary = handles[1];
-  if (primary instanceof Animation) {
-    primary.finished.then(() => {
-      if (!isCurrent(modal, token)) return;
-      stateFor(modal).handles = [];
-      done?.();
-    }).catch(() => undefined);
-  }
+  register(modal, [overlay, surfaceOpacity, surfacePosition]);
+  surfacePosition.finished.then(() => {
+    if (!isCurrent(modal, token)) return;
+    stateFor(modal).handles = [];
+    done?.();
+  }).catch(() => undefined);
 }
