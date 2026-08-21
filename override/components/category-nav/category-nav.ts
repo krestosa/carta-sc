@@ -1,3 +1,4 @@
+import type { Cleanup } from '../../core/types.js';
 import { motionTokens, selectors } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import { CategoryActiveState } from './active-state.js';
@@ -25,275 +26,340 @@ import { CategoryRailController } from './rail.js';
 import { CategoryScrollSpy } from './scroll-spy.js';
 import { CategorySubmenu } from './submenu.js';
 
-let scrollSpy: CategoryScrollSpy;
-const rail = new CategoryRailController({
-  invalidateOffset: invalidateCategoryOffset,
-  refreshMetrics: () => scrollSpy.refresh(),
-});
-const activeState = new CategoryActiveState({
-  requestCenter: rail.requestCenter,
-  scheduleRail: rail.scheduleRail,
-});
-scrollSpy = new CategoryScrollSpy(activeState);
-const programmaticScroll = new ProgrammaticCategoryScroll({
-  refreshMetrics: scrollSpy.refresh,
-  releaseSpyHold: scrollSpy.release,
-  scheduleSpy: scrollSpy.schedule,
-});
-const submenu = new CategorySubmenu();
+class CategoryNavigationController {
+  readonly #rail: CategoryRailController;
+  readonly #activeState: CategoryActiveState;
+  readonly #scrollSpy: CategoryScrollSpy;
+  readonly #programmaticScroll: ProgrammaticCategoryScroll;
+  readonly #submenu = new CategorySubmenu();
+  readonly #boundScrollers = new Set<HTMLElement>();
 
-const boundScrollers = new Set<HTMLElement>();
-let resizeFrame = 0;
-let structureFrame = 0;
-let motionRefreshFrame = 0;
-let geometryTimer = 0;
-let structureObserver: MutationObserver | null = null;
-let initialized = false;
+  #resizeFrame = 0;
+  #structureFrame = 0;
+  #motionRefreshFrame = 0;
+  #geometryTimer = 0;
+  #structureObserver: MutationObserver | null = null;
+  #initialized = false;
 
-function activateAndScroll(target: HTMLElement, activeTarget: HTMLElement = target): void {
-  invalidateCategoryOffset();
-  const plan = categoryScrollPlan(target);
-  scrollSpy.hold(activeTarget);
-  activeState.set(activeTarget, true);
-  programmaticScroll.scrollTo(target, plan);
-}
-
-function onCategory(event: MouseEvent): void {
-  if (event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  const origin = event.target instanceof Element ? event.target : null;
-  const link = origin?.closest<HTMLAnchorElement>('a.anchorLink, a.anchorLinkSub, a.sc-category-submenu-link');
-  if (!link) return;
-
-  const submenuLink = link.classList.contains('sc-category-submenu-link');
-  if (link.closest('.topPullDown,.dropdown-menu') && !submenuLink) return;
-  const inManagedNav = link.closest(selectors.categoryToolbar) ||
-    link.closest(`${CATEGORY_SELECTORS.mobileWrapper} ${CATEGORY_SELECTORS.mobileRail}`) ||
-    link.closest('.sc-category-submenu');
-  if (!inManagedNav) return;
-
-  const target = anchorForHref(link.getAttribute('href'));
-  if (!target) return;
-  const owner = submenuLink ? subcategoryOwner(link) : null;
-  const hasChildren = !submenuLink && submenu.has(link);
-  const compact = !desktopCategories.matches;
-
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  closeLegacyCategoryMenus();
-  cleanCategoryHash();
-
-  if (submenuLink) {
-    submenu.close(false);
-    activateAndScroll(target, owner ?? target);
-    return;
+  constructor() {
+    this.#rail = new CategoryRailController({
+      invalidateOffset: invalidateCategoryOffset,
+      refreshMetrics: () => this.#scrollSpy.refresh(),
+    });
+    this.#activeState = new CategoryActiveState({
+      requestCenter: this.#rail.requestCenter,
+      scheduleRail: this.#rail.scheduleRail,
+    });
+    this.#scrollSpy = new CategoryScrollSpy(this.#activeState);
+    this.#programmaticScroll = new ProgrammaticCategoryScroll({
+      refreshMetrics: this.#scrollSpy.refresh,
+      releaseSpyHold: this.#scrollSpy.release,
+      scheduleSpy: this.#scrollSpy.schedule,
+    });
   }
-  if (hasChildren && compact) {
-    submenu.open(link, true);
-    return;
+
+  initialize(): Cleanup {
+    if (this.#initialized) return this.destroy;
+    this.#initialized = true;
+    this.#addListeners();
+    this.#syncStructure();
+    resumeCategoryIndicator();
+    this.#watchStructure();
+    this.#geometryTimer = window.setTimeout(() => {
+      this.#geometryTimer = 0;
+      if (!this.#initialized) return;
+      applyCategorySemantics();
+      this.#submenu.scan();
+      this.#refreshGeometry();
+    }, motionTokens.geometryRefreshDelay);
+    void document.fonts?.ready.then(this.#refreshGeometry).catch(() => undefined);
+    return this.destroy;
   }
-  if (hasChildren) submenu.open(link, true);
-  activateAndScroll(target);
-}
 
-function onSelect(event: Event): void {
-  const select = event.target instanceof HTMLSelectElement ? event.target : null;
-  if (!select?.matches(CATEGORY_SELECTORS.select)) return;
-  const target = anchorForHref(select.value);
-  if (!target) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  closeLegacyCategoryMenus();
-  cleanCategoryHash();
-  submenu.close(false);
-  activateAndScroll(target);
-}
+  destroy = (): void => {
+    if (!this.#initialized) return;
+    this.#initialized = false;
+    this.#removeListeners();
+    this.#unbindRailScrollers();
+    this.#submenu.destroy();
+    this.#structureObserver?.disconnect();
+    this.#structureObserver = null;
+    this.#cancelScheduledWork();
+    this.#rail.cancel();
+    this.#scrollSpy.stop();
+    this.#programmaticScroll.interrupt();
+    pauseCategoryIndicator();
+  };
 
-function pruneRailScrollers(): void {
-  for (const scroller of boundScrollers) {
-    if (document.documentElement.contains(scroller)) continue;
-    scroller.removeEventListener('scroll', rail.scheduleOverflow);
-    boundScrollers.delete(scroller);
+  refreshMetrics(): void {
+    this.#scrollSpy.refresh();
   }
-}
 
-function bindRailScrollers(): void {
-  pruneRailScrollers();
-  for (const scroller of document.querySelectorAll<HTMLElement>(`${CATEGORY_SELECTORS.scroller},${CATEGORY_SELECTORS.mobileScroller}`)) {
-    if (boundScrollers.has(scroller)) continue;
-    boundScrollers.add(scroller);
-    scroller.addEventListener('scroll', rail.scheduleOverflow, { passive: true });
+  repair(): void {
+    this.#scheduleStructure();
   }
-}
 
-function unbindRailScrollers(): void {
-  for (const scroller of boundScrollers) scroller.removeEventListener('scroll', rail.scheduleOverflow);
-  boundScrollers.clear();
-}
+  current(): HTMLElement | null {
+    return this.#scrollSpy.current();
+  }
 
-function refreshGeometry(): void {
-  if (!initialized) return;
-  invalidateCategoryOffset();
-  scrollSpy.refresh();
-  rail.scheduleRail();
-  submenu.schedulePosition();
-}
+  setActive(target: HTMLElement | null, animate = true): void {
+    this.#activeState.set(target, animate);
+  }
 
-function runResize(): void {
-  resizeFrame = 0;
-  refreshGeometry();
-}
+  #activateAndScroll(target: HTMLElement, activeTarget: HTMLElement = target): void {
+    invalidateCategoryOffset();
+    const plan = categoryScrollPlan(target);
+    this.#scrollSpy.hold(activeTarget);
+    this.#activeState.set(activeTarget, true);
+    this.#programmaticScroll.scrollTo(target, plan);
+  }
 
-function resize(): void {
-  if (initialized && !resizeFrame) resizeFrame = requestAnimationFrame(runResize);
-}
+  #onCategory = (event: MouseEvent): void => {
+    if (event.defaultPrevented
+      || event.button > 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey) return;
 
-function windowScroll(): void {
-  rail.scheduleSticky();
-  scrollSpy.schedule();
-  submenu.schedulePosition();
-}
+    const origin = event.target instanceof Element ? event.target : null;
+    const link = origin?.closest<HTMLAnchorElement>('a.anchorLink, a.anchorLinkSub, a.sc-category-submenu-link');
+    if (!link) return;
 
-function interrupt(): void {
-  programmaticScroll.interrupt();
-  scrollSpy.release();
-}
+    const submenuLink = link.classList.contains('sc-category-submenu-link');
+    if (link.closest('.topPullDown,.dropdown-menu') && !submenuLink) return;
+    const inManagedNav = link.closest(selectors.categoryToolbar)
+      || link.closest(`${CATEGORY_SELECTORS.mobileWrapper} ${CATEGORY_SELECTORS.mobileRail}`)
+      || link.closest('.sc-category-submenu');
+    if (!inManagedNav) return;
 
-function observeStructure(): void {
-  if (structureObserver && document.body) structureObserver.observe(document.body, { childList: true, subtree: true });
-}
+    const target = anchorForHref(link.getAttribute('href'));
+    if (!target) return;
+    const owner = submenuLink ? subcategoryOwner(link) : null;
+    const hasChildren = !submenuLink && this.#submenu.has(link);
+    const compact = !desktopCategories.matches;
 
-function refreshMotionSafely(): void {
-  if (!initialized || motionRefreshFrame) return;
-  motionRefreshFrame = requestAnimationFrame(() => {
-    motionRefreshFrame = 0;
-    if (!initialized) return;
-    structureObserver?.disconnect();
-    motion.refresh(0);
-    structureObserver?.takeRecords();
-    observeStructure();
-  });
-}
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeLegacyCategoryMenus();
+    cleanCategoryHash();
 
-function syncStructure(): void {
-  if (structureFrame) cancelAnimationFrame(structureFrame);
-  structureFrame = 0;
-  if (!initialized) return;
-  invalidateCategoryOffset();
-  syncCategoryLayout({ refreshMetrics: scrollSpy.refresh, scheduleRail: rail.scheduleRail });
-  applyCategorySemantics();
-  submenu.scan();
-  bindRailScrollers();
-  submenu.schedulePosition();
-  structureObserver?.takeRecords();
-  refreshMotionSafely();
-}
+    if (submenuLink) {
+      this.#submenu.close(false);
+      this.#activateAndScroll(target, owner ?? target);
+      return;
+    }
+    if (hasChildren && compact) {
+      this.#submenu.open(link, true);
+      return;
+    }
+    if (hasChildren) this.#submenu.open(link, true);
+    this.#activateAndScroll(target);
+  };
 
-function scheduleStructure(): void {
-  if (initialized && !structureFrame) structureFrame = requestAnimationFrame(syncStructure);
-}
+  #onSelect = (event: Event): void => {
+    const select = event.target instanceof HTMLSelectElement ? event.target : null;
+    if (!select?.matches(CATEGORY_SELECTORS.select)) return;
+    const target = anchorForHref(select.value);
+    if (!target) return;
 
-function structural(node: Node): boolean {
-  if (!(node instanceof Element)) return false;
-  const selector = `${selectors.container}, ${selectors.categoryToolbar}, ${CATEGORY_SELECTORS.mobileWrapper}, .wrapp-nav-tabsTopShop`;
-  return node.matches(selector) || Boolean(node.querySelector(selectors.container));
-}
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeLegacyCategoryMenus();
+    cleanCategoryHash();
+    this.#submenu.close(false);
+    this.#activateAndScroll(target);
+  };
 
-function watchStructure(): void {
-  if (structureObserver || !document.body) return;
-  structureObserver = new MutationObserver((mutations) => {
-    if (mutations.some((mutation) => [...mutation.addedNodes, ...mutation.removedNodes].some(structural))) scheduleStructure();
-  });
-  observeStructure();
-}
+  #pruneRailScrollers(): void {
+    for (const scroller of this.#boundScrollers) {
+      if (document.documentElement.contains(scroller)) continue;
+      scroller.removeEventListener('scroll', this.#rail.scheduleOverflow);
+      this.#boundScrollers.delete(scroller);
+    }
+  }
 
-function breakpoint(): void {
-  submenu.close(false);
-  syncStructure();
-}
+  #bindRailScrollers(): void {
+    this.#pruneRailScrollers();
+    for (const scroller of document.querySelectorAll<HTMLElement>(`${CATEGORY_SELECTORS.scroller},${CATEGORY_SELECTORS.mobileScroller}`)) {
+      if (this.#boundScrollers.has(scroller)) continue;
+      this.#boundScrollers.add(scroller);
+      scroller.addEventListener('scroll', this.#rail.scheduleOverflow, { passive: true });
+    }
+  }
 
-function addListeners(): void {
-  document.addEventListener('click', onCategory, true);
-  document.addEventListener('change', onSelect, true);
-  document.addEventListener('pointerover', submenu.onPointerOver, true);
-  document.addEventListener('pointerout', submenu.onPointerOut, true);
-  document.addEventListener('pointerdown', submenu.onOutsidePointer, true);
-  document.addEventListener('focusin', submenu.onFocusIn, true);
-  document.addEventListener('focusout', submenu.onFocusOut, true);
-  document.addEventListener('keydown', submenu.onKeyDown, true);
-  window.addEventListener('scroll', windowScroll, { passive: true });
-  window.addEventListener('resize', resize, { passive: true });
-  window.addEventListener('wheel', interrupt, { passive: true });
-  window.addEventListener('touchstart', interrupt, { passive: true });
-  desktopCategories.addEventListener('change', breakpoint);
-}
+  #unbindRailScrollers(): void {
+    for (const scroller of this.#boundScrollers) {
+      scroller.removeEventListener('scroll', this.#rail.scheduleOverflow);
+    }
+    this.#boundScrollers.clear();
+  }
 
-function removeListeners(): void {
-  document.removeEventListener('click', onCategory, true);
-  document.removeEventListener('change', onSelect, true);
-  document.removeEventListener('pointerover', submenu.onPointerOver, true);
-  document.removeEventListener('pointerout', submenu.onPointerOut, true);
-  document.removeEventListener('pointerdown', submenu.onOutsidePointer, true);
-  document.removeEventListener('focusin', submenu.onFocusIn, true);
-  document.removeEventListener('focusout', submenu.onFocusOut, true);
-  document.removeEventListener('keydown', submenu.onKeyDown, true);
-  window.removeEventListener('scroll', windowScroll);
-  window.removeEventListener('resize', resize);
-  window.removeEventListener('wheel', interrupt);
-  window.removeEventListener('touchstart', interrupt);
-  desktopCategories.removeEventListener('change', breakpoint);
-}
+  #refreshGeometry = (): void => {
+    if (!this.#initialized) return;
+    invalidateCategoryOffset();
+    this.#scrollSpy.refresh();
+    this.#rail.scheduleRail();
+    this.#submenu.schedulePosition();
+  };
 
-export function initializeCategoryNavigation(): () => void {
-  if (initialized) return destroyCategoryNavigation;
-  initialized = true;
-  addListeners();
-  syncStructure();
-  resumeCategoryIndicator();
-  watchStructure();
-  geometryTimer = window.setTimeout(() => {
-    geometryTimer = 0;
-    if (!initialized) return;
+  #resize = (): void => {
+    if (!this.#initialized || this.#resizeFrame) return;
+    this.#resizeFrame = requestAnimationFrame(() => {
+      this.#resizeFrame = 0;
+      this.#refreshGeometry();
+    });
+  };
+
+  #windowScroll = (): void => {
+    this.#rail.scheduleSticky();
+    this.#scrollSpy.schedule();
+    this.#submenu.schedulePosition();
+  };
+
+  #interrupt = (): void => {
+    this.#programmaticScroll.interrupt();
+    this.#scrollSpy.release();
+  };
+
+  #observeStructure(): void {
+    if (this.#structureObserver && document.body) {
+      this.#structureObserver.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
+  #refreshMotionSafely(): void {
+    if (!this.#initialized || this.#motionRefreshFrame) return;
+    this.#motionRefreshFrame = requestAnimationFrame(() => {
+      this.#motionRefreshFrame = 0;
+      if (!this.#initialized) return;
+      this.#structureObserver?.disconnect();
+      motion.refresh(0);
+      this.#structureObserver?.takeRecords();
+      this.#observeStructure();
+    });
+  }
+
+  #syncStructure = (): void => {
+    if (this.#structureFrame) cancelAnimationFrame(this.#structureFrame);
+    this.#structureFrame = 0;
+    if (!this.#initialized) return;
+
+    invalidateCategoryOffset();
+    syncCategoryLayout({
+      refreshMetrics: this.#scrollSpy.refresh,
+      scheduleRail: this.#rail.scheduleRail,
+    });
     applyCategorySemantics();
-    submenu.scan();
-    refreshGeometry();
-  }, motionTokens.geometryRefreshDelay);
-  void document.fonts?.ready.then(refreshGeometry).catch(() => undefined);
-  return destroyCategoryNavigation;
+    this.#submenu.scan();
+    this.#bindRailScrollers();
+    this.#submenu.schedulePosition();
+    this.#structureObserver?.takeRecords();
+    this.#refreshMotionSafely();
+  };
+
+  #scheduleStructure = (): void => {
+    if (this.#initialized && !this.#structureFrame) {
+      this.#structureFrame = requestAnimationFrame(this.#syncStructure);
+    }
+  };
+
+  #structural = (node: Node): boolean => {
+    if (!(node instanceof Element)) return false;
+    const selector = `${selectors.container}, ${selectors.categoryToolbar}, ${CATEGORY_SELECTORS.mobileWrapper}, .wrapp-nav-tabsTopShop`;
+    return node.matches(selector) || Boolean(node.querySelector(selectors.container));
+  };
+
+  #watchStructure(): void {
+    if (this.#structureObserver || !document.body) return;
+    this.#structureObserver = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => [...mutation.addedNodes, ...mutation.removedNodes].some(this.#structural))) {
+        this.#scheduleStructure();
+      }
+    });
+    this.#observeStructure();
+  }
+
+  #breakpoint = (): void => {
+    this.#submenu.close(false);
+    this.#syncStructure();
+  };
+
+  #addListeners(): void {
+    document.addEventListener('click', this.#onCategory, true);
+    document.addEventListener('change', this.#onSelect, true);
+    document.addEventListener('pointerover', this.#submenu.onPointerOver, true);
+    document.addEventListener('pointerout', this.#submenu.onPointerOut, true);
+    document.addEventListener('pointerdown', this.#submenu.onOutsidePointer, true);
+    document.addEventListener('focusin', this.#submenu.onFocusIn, true);
+    document.addEventListener('focusout', this.#submenu.onFocusOut, true);
+    document.addEventListener('keydown', this.#submenu.onKeyDown, true);
+    window.addEventListener('scroll', this.#windowScroll, { passive: true });
+    window.addEventListener('resize', this.#resize, { passive: true });
+    window.addEventListener('wheel', this.#interrupt, { passive: true });
+    window.addEventListener('touchstart', this.#interrupt, { passive: true });
+    desktopCategories.addEventListener('change', this.#breakpoint);
+  }
+
+  #removeListeners(): void {
+    document.removeEventListener('click', this.#onCategory, true);
+    document.removeEventListener('change', this.#onSelect, true);
+    document.removeEventListener('pointerover', this.#submenu.onPointerOver, true);
+    document.removeEventListener('pointerout', this.#submenu.onPointerOut, true);
+    document.removeEventListener('pointerdown', this.#submenu.onOutsidePointer, true);
+    document.removeEventListener('focusin', this.#submenu.onFocusIn, true);
+    document.removeEventListener('focusout', this.#submenu.onFocusOut, true);
+    document.removeEventListener('keydown', this.#submenu.onKeyDown, true);
+    window.removeEventListener('scroll', this.#windowScroll);
+    window.removeEventListener('resize', this.#resize);
+    window.removeEventListener('wheel', this.#interrupt);
+    window.removeEventListener('touchstart', this.#interrupt);
+    desktopCategories.removeEventListener('change', this.#breakpoint);
+  }
+
+  #cancelScheduledWork(): void {
+    if (this.#resizeFrame) cancelAnimationFrame(this.#resizeFrame);
+    if (this.#structureFrame) cancelAnimationFrame(this.#structureFrame);
+    if (this.#motionRefreshFrame) cancelAnimationFrame(this.#motionRefreshFrame);
+    if (this.#geometryTimer) clearTimeout(this.#geometryTimer);
+    this.#resizeFrame = 0;
+    this.#structureFrame = 0;
+    this.#motionRefreshFrame = 0;
+    this.#geometryTimer = 0;
+  }
+}
+
+const categoryNavigation = new CategoryNavigationController();
+
+export function initializeCategoryNavigation(): Cleanup {
+  return categoryNavigation.initialize();
 }
 
 export function destroyCategoryNavigation(): void {
-  if (!initialized) return;
-  initialized = false;
-  removeListeners();
-  unbindRailScrollers();
-  submenu.destroy();
-  structureObserver?.disconnect();
-  structureObserver = null;
-  if (resizeFrame) cancelAnimationFrame(resizeFrame);
-  if (structureFrame) cancelAnimationFrame(structureFrame);
-  if (motionRefreshFrame) cancelAnimationFrame(motionRefreshFrame);
-  if (geometryTimer) clearTimeout(geometryTimer);
-  resizeFrame = structureFrame = motionRefreshFrame = geometryTimer = 0;
-  rail.cancel();
-  scrollSpy.stop();
-  programmaticScroll.interrupt();
-  pauseCategoryIndicator();
+  categoryNavigation.destroy();
 }
 
 export function refreshCategoryNavMetrics(): void {
-  scrollSpy.refresh();
+  categoryNavigation.refreshMetrics();
 }
 
 export function repairCategoryNavigation(): void {
-  scheduleStructure();
+  categoryNavigation.repair();
 }
 
 export function currentCategory(): HTMLElement | null {
-  return scrollSpy.current();
+  return categoryNavigation.current();
 }
 
 export function setActiveCategory(target: HTMLElement | null, animate = true): void {
-  activeState.set(target, animate);
+  categoryNavigation.setActive(target, animate);
 }
 
-export { markCategoryIndicatorDirty, moveCategoryIndicator, isCategoryIndicatorDirty, categoryLinks, anchorForHref };
+export {
+  anchorForHref,
+  categoryLinks,
+  isCategoryIndicatorDirty,
+  markCategoryIndicatorDirty,
+  moveCategoryIndicator,
+};
