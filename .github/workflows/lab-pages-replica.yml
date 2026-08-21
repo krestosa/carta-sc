@@ -56,6 +56,7 @@ jobs:
           test -s .pages-site/override/main.js
           test -s .pages-site/override/components/product-modal/motion.js
           test -s .pages-site/override/components/catalog-tools/catalog-tools.js
+          test -s .pages-site/override/features/image-preloader/motion.js
           ! test -e .pages-site/override/components/catalog-tools/icon-control-motion.js
           ! test -e .pages-site/override/components/catalog-tools/view-icon-interaction.js
           grep -Fq "const VERSION = '${GITHUB_SHA}';" .pages-site/index.html
@@ -63,6 +64,13 @@ jobs:
           grep -Fq 'border-radius: 24px !important;' .pages-site/override/main.css
           grep -Fq 'border-radius: 50%;' .pages-site/override/main.css
           ! grep -Fq -- '--sc-icon-control-radius' .pages-site/override/main.css
+          grep -Fq -- '--sc-image-preloader-cycle: 2000ms;' .pages-site/override/main.css
+          grep -Fq 'background-size: 282.842712vmax 282.842712vmax;' .pages-site/override/main.css
+          grep -Fq 'sc-image-preloader-shimmer-position' .pages-site/override/main.css
+          grep -Fq 'const SHIMMER_CYCLE_MS = 2000;' .pages-site/override/features/image-preloader/motion.js
+          grep -Fq 'const REVEAL_ALPHA_DURATION_MS = 80;' .pages-site/override/features/image-preloader/motion.js
+          grep -Fq 'const RESET_OUTGOING_MS = 150;' .pages-site/override/features/image-preloader/motion.js
+          grep -Fq 'const RESET_INCOMING_MS = 250;' .pages-site/override/features/image-preloader/motion.js
           ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' .pages-site/override/components/product-modal/motion.js
           ! grep -Fq 'clipPath' .pages-site/override/components/product-modal/motion.js
           ! grep -Fq 'springTransform' .pages-site/override/components/product-modal/motion.js
@@ -140,6 +148,9 @@ jobs:
             catalog=$(curl -fsSL --retry 3 --retry-delay 1 \
               -H 'Cache-Control: no-cache, no-store, max-age=0' \
               "${PAGE_URL%/}/override/components/catalog-tools/catalog-tools.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
+            preloader=$(curl -fsSL --retry 3 --retry-delay 1 \
+              -H 'Cache-Control: no-cache, no-store, max-age=0' \
+              "${PAGE_URL%/}/override/features/image-preloader/motion.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
             curl -fsSL --retry 3 --retry-delay 1 \
               -H 'Cache-Control: no-cache, no-store, max-age=0' \
               "${PAGE_URL%/}/_deploy-manifest.json?verify=${nonce}" \
@@ -151,6 +162,13 @@ jobs:
               && grep -Fq 'border-radius: 24px !important;' <<<"$css" \
               && grep -Fq 'border-radius: 50%;' <<<"$css" \
               && ! grep -Fq -- '--sc-icon-control-radius' <<<"$css" \
+              && grep -Fq -- '--sc-image-preloader-cycle: 2000ms;' <<<"$css" \
+              && grep -Fq 'background-size: 282.842712vmax 282.842712vmax;' <<<"$css" \
+              && grep -Fq 'sc-image-preloader-shimmer-position' <<<"$css" \
+              && grep -Fq 'const SHIMMER_CYCLE_MS = 2000;' <<<"$preloader" \
+              && grep -Fq 'const REVEAL_ALPHA_DURATION_MS = 80;' <<<"$preloader" \
+              && grep -Fq 'const RESET_OUTGOING_MS = 150;' <<<"$preloader" \
+              && grep -Fq 'const RESET_INCOMING_MS = 250;' <<<"$preloader" \
               && ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' <<<"$modal" \
               && ! grep -Fq 'clipPath' <<<"$modal" \
               && ! grep -Fq 'springTransform' <<<"$modal" \
