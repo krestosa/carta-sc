@@ -11,9 +11,22 @@ export interface MotionTweenOptions {
   onComplete?: () => void;
 }
 
+export interface MotionSpringSpec {
+  readonly stiffness: number;
+  readonly damping: number;
+}
+
+export interface MotionSpringOptions extends MotionTweenOptions {
+  initialVelocity?: number;
+}
+
 export interface MotionPropertyOptions extends MotionTweenOptions {
   duration: number;
   ease?: string;
+  clear?: boolean;
+}
+
+export interface MotionSpringPropertyOptions extends MotionSpringOptions {
   clear?: boolean;
 }
 
@@ -31,16 +44,33 @@ export interface MotionEngine {
     update: (progress: number) => void,
     options?: MotionTweenOptions,
   ): MotionHandle;
+  spring(
+    spec: MotionSpringSpec,
+    update: (progress: number) => void,
+    options?: MotionSpringOptions,
+  ): MotionHandle;
   delay(seconds: number, callback: () => void): MotionHandle;
   transform(
     target: HTMLElement | SVGElement,
     to: Partial<MotionTransformState>,
     options: MotionPropertyOptions,
   ): MotionHandle;
+  springTransform(
+    target: HTMLElement | SVGElement,
+    to: Partial<MotionTransformState>,
+    spec: MotionSpringSpec,
+    options?: MotionSpringPropertyOptions,
+  ): MotionHandle;
   opacity(
     target: HTMLElement | SVGElement,
     to: number,
     options: MotionPropertyOptions,
+  ): MotionHandle;
+  springOpacity(
+    target: HTMLElement | SVGElement,
+    to: number,
+    spec: MotionSpringSpec,
+    options?: MotionSpringPropertyOptions,
   ): MotionHandle;
   attributes(target: Element, to: Record<string, number>, options: MotionPropertyOptions): MotionHandle;
   path(target: SVGPathElement, toD: string, options: MotionPropertyOptions): MotionHandle;
