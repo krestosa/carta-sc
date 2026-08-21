@@ -17,9 +17,9 @@ function validateViewModes(): void {
     `CatalogViewMode must expose compact and list only; found ${JSON.stringify([...modes])}`,
   );
 
-  const view = readProjectFile('override/components/catalog-tools/view.ts');
+  const viewState = readProjectFile('override/components/catalog-tools/view-state.ts');
   validation.check(
-    /if\s*\(value\s*===\s*['"]normal['"]\)\s*return\s*['"]compact['"]/.test(view),
+    /if\s*\(value\s*===\s*['"]normal['"]\)\s*return\s*['"]compact['"]/.test(viewState),
     'legacy normal preference must migrate to compact',
   );
 
