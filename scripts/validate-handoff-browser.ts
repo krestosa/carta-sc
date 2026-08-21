@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
@@ -139,7 +139,7 @@ function findChrome(): string {
   return candidate;
 }
 
-async function launchChrome(): Promise<{ process: ChildProcessWithoutNullStreams; client: CdpClient; cleanup(): Promise<void> }> {
+async function launchChrome(): Promise<{ process: ChildProcess; client: CdpClient; cleanup(): Promise<void> }> {
   const port = await freePort();
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'carta-sc-browser-'));
   const args = [
