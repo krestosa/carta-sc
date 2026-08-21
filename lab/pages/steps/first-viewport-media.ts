@@ -1,21 +1,11 @@
 import path from 'node:path';
 import { SITE, githubSha, read, write } from '../lib/core.js';
-import {
-  FIRST_VIEWPORT_COUNT,
-  type DesktopMediaStats,
-  type FirstViewportStat,
-} from './first-viewport-media/config.js';
+import type { DesktopMediaStats } from './first-viewport-media/config.js';
 import { optimizeDesktopStability } from './first-viewport-media/desktop.js';
 import { summarizeChrome, verifyDesktopAssets } from './first-viewport-media/desktop-verify.js';
-import {
-  optimizeFirstViewportProducts,
-  summarizeFirstViewport,
-  verifyFirstViewportAssets,
-} from './first-viewport-media/products.js';
 
 interface MediaOptimizationResult {
   readonly html: string;
-  readonly firstViewportStats: readonly FirstViewportStat[];
   readonly desktopStats: DesktopMediaStats;
 }
 
@@ -31,25 +21,21 @@ class FirstViewportMediaOptimizer {
   }
 
   async #optimize(source: string): Promise<MediaOptimizationResult> {
-    const firstViewport = await optimizeFirstViewportProducts(source);
-    const desktop = await optimizeDesktopStability(firstViewport.html, this.#sha);
+    const desktop = await optimizeDesktopStability(source, this.#sha);
     return {
       html: desktop.html,
-      firstViewportStats: firstViewport.stats,
       desktopStats: desktop.stats,
     };
   }
 
   #verify(html: string): void {
-    verifyFirstViewportAssets(html);
     verifyDesktopAssets(html, this.#sha);
   }
 
   #report(result: MediaOptimizationResult): void {
     const desktop = result.desktopStats;
     console.log(
-      `Optimized ${FIRST_VIEWPORT_COUNT} first-viewport products after logo readiness: ${summarizeFirstViewport(result.firstViewportStats)}. `
-        + `Desktop stability: banner ${desktop.bannerSize[0]}x${desktop.bannerSize[1]}/${desktop.bannerBytes}B same-origin; `
+      `Desktop stability: banner ${desktop.bannerSize[0]}x${desktop.bannerSize[1]}/${desktop.bannerBytes}B same-origin; `
         + `${summarizeChrome(desktop.media)}; ${desktop.countryLinks} country links labelled.`,
     );
   }
