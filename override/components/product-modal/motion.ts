@@ -8,14 +8,6 @@ const MOTION = {
   openScale: 0.992,
   closeOffsetY: 6,
   closeScale: 0.994,
-  openBackdropDuration: 0.14,
-  openDialogDuration: 0.2,
-  openDialogDelay: 0.015,
-  closeDialogDuration: 0.11,
-  closeBackdropDuration: 0.13,
-  closeBackdropDelay: 0.005,
-  reopenBackdropDuration: 0.11,
-  reopenDialogDuration: 0.16,
 } as const;
 
 interface ModalMotionState {
@@ -94,16 +86,15 @@ export function animateModalOpen(modal: HTMLElement | null, source: HTMLElement 
     dialog.style.transform = `translate3d(0,${MOTION.openOffsetY}px,0) scale(${MOTION.openScale})`;
 
     register(modal, [
-      engine.opacity(modal, 1, { duration: MOTION.openBackdropDuration, ease: motionTokens.easings.out }),
-      engine.opacity(dialog, 1, {
-        duration: MOTION.openDialogDuration,
-        delay: MOTION.openDialogDelay,
-        ease: motionTokens.easings.strongOut,
+      engine.opacity(modal, 1, {
+        duration: motionTokens.durations.short3,
+        ease: motionTokens.easings.decelerate,
       }),
-      engine.transform(dialog, { y: 0, scale: 1 }, {
-        duration: MOTION.openDialogDuration,
-        delay: MOTION.openDialogDelay,
-        ease: motionTokens.easings.strongOut,
+      engine.opacity(dialog, 1, {
+        duration: motionTokens.durations.short4,
+        ease: motionTokens.easings.decelerate,
+      }),
+      engine.springTransform(dialog, { y: 0, scale: 1 }, motionTokens.springs.spatial.default, {
         onComplete: () => {
           if (!isCurrent(modal, token)) return;
           stateFor(modal).handles = [];
@@ -128,11 +119,15 @@ export function animateModalReopen(modal: HTMLElement | null, source: HTMLElemen
     modal.style.visibility = 'visible';
     dialog.style.visibility = 'visible';
     register(modal, [
-      engine.opacity(modal, 1, { duration: MOTION.reopenBackdropDuration, ease: motionTokens.easings.out }),
-      engine.opacity(dialog, 1, { duration: MOTION.reopenDialogDuration, ease: motionTokens.easings.strongOut }),
-      engine.transform(dialog, { y: 0, scale: 1 }, {
-        duration: MOTION.reopenDialogDuration,
-        ease: motionTokens.easings.strongOut,
+      engine.opacity(modal, 1, {
+        duration: motionTokens.durations.short2,
+        ease: motionTokens.easings.decelerate,
+      }),
+      engine.opacity(dialog, 1, {
+        duration: motionTokens.durations.short3,
+        ease: motionTokens.easings.decelerate,
+      }),
+      engine.springTransform(dialog, { y: 0, scale: 1 }, motionTokens.springs.spatial.fast, {
         onComplete: () => {
           if (!isCurrent(modal, token)) return;
           stateFor(modal).handles = [];
@@ -170,15 +165,17 @@ export function animateModalClose(modal: HTMLElement | null, done?: () => void):
 
     stop(modal);
     register(modal, [
-      engine.opacity(dialog, 0, { duration: MOTION.closeDialogDuration, ease: motionTokens.easings.in }),
-      engine.transform(dialog, { y: MOTION.closeOffsetY, scale: MOTION.closeScale }, {
-        duration: MOTION.closeDialogDuration,
-        ease: motionTokens.easings.in,
+      engine.opacity(dialog, 0, {
+        duration: motionTokens.durations.short2,
+        ease: motionTokens.easings.accelerate,
       }),
+      engine.springTransform(dialog, {
+        y: MOTION.closeOffsetY,
+        scale: MOTION.closeScale,
+      }, motionTokens.springs.spatial.fast),
       engine.opacity(modal, 0, {
-        duration: MOTION.closeBackdropDuration,
-        delay: MOTION.closeBackdropDelay,
-        ease: motionTokens.easings.inOut,
+        duration: motionTokens.durations.short3,
+        ease: motionTokens.easings.accelerate,
         onComplete: () => {
           if (!isCurrent(modal, token)) return;
           stateFor(modal).handles = [];
