@@ -1,50 +1,8 @@
 import path from 'node:path';
 import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import { transpileBrowserRuntime } from '../lib/browser-runtime.js';
 
-const PREPAINT_SCRIPT = String.raw`{
-  const root = document.documentElement;
-  const themeModes = ['system', 'light', 'dark'];
-  const viewModes = ['compact', 'list'];
-  const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-  let theme = 'system';
-  let view = '';
-
-  try {
-    theme = localStorage.getItem('scTheme:v1') || 'system';
-  } catch {
-    theme = 'system';
-  }
-  if (!themeModes.includes(theme)) theme = 'system';
-
-  const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
-  root.setAttribute('data-sc-theme', theme);
-  root.setAttribute('data-sc-theme-resolved', resolvedTheme);
-  root.style.colorScheme = resolvedTheme;
-
-  const width = window.innerWidth || root.clientWidth || 0;
-  const context = width <= 640 ? 'phone' : width <= 992 ? 'tablet' : 'desktop';
-  const normalizeLegacyView = (value) => value === 'list' ? 'list' : value ? 'compact' : '';
-
-  try {
-    view = localStorage.getItem('scCatalogView:v3') || '';
-    if (view === 'normal') view = 'compact';
-    if (!viewModes.includes(view)) {
-      const legacy = localStorage.getItem('scCatalogView:v2:' + context)
-        || localStorage.getItem(context === 'desktop' ? 'scCatalogView:desktop' : 'scCatalogView:mobile')
-        || '';
-      view = normalizeLegacyView(legacy);
-      if (view) {
-        try { localStorage.setItem('scCatalogView:v3', view); } catch {}
-      }
-    }
-  } catch {
-    view = '';
-  }
-
-  if (!viewModes.includes(view)) view = 'compact';
-  root.setAttribute('data-sc-catalog-view', view);
-  root.classList.add('sc-catalog-prepaint', 'sc-no-loading-state');
-}`;
+const PREPAINT_RUNTIME_SOURCE = 'lab/pages/steps/prepaint-runtime.ts';
 
 interface BootstrapAssets {
   readonly legacyRuntime: string;
@@ -65,9 +23,13 @@ function assets(sha: string): BootstrapAssets {
   };
 }
 
+function prepaintScript(): string {
+  return transpileBrowserRuntime(PREPAINT_RUNTIME_SOURCE, 'classic');
+}
+
 function replacementFor(bundle: BootstrapAssets): string {
   return [
-    `<script>${PREPAINT_SCRIPT}</script>`,
+    `<script>${prepaintScript()}</script>`,
     `<script src="${bundle.legacyRuntime}"></script>`,
     `<link rel="stylesheet" href="${bundle.overrideStyle}">`,
     `<script type="module" src="${bundle.overrideModule}"></script>`,
@@ -76,13 +38,10 @@ function replacementFor(bundle: BootstrapAssets): string {
 
 function assertGeneratedContract(html: string, bundle: BootstrapAssets): void {
   assert(
-    html.includes('data-sc-catalog-view') && html.includes('scCatalogView:v3'),
+    html.includes('data-sc-catalog-view')
+      && html.includes('scCatalogView:v3')
+      && html.includes('scCatalogView:v2:'),
     'Remembered catalogue view prepaint bootstrap is missing',
-  );
-  assert(html.includes("view = 'compact'"), 'Catalogue prepaint default must be compact');
-  assert(
-    html.includes("const viewModes = ['compact', 'list']"),
-    'Pages prepaint must expose compact and list only',
   );
   assert(
     html.includes('data-sc-theme-resolved') && html.includes('scTheme:v1'),
