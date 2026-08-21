@@ -37,6 +37,11 @@ function activateImage(image) {
   image.src = source;
 }
 
+function activateFirstViewportImages() {
+  const images = documentRoot.querySelectorAll('img[data-sc-first-viewport][data-sc-src]');
+  images.forEach(activateImage);
+}
+
 function activateDeferredImages() {
   if (imagesActivated) return;
   imagesActivated = true;
@@ -174,6 +179,7 @@ function boot() {
   const ready = () => {
     if (settled) return;
     settled = true;
+    activateFirstViewportImages();
     activateDeferredImages();
     scheduleDesktopImages();
     scheduleRuntime();
@@ -208,6 +214,7 @@ function startRecaptcha() {
   documentRoot.head.append(script);
 }
 
+waitForCriticalMedia();
 if (documentRoot.readyState === 'loading') documentRoot.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
 
@@ -265,13 +272,30 @@ export function verify(
   deferredBytes: number,
 ): void {
   const active = html.replace(/<!--[\s\S]*?-->/g, '');
-  assert(criticalBytes < 450_000 && deferredBytes >= 30_000 && fs.existsSync(path.join(SITE, '_pages/deferred.css')), 'CSS split budget failed');
+  assert(
+    criticalBytes < 450_000 && deferredBytes >= 30_000 && fs.existsSync(path.join(SITE, '_pages/deferred.css')),
+    'CSS split budget failed',
+  );
   assert(!/<script\b[^>]*src=/i.test(active), 'initial external script remains');
   assert(html.split('data-sc-src=').length - 1 >= productImageCount, 'product hard-lazy incomplete');
   assert(!/data-sc-lcp-product=/i.test(html), 'stale product LCP promotion remains');
-  assert(/<section\b[^>]*class=["'][^"']*\bsc-catalog-tools\b[^>]*data-sc-static-shell=/i.test(html), 'static catalog tools shell missing');
+  assert(
+    /<section\b[^>]*class=["'][^"']*\bsc-catalog-tools\b[^>]*data-sc-static-shell=/i.test(html),
+    'static catalog tools shell missing',
+  );
   assert(html.includes('sc-trait-reference-placeholder'), 'catalog trait-row reservation missing');
-  assert(html.includes(`{ src: 'override/main.js?v=' + VERSION, kind: 'module' }`), 'override runtime must load as an ES module');
+  assert(
+    html.includes(`{ src: 'override/main.js?v=' + VERSION, kind: 'module' }`),
+    'override runtime must load as an ES module',
+  );
+  assert(
+    html.includes("querySelectorAll('img[data-sc-first-viewport][data-sc-src]')"),
+    'first-viewport image release contract is missing',
+  );
+  assert(
+    html.includes("querySelectorAll('img[data-sc-desktop-src]')"),
+    'desktop image release contract is missing',
+  );
   assert(html.includes(PHP_GUARD_SLOT), 'PHP guard injection slot is missing');
   assert(!html.includes('__scRuntimeReady') && !html.includes('__scAfterRuntime'), 'legacy runtime readiness globals remain');
 
@@ -280,7 +304,10 @@ export function verify(
     'i',
   ).exec(html);
   assert(logo, 'same-origin mobile LCP logo missing');
-  assert(/loading=["']eager["']/i.test(logo[0]) && /fetchpriority=["']high["']/i.test(logo[0]), 'mobile LCP logo lost eager/high priority');
+  assert(
+    /loading=["']eager["']/i.test(logo[0]) && /fetchpriority=["']high["']/i.test(logo[0]),
+    'mobile LCP logo lost eager/high priority',
+  );
   assert(!/\b(?:margin-left|transform)\s*:/i.test(logo[0]), 'late-mutating mobile logo geometry remains');
   assert(
     new RegExp(
@@ -293,7 +320,13 @@ export function verify(
 
   const shop = read(path.join(SITE, '_pages/shop.js'));
   const legacy = read(path.join(SITE, '_pages/legacy.js'));
-  assert(!shop.includes('.imgLiquid(') && !shop.includes('shop_imgLiquids') && !shop.includes('Knormalize(') && !legacy.includes('function Knormalize'), 'legacy catalog runtime remains');
+  assert(
+    !shop.includes('.imgLiquid(')
+      && !shop.includes('shop_imgLiquids')
+      && !shop.includes('Knormalize(')
+      && !legacy.includes('function Knormalize'),
+    'legacy catalog runtime remains',
+  );
   assert(!read(path.join(SITE, 'override/main.js')).includes('cetAttribute'), 'broken override call remains');
 }
 

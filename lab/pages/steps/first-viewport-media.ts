@@ -1,41 +1,263 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import sharp from 'sharp';
 import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import {
+  BANNER,
+  CHROME_MEDIA,
+  COUNTRY_LINKS,
+  DIMENSION_ONLY_MEDIA,
+  FIRST_VIEWPORT_COUNT,
+  MAX_CHROME_TOTAL_BYTES,
+  MAX_PRODUCT_BYTES,
+  type ChromeMediaStat,
+  type DesktopMediaStats,
+  type DimensionStat,
+  type FirstViewportStat,
+  type ImageSize,
+} from './first-viewport-media/config.js';
+import {
+  downloadImage,
+  encodeChromeImage,
+  encodeDesktopBanner,
+  encodeProductImage,
+  imageSize,
+} from './first-viewport-media/images.js';
+import {
+  ensureRemoteImageDimensions,
+  normalizeCountryLink,
+  replaceImageSource,
+} from './first-viewport-media/html.js';
 
-const FIRST_VIEWPORT_COUNT=4,MAX_DIMENSION=420,MAX_BYTES=36_000,MAX_DOWNLOAD_BYTES=3_000_000,MAX_CHROME_BYTES=28_000,MAX_CHROME_TOTAL=90_000;
-const BANNER_URL='https://www.sushiclub.com.ar/uploads_shop/banner_shop/imagenes/aniversario_banner_desktop_(1)1782398717_556.webp';
-const BANNER_EXPECTED:[number,number]=[1500,157];
-const CHROME_MEDIA=[
-  ['desktop-logo','https://www.sushiclub.com.ar/gfx/web-sushiclub2_black.png'],
-  ['flag-arg','https://www.sushiclub.com.ar/gfx/band-arg.jpg'],['flag-mex','https://www.sushiclub.com.ar/gfx/band-mex.jpg'],['flag-par','https://www.sushiclub.com.ar/gfx/band-par.jpg'],['flag-esp','https://www.sushiclub.com.ar/gfx/band-esp.jpg'],['flag-uru','https://www.sushiclub.com.ar/gfx/band_uru.jpg'],['flag-usa','https://www.sushiclub.com.ar/gfx/band-usa.jpg'],['tiktok','https://www.sushiclub.com.ar/iconos/icons8-tiktok-32.png'],
-] as const;
-const COUNTRIES={ 'flag-arg':'Argentina','flag-mex':'México','flag-par':'Paraguay','flag-esp':'España','flag-uru':'Uruguay','flag-usa':'Estados Unidos' } as const;
-const DIMENSION_ONLY=[
-  'https://www.sushiclub.com.ar/uploads/marcas/6/imagenes/chandon_web_gris_4_1749078095.png',
-  'https://www.sushiclub.com.ar/uploads/marcas/8/imagenes/marca_06.jpg',
-  'https://www.sushiclub.com.ar/uploads/marcas/4/imagenes/smartwater_gris_web_2_1749078414.png',
-  'https://www.sushiclub.com.ar/uploads/marcas/5/imagenes/aquarius_gris_web_1_1749077984.png',
-] as const;
+const PRODUCT_SOURCE_PATTERN = /<img\b(?=[^>]*\bdata-sc-src=["'](?<src>https:\/\/www\.sushiclub\.com\.ar\/uploads_shop\/productos\/[^"']+)["'])[^>]*>/gi;
+const BANNER_TAG_PATTERN = /<img\b(?=[^>]*\bclass=["'][^"']*\bimgBannerShop\b[^"']*["'])[^>]*>/i;
+const BANNER_PRELOAD_PATTERN = /<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])[^>]*>/gi;
 
-type Size=[number,number];type FirstStat={index:number;bytes:number;size:Size};type MediaStat={name:string;count:number;size:Size;bytes:number};
-type DesktopStats={bannerBytes:number;bannerSize:Size;media:MediaStat[];countryLinks:number;dimensions:{name:string;count:number;size:Size}[]};
+interface Replacement {
+  readonly start: number;
+  readonly end: number;
+  readonly tag: string;
+}
 
-async function download(url:string):Promise<Buffer>{let last:unknown;for(let attempt=0;attempt<3;attempt++){try{const response=await fetch(url,{headers:{'user-agent':'Mozilla/5.0'},redirect:'follow',signal:AbortSignal.timeout(12_000)});assert(response.ok,`HTTP ${response.status}`);const type=response.headers.get('content-type')??'',data=Buffer.from(await response.arrayBuffer());assert(data.length>0&&data.length<=MAX_DOWNLOAD_BYTES&&type.startsWith('image/'),`invalid source image: type=${type} bytes=${data.length}`);return data;}catch(error:unknown){last=error;if(attempt<2)await new Promise((resolve)=>setTimeout(resolve,600*(attempt+1)));}}throw new Error(`first-viewport image download failed: ${url}: ${last instanceof Error?last.message:String(last)}`);}
-async function imageSize(data:Buffer,name:string):Promise<Size>{try{const meta=await sharp(data,{failOn:'error'}).metadata();assert(meta.width&&meta.height&&meta.width<=5000&&meta.height<=5000,`invalid Pages image dimensions for ${name}: ${meta.width}x${meta.height}`);return [meta.width,meta.height];}catch(error:unknown){throw new Error(`cannot decode Pages image ${name}: ${error instanceof Error?error.message:String(error)}`);}}
-async function encodeProduct(data:Buffer,name:string):Promise<{url:string;bytes:number;size:Size}>{for(const [dimension,quality] of [[MAX_DIMENSION,72],[384,70],[352,68]] as const){const out=await sharp(data,{failOn:'error'}).rotate().resize({width:dimension,height:dimension,fit:'inside',withoutEnlargement:true,kernel:sharp.kernel.lanczos3}).webp({quality,effort:6}).toBuffer({resolveWithObject:true});if(out.data.length<=MAX_BYTES){const dir=path.join(SITE,'_first-viewport');fs.mkdirSync(dir,{recursive:true});const target=path.join(dir,`${name}.webp`);write(target,out.data);return {url:`_first-viewport/${name}.webp?v=${githubSha()}`,bytes:out.data.length,size:[out.info.width,out.info.height]};}}throw new Error(`first-viewport WebP budget exceeded for ${name}`);}
-async function encodeChrome(data:Buffer,name:string):Promise<{url:string;size:Size;bytes:number}>{const size=await imageSize(data,name);for(const quality of [88,82,76]){const encoded=await sharp(data,{failOn:'error'}).rotate().webp({quality,effort:6}).toBuffer();if(encoded.length<=MAX_CHROME_BYTES){const dir=path.join(SITE,'_chrome-media');fs.mkdirSync(dir,{recursive:true});write(path.join(dir,`${name}.webp`),encoded);return {url:`_chrome-media/${name}.webp?v=${githubSha()}`,size,bytes:encoded.length};}}throw new Error(`desktop chrome WebP budget exceeded for ${name}`);}
+interface FirstViewportResult {
+  readonly html: string;
+  readonly stats: readonly FirstViewportStat[];
+}
 
-async function optimizeFirstViewport(html:string):Promise<{html:string;stats:FirstStat[]}>{const re=/<img\b(?=[^>]*\bdata-sc-src=["'](?<src>https:\/\/www\.sushiclub\.com\.ar\/uploads_shop\/productos\/[^"']+)["'])[^>]*>/gi;const matches=[...html.matchAll(re)];assert(matches.length>=FIRST_VIEWPORT_COUNT,`expected at least ${FIRST_VIEWPORT_COUNT} hard-lazy products, found ${matches.length}`);const replacements:{start:number;end:number;tag:string}[]=[],stats:FirstStat[]=[];for(let i=0;i<FIRST_VIEWPORT_COUNT;i++){const match=matches[i]!;assert(match.index!==undefined&&match.groups?.src,'first-viewport product source missing');const asset=await encodeProduct(await download(match.groups.src),`product-${i+1}`);let tag=match[0].replace(/\bdata-sc-src=["'][^"']+["']/i,`data-sc-src="${asset.url}"`).replace(/\s+data-sc-first-viewport=["'][^"']*["']/gi,'');tag=tag.slice(0,-1).trimEnd()+` data-sc-first-viewport="${i+1}">`;replacements.push({start:match.index,end:match.index+match[0].length,tag});stats.push({index:i+1,bytes:asset.bytes,size:asset.size});}for(const item of replacements.reverse())html=html.slice(0,item.start)+item.tag+html.slice(item.end);const marker="function ready(){if(done)return;done=1;images();scheduleRuntime()}",replacement="function ready(){if(done)return;done=1;[].forEach.call(d.querySelectorAll('img[data-sc-first-viewport]'),li);images();scheduleRuntime()}";assert(html.includes(marker),'delivery-loader ready() marker missing');return {html:html.replace(marker,replacement),stats};}
+interface DesktopResult {
+  readonly html: string;
+  readonly stats: DesktopMediaStats;
+}
 
-function replaceImgSource(html:string,oldUrl:string,newUrl:string,size:Size):[string,number]{const re=new RegExp(`<img\\b(?=[^>]*\\bsrc=["']${escapeRegExp(oldUrl)}["'])[^>]*>`,'gi');let count=0;html=html.replace(re,(tag:string)=>{count++;tag=tag.replace(/\bsrc=["'][^"']+["']/i,`src="${newUrl}"`).replace(/\s+(?:width|height)\s*=\s*["'][^"']*["']/gi,'');const close=tag.endsWith('/>')?'/>':'>';return `${tag.slice(0,-close.length).trimEnd()} width="${size[0]}" height="${size[1]}"${close}`;});return [html,count];}
-function ensureRemoteDimensions(html:string,url:string,size:Size):[string,number]{const re=new RegExp(`<img\\b(?=[^>]*\\bsrc=["']${escapeRegExp(url)}["'])[^>]*>`,'gi');let count=0;html=html.replace(re,(tag:string)=>{count++;tag=tag.replace(/\s+(?:width|height)\s*=\s*["'][^"']*["']/gi,'');const close=tag.endsWith('/>')?'/>':'>';return `${tag.slice(0,-close.length).trimEnd()} width="${size[0]}" height="${size[1]}"${close}`;});return [html,count];}
-function normalizeCountryLinks(html:string,localUrl:string,label:string):[string,number]{const src=escapeRegExp(localUrl),re=new RegExp(`<a\\b(?<attrs>[^>]*)>(?<body>(?:(?!<a\\b|<\\/a>).)*?<img\\b(?=[^>]*\\bsrc=["']${src}["'])[^>]*>(?:(?!<a\\b|<\\/a>).)*?)<\\/a>`,'gis');let count=0;html=html.replace(re,(_all:string,...args:unknown[])=>{const groups=args.at(-1) as {attrs?:string;body?:string}|undefined;count++;let attrs=groups?.attrs??'',body=groups?.body??'';attrs=/\saria-label=["'][^"']*["']/i.test(attrs)?attrs.replace(/\saria-label=["'][^"']*["']/i,` aria-label="${label}"`):attrs.trimEnd()+` aria-label="${label}"`;body=body.replace(new RegExp(`(<img\\b(?=[^>]*\\bsrc=["']${src}["'])[^>]*?)\\s+alt=["'][^"']*["']`,'i'),'$1 alt=""');return `<a${attrs}>${body}</a>`;});return [html,count];}
+function addFirstViewportMarker(tag: string, source: string, index: number): string {
+  const close = tag.endsWith('/>') ? '/>' : '>';
+  const normalized = tag
+    .replace(/\bdata-sc-src=["'][^"']+["']/i, `data-sc-src="${source}"`)
+    .replace(/\s+data-sc-first-viewport=["'][^"']*["']/gi, '');
+  return `${normalized.slice(0, -close.length).trimEnd()} data-sc-first-viewport="${index}"${close}`;
+}
 
-async function optimizeBanner(html:string,sha:string):Promise<{html:string;bytes:number;size:Size}>{const data=await download(BANNER_URL),size=await imageSize(data,'desktop-banner');assert(size[0]===BANNER_EXPECTED[0]&&size[1]===BANNER_EXPECTED[1],`desktop banner geometry changed upstream: expected ${BANNER_EXPECTED.join('x')}, got ${size.join('x')}`);const meta=await sharp(data).metadata();const encoded=meta.format==='webp'?data:await sharp(data).webp({quality:90,effort:6}).toBuffer();assert(encoded.length>0&&encoded.length<=120_000,`desktop banner budget exceeded: ${encoded.length} bytes`);const dir=path.join(SITE,'_critical-media');fs.mkdirSync(dir,{recursive:true});write(path.join(dir,'desktop-banner.webp'),encoded);const local=`_critical-media/desktop-banner.webp?v=${sha}`;const banner=/<img\b(?=[^>]*\bclass=["'][^"']*\bimgBannerShop\b[^"']*["'])[^>]*>/i.exec(html);assert(banner&&banner.index!==undefined,'desktop banner image missing');assert(banner[0].includes(BANNER_URL),'unexpected desktop banner source before localization');let tag=banner[0].replace(/\bsrc=["'][^"']+["']/i,`src="${local}"`).replace(/\s+(?:width|height|loading|decoding|fetchpriority)=["'][^"']*["']/gi,'');const close=tag.endsWith('/>')?'/>':'>';tag=`${tag.slice(0,-close.length).trimEnd()} width="${size[0]}" height="${size[1]}" loading="eager" decoding="async" fetchpriority="auto"${close}`;html=html.slice(0,banner.index)+tag+html.slice(banner.index+banner[0].length);const preloads=[...html.matchAll(/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])[^>]*>/gi)].filter((m)=>m[0].includes(BANNER_URL));assert(preloads.length===1&&preloads[0]?.index!==undefined,`expected one desktop banner preload, found ${preloads.length}`);const p=preloads[0]!,next=p[0].replace(BANNER_URL,local);assert(/\bmedia=["']\(min-width:\s*993px\)["']/i.test(next),'desktop banner preload lost desktop media gate');html=html.slice(0,p.index!)+next+html.slice(p.index!+p[0].length);return {html,bytes:encoded.length,size};}
+function applyReplacements(html: string, replacements: readonly Replacement[]): string {
+  return [...replacements]
+    .sort((left, right) => right.start - left.start)
+    .reduce((current, replacement) => (
+      `${current.slice(0, replacement.start)}${replacement.tag}${current.slice(replacement.end)}`
+    ), html);
+}
 
-async function optimizeDesktopStability(html:string,sha:string):Promise<{html:string;stats:DesktopStats}>{const banner=await optimizeBanner(html,sha);html=banner.html;const media:MediaStat[]=[],local=new Map<string,string>();let total=0;for(const [name,url] of CHROME_MEDIA){const encoded=await encodeChrome(await download(url),name);total+=encoded.bytes;assert(total<=MAX_CHROME_TOTAL,`desktop chrome total WebP budget exceeded: ${total} bytes`);let count;[html,count]=replaceImgSource(html,url,encoded.url,encoded.size);assert(count>=1,`expected desktop chrome image not found: ${url}`);local.set(name,encoded.url);media.push({name,count,size:encoded.size,bytes:encoded.bytes});}let countryLinks=0;for(const [name,label] of Object.entries(COUNTRIES)){const url=local.get(name);assert(url,`localized country media missing: ${name}`);let count;[html,count]=normalizeCountryLinks(html,url,label);assert(count>=1,`country link not found for ${label}`);countryLinks+=count;}const dimensions:DesktopStats['dimensions']=[];for(const url of DIMENSION_ONLY){const size=await imageSize(await download(url),path.basename(new URL(url).pathname));let count;[html,count]=ensureRemoteDimensions(html,url,size);assert(count>=1,`dimension-only image not found: ${url}`);dimensions.push({name:path.basename(new URL(url).pathname),count,size});}return {html,stats:{bannerBytes:banner.bytes,bannerSize:banner.size,media,countryLinks,dimensions}};}
+async function optimizeFirstViewportProducts(html: string): Promise<FirstViewportResult> {
+  const matches = [...html.matchAll(PRODUCT_SOURCE_PATTERN)];
+  assert(
+    matches.length >= FIRST_VIEWPORT_COUNT,
+    `expected at least ${FIRST_VIEWPORT_COUNT} hard-lazy products, found ${matches.length}`,
+  );
 
-function verify(html:string,sha:string):void{assert(html.split('data-sc-first-viewport=').length-1===FIRST_VIEWPORT_COUNT,'first-viewport product marker count mismatch');for(let i=1;i<=FIRST_VIEWPORT_COUNT;i++){const file=path.join(SITE,`_first-viewport/product-${i}.webp`);assert(fs.existsSync(file)&&fs.statSync(file).size<=MAX_BYTES,`invalid first-viewport product asset: ${file}`);}assert(html.includes("querySelectorAll('img[data-sc-first-viewport]')"),'delivery loader does not release first-viewport products after LCP media');assert(!html.includes(BANNER_URL),'remote desktop banner remains after localization');assert(!html.includes('web-sushiclub2_black.png'),'remote desktop logo remains after localization');assert((html.match(/_chrome-media\/flag-/g)??[]).length>=Object.keys(COUNTRIES).length,'country chrome-media localization incomplete');assert(fs.existsSync(path.join(SITE,'_critical-media/desktop-banner.webp')),'localized desktop banner missing');assert(new RegExp(`<img\\b(?=[^>]*\\bclass=["'][^"']*\\bimgBannerShop\\b)(?=[^>]*\\bsrc=["']_critical-media/desktop-banner\\.webp\\?v=${escapeRegExp(sha)}["'])(?=[^>]*\\bwidth=["']1500["'])(?=[^>]*\\bheight=["']157["'])[^>]*>`,'i').test(html),'desktop banner lost localized intrinsic geometry');assert(new RegExp(`<img\\b(?=[^>]*\\bsrc=["']_chrome-media/desktop-logo\\.webp\\?v=${escapeRegExp(sha)}["'])(?=[^>]*\\bwidth=["'][1-9][0-9]*["'])(?=[^>]*\\bheight=["'][1-9][0-9]*["'])[^>]*>`,'i').test(html),'desktop logo intrinsic dimensions missing');for(const [name,label] of Object.entries(COUNTRIES)){const local=`_chrome-media/${name}.webp?v=${sha}`;assert(new RegExp(`<a\\b(?=[^>]*\\baria-label=["']${escapeRegExp(label)}["'])[^>]*>(?:(?!<\\/a>).)*?<img\\b(?=[^>]*\\bsrc=["']${escapeRegExp(local)}["'])(?=[^>]*\\balt=["']["'])[^>]*>(?:(?!<\\/a>).)*?<\\/a>`,'is').test(html),`accessibility normalization missing for country ${label}`);}}
+  const replacements: Replacement[] = [];
+  const stats: FirstViewportStat[] = [];
 
-export async function optimizeFirstViewportMedia():Promise<void>{const sha=githubSha(),index=path.join(SITE,'index.html');let html=read(index);const first=await optimizeFirstViewport(html);html=first.html;const desktop=await optimizeDesktopStability(html,sha);html=desktop.html;write(index,html);verify(html,sha);const firstSummary=first.stats.map((s)=>`${s.index}:${s.bytes}B/${s.size[0]}x${s.size[1]}`).join(', '),chromeSummary=desktop.stats.media.map((s)=>`${s.name}:${s.count}x/${s.size[0]}x${s.size[1]}/${s.bytes}B`).join(', ');console.log(`Optimized ${FIRST_VIEWPORT_COUNT} first-viewport products after logo readiness: ${firstSummary}. Desktop stability: banner ${desktop.stats.bannerSize[0]}x${desktop.stats.bannerSize[1]}/${desktop.stats.bannerBytes}B same-origin; ${chromeSummary}; ${desktop.stats.countryLinks} country links labelled.`);}
+  for (let offset = 0; offset < FIRST_VIEWPORT_COUNT; offset += 1) {
+    const match = matches[offset];
+    const source = match?.groups?.src;
+    assert(match?.index !== undefined && source, 'first-viewport product source missing');
+
+    const index = offset + 1;
+    const asset = await encodeProductImage(await downloadImage(source), `product-${index}`);
+    replacements.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      tag: addFirstViewportMarker(match[0], asset.url, index),
+    });
+    stats.push({ index, bytes: asset.bytes, size: asset.size });
+  }
+
+  return { html: applyReplacements(html, replacements), stats };
+}
+
+function localizeBannerTag(html: string, url: string, size: ImageSize): string {
+  const match = BANNER_TAG_PATTERN.exec(html);
+  assert(match?.index !== undefined, 'desktop banner image missing');
+  assert(match[0].includes(BANNER.url), 'unexpected desktop banner source before localization');
+
+  const close = match[0].endsWith('/>') ? '/>' : '>';
+  const normalized = match[0]
+    .replace(/\bsrc=["'][^"']+["']/i, `src="${url}"`)
+    .replace(/\s+(?:width|height|loading|decoding|fetchpriority)=["'][^"']*["']/gi, '');
+  const tag = `${normalized.slice(0, -close.length).trimEnd()} width="${size[0]}" height="${size[1]}" loading="eager" decoding="async" fetchpriority="auto"${close}`;
+  return `${html.slice(0, match.index)}${tag}${html.slice(match.index + match[0].length)}`;
+}
+
+function localizeBannerPreload(html: string, url: string): string {
+  const matches = [...html.matchAll(BANNER_PRELOAD_PATTERN)].filter((match) => match[0].includes(BANNER.url));
+  const preload = matches[0];
+  assert(matches.length === 1 && preload?.index !== undefined, `expected one desktop banner preload, found ${matches.length}`);
+
+  const replacement = preload[0].replace(BANNER.url, url);
+  assert(
+    /\bmedia=["']\(min-width:\s*993px\)["']/i.test(replacement),
+    'desktop banner preload lost desktop media gate',
+  );
+  return `${html.slice(0, preload.index)}${replacement}${html.slice(preload.index + preload[0].length)}`;
+}
+
+async function optimizeDesktopStability(html: string, sha: string): Promise<DesktopResult> {
+  const banner = await encodeDesktopBanner(sha);
+  let result = localizeBannerTag(html, banner.url, banner.size);
+  result = localizeBannerPreload(result, banner.url);
+
+  const mediaStats: ChromeMediaStat[] = [];
+  const localizedMedia = new Map<string, string>();
+  let totalChromeBytes = 0;
+
+  for (const definition of CHROME_MEDIA) {
+    const asset = await encodeChromeImage(await downloadImage(definition.url), definition.name);
+    totalChromeBytes += asset.bytes;
+    assert(
+      totalChromeBytes <= MAX_CHROME_TOTAL_BYTES,
+      `desktop chrome total WebP budget exceeded: ${totalChromeBytes} bytes`,
+    );
+
+    const mutation = replaceImageSource(result, definition.url, asset.url, asset.size);
+    assert(mutation.count >= 1, `expected desktop chrome image not found: ${definition.url}`);
+    result = mutation.html;
+    localizedMedia.set(definition.name, asset.url);
+    mediaStats.push({ name: definition.name, count: mutation.count, ...asset });
+  }
+
+  let countryLinks = 0;
+  for (const [name, label] of COUNTRY_LINKS) {
+    const localUrl = localizedMedia.get(name);
+    assert(localUrl, `localized country media missing: ${name}`);
+    const mutation = normalizeCountryLink(result, localUrl, label);
+    assert(mutation.count >= 1, `country link not found for ${label}`);
+    result = mutation.html;
+    countryLinks += mutation.count;
+  }
+
+  const dimensions: DimensionStat[] = [];
+  for (const url of DIMENSION_ONLY_MEDIA) {
+    const name = path.basename(new URL(url).pathname);
+    const size = await imageSize(await downloadImage(url), name);
+    const mutation = ensureRemoteImageDimensions(result, url, size);
+    assert(mutation.count >= 1, `dimension-only image not found: ${url}`);
+    result = mutation.html;
+    dimensions.push({ name, count: mutation.count, size });
+  }
+
+  return {
+    html: result,
+    stats: {
+      bannerBytes: banner.bytes,
+      bannerSize: banner.size,
+      media: mediaStats,
+      countryLinks,
+      dimensions,
+    },
+  };
+}
+
+function verifyFirstViewportAssets(html: string): void {
+  assert(
+    html.split('data-sc-first-viewport=').length - 1 === FIRST_VIEWPORT_COUNT,
+    'first-viewport product marker count mismatch',
+  );
+
+  for (let index = 1; index <= FIRST_VIEWPORT_COUNT; index += 1) {
+    const file = path.join(SITE, `_first-viewport/product-${index}.webp`);
+    assert(
+      fs.existsSync(file) && fs.statSync(file).size <= MAX_PRODUCT_BYTES,
+      `invalid first-viewport product asset: ${file}`,
+    );
+  }
+
+  assert(
+    html.includes("querySelectorAll('img[data-sc-first-viewport][data-sc-src]')"),
+    'delivery loader does not release first-viewport products after LCP media',
+  );
+}
+
+function verifyDesktopAssets(html: string, sha: string): void {
+  assert(!html.includes(BANNER.url), 'remote desktop banner remains after localization');
+  assert(!html.includes('web-sushiclub2_black.png'), 'remote desktop logo remains after localization');
+  assert(
+    (html.match(/_chrome-media\/flag-/g) ?? []).length >= COUNTRY_LINKS.length,
+    'country chrome-media localization incomplete',
+  );
+  assert(
+    fs.existsSync(path.join(SITE, '_critical-media', BANNER.outputName)),
+    'localized desktop banner missing',
+  );
+
+  assert(
+    new RegExp(
+      `<img\\b(?=[^>]*\\bclass=["'][^"']*\\bimgBannerShop\\b)(?=[^>]*\\bsrc=["']_critical-media/desktop-banner\\.webp\\?v=${escapeRegExp(sha)}["'])(?=[^>]*\\bwidth=["']1500["'])(?=[^>]*\\bheight=["']157["'])[^>]*>`,
+      'i',
+    ).test(html),
+    'desktop banner lost localized intrinsic geometry',
+  );
+  assert(
+    new RegExp(
+      `<img\\b(?=[^>]*\\bsrc=["']_chrome-media/desktop-logo\\.webp\\?v=${escapeRegExp(sha)}["'])(?=[^>]*\\bwidth=["'][1-9][0-9]*["'])(?=[^>]*\\bheight=["'][1-9][0-9]*["'])[^>]*>`,
+      'i',
+    ).test(html),
+    'desktop logo intrinsic dimensions missing',
+  );
+
+  for (const [name, label] of COUNTRY_LINKS) {
+    const localUrl = `_chrome-media/${name}.webp?v=${sha}`;
+    const pattern = new RegExp(
+      `<a\\b(?=[^>]*\\baria-label=["']${escapeRegExp(label)}["'])[^>]*>(?:(?!<\\/a>).)*?<img\\b(?=[^>]*\\bsrc=["']${escapeRegExp(localUrl)}["'])(?=[^>]*\\balt=["']["'])[^>]*>(?:(?!<\\/a>).)*?<\\/a>`,
+      'is',
+    );
+    assert(pattern.test(html), `accessibility normalization missing for country ${label}`);
+  }
+}
+
+function summarizeFirstViewport(stats: readonly FirstViewportStat[]): string {
+  return stats
+    .map((stat) => `${stat.index}:${stat.bytes}B/${stat.size[0]}x${stat.size[1]}`)
+    .join(', ');
+}
+
+function summarizeChrome(stats: readonly ChromeMediaStat[]): string {
+  return stats
+    .map((stat) => `${stat.name}:${stat.count}x/${stat.size[0]}x${stat.size[1]}/${stat.bytes}B`)
+    .join(', ');
+}
+
+export async function optimizeFirstViewportMedia(): Promise<void> {
+  const sha = githubSha();
+  const indexFile = path.join(SITE, 'index.html');
+  const source = read(indexFile);
+
+  const firstViewport = await optimizeFirstViewportProducts(source);
+  const desktop = await optimizeDesktopStability(firstViewport.html, sha);
+
+  verifyFirstViewportAssets(desktop.html);
+  verifyDesktopAssets(desktop.html, sha);
+  write(indexFile, desktop.html);
+
+  console.log(
+    `Optimized ${FIRST_VIEWPORT_COUNT} first-viewport products after logo readiness: ${summarizeFirstViewport(firstViewport.stats)}. `
+      + `Desktop stability: banner ${desktop.stats.bannerSize[0]}x${desktop.stats.bannerSize[1]}/${desktop.stats.bannerBytes}B same-origin; `
+      + `${summarizeChrome(desktop.stats.media)}; ${desktop.stats.countryLinks} country links labelled.`,
+  );
+}

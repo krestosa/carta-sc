@@ -1,7 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ROOT, SITE, LAB, assert, copyFile, copyTree, ensureDir, nodeCheck, remove } from './lib/core.js';
+import {
+  LAB,
+  ROOT,
+  SITE,
+  assert,
+  copyFile,
+  copyTree,
+  ensureDir,
+  nodeCheck,
+  remove,
+  type JavaScriptSyntaxMode,
+} from './lib/core.js';
 import { applyLabOverrides } from './steps/apply-lab-overrides.js';
 import { compileTemplates } from './steps/compile-templates.js';
 import { prepareArtifact } from './steps/prepare-artifact.js';
@@ -32,18 +43,38 @@ import {
 } from './validators.js';
 
 const ROOT_EXCLUDES = new Set([
-  '.git', '.github', '.pages-site', '.build', '.generated', '.migration', 'node_modules',
-  'lab', 'scripts', 'README.md', 'DOCUMENTACION_TECNICA_COMPLETA.md',
-  'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.browser.json', 'tsconfig.tooling.json', 'types',
+  '.git',
+  '.github',
+  '.pages-site',
+  '.build',
+  '.generated',
+  '.migration',
+  'node_modules',
+  'lab',
+  'scripts',
+  'README.md',
+  'DOCUMENTACION_TECNICA_COMPLETA.md',
+  'TYPESCRIPT_NATIVE_REWRITE_RULES.md',
+  'package.json',
+  'package-lock.json',
+  'tsconfig.base.json',
+  'tsconfig.browser.json',
+  'tsconfig.tooling.json',
+  'types',
 ]);
+
+interface RuntimeSyntaxTarget {
+  readonly file: string;
+  readonly mode: JavaScriptSyntaxMode;
+}
 
 function stageRuntime(): void {
   remove(SITE);
   ensureDir(SITE);
   copyTree(ROOT, SITE, (relative, absolute) => {
     const normalized = relative.replaceAll(path.sep, '/');
-    const top = normalized.split('/', 1)[0] ?? normalized;
-    if (ROOT_EXCLUDES.has(top)) return false;
+    const topLevel = normalized.split('/', 1)[0] ?? normalized;
+    if (ROOT_EXCLUDES.has(topLevel)) return false;
     if (absolute === SITE || absolute.startsWith(`${SITE}${path.sep}`)) return false;
     if (normalized.endsWith('.ts')) return false;
     return true;
@@ -55,16 +86,24 @@ function stageRuntime(): void {
   copyFile(path.join(LAB, '.nojekyll'), path.join(SITE, '.nojekyll'));
 }
 
-function validateRuntimeSyntax(final = false): void {
-  const files = [
-    path.join(SITE, 'override', 'main.js'),
-    path.join(SITE, '_pages', 'legacy.js'),
-    path.join(SITE, '_pages', 'shop.js'),
+function runtimeSyntaxTargets(final: boolean): RuntimeSyntaxTarget[] {
+  const targets: RuntimeSyntaxTarget[] = [
+    { file: path.join(SITE, 'override', 'main.js'), mode: 'module' },
+    { file: path.join(SITE, '_pages', 'legacy.js'), mode: 'classic' },
+    { file: path.join(SITE, '_pages', 'shop.js'), mode: 'classic' },
   ];
+
   if (final) {
-    files.push(path.join(SITE, '_pages', 'php-guard.js'), path.join(SITE, '_js_dev', 'main-legacy.js'));
+    targets.push(
+      { file: path.join(SITE, '_pages', 'php-guard.js'), mode: 'classic' },
+      { file: path.join(SITE, '_js_dev', 'main-legacy.js'), mode: 'classic' },
+    );
   }
-  for (const file of files) nodeCheck(file);
+  return targets;
+}
+
+function validateRuntimeSyntax(final = false): void {
+  for (const target of runtimeSyntaxTargets(final)) nodeCheck(target.file, target.mode);
   validateJsSyntax();
 }
 
