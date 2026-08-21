@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildPages } from '../pages/build.js';
 import { ROOT, SITE, assert, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
+import { staticizeCompiled } from './staticize.js';
 
 interface HandoffPaths {
   readonly root: string;
@@ -30,15 +31,21 @@ const PATHS: HandoffPaths = {
   compiled: path.join(ROOT, 'handoff', 'compiled'),
 };
 
-const EXCLUDED_TOP_LEVEL = new Set([
-  '.git',
-  '.github',
-  '.build',
-  '.generated',
-  '.pages-site',
-  '.migration',
-  'node_modules',
-  'handoff',
+const SOURCE_TOP_LEVEL = new Set([
+  '_css_dev',
+  '_js_dev',
+  'css',
+  'index.html',
+  'js',
+  'lab',
+  'override',
+  'package-lock.json',
+  'package.json',
+  'scripts',
+  'tsconfig.base.json',
+  'tsconfig.browser.json',
+  'tsconfig.tooling.json',
+  'types',
 ]);
 
 const EXCLUDED_SOURCE_EXTENSIONS = new Set([
@@ -54,7 +61,9 @@ const SOURCE_PACKAGE_SCRIPTS = {
   'compile:tooling': 'tsc -p tsconfig.tooling.json',
   'compile:browser': 'tsc -p tsconfig.browser.json',
   'build:runtime': 'npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js',
-  build: 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
+  'build:site': 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
+  'build:compiled': 'npm run build:site && node .build/tooling/lab/handoff/staticize.js .pages-site ../compiled',
+  build: 'npm run build:compiled',
 } as const;
 
 const LAUNCHERS: readonly LauncherDefinition[] = [
@@ -64,30 +73,20 @@ const LAUNCHERS: readonly LauncherDefinition[] = [
     content: (sha) => `#!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
-SOURCE="$ROOT/source"
-COMPILED="$ROOT/compiled"
-cd "$SOURCE"
+cd "$ROOT/source"
 export GITHUB_SHA="${'${GITHUB_SHA:-'}${sha}}"
 npm ci
 npm run build
-rm -rf "$COMPILED"
-mkdir -p "$COMPILED"
-cp -a "$SOURCE/.pages-site/." "$COMPILED/"
 `,
   },
   {
     name: 'build.ps1',
     content: (sha) => `$ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Source = Join-Path $Root 'source'
-$Compiled = Join-Path $Root 'compiled'
-Set-Location $Source
+Set-Location (Join-Path $Root 'source')
 if (-not $env:GITHUB_SHA) { $env:GITHUB_SHA = '${sha}' }
 npm ci
 npm run build
-if (Test-Path $Compiled) { Remove-Item -Recurse -Force $Compiled }
-New-Item -ItemType Directory -Force $Compiled | Out-Null
-Get-ChildItem -LiteralPath (Join-Path $Source '.pages-site') -Force | Copy-Item -Destination $Compiled -Recurse -Force
 `,
   },
 ];
@@ -101,7 +100,7 @@ class HandoffBuildPipeline {
     this.#prepareOutput();
     this.#copySource();
     this.#writeSourcePackage();
-    this.#copyCompiledArtifact();
+    staticizeCompiled(SITE, PATHS.compiled);
     this.#writeLaunchers();
   }
 
@@ -124,16 +123,20 @@ class HandoffBuildPipeline {
     const normalized = relative.replaceAll(path.sep, '/');
     const segments = normalized.split('/');
     const topLevel = segments[0] ?? normalized;
-    if (EXCLUDED_TOP_LEVEL.has(topLevel)) return false;
-    if (segments.some((segment) => segment === '.git' || segment === '.github' || segment === 'node_modules')) return false;
+    if (!SOURCE_TOP_LEVEL.has(topLevel)) return false;
+    if (segments.some((segment) => segment.startsWith('.'))) return false;
 
     const isDirectory = fs.statSync(absolute).isDirectory();
     if (!isDirectory && EXCLUDED_SOURCE_EXTENSIONS.has(path.extname(normalized).toLowerCase())) return false;
     if (!isDirectory && /requirements(?:\.txt)?$/i.test(normalized)) return false;
-    if (normalized === '.gitignore' || normalized === 'package.json') return false;
+    if (normalized === 'package.json') return false;
 
     if (topLevel === 'lab') {
-      return normalized === 'lab' || normalized === 'lab/pages' || normalized.startsWith('lab/pages/');
+      return normalized === 'lab'
+        || normalized === 'lab/pages'
+        || normalized.startsWith('lab/pages/')
+        || normalized === 'lab/handoff'
+        || normalized === 'lab/handoff/staticize.ts';
     }
 
     if (topLevel === 'scripts') {
@@ -156,13 +159,6 @@ class HandoffBuildPipeline {
       engines: rootPackage.engines,
       scripts: SOURCE_PACKAGE_SCRIPTS,
       devDependencies: rootPackage.devDependencies,
-    });
-  }
-
-  #copyCompiledArtifact(): void {
-    copyTree(SITE, PATHS.compiled, (relative, absolute) => {
-      if (fs.statSync(absolute).isDirectory()) return true;
-      return path.extname(relative).toLowerCase() !== '.md';
     });
   }
 
