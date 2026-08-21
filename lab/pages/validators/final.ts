@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { SITE, assert, githubSha, read, walk } from '../lib/core.js';
+import { ROOT, SITE, assert, githubSha, read, walk } from '../lib/core.js';
 import { failList } from './shared.js';
 
 const REQUIRED_ARTIFACTS = [
@@ -26,6 +26,30 @@ function validateRequiredFiles(issues: string[]): void {
   }
 }
 
+function expectedOverrideTarget(source: string): string {
+  const sourceRoot = path.join(ROOT, 'override');
+  const relative = path.relative(sourceRoot, source).replaceAll(path.sep, '/');
+  return relative.endsWith('.ts') ? relative.replace(/\.ts$/, '.js') : relative;
+}
+
+function validateOverrideCoverage(issues: string[]): void {
+  const sourceRoot = path.join(ROOT, 'override');
+  const targetRoot = path.join(SITE, 'override');
+  const missing: string[] = [];
+
+  for (const source of walk(sourceRoot)) {
+    const relative = expectedOverrideTarget(source);
+    const target = path.join(targetRoot, ...relative.split('/'));
+    if (!fs.existsSync(target) || !fs.statSync(target).isFile() || fs.statSync(target).size === 0) {
+      missing.push(relative);
+    }
+  }
+
+  if (missing.length > 0) {
+    issues.push(`override staging is incomplete; missing=${missing.sort().join(',')}`);
+  }
+}
+
 export function validateFinalInvariants(): void {
   const sha = githubSha();
   const index = path.join(SITE, 'index.html');
@@ -34,10 +58,14 @@ export function validateFinalInvariants(): void {
   const html = read(index);
   const issues: string[] = [];
   validateRequiredFiles(issues);
+  validateOverrideCoverage(issues);
 
   if (html.includes('unversioned')) issues.push('unversioned cache token remains in final Pages HTML');
   if (!html.includes(`_critical-media/sushiclub-logo.svg?v=${sha}`)) {
     issues.push('versioned system logo is missing from final HTML');
+  }
+  if (!html.includes(`const VERSION = '${sha}';`)) {
+    issues.push('final delivery loader does not identify the exact build SHA');
   }
   if (/<script\b[^>]*\bsrc=["'][^"']*(?:override\/runtime-main\.js|override\/[^"']+\.ts)[^"']*["']/i.test(html)) {
     issues.push('source-only override runtime reference remains in final HTML');
