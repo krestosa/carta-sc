@@ -72,11 +72,11 @@ function seedThemePrepaint(root: HTMLElement): boolean {
   ring.style.opacity = themePrepaintMode === 'system' ? '1' : '0';
   rays.style.opacity = themePrepaintMode === 'light' ? '1' : '0';
 
-  for (const line of rayLines) {
+  rayLines.forEach((line) => {
     line.setAttribute('pathLength', '1');
     line.style.strokeDasharray = '1';
     line.style.strokeDashoffset = themePrepaintMode === 'light' ? '0' : '1';
-  }
+  });
   icon.setAttribute('data-sc-theme-glyph-state', themePrepaintMode);
 
   const button = root.querySelector<HTMLButtonElement>('.sc-theme-toggle');
@@ -85,11 +85,11 @@ function seedThemePrepaint(root: HTMLElement): boolean {
     button.setAttribute('title', themePrepaintTitle(themePrepaintMode));
   }
 
-  for (const option of root.querySelectorAll<HTMLElement>('[data-sc-theme-option]')) {
+  root.querySelectorAll<HTMLElement>('[data-sc-theme-option]').forEach((option) => {
     const selected = option.getAttribute('data-sc-theme-option') === themePrepaintMode;
     option.setAttribute('aria-checked', String(selected));
     option.classList.toggle('sc-theme-option-selected', selected);
-  }
+  });
 
   root.setAttribute('data-sc-theme-prepaint-ready', '1');
   return true;
@@ -106,7 +106,7 @@ function scanThemePrepaint(node: Node): void {
 scanThemePrepaint(themePrepaintDocument.documentElement);
 const themePrepaintObserver = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) scanThemePrepaint(node);
+    mutation.addedNodes.forEach((node) => scanThemePrepaint(node));
   }
   if (themePrepaintDocument.querySelector('.sc-catalog-tools[data-sc-theme-prepaint-ready]')) {
     themePrepaintObserver.disconnect();
