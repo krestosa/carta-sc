@@ -36,6 +36,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip::
 
 body.sushiShop .sc-theme-toggle,
 body.sushiShop .sc-catalog-view-toggle {
+  --sc-icon-control-radius: 20px;
   box-sizing: border-box !important;
   position: relative !important;
   isolation: isolate;
@@ -50,7 +51,7 @@ body.sushiShop .sc-catalog-view-toggle {
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 50% !important;
+  border-radius: 0 !important;
   outline: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -67,27 +68,23 @@ body.sushiShop .sc-catalog-view-toggle::after {
   content: '';
   position: absolute;
   inset: var(--sc-control-visual-inset);
-  border-radius: 50%;
+  border-radius: var(--sc-icon-control-radius,20px);
   pointer-events: none;
 }
 
 body.sushiShop .sc-theme-toggle::before,
 body.sushiShop .sc-catalog-view-toggle::before {
-  z-index: 0;
+  z-index: 1;
   box-sizing: border-box;
-  border: var(--sc-border-hairline) solid var(--sc-color-border-strong);
+  border: 2px solid var(--sc-focus-ring-color);
   background: transparent;
-  box-shadow: none;
-  transition:
-    border-color var(--sc-motion-short2) var(--sc-motion-ease-standard),
-    background-color var(--sc-motion-short2) var(--sc-motion-ease-standard),
-    box-shadow var(--sc-motion-short2) var(--sc-motion-ease-standard);
+  opacity: 0;
 }
 
 body.sushiShop .sc-theme-toggle::after,
 body.sushiShop .sc-catalog-view-toggle::after {
-  z-index: 1;
-  background: var(--sc-color-ink);
+  z-index: 0;
+  background: currentColor;
   opacity: 0;
   transition: opacity var(--sc-motion-short2) var(--sc-motion-ease-linear);
 }
@@ -98,24 +95,14 @@ body.sushiShop .sc-catalog-view-toggle > * {
   z-index: 2;
 }
 
-body.sushiShop .sc-theme-toggle:hover::before,
-body.sushiShop .sc-catalog-view-toggle:hover::before,
-body.sushiShop .sc-theme-toggle[aria-expanded='true']::before {
-  border-color: var(--sc-color-ink);
-}
-
 body.sushiShop .sc-theme-toggle:hover::after,
-body.sushiShop .sc-catalog-view-toggle:hover::after,
-body.sushiShop .sc-theme-toggle[aria-expanded='true']::after {
+body.sushiShop .sc-catalog-view-toggle:hover::after {
   opacity: var(--sc-state-hover-opacity);
 }
 
 body.sushiShop .sc-theme-toggle:focus-visible::before,
 body.sushiShop .sc-catalog-view-toggle:focus-visible::before {
-  border-color: var(--sc-color-ink);
-  box-shadow:
-    0 0 0 2px var(--sc-color-surface),
-    0 0 0 4px var(--sc-focus-ring-color);
+  opacity: 1;
 }
 
 body.sushiShop .sc-theme-toggle:focus-visible::after,
@@ -123,15 +110,21 @@ body.sushiShop .sc-catalog-view-toggle:focus-visible::after {
   opacity: var(--sc-state-focus-opacity);
 }
 
-body.sushiShop .sc-theme-toggle:active::before,
-body.sushiShop .sc-catalog-view-toggle:active::before {
-  border-color: var(--sc-color-ink);
-}
-
 body.sushiShop .sc-theme-toggle:active::after,
 body.sushiShop .sc-catalog-view-toggle:active::after {
   opacity: var(--sc-state-pressed-opacity);
 }
+
+body.sushiShop .sc-theme-toggle:disabled,
+body.sushiShop .sc-catalog-view-toggle:disabled {
+  color: var(--sc-color-ink) !important;
+  cursor: default !important;
+  opacity: .38 !important;
+}
+body.sushiShop .sc-theme-toggle:disabled::before,
+body.sushiShop .sc-theme-toggle:disabled::after,
+body.sushiShop .sc-catalog-view-toggle:disabled::before,
+body.sushiShop .sc-catalog-view-toggle:disabled::after { opacity: 0 !important; }
 
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
   --sc-state-layer-color: var(--sc-color-ink);
@@ -263,8 +256,6 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.sushiShop .sc-theme-toggle::before,
-  body.sushiShop .sc-catalog-view-toggle::before,
   body.sushiShop .sc-theme-toggle::after,
   body.sushiShop .sc-catalog-view-toggle::after,
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip,
