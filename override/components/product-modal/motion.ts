@@ -56,9 +56,13 @@ function animate(
   return target.animate(keyframes, { ...options, fill: 'both' });
 }
 
+function imageStagePart(dialog: HTMLElement): HTMLElement | null {
+  return dialog.querySelector<HTMLElement>('.sc-product-modal__image-stage');
+}
+
 function visualParts(dialog: HTMLElement): HTMLElement[] {
   return [
-    dialog.querySelector<HTMLElement>('.sc-product-modal__image-stage'),
+    imageStagePart(dialog),
     dialog.querySelector<HTMLElement>('.sc-product-modal__title'),
     dialog.querySelector<HTMLElement>('.sc-product-modal__description'),
   ].filter((node): node is HTMLElement => Boolean(node));
@@ -81,6 +85,7 @@ function clear(modal: HTMLElement, dialog: HTMLElement): void {
     if (!node) continue;
     node.style.removeProperty('opacity');
     node.style.removeProperty('transform');
+    node.style.removeProperty('clip-path');
     node.style.removeProperty('will-change');
   }
 }
@@ -91,16 +96,31 @@ function finishOpen(modal: HTMLElement, dialog: HTMLElement, token: number): voi
   clear(modal, dialog);
 }
 
-function imageEntrance(dialog: HTMLElement): MotionHandle | null {
+function imageEntrance(dialog: HTMLElement): CancelableMotion[] {
+  const stage = imageStagePart(dialog);
   const image = imagePart(dialog);
-  if (!image) return null;
-  image.style.transform = 'translate3d(18px,0,0) scale(1.04)';
-  return motion.engine.springTransform(
-    image,
-    { x: 0, scale: 1 },
-    motionTokens.springs.focus,
-    { clear: true },
-  );
+  if (!stage || !image) return [];
+
+  stage.style.willChange = 'clip-path';
+  image.style.willChange = 'transform';
+  image.style.transform = 'translate3d(-42px,0,0) scale(1.08)';
+
+  return [
+    animate(
+      stage,
+      [
+        { clipPath: 'inset(0 18% 0 18% round 28px)' },
+        { clipPath: 'inset(0 0 0 0 round 28px)' },
+      ],
+      { duration: 500, easing: EASING.open },
+    ),
+    motion.engine.springTransform(
+      image,
+      { x: 0, scale: 1 },
+      motionTokens.springs.focus,
+      { clear: true },
+    ),
+  ];
 }
 
 function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): void {
@@ -138,8 +158,7 @@ function openSequence(modal: HTMLElement, dialog: HTMLElement, token: number): v
     ], { duration: 300, easing: EASING.linear }));
   }
 
-  const imageMotion = imageEntrance(dialog);
-  if (imageMotion) handles.push(imageMotion);
+  handles.push(...imageEntrance(dialog));
 
   register(modal, handles);
   const primary = handles[1];
