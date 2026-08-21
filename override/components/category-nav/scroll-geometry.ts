@@ -1,13 +1,15 @@
-import { queries, selectors } from '../../core/variables.js';
+import { queries, motionTokens, selectors } from '../../core/variables.js';
+import { motion } from '../../motion/main.js';
+import type { MotionHandle } from '../../motion/types.js';
 import { CATEGORY_SCROLL, CATEGORY_SELECTORS } from './config.js';
 
 export interface ScrollPlan {
   readonly y: number;
   readonly distance: number;
-  readonly duration: number;
+  readonly instant: boolean;
 }
 
-const confirmationAnimations = new WeakMap<HTMLElement, Animation>();
+const confirmationMotions = new WeakMap<HTMLElement, MotionHandle>();
 let offsetCache: number | null = null;
 
 export function invalidateCategoryOffset(): void {
@@ -77,23 +79,14 @@ export function categoryTargetY(target: HTMLElement): number {
   return targetYFromOffset(target);
 }
 
-function durationForDistance(distance: number): number {
-  const range = CATEGORY_SCROLL.maxDuration - CATEGORY_SCROLL.minDuration;
-  const scaled = Math.pow(
-    Math.min(1, distance / CATEGORY_SCROLL.distanceScale),
-    CATEGORY_SCROLL.distancePower,
-  );
-  return Math.min(
-    CATEGORY_SCROLL.maxDuration,
-    Math.max(CATEGORY_SCROLL.minDuration, CATEGORY_SCROLL.minDuration + scaled * range),
-  );
-}
-
 export function categoryScrollPlan(target: HTMLElement): ScrollPlan {
   const y = categoryTargetY(target);
   const distance = Math.abs(y - currentPageY());
-  const instant = queries.reducedMotion.matches || distance < CATEGORY_SCROLL.currentMarkOffset;
-  return { y, distance, duration: instant ? 0 : durationForDistance(distance) };
+  return {
+    y,
+    distance,
+    instant: queries.reducedMotion.matches || distance < CATEGORY_SCROLL.currentMarkOffset,
+  };
 }
 
 function associatedHeading(target: HTMLElement): HTMLElement | null {
@@ -116,18 +109,17 @@ function associatedHeading(target: HTMLElement): HTMLElement | null {
 
 export function confirmCategoryTarget(target: HTMLElement): void {
   const heading = associatedHeading(target);
-  if (!heading || queries.reducedMotion.matches || typeof heading.animate !== 'function') return;
+  if (!heading || queries.reducedMotion.matches) return;
 
-  confirmationAnimations.get(heading)?.cancel();
-  const animation = heading.animate([{ opacity: 0.62 }, { opacity: 1 }], {
-    duration: 260,
-    easing: 'cubic-bezier(.22,1,.36,1)',
+  confirmationMotions.get(heading)?.cancel();
+  heading.style.opacity = '0.62';
+  const handle = motion.engine.opacity(heading, 1, {
+    duration: motionTokens.durations.medium1,
+    ease: motionTokens.easings.decelerate,
+    clear: true,
+    onComplete: () => {
+      if (confirmationMotions.get(heading) === handle) confirmationMotions.delete(heading);
+    },
   });
-  confirmationAnimations.set(heading, animation);
-
-  const clear = (): void => {
-    if (confirmationAnimations.get(heading) === animation) confirmationAnimations.delete(heading);
-  };
-  animation.onfinish = clear;
-  animation.oncancel = clear;
+  confirmationMotions.set(heading, handle);
 }
