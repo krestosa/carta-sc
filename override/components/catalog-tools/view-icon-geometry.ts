@@ -1,5 +1,5 @@
-import { queries } from '../../core/variables.js';
 import type { CatalogViewMode } from '../../core/types.js';
+import { motionTokens, queries } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 import { catalogViewLabel, viewIconKey, type ViewIconKey } from './view-state.js';
@@ -123,21 +123,30 @@ export class CatalogViewIconController {
     host.setAttribute('data-sc-view-icon-animating', 'true');
     this.#activeMotion.set(host, handles);
 
+    const complete = (): void => {
+      remaining -= 1;
+      if (remaining > 0 || this.#activeMotion.get(host) !== handles) return;
+      this.#activeMotion.delete(host);
+      host.removeAttribute('data-sc-view-icon-animating');
+      this.ensurePresentation(host);
+    };
+
     shapes.forEach((shape, index) => {
       const target = targets[index];
       if (!target) return;
-      handles.push(motion.engine.attributes(shape, this.#numericAttributes(target), {
-        duration: reduced ? 0.1 : 0.19,
-        delay: reduced ? 0 : Math.floor(index / 2) * 0.008,
-        ease: reduced ? 'quad.inOut' : 'cubic.inOut',
-        onComplete: () => {
-          remaining -= 1;
-          if (remaining > 0 || this.#activeMotion.get(host) !== handles) return;
-          this.#activeMotion.delete(host);
-          host.removeAttribute('data-sc-view-icon-animating');
-          this.ensurePresentation(host);
-        },
-      }));
+      const attributes = this.#numericAttributes(target);
+      handles.push(reduced
+        ? motion.engine.attributes(shape, attributes, {
+            duration: motionTokens.durations.short2,
+            ease: motionTokens.easings.standard,
+            onComplete: complete,
+          })
+        : motion.engine.springAttributes(
+            shape,
+            attributes,
+            motionTokens.springs.spatial.fast,
+            { onComplete: complete },
+          ));
     });
   }
 }
