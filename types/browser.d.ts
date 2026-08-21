@@ -26,8 +26,4 @@ interface Window {
   $?: JQueryStaticCompat;
   __scCatalogAssetVersion?: string;
   __scInitialTheme?: string;
-  __scRuntimeReady?: number;
-  __scAfterRuntime?: Array<() => void>;
-  __scLoadRecaptcha?: () => void;
-  __scLegacyMainLoaderBooted?: boolean;
 }

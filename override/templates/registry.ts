@@ -10,7 +10,7 @@ const SOURCE_PATHS = [
 type TemplateName = string;
 type TemplateManifest = Record<TemplateName, string>;
 
-let compiledTemplates: TemplateManifest | null = null; /*__SC_TEMPLATE_PAYLOAD__*/
+const COMPILED_TEMPLATES: TemplateManifest | null = null; /*__SC_TEMPLATE_PAYLOAD__*/
 
 const assetVersion = window.__scCatalogAssetVersion ?? 'unversioned';
 const templateStore = new Map<TemplateName, HTMLTemplateElement>();
@@ -49,8 +49,8 @@ const installCompiledTemplates = (manifest: TemplateManifest): void => {
   for (const [name, markup] of Object.entries(manifest)) registerTemplate(name, markup);
 };
 
-export const templatesReady: Promise<void> = compiledTemplates
-  ? Promise.resolve().then(() => installCompiledTemplates(compiledTemplates!))
+export const templatesReady: Promise<void> = COMPILED_TEMPLATES
+  ? Promise.resolve().then(() => installCompiledTemplates(COMPILED_TEMPLATES))
   : Promise.all(SOURCE_PATHS.map(loadSource)).then(() => undefined);
 
 export const hasTemplate = (name: string): boolean => templateStore.has(name);

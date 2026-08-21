@@ -5,30 +5,41 @@ export const scrollState: ScrollState = {
   suppressRevealUntil: 0,
 };
 
-export const revealGate: RevealGate = (() => {
-  const root = document.documentElement;
-  let headings = false;
-  let cards = false;
-  let released = false;
+class CatalogRevealGate implements RevealGate {
+  readonly #root: HTMLElement;
+  #headings = false;
+  #cards = false;
+  #released = false;
 
-  const release = (): void => {
-    if (released) return;
-    released = true;
-    root.setAttribute('data-sc-catalog-reveal-ready', 'true');
-    root.classList.remove('sc-catalog-reveal-prepaint');
-  };
+  constructor(root: HTMLElement) {
+    this.#root = root;
+  }
 
-  const mark = (part: 'headings' | 'cards'): void => {
-    if (part === 'headings') headings = true;
-    else cards = true;
-    if (headings && cards) release();
-  };
+  get headings(): boolean {
+    return this.#headings;
+  }
 
-  return {
-    get headings() { return headings; },
-    get cards() { return cards; },
-    get released() { return released; },
-    mark,
-    release,
-  };
-})();
+  get cards(): boolean {
+    return this.#cards;
+  }
+
+  get released(): boolean {
+    return this.#released;
+  }
+
+  mark(part: 'headings' | 'cards'): void {
+    if (part === 'headings') this.#headings = true;
+    else this.#cards = true;
+
+    if (this.#headings && this.#cards) this.release();
+  }
+
+  release(): void {
+    if (this.#released) return;
+    this.#released = true;
+    this.#root.setAttribute('data-sc-catalog-reveal-ready', 'true');
+    this.#root.classList.remove('sc-catalog-reveal-prepaint');
+  }
+}
+
+export const revealGate: RevealGate = new CatalogRevealGate(document.documentElement);

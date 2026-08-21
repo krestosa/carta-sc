@@ -1,3 +1,97 @@
 import path from 'node:path';
 import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
-export function flattenBootstrap():void{const sha=githubSha(),file=path.join(SITE,'index.html');let html=read(file);const bootstrap=new RegExp(`<script\\b(?=[^>]*\\bsrc=["']_js_dev/main\\.js\\?v=${escapeRegExp(sha)}["'])[^>]*>\\s*<\\/script>`,'i');const prepaint="(function(){var r=document.documentElement,t='system',a='light',d=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;try{t=localStorage.getItem('scTheme:v1')||'system'}catch(e){t='system'}if(['system','light','dark'].indexOf(t)<0)t='system';a=t==='system'?(d?'dark':'light'):t;r.setAttribute('data-sc-theme',t);r.setAttribute('data-sc-theme-resolved',a);r.style.colorScheme=a;var w=window.innerWidth||r.clientWidth||0,c=w<=640?'phone':w<=992?'tablet':'desktop',v='',l='';function m(x){return x==='list'?'list':x?'compact':''}try{v=localStorage.getItem('scCatalogView:v3')||'';if(v==='normal')v='compact';if(['compact','list'].indexOf(v)<0){l=localStorage.getItem('scCatalogView:v2:'+c)||localStorage.getItem(c==='desktop'?'scCatalogView:desktop':'scCatalogView:mobile')||'';v=m(l);if(v){try{localStorage.setItem('scCatalogView:v3',v)}catch(e2){}}}}catch(e){v=''}if(['compact','list'].indexOf(v)<0)v='compact';r.setAttribute('data-sc-catalog-view',v);r.classList.add('sc-catalog-prepaint','sc-no-loading-state')})();";const replacement=[`<script>${prepaint}window.__scCatalogAssetVersion='${sha}';</script>`,`<script src="_js_dev/main-legacy.js?v=${sha}" type="text/javascript"></script>`,`<link rel="stylesheet" href="override/main.css?v=${sha}">`,`<script src="override/main.js?v=${sha}" type="text/javascript"></script>`].join('\n');let count=0;html=html.replace(bootstrap,()=>{count++;return replacement;});assert(count===1,`Expected one Pages bootstrap script, found ${count}`);assert(!bootstrap.test(html),'Development bootstrap script remains in Pages index');assert(html.includes('data-sc-catalog-view')&&html.includes('scCatalogView:v3'),'Remembered unified catalogue view prepaint bootstrap is missing');assert(html.includes("v='compact';r.setAttribute('data-sc-catalog-view',v)"),'Catalogue prepaint default must be compact');assert(html.includes("['compact','list'].indexOf(v)")&&!html.includes("['normal','compact','list']"),'Pages prepaint must expose density and list only');assert(html.includes('data-sc-theme-resolved')&&html.includes('scTheme:v1'),'Remembered color theme prepaint bootstrap is missing');assert((html.match(new RegExp(`<script\\b[^>]*\\bsrc=["']_js_dev/main-legacy\\.js\\?v=${escapeRegExp(sha)}["'][^>]*>\\s*<\\/script>`,'gi'))??[]).length===1,'Direct main-legacy script must appear exactly once');assert((html.match(new RegExp(`<link\\b[^>]*\\bhref=["']override/main\\.css\\?v=${escapeRegExp(sha)}["'][^>]*>`,'gi'))??[]).length===2,'Override CSS must appear once as preload and once as stylesheet');assert((html.match(new RegExp(`<script\\b[^>]*\\bsrc=["']override/main\\.js\\?v=${escapeRegExp(sha)}["'][^>]*>\\s*<\\/script>`,'gi'))??[]).length===1,'Direct override runtime script must appear exactly once');write(file,html);}
+
+const PREPAINT_SCRIPT = String.raw`{
+  const root = document.documentElement;
+  const themeModes = ['system', 'light', 'dark'];
+  const viewModes = ['compact', 'list'];
+  const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  let theme = 'system';
+  let view = '';
+
+  try {
+    theme = localStorage.getItem('scTheme:v1') || 'system';
+  } catch {
+    theme = 'system';
+  }
+  if (!themeModes.includes(theme)) theme = 'system';
+
+  const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
+  root.setAttribute('data-sc-theme', theme);
+  root.setAttribute('data-sc-theme-resolved', resolvedTheme);
+  root.style.colorScheme = resolvedTheme;
+
+  const width = window.innerWidth || root.clientWidth || 0;
+  const context = width <= 640 ? 'phone' : width <= 992 ? 'tablet' : 'desktop';
+  const normalizeLegacyView = (value) => value === 'list' ? 'list' : value ? 'compact' : '';
+
+  try {
+    view = localStorage.getItem('scCatalogView:v3') || '';
+    if (view === 'normal') view = 'compact';
+    if (!viewModes.includes(view)) {
+      const legacy = localStorage.getItem('scCatalogView:v2:' + context)
+        || localStorage.getItem(context === 'desktop' ? 'scCatalogView:desktop' : 'scCatalogView:mobile')
+        || '';
+      view = normalizeLegacyView(legacy);
+      if (view) {
+        try { localStorage.setItem('scCatalogView:v3', view); } catch {}
+      }
+    }
+  } catch {
+    view = '';
+  }
+
+  if (!viewModes.includes(view)) view = 'compact';
+  root.setAttribute('data-sc-catalog-view', view);
+  root.classList.add('sc-catalog-prepaint', 'sc-no-loading-state');
+}`;
+
+function countMatches(source: string, pattern: RegExp): number {
+  return source.match(new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`))?.length ?? 0;
+}
+
+export function flattenBootstrap(): void {
+  const sha = githubSha();
+  const file = path.join(SITE, 'index.html');
+  let html = read(file);
+
+  const bootstrap = new RegExp(
+    `<script\\b(?=[^>]*\\bsrc=["']_js_dev/main\\.js\\?v=${escapeRegExp(sha)}["'])[^>]*>\\s*<\\/script>`,
+    'i',
+  );
+  assert(countMatches(html, bootstrap) === 1, 'Expected exactly one Pages development bootstrap script');
+
+  const replacement = [
+    `<script>${PREPAINT_SCRIPT}\nwindow.__scCatalogAssetVersion='${sha}';</script>`,
+    `<script src="_js_dev/main-legacy.js?v=${sha}"></script>`,
+    `<link rel="stylesheet" href="override/main.css?v=${sha}">`,
+    `<script type="module" src="override/main.js?v=${sha}"></script>`,
+  ].join('\n');
+
+  html = html.replace(bootstrap, replacement);
+
+  assert(!bootstrap.test(html), 'Development bootstrap script remains in Pages index');
+  assert(html.includes('data-sc-catalog-view') && html.includes('scCatalogView:v3'), 'Remembered catalogue view prepaint bootstrap is missing');
+  assert(html.includes("view = 'compact'"), 'Catalogue prepaint default must be compact');
+  assert(html.includes("const viewModes = ['compact', 'list']"), 'Pages prepaint must expose density and list only');
+  assert(html.includes('data-sc-theme-resolved') && html.includes('scTheme:v1'), 'Remembered color theme prepaint bootstrap is missing');
+
+  const legacyRuntime = new RegExp(
+    `<script\\b[^>]*\\bsrc=["']_js_dev/main-legacy\\.js\\?v=${escapeRegExp(sha)}["'][^>]*>\\s*<\\/script>`,
+    'gi',
+  );
+  const overrideStyle = new RegExp(
+    `<link\\b[^>]*\\bhref=["']override/main\\.css\\?v=${escapeRegExp(sha)}["'][^>]*>`,
+    'gi',
+  );
+  const overrideModule = new RegExp(
+    `<script\\b(?=[^>]*\\btype=["']module["'])(?=[^>]*\\bsrc=["']override/main\\.js\\?v=${escapeRegExp(sha)}["'])[^>]*>\\s*<\\/script>`,
+    'gi',
+  );
+
+  assert(countMatches(html, legacyRuntime) === 1, 'Direct main-legacy script must appear exactly once');
+  assert(countMatches(html, overrideStyle) === 2, 'Override CSS must appear once as preload and once as stylesheet');
+  assert(countMatches(html, overrideModule) === 1, 'Direct override module entry must appear exactly once');
+
+  write(file, html);
+}
