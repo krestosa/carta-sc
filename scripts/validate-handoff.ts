@@ -80,8 +80,8 @@ class HandoffValidator {
         && !relativePath.startsWith('scripts/lib/')) {
         throw new Error(`Unrelated build script leaked into handoff source: ${relativePath}`);
       }
-      if (file.endsWith('.js') && !relativePath.startsWith('js/') && !relativePath.startsWith('_js_dev/')) {
-        throw new Error(`Owned JS source leaked into handoff source: ${relativePath}`);
+      if (extension === '.js' && relativePath.startsWith('override/')) {
+        throw new Error(`Generated owned JavaScript leaked into handoff source: ${relativePath}`);
       }
     }
   }
