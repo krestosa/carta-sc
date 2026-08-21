@@ -63,6 +63,7 @@ const SOURCE_PACKAGE_SCRIPTS = {
   'build:runtime': 'npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js',
   'build:site': 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
   'build:compiled': 'npm run build:site && node .build/tooling/lab/handoff/staticize.js .pages-site ../compiled',
+  'build:handoff': 'npm run build:compiled',
   build: 'npm run build:compiled',
 } as const;
 
@@ -76,7 +77,7 @@ ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
 cd "$ROOT/source"
 export GITHUB_SHA="${'${GITHUB_SHA:-'}${sha}}"
 npm ci
-npm run build
+npm run build:handoff
 `,
   },
   {
@@ -86,7 +87,7 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location (Join-Path $Root 'source')
 if (-not $env:GITHUB_SHA) { $env:GITHUB_SHA = '${sha}' }
 npm ci
-npm run build
+npm run build:handoff
 `,
   },
 ];
