@@ -15,7 +15,7 @@ body.sushiShop .sc-product-modal__cart-button {
   min-height: 46px !important;
   padding: 12px 18px !important;
   border: var(--sc-border-hairline) solid var(--sc-color-ink) !important;
-  border-radius: 0 !important;
+  border-radius: 999px !important;
   background: var(--sc-color-ink) !important;
   color: var(--sc-color-surface) !important;
   font: var(--sc-font-weight-semibold) 14px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
