@@ -1,26 +1,21 @@
-name: TypeScript CI and Optional Handoff
+name: Temporary Windows Handoff Validation
 
 on:
   push:
     branches:
       - type
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: typescript-ci-${{ github.event.pull_request.number || github.ref }}
+  group: windows-handoff-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci:
-    if: github.ref == 'refs/heads/type' || (github.event_name == 'pull_request' && github.head_ref == 'type')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  windows-handoff:
+    runs-on: windows-latest
+    timeout-minutes: 40
     steps:
       - name: Checkout exact commit
         uses: actions/checkout@v6
@@ -38,26 +33,13 @@ jobs:
         run: npm ci
 
       - name: Verify checked out SHA
-        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+        shell: pwsh
+        run: |
+          $actual = git rev-parse HEAD
+          if ($actual -ne $env:GITHUB_SHA) { throw "Checkout SHA mismatch: $actual != $env:GITHUB_SHA" }
 
-      - name: Run full TypeScript CI
-        run: npm run ci
+      - name: Build handoff on Windows
+        run: npm run build:handoff
 
-      - name: Build temporary handoff
-        if: github.event_name == 'workflow_dispatch'
-        run: npm run handoff:temporary
-
-      - name: Verify temporary handoff
-        if: github.event_name == 'workflow_dispatch'
+      - name: Validate handoff on Windows
         run: npm run validate:handoff -- .pages-site
-
-      - name: Upload temporary handoff
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v7
-        with:
-          name: handoff-${{ github.sha }}
-          path: handoff
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 7
-          compression-level: 6
