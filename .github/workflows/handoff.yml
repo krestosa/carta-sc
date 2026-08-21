@@ -49,7 +49,7 @@ jobs:
 
       - name: Verify temporary handoff
         if: github.event_name == 'workflow_dispatch'
-        run: npm run validate:handoff -- handoff .pages-site
+        run: npm run validate:handoff -- .pages-site
 
       - name: Upload temporary handoff
         if: github.event_name == 'workflow_dispatch'
