@@ -12,9 +12,21 @@ interface DeliveryWindow extends Window {
   dataLayer?: AnalyticsEvent[];
 }
 
+interface FirstViewportEntry {
+  readonly image: HTMLImageElement;
+  readonly stage: HTMLElement;
+  readonly card: HTMLElement;
+  readonly top: number;
+  readonly left: number;
+}
+
 const VERSION = '__SC_VERSION__';
 const documentRoot = document;
 const browser: DeliveryWindow = window;
+const FIRST_VIEWPORT_PULSE_MS = 1500;
+const FIRST_VIEWPORT_ROW_DELAY_MS = 200;
+const FIRST_VIEWPORT_COLUMN_DELAY_MS = 100;
+const FIRST_VIEWPORT_ROW_TOLERANCE_PX = 4;
 const runtimeSources: RuntimeSource[] = [
   { src: 'js/jquery-2.1.0.min.js', kind: 'classic' },
   /*__SC_PHP_GUARD__*/
@@ -69,9 +81,65 @@ class DeliveryRuntimeController {
     image.src = source;
   }
 
+  #isInViewport(element: Element): boolean {
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0
+      && rect.height > 0
+      && rect.bottom > 0
+      && rect.top < browser.innerHeight
+      && rect.right > 0
+      && rect.left < browser.innerWidth;
+  }
+
+  #firstViewportEntries(images: readonly HTMLImageElement[]): FirstViewportEntry[] {
+    const entries: FirstViewportEntry[] = [];
+    for (const image of images) {
+      const stage = image.closest<HTMLElement>('.imgShop,.imgLiquidNoFillShop');
+      const card = image.closest<HTMLElement>('.productoShop');
+      if (!stage || !card || !this.#isInViewport(card)) continue;
+      const rect = card.getBoundingClientRect();
+      entries.push({ image, stage, card, top: rect.top, left: rect.left });
+    }
+    return entries.sort((left, right) => (
+      Math.abs(left.top - right.top) > FIRST_VIEWPORT_ROW_TOLERANCE_PX
+        ? left.top - right.top
+        : left.left - right.left
+    ));
+  }
+
+  #primeFirstViewportSkeletons(entries: readonly FirstViewportEntry[]): void {
+    if (!entries.length) return;
+    documentRoot.documentElement.classList.add('sc-image-preloader-active');
+
+    let row = -1;
+    let rowTop = Number.NEGATIVE_INFINITY;
+    let column = 0;
+    const clock = performance.now() % FIRST_VIEWPORT_PULSE_MS;
+
+    for (const entry of entries) {
+      if (row < 0 || Math.abs(entry.top - rowTop) > FIRST_VIEWPORT_ROW_TOLERANCE_PX) {
+        row += 1;
+        rowTop = entry.top;
+        column = 0;
+      }
+
+      const delay = row * FIRST_VIEWPORT_ROW_DELAY_MS + column * FIRST_VIEWPORT_COLUMN_DELAY_MS;
+      const phase = `${-clock + delay}ms`;
+      entry.stage.classList.add('sc-image-loading', 'sc-image-active');
+      entry.card.classList.add('sc-card-placeholder-loading', 'sc-card-placeholder-active');
+      entry.stage.style.setProperty('--sc-image-preloader-phase', phase);
+      entry.card.style.setProperty('--sc-image-preloader-phase', phase);
+      column += 1;
+    }
+  }
+
   #activateFirstViewportImages(): void {
-    const images = documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-first-viewport][data-sc-src]');
-    images.forEach((image) => this.#activateImage(image));
+    const images = Array.from(
+      documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-first-viewport][data-sc-src]'),
+    );
+    const entries = this.#firstViewportEntries(images);
+    this.#primeFirstViewportSkeletons(entries);
+    entries.forEach(({ image }) => this.#activateImage(image));
   }
 
   #activateDeferredImages = (): void => {
@@ -79,7 +147,9 @@ class DeliveryRuntimeController {
     this.#imagesActivated = true;
     const images = Array.from(documentRoot.querySelectorAll<HTMLImageElement>('img[data-sc-src]'));
     if (!('IntersectionObserver' in browser)) {
-      images.forEach((image) => this.#activateImage(image));
+      images.forEach((image) => {
+        if (this.#isInViewport(image)) this.#activateImage(image);
+      });
       return;
     }
 
@@ -236,7 +306,7 @@ class DeliveryRuntimeController {
     const script = documentRoot.createElement('script');
     script.async = true;
     script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-WQPLGX9';
-    documentRoot.head.append(script);
+    documentRoot.head.appendChild(script);
   };
 
   #scheduleAnalyticsFallback = (): void => {
@@ -250,7 +320,7 @@ class DeliveryRuntimeController {
     script.async = true;
     script.defer = true;
     script.src = 'https://www.google.com/recaptcha/api.js';
-    documentRoot.head.append(script);
+    documentRoot.head.appendChild(script);
   };
 
   #onPreRuntimeClick = (event: MouseEvent): void => {
