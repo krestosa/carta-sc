@@ -125,6 +125,25 @@ function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
     : a.left - b.left);
 }
 
+function applyWaveLayout(stages: readonly HTMLElement[]): void {
+  const entries = visibleWaveEntries(stages);
+  let row = -1;
+  let rowTop = Number.NEGATIVE_INFINITY;
+  let column = 0;
+
+  for (const entry of entries) {
+    if (row < 0 || Math.abs(entry.top - rowTop) > ROW_TOLERANCE_PX) {
+      row += 1;
+      rowTop = entry.top;
+      column = 0;
+    }
+    const delay = (row * WAVE_ROW_DELAY_MS + column * WAVE_COLUMN_DELAY_MS) % PULSE_CYCLE_MS;
+    setSharedProperty(entry.stage, WAVE_DELAY_PROPERTY, `${delay}ms`);
+    setSharedProperty(entry.stage, PHASE_PROPERTY, phaseDelay(delay));
+    column += 1;
+  }
+}
+
 class PlaceholderFrameCoordinator {
   readonly #states = new Map<HTMLElement, StageMotionState>();
   #frame = 0;
@@ -194,6 +213,9 @@ class PlaceholderFrameCoordinator {
 
 export function synchronizeImagePlaceholderCycle(): void {
   document.documentElement.style.setProperty(CLOCK_PROPERTY, phaseDelay());
+  applyWaveLayout([
+    ...document.querySelectorAll<HTMLElement>('.listadoShop .productoShop .imgShop,.listadoShop .productoShop .imgLiquidNoFillShop'),
+  ]);
 }
 
 export class ImagePlaceholderMotion {
@@ -202,23 +224,8 @@ export class ImagePlaceholderMotion {
   readonly #coordinator = new PlaceholderFrameCoordinator();
 
   synchronize(stages: readonly HTMLElement[]): void {
-    synchronizeImagePlaceholderCycle();
-    const entries = visibleWaveEntries(stages);
-    let row = -1;
-    let rowTop = Number.NEGATIVE_INFINITY;
-    let column = 0;
-
-    for (const entry of entries) {
-      if (row < 0 || Math.abs(entry.top - rowTop) > ROW_TOLERANCE_PX) {
-        row += 1;
-        rowTop = entry.top;
-        column = 0;
-      }
-      const delay = (row * WAVE_ROW_DELAY_MS + column * WAVE_COLUMN_DELAY_MS) % PULSE_CYCLE_MS;
-      setSharedProperty(entry.stage, WAVE_DELAY_PROPERTY, `${delay}ms`);
-      if (entry.stage.classList.contains('sc-image-active')) this.#syncPhase(entry.stage);
-      column += 1;
-    }
+    document.documentElement.style.setProperty(CLOCK_PROPERTY, phaseDelay());
+    applyWaveLayout(stages);
   }
 
   markLoading(stage: HTMLElement, active: boolean): void {
