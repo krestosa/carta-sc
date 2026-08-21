@@ -1,8 +1,9 @@
+import { moduleAssetVersion } from './core/module-version.js';
+
 type BootstrapTheme = 'system' | 'light' | 'dark';
 
 const THEME_MODES = ['system', 'light', 'dark'] as const satisfies readonly BootstrapTheme[];
 const THEME_STORAGE_KEY = 'scTheme:v1';
-const DEFAULT_ASSET_VERSION = 'unversioned';
 const root = document.documentElement;
 
 function isBootstrapTheme(value: string | null): value is BootstrapTheme {
@@ -30,14 +31,6 @@ function applyInitialTheme(): void {
   window.__scInitialTheme = theme;
 }
 
-function runtimeAssetVersion(): string {
-  try {
-    return new URL(import.meta.url).searchParams.get('v') || DEFAULT_ASSET_VERSION;
-  } catch {
-    return DEFAULT_ASSET_VERSION;
-  }
-}
-
 function releasePrepaint(error: unknown): void {
   root.setAttribute('data-sc-catalog-reveal-ready', 'true');
   root.classList.remove('sc-catalog-reveal-prepaint');
@@ -45,7 +38,7 @@ function releasePrepaint(error: unknown): void {
 }
 
 async function startRuntime(): Promise<void> {
-  const assetVersion = runtimeAssetVersion();
+  const assetVersion = moduleAssetVersion(import.meta.url);
   await import(`./runtime-main.js?v=${encodeURIComponent(assetVersion)}`);
 }
 
