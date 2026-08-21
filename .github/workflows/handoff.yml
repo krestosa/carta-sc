@@ -1,4 +1,4 @@
-name: Temporary Windows Handoff Validation
+name: TypeScript CI and Optional Handoff
 
 on:
   push:
@@ -7,48 +7,57 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: windows-handoff-${{ github.event.pull_request.number || github.ref }}
+  group: typescript-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  windows-handoff:
+  ci:
     if: github.ref == 'refs/heads/type' || (github.event_name == 'pull_request' && github.head_ref == 'type')
-    runs-on: windows-latest
-    timeout-minutes: 40
-    env:
-      TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout exact type commit
+      - name: Checkout exact commit
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
 
-      - name: Set up Node 24
+      - name: Set up Node 22
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify checked out type SHA
-        shell: pwsh
-        run: |
-          $actual = git rev-parse HEAD
-          if ($actual -ne $env:TYPE_SHA) { throw "Checkout SHA mismatch: $actual != $env:TYPE_SHA" }
+      - name: Verify checked out SHA
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
-      - name: Build handoff on Windows
-        shell: pwsh
-        run: |
-          $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run build:handoff
+      - name: Run full TypeScript CI
+        run: npm run ci
 
-      - name: Validate handoff on Windows
+      - name: Build temporary handoff
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run handoff:temporary
+
+      - name: Verify temporary handoff
+        if: github.event_name == 'workflow_dispatch'
         run: npm run validate:handoff -- .pages-site
+
+      - name: Upload temporary handoff
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: handoff-${{ github.sha }}
+          path: handoff
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 7
+          compression-level: 6
