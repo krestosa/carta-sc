@@ -69,6 +69,10 @@ function cubicBezierValue(curve: CubicBezier, progress: number): number {
   return cubicCoordinate(t, curve.y1, curve.y2);
 }
 
+function phaseDelay(): string {
+  return `${-(performance.now() % SHIMMER_CYCLE_MS)}ms`;
+}
+
 function setAlpha(stage: HTMLElement, cover: number, content: number): void {
   stage.style.setProperty(COVER_ALPHA_PROPERTY, String(clamp(cover)));
   stage.style.setProperty(CONTENT_ALPHA_PROPERTY, String(clamp(content)));
@@ -77,6 +81,10 @@ function setAlpha(stage: HTMLElement, cover: number, content: number): void {
 function clearAlpha(stage: HTMLElement): void {
   stage.style.removeProperty(COVER_ALPHA_PROPERTY);
   stage.style.removeProperty(CONTENT_ALPHA_PROPERTY);
+}
+
+export function synchronizeImagePlaceholderCycle(): void {
+  document.documentElement.style.setProperty(PHASE_PROPERTY, phaseDelay());
 }
 
 export class ImagePlaceholderMotion {
@@ -162,6 +170,7 @@ export class ImagePlaceholderMotion {
   destroy(): void {
     for (const stage of [...this.#states.keys()]) this.release(stage);
     this.#states.clear();
+    document.documentElement.style.removeProperty(PHASE_PROPERTY);
   }
 
   #setActive(stage: HTMLElement, active: boolean): void {
@@ -170,8 +179,7 @@ export class ImagePlaceholderMotion {
   }
 
   #syncPhase(stage: HTMLElement): void {
-    const phase = performance.now() % SHIMMER_CYCLE_MS;
-    stage.style.setProperty(PHASE_PROPERTY, `${-phase}ms`);
+    stage.style.setProperty(PHASE_PROPERTY, phaseDelay());
   }
 
   #settleReady(stage: HTMLElement): void {
