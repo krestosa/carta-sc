@@ -50,6 +50,7 @@ const ROOT_EXCLUDES = new Set([
   '.generated',
   '.migration',
   'node_modules',
+  'handoff',
   'lab',
   'scripts',
   'README.md',
@@ -85,6 +86,7 @@ class PagesBuildPipeline {
     remove(SITE);
     ensureDir(SITE);
     copyTree(ROOT, SITE, (relative, absolute) => this.shouldStageSource(relative, absolute));
+    assert(!fs.existsSync(path.join(SITE, 'handoff')), 'handoff artifact leaked into Pages staging');
 
     const generatedOverride = path.join(ROOT, '.generated', 'browser', 'override');
     assert(fs.existsSync(generatedOverride), 'Browser TypeScript output is missing; run build:runtime first');
