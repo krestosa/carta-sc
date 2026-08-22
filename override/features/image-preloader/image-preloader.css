@@ -1,71 +1,87 @@
-/* Placeholder visual mientras cargan las imágenes de producto. */
 html.sc-image-preloader-active {
-  --sc-image-preloader-base: #eeeeeb;
-  --sc-image-preloader-highlight: #fafaf7;
+  --sc-image-preloader-base: #e3e3e2;
+  --sc-image-preloader-cycle: 1500ms;
+  --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
 }
 
-/* Colores del placeholder en tema oscuro. */
 html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
-  --sc-image-preloader-base: #151515;
-  --sc-image-preloader-highlight: #292929;
+  --sc-image-preloader-base: #292926;
+  --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
 }
 
 @media (prefers-color-scheme: light) {
   html.sc-image-preloader-active[data-sc-theme='system'] {
-    --sc-image-preloader-base: #eeeeeb;
-    --sc-image-preloader-highlight: #fafaf7;
+    --sc-image-preloader-base: #e3e3e2;
+    --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
   }
 }
 
 @media (prefers-color-scheme: dark) {
   html.sc-image-preloader-active[data-sc-theme='system'] {
-    --sc-image-preloader-base: #151515;
-    --sc-image-preloader-highlight: #292929;
+    --sc-image-preloader-base: #292926;
+    --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
   }
 }
 
-/* Prepara el contenedor para el shimmer. */
+body.sushiShop .listadoShop .productoShop .imgShop > img[data-sc-src]:not([src]),
+body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img[data-sc-src]:not([src]) {
+  display: block !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: transparent !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop {
   position: relative !important;
   isolation: isolate;
+  box-sizing: border-box !important;
   overflow: hidden !important;
-  background-color: var(--sc-image-preloader-base) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
-/* La imagen queda visible por defecto; JS activa el placeholder solo al cargar. */
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(100deg, transparent 18%, var(--sc-image-preloader-highlight) 50%, transparent 82%);
-  transform: translate3d(115%, 0, 0);
-  animation: none;
-  transition: none !important;
+  background: var(--sc-image-preloader-base);
 }
 
-/* Muestra el placeholder solo durante la carga real. */
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading::before,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading::before {
-  opacity: 1;
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
+  content: none !important;
+  display: none !important;
 }
 
-/* Activa shimmer cuando el contenedor entra en trabajo. */
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active::before,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active::before {
-  will-change: transform;
-  animation: sc-image-preloader-shimmer 1.08s cubic-bezier(.4, 0, .2, 1) infinite;
-}
-
-/* Estado base de la imagen. */
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop > img,
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img {
+  display: block !important;
   position: relative !important;
   z-index: 1;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
   opacity: 1 !important;
   visibility: visible !important;
   transform: none !important;
@@ -73,35 +89,105 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   will-change: auto;
 }
 
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading > img,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading > img {
-  opacity: 0 !important;
-  transform: none !important;
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-revealing,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-revealing {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: var(--sc-image-preloader-base) !important;
 }
 
-/* Retira el placeholder al completar la carga. */
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready::before,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-ready::before {
-  opacity: 0;
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-revealing::after,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-revealing::after {
+  opacity: var(--sc-image-preloader-cover-alpha, 1);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-loading.sc-image-active > img,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-loading.sc-image-active > img,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-revealing > img,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-revealing > img {
+  opacity: var(--sc-image-preloader-content-alpha, 0) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
+  .sc-card-placeholder-active.sc-card-placeholder-loading,
+  .sc-card-placeholder-revealing
+) > a.fancyboxModalAddProd::before,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
+  .sc-card-placeholder-active.sc-card-placeholder-loading,
+  .sc-card-placeholder-revealing
+) > a.fancyboxModalAddProd::after {
+  content: '';
+  display: block;
+  z-index: 4;
+  justify-self: stretch;
+  align-self: start;
+  pointer-events: none;
+  opacity: var(--sc-image-preloader-cover-alpha, 1);
+  background: var(--sc-image-preloader-base);
+  border-radius: 999px;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
+  .sc-card-placeholder-active.sc-card-placeholder-loading,
+  .sc-card-placeholder-revealing
+) > a.fancyboxModalAddProd::before {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  height: 12px;
+  margin-top: var(--sc-card-title-padding-top);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
+  .sc-card-placeholder-active.sc-card-placeholder-loading,
+  .sc-card-placeholder-revealing
+) > a.fancyboxModalAddProd::after {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  width: 86%;
+  height: 8px;
+  margin-top: calc(var(--sc-card-description-offset) + 1px);
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
+  .sc-card-placeholder-active.sc-card-placeholder-loading,
+  .sc-card-placeholder-revealing
+) > a.fancyboxModalAddProd > :not(.imgShop):not(.imgLiquidNoFillShop) {
+  opacity: var(--sc-image-preloader-content-alpha, 0) !important;
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading:not(.sc-card-placeholder-transitioning) {
+  will-change: opacity;
+  animation: sc-image-preloader-pulse var(--sc-image-preloader-cycle) linear infinite;
+  animation-delay: var(--sc-image-preloader-phase, var(--sc-image-preloader-clock, 0ms));
+}
+
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-revealing,
+html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-ready {
   animation: none;
   will-change: auto;
 }
 
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop.sc-image-ready > img,
-html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop.sc-image-ready > img {
-  opacity: 1 !important;
-  transform: none !important;
+@keyframes sc-image-preloader-pulse {
+  0% { opacity: 1; }
+  20% { opacity: 0; }
+  40% { opacity: 0; }
+  80% { opacity: 1; }
+  100% { opacity: 1; }
 }
 
-@keyframes sc-image-preloader-shimmer {
-  from { transform: translate3d(115%, 0, 0); }
-  to { transform: translate3d(-115%, 0, 0); }
-}
-
-/* Desactiva shimmer con movimiento reducido. */
 @media (prefers-reduced-motion: reduce) {
-  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgShop::before,
-  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop::before {
-    animation: none;
+  html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop.sc-card-placeholder-active.sc-card-placeholder-loading {
+    animation: none !important;
+    will-change: auto !important;
   }
 }

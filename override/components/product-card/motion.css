@@ -1,6 +1,6 @@
 /* Token local del componente. */
 body.sushiShop {
-  --sc-motion-card: 340ms;
+  --sc-motion-card: var(--sc-motion-medium3);
 }
 
 /* La card conserva geometría estable; el reveal mueve top y no transforma imágenes. */
@@ -22,15 +22,15 @@ body.sushiShop {
 .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   scale: 1;
   transform-origin: 50% 50%;
-  transition: scale 100ms var(--sc-motion-ease-out) !important;
+  transition: scale var(--sc-motion-short2) var(--sc-motion-ease-decelerate) !important;
   touch-action: manipulation;
 }
 .sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:active { scale: .995; }
 
 .sushiShop .productoShop .sumar {
   -webkit-transform-origin: 50% 50%;transform-origin: 50% 50%;touch-action: manipulation;
-  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
-  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-out),background-color var(--sc-motion-fast) var(--sc-motion-ease-out),border-color var(--sc-motion-fast) var(--sc-motion-ease-out),color var(--sc-motion-fast) var(--sc-motion-ease-out) !important;
+  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
+  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
 }
 .sushiShop .productoShop .sumar:active {-webkit-transform: scale(var(--sc-card-action-active-scale));transform: scale(var(--sc-card-action-active-scale));}
 .sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}

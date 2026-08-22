@@ -35,9 +35,31 @@
   --sc-catalog-inline-space: 64px;
   --sc-product-image-ratio: 286 / 200;
 
-  /* Motion común. Los módulos pueden ajustar duración, pero comparten curvas consistentes. */
-  --sc-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --sc-motion-fast: 160ms;
-  --sc-motion-theme: 560ms;
-  --sc-motion-icon: 180ms;
+  /* Duraciones y curvas compartidas por transiciones basadas en tiempo. */
+  --sc-motion-short1: 50ms;
+  --sc-motion-short2: 100ms;
+  --sc-motion-short3: 150ms;
+  --sc-motion-short4: 200ms;
+  --sc-motion-medium1: 250ms;
+  --sc-motion-medium2: 300ms;
+  --sc-motion-medium3: 350ms;
+  --sc-motion-medium4: 400ms;
+  --sc-motion-long1: 450ms;
+  --sc-motion-long2: 500ms;
+  --sc-motion-long3: 550ms;
+  --sc-motion-long4: 600ms;
+  --sc-motion-extra-long1: 700ms;
+  --sc-motion-extra-long2: 800ms;
+  --sc-motion-extra-long3: 900ms;
+  --sc-motion-extra-long4: 1000ms;
+  --sc-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --sc-motion-ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --sc-motion-ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --sc-motion-ease-linear: cubic-bezier(0, 0, 1, 1);
+
+  /* Alias semánticos existentes. */
+  --sc-motion-ease-out: var(--sc-motion-ease-decelerate);
+  --sc-motion-fast: var(--sc-motion-short3);
+  --sc-motion-theme: var(--sc-motion-long3);
+  --sc-motion-icon: var(--sc-motion-short4);
 }

@@ -6,7 +6,7 @@ body {
 }
 
 /* Diagnóstico de reveal: desactiva cualquier virtualización/containment heredado sobre las
-   unidades del catálogo para que IntersectionObserver y ScrollTrigger midan geometría real. */
+   unidades del catálogo para que los observadores de viewport midan geometría real. */
 body.sushiShop .listadoShop,
 body.sushiShop .listadoShop .titleShopSeccion,
 body.sushiShop .listadoShop .titleShopSeccion > div,
@@ -17,7 +17,7 @@ body.sushiShop .listadoShop .productoShop {
   contain-intrinsic-size: none !important;
 }
 
-/* El estado temprano ya existe cuando entra este CSS. Se libera cuando GSAP terminó de
+/* El estado temprano ya existe cuando entra este CSS. Se libera cuando el motor local terminó de
    preparar títulos y cards, evitando el flash visible previo al reveal. */
 @media (prefers-reduced-motion: no-preference) {
   html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .titleShopSeccion > div,

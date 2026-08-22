@@ -1,4 +1,4 @@
-/* Contrato global de color; GSAP interpola cambios manuales. */
+/* Contrato global de color; el motor local interpola cambios manuales. */
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;

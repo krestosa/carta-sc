@@ -1,0 +1,28 @@
+/* Icono grilla/lista con interpolación geométrica local de sus rectángulos SVG. */
+body.sushiShop .sc-view-state-icon {
+  display:block;
+  flex:0 0 var(--sc-view-icon-size,24px);
+  width:var(--sc-view-icon-size,24px);
+  height:var(--sc-view-icon-size,24px);
+  overflow:visible;
+  color:currentColor;
+  fill:currentColor;
+  transform-box:view-box;
+  transform-origin:50% 50%;
+}
+body.sushiShop .sc-view-state-icon [data-sc-view-live] rect,
+body.sushiShop .sc-view-state-icon [data-sc-view-live] path {
+  fill:currentColor;
+  shape-rendering:geometricPrecision;
+}
+body.sushiShop .sc-view-icon-targets {
+  visibility:hidden;
+  pointer-events:none;
+}
+body.sushiShop .sc-view-icon-targets rect,
+body.sushiShop .sc-view-icon-targets path {
+  fill:currentColor;
+}
+@media (prefers-reduced-motion:reduce) {
+  body.sushiShop .sc-view-state-icon { transition:none!important; }
+}
