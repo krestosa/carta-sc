@@ -10,11 +10,22 @@ import {
   type RewriteStats,
 } from './config.js';
 
+const REPOSITORY_SCAN_EXCLUDES = new Set([
+  '.git',
+  '.pages-site',
+  '.build',
+  '.generated',
+  '.migration',
+  'node_modules',
+  'handoff',
+]);
+
 export function repositoryStaticAssets(): string[] {
-  return walk(process.cwd()).filter((file) => {
-    if (file.includes(`${path.sep}.git${path.sep}`)) return false;
-    if (file.includes(`${path.sep}.pages-site${path.sep}`)) return false;
-    if (file.includes(`${path.sep}node_modules${path.sep}`)) return false;
+  const root = process.cwd();
+  return walk(root).filter((file) => {
+    const relative = path.relative(root, file);
+    const topLevel = relative.split(path.sep, 1)[0] ?? relative;
+    if (REPOSITORY_SCAN_EXCLUDES.has(topLevel)) return false;
     return FORBIDDEN_SUFFIXES.has(path.extname(file).toLowerCase());
   });
 }
