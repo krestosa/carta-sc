@@ -2,26 +2,24 @@
 body.sushiShop .sc-product-modal__title {
   margin: 0 !important;
   color: var(--sc-color-ink) !important;
-  font-family: var(--sc-font-primary) !important;
-  font-size: 20px !important;
-  line-height: var(--sc-modal-title-line-height) !important;
-  font-weight: var(--sc-font-weight-semibold) !important;
-  letter-spacing: -.025em !important;
+  font-family: var(--sc-type-modal-title-font-family) !important;
+  font-size: var(--sc-type-modal-title-font-size) !important;
+  line-height: var(--sc-type-modal-title-line-height) !important;
+  font-weight: var(--sc-type-modal-title-font-weight) !important;
+  letter-spacing: var(--sc-type-modal-title-letter-spacing) !important;
 }
 
-/* Precio vigente, tachado y rasgos siguen el mismo eje en todos los breakpoints. */
 body.sushiShop .sc-product-modal__price-row {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  column-gap: 6px !important;
+  column-gap: var(--sc-token-dimension-six) !important;
   row-gap: 0 !important;
   white-space: nowrap !important;
 }
 
-/* Tachado + rasgos forman una unidad compacta. */
 body.sushiShop .sc-product-modal__secondary-meta {
   display: inline-flex !important;
   order: 2 !important;
@@ -29,7 +27,7 @@ body.sushiShop .sc-product-modal__secondary-meta {
   align-items: center !important;
   align-self: center !important;
   justify-content: flex-start !important;
-  gap: 5px !important;
+  gap: var(--sc-token-dimension-five) !important;
   width: max-content !important;
   min-width: max-content !important;
   margin: 0 !important;
@@ -42,17 +40,16 @@ body.sushiShop .sc-product-modal__secondary-meta .ofertaPrice {
   margin: 0 !important;
 }
 
-/* Fuego y hoja conservan una base común dentro del grupo. */
 body.sushiShop .sc-product-modal__traits {
   display: inline-flex !important;
   order: 2 !important;
   flex: 0 0 auto !important;
   align-items: flex-end !important;
   align-self: center !important;
-  gap: 5px !important;
-  height: 13px !important;
-  min-height: 13px !important;
-  max-height: 13px !important;
+  gap: var(--sc-token-dimension-five) !important;
+  height: var(--sc-token-dimension-thirteen) !important;
+  min-height: var(--sc-token-dimension-thirteen) !important;
+  max-height: var(--sc-token-dimension-thirteen) !important;
   margin: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
@@ -69,31 +66,29 @@ body.sushiShop .sc-product-modal__traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
   align-self: flex-end !important;
-  max-width: 16px !important;
-  max-height: 13px !important;
+  max-width: var(--sc-token-dimension-sixteen) !important;
+  max-height: var(--sc-token-dimension-thirteen) !important;
   margin: 0 !important;
   overflow: visible !important;
   transform: none !important;
 }
 
-/* Compensa el vacío óptico inferior de la hoja para que apoye sobre la base de la llama. */
 body.sushiShop .sc-product-modal__traits .sc-trait-icon[data-sc-trait='vegetariano'] {
   align-self: flex-end !important;
-  transform: translateY(1px) !important;
+  transform: translateY(var(--sc-token-dimension-one)) !important;
   transform-origin: 50% 100% !important;
 }
 
-/* Descripción completa del producto. */
 body.sushiShop .sc-product-modal__description {
-  margin: 10px 0 0 !important;
+  margin: var(--sc-token-dimension-ten) 0 0 !important;
   color: var(--sc-color-copy) !important;
-  font-family: var(--sc-font-primary) !important;
-  font-size: 13.5px !important;
-  line-height: 1.52 !important;
-  font-weight: var(--sc-font-weight-regular) !important;
+  font-family: var(--sc-type-modal-body-font-family) !important;
+  font-size: var(--sc-type-modal-body-font-size) !important;
+  line-height: var(--sc-type-modal-body-line-height) !important;
+  font-weight: var(--sc-type-modal-body-font-weight) !important;
+  letter-spacing: var(--sc-type-modal-body-letter-spacing) !important;
 }
 
-/* Precio vigente. */
 body.sushiShop .sc-product-modal__price-row .price,
 body.sushiShop .sc-product-modal__price-row .priceHijass {
   order: 1 !important;
@@ -102,11 +97,14 @@ body.sushiShop .sc-product-modal__price-row .priceHijass {
   justify-self: start !important;
   margin: 0 !important;
   color: var(--sc-color-ink) !important;
-  font: var(--sc-font-weight-semibold) 17px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
+  font-family: var(--sc-type-modal-price-font-family) !important;
+  font-size: var(--sc-type-modal-price-font-size) !important;
+  line-height: var(--sc-type-modal-price-line-height) !important;
+  font-weight: var(--sc-type-modal-price-font-weight) !important;
+  letter-spacing: var(--sc-type-modal-price-letter-spacing) !important;
   white-space: nowrap !important;
 }
 
-/* Precio anterior tachado. */
 body.sushiShop .sc-product-modal__price-row .ofertaPrice {
   order: 1 !important;
   flex: 0 0 auto !important;
@@ -114,7 +112,11 @@ body.sushiShop .sc-product-modal__price-row .ofertaPrice {
   justify-self: start !important;
   margin: 0 !important;
   color: var(--sc-color-muted) !important;
-  font: var(--sc-font-weight-regular) 12px/var(--sc-modal-title-line-height) var(--sc-font-primary) !important;
+  font-family: var(--sc-token-font-family-primary) !important;
+  font-size: var(--sc-token-dimension-font-twelve) !important;
+  line-height: var(--sc-token-number-line-height-modal-title) !important;
+  font-weight: var(--sc-token-font-weight-regular) !important;
+  letter-spacing: var(--sc-token-dimension-tracking-zero) !important;
   text-decoration: line-through !important;
   white-space: nowrap !important;
 }
