@@ -1,33 +1,53 @@
 # Design token architecture
 
-`design.tokens.json` is the only design-token source. It follows the DTCG Format Module 2025.10 vocabulary and contains only application-wide, platform-agnostic design decisions.
+`tokens/design.tokens.json` is the only design-token source. It follows the Design Tokens Community Group Format Module 2025.10 vocabulary directly.
 
-## Ownership rule
+The file intentionally does not use a `$schema` property. The 2025.10 Format Module does not define one; properties beginning with `$` are reserved by the format, so adding a tool-specific `$schema` would make the source less portable rather than more conformant.
 
-A value belongs in `design.tokens.json` only when all of these are true:
+## What belongs in DTCG
 
-1. It represents a design decision rather than implementation mechanics.
-2. It is meaningful across multiple components or platforms.
-3. Changing it is expected to update the product systemically.
-4. Its value can be expressed with an official DTCG 2025.10 `$type`.
+A value belongs in `design.tokens.json` only when it is a product-wide design decision that is meaningful across component boundaries and can be represented with an official DTCG 2025.10 `$type`.
 
-Examples: semantic theme colors, the primary font family and weights, accessibility focus/touch dimensions, shared motion duration/easing vocabulary, and shared semantic borders.
+Current global token types:
 
-A value belongs in a component or feature CSS custom property when it is owned by that UI unit and is reused, overridden by state/theme/responsiveness, or improves readability. Examples: modal radius, submenu shadow, filter-chip height, sticky-shadow opacity, component z-index, and component typography sizes.
+- `color`: palette and semantic light/dark theme colors.
+- `dimension`: responsive boundaries, accessibility dimensions and shared layout alignment.
+- `fontFamily`: application typeface stacks.
+- `fontWeight`: application font weights.
+- `number`: only genuinely shared unitless values such as the product-media aspect ratio and semantic layer level.
+- `typography`: semantic heading/body roles. Font size, weight, family, tracking and line height live together in the official composite.
+- `border`: semantic default, strong and focus borders.
 
-A value belongs in local TypeScript configuration when it controls runtime implementation rather than visual-system semantics. Examples: spring physics, orchestration delays, animation offsets, batching policy, and measurement tolerances.
+The builder accepts only official 2025.10 types. A type being supported by DTCG does not mean the project must create a token of that type.
 
-A one-off value stays a literal when naming it would not add semantics or reuse.
+## What does not belong in DTCG
 
-## Boundaries
+Component geometry, one-off spacing, component radii, component shadows, local opacity, local z-index, local text sizes and similar implementation details stay with their owning CSS file as local custom properties when reuse or responsive/state override justifies a variable. Otherwise they stay as literals.
 
-- Do not create additional `*.tokens.json` documents for components.
-- Do not create numeric token tables such as `dimension.one`, `dimension.two`, etc.
-- Do not invent `$type` values. The builder accepts only the DTCG 2025.10 types.
-- The standard defines an allowed type vocabulary; the project does not need to instantiate every type.
-- Springs are not a DTCG 2025.10 token type and remain runtime motion configuration.
-- Application CSS does not consume canonical `--sc-token-*` variables directly. Generated semantic platform aliases such as `--sc-color-*`, `--sc-font-*`, `--sc-motion-*`, `--sc-transition-*`, `--sc-border-*`, `--sc-focus-*`, and `--sc-touch-target` form the CSS API.
-- Application TypeScript consumes generated token data only through the owning adapters (`core/variables.ts` for media and `motion/config.ts` for motion).
-- `tokens.generated.css` and `tokens.generated.ts` are build artifacts and must never be edited by hand.
+Do not create numeric token tables such as `dimension.one`, `spacing.4` or equivalent. Names must describe a design decision, not restate a raw number.
 
-`npm run tokens:verify` validates the DTCG document, regenerates platform artifacts, and runs the architecture audit in strict mode.
+Motion is intentionally TypeScript-owned. Animation durations, easings, springs, orchestration offsets and runtime timing constants live under `override/motion/` or the feature/component TypeScript that owns them. DTCG `duration`, `cubicBezier` and `transition` are valid standard types, but this project does not use them because motion is maintained alongside the runtime.
+
+## Penpot / Tokens Studio compatibility
+
+Names such as `spacing`, `sizing`, `font-size`, `letter-spacing`, `border-radius`, `stroke-width`, `opacity`, `rotation`, `text-case` and `text-decoration` may appear as token categories in design tools. They are not all DTCG `$type` values.
+
+For DTCG 2025.10 interoperability:
+
+- spacing, sizing, font size, letter spacing, radius and stroke width are represented as `dimension`;
+- opacity and rotation can only be represented as `number` when they are truly global design decisions;
+- text case and text decoration are not 2025.10 token types and remain tool/platform concerns;
+- complete type styles use the standard `typography` composite token.
+
+Tool-specific metadata belongs in `$extensions` only when it is actually required. The canonical source does not depend on Penpot or Tokens Studio extensions.
+
+## Generated platform API
+
+`npm run tokens:build` generates:
+
+- `override/core/tokens.generated.css`: the small CSS API for global design decisions.
+- `override/core/tokens.generated.ts`: media-query constants derived from global breakpoint tokens.
+
+Application CSS consumes those semantic generated variables rather than raw token paths. Component variables remain local to their owner.
+
+`npm run tokens:verify` validates the DTCG file, rebuilds the generated artifacts, verifies that the committed generated files are current, and runs the architecture audit in strict mode.
