@@ -58,6 +58,7 @@ body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSe
 
 body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source.sc-search-first-visible > .titleShopSeccion:not([hidden]) {
   margin-top: 0 !important;
+  margin-bottom: calc(-1 * var(--sc-space-large)) !important;
 }
 
 body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source.sc-search-first-visible > .titleShopSeccion:not([hidden]) > div {
