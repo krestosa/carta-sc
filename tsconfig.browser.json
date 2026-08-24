@@ -17,8 +17,7 @@
   },
   "include": [
     "types/browser.d.ts",
-    "override/**/*.ts",
-    "styles/**/*.ts"
+    "override/**/*.ts"
   ],
   "exclude": [
     ".generated",
