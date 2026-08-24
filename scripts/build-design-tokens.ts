@@ -82,9 +82,7 @@ function resolveValue(value: unknown, stack: string[] = []): unknown {
   }
   if (Array.isArray(value)) return value.map((item) => resolveValue(item, stack));
   if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, resolveValue(item, stack)]),
-    );
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveValue(item, stack)]));
   }
   return value;
 }
@@ -242,6 +240,8 @@ const shapeNames = ['none', 'extraSmall', 'menu', 'control', 'card', 'dialog', '
 const spacingNames = [
   'extraSmall', 'small', 'medium', 'large', 'extraLarge', 'doubleExtraLarge', 'tripleExtraLarge', 'quadExtraLarge',
 ] as const;
+const stateOpacityNames = ['disabled', 'muted', 'placeholder', 'hover', 'focus', 'pressed', 'dragged'] as const;
+const elevationNames = ['level0', 'level1', 'level2', 'level3', 'level4', 'level5', 'menu', 'popover', 'dialog'] as const;
 const typographyEntries = [
   ['heading1.desktop', 'heading-1'], ['heading2', 'heading-2'], ['heading3.desktop', 'heading-3'],
   ['heading4', 'heading-4'], ['bodyLarge', 'body-large'], ['body', 'body'], ['bodySmall', 'body-small'],
@@ -287,12 +287,8 @@ const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. 
   --sc-layer-mobile-menu: ${cssValue('system.layer.mobileMenu')};
   --sc-layer-mobile-panel: ${cssValue('system.layer.mobilePanel')};
   --sc-layer-modal: ${cssValue('system.layer.modal')};
-  --sc-state-opacity-disabled: ${cssValue('system.state.opacity.disabled')};
-  --sc-state-opacity-muted: ${cssValue('system.state.opacity.muted')};
-  --sc-state-opacity-placeholder: ${cssValue('system.state.opacity.placeholder')};
-  --sc-elevation-menu: ${cssValue('system.elevation.menu')};
-  --sc-elevation-popover: ${cssValue('system.elevation.popover')};
-  --sc-elevation-dialog: ${cssValue('system.elevation.dialog')};
+${stateOpacityNames.map((name) => `  --sc-state-opacity-${cssName(name)}: ${cssValue(`system.state.opacity.${name}`)};`).join('\n')}
+${elevationNames.map((name) => `  --sc-elevation-${cssName(name)}: ${cssValue(`system.elevation.${name}`)};`).join('\n')}
 ${shapeNames.map((name) => `  --sc-shape-${cssName(name)}: ${cssValue(`system.shape.${name}`)};`).join('\n')}
 ${spacingNames.map((name) => `  --sc-space-${cssName(name)}: ${cssValue(`system.spacing.${name}`)};`).join('\n')}
 ${durationNames.map((name) => `  --sc-motion-${cssName(name)}: ${cssValue(`system.motion.duration.${name}`)};`).join('\n')}
@@ -398,11 +394,14 @@ const systemTokenObject = {
   typography: typographyObject,
   shape: Object.fromEntries(shapeNames.map((name) => [name, cssValue(`system.shape.${name}`)])),
   spacing: Object.fromEntries(spacingNames.map((name) => [name, cssValue(`system.spacing.${name}`)])),
-  state: { opacity: {
-    disabled: numberValue('system.state.opacity.disabled'),
-    muted: numberValue('system.state.opacity.muted'),
-    placeholder: numberValue('system.state.opacity.placeholder'),
-  } },
+  size: {
+    touchTarget: cssValue('system.size.touchTarget'),
+    icon: cssValue('system.size.icon'),
+  },
+  state: {
+    opacity: Object.fromEntries(stateOpacityNames.map((name) => [name, numberValue(`system.state.opacity.${name}`)])),
+  },
+  elevation: Object.fromEntries(elevationNames.map((name) => [name, cssValue(`system.elevation.${name}`)])),
   layer: {
     raised: numberValue('system.layer.raised'), sticky: numberValue('system.layer.sticky'),
     popover: numberValue('system.layer.popover'), mobileMenu: numberValue('system.layer.mobileMenu'),
