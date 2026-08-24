@@ -83,7 +83,7 @@ export class SearchResultPresenter {
       this.#orderGroupContent(group, query, epoch);
     }
 
-    this.#reorderHosts(hosts, query);
+    this.#reorderHosts(hosts, query, true);
     this.#visibleItems = visible;
     return visible;
   }
@@ -122,7 +122,7 @@ export class SearchResultPresenter {
       }
     }
 
-    this.#reorderHosts(hosts, '');
+    this.#reorderHosts(hosts, '', false);
     this.#active = false;
     this.#visibleItems = [...searchable];
   }
@@ -171,7 +171,7 @@ export class SearchResultPresenter {
     });
   }
 
-  #reorderHosts(hosts: readonly SearchHost[], query: string): void {
+  #reorderHosts(hosts: readonly SearchHost[], query: string, markFirstVisible: boolean): void {
     for (const host of hosts) {
       const ordered = query
         ? host.groups.slice().sort((a, b) => {
@@ -181,6 +181,14 @@ export class SearchResultPresenter {
             return a.index - b.index;
           })
         : host.groups.slice().sort((a, b) => a.index - b.index);
+
+      const firstVisible = markFirstVisible
+        ? ordered.find((group) => group.visible && !group.node.hidden)
+        : undefined;
+      for (const group of host.groups) {
+        group.node.classList.toggle('sc-search-first-visible', group === firstVisible);
+      }
+
       const signature = `${query ? 'q' : 'o'}:${ordered.map((group) => group.index).join(',')}`;
       if (signature === host.signature) continue;
 
