@@ -12,6 +12,7 @@ import { normalizeSearchText } from './search-ranking.js';
 import { SearchResultPresenter } from './search-results.js';
 
 const SEARCH_UPDATING_CLASS = 'sc-catalog-search-updating';
+const SEARCH_INPUT_DELAY_MS = 55;
 
 export interface CatalogSearchOptions {
   readonly onRestore?: () => void;
@@ -25,7 +26,6 @@ export class CatalogSearchController {
 
   #nodes: SearchNodes | null = null;
   #lastState = '';
-  #inputFrame = 0;
   #inputTask = 0;
   #pendingInputValue = '';
 
@@ -179,29 +179,22 @@ export class CatalogSearchController {
 
   #scheduleInputApply(value: string): void {
     this.#pendingInputValue = value;
-    if (this.#inputFrame || this.#inputTask) return;
+    if (this.#inputTask) clearTimeout(this.#inputTask);
 
-    this.#inputFrame = requestAnimationFrame(() => {
-      this.#inputFrame = 0;
+    // A short trailing debounce collapses key-repeat and rapid deletion into one catalogue pass.
+    // This avoids repeatedly ranking and mutating hundreds of cards while keeping input latency low.
+    this.#inputTask = window.setTimeout(() => {
+      this.#inputTask = 0;
       if (!this.#nodes) return;
-
-      // Let the browser paint the typed character before mutating the catalogue. Multiple input
-      // events within the same frame collapse into one search update, which is critical on mobile.
-      this.#inputTask = window.setTimeout(() => {
-        this.#inputTask = 0;
-        if (!this.#nodes) return;
-        const nextValue = this.#pendingInputValue;
-        this.#pendingInputValue = '';
-        this.#lastState = '';
-        this.apply(nextValue);
-      }, 0);
-    });
+      const nextValue = this.#pendingInputValue;
+      this.#pendingInputValue = '';
+      this.#lastState = '';
+      this.apply(nextValue);
+    }, SEARCH_INPUT_DELAY_MS);
   }
 
   #cancelPendingInput(): void {
-    if (this.#inputFrame) cancelAnimationFrame(this.#inputFrame);
     if (this.#inputTask) clearTimeout(this.#inputTask);
-    this.#inputFrame = 0;
     this.#inputTask = 0;
     this.#pendingInputValue = '';
   }
