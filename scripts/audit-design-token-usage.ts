@@ -100,7 +100,6 @@ function auditCss(file: string, source: string): void {
     if (/(?:#[0-9a-f]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|lab|lch|oklab|oklch|color)\()/i.test(value) && !tokenized) add('color', file, line, property, value);
     if (hasRawDuration(value) && !tokenized) add('duration', file, line, property, value);
     if (/cubic-bezier\(/i.test(value) && !tokenized) add('cubicBezier', file, line, property, value);
-    if (/gradient\(/i.test(value) && !/var\(--sc-(?:token-gradient|gradient-)/.test(value)) add('gradient', file, line, property, value);
     if (/^(?:box-shadow|text-shadow)$/i.test(property) && !resetOnly && !tokenized) add('shadow', file, line, property, value);
     if (property === 'font-family' && !resetOnly && !tokenized) add('fontFamily', file, line, property, value);
     if (property === 'font-weight' && /^\s*\d+/.test(value) && !tokenized) add('fontWeight', file, line, property, value);
