@@ -1,4 +1,4 @@
-/* Precios de card; cada vista decide la posición de la fila. */
+/* Precios de card; precio vigente y rasgos comparten una misma línea visual. */
 body.sushiShop {
   --sc-card-compact-price-row-height: 18px;
   --sc-card-list-price-row-height: 18px;
@@ -13,12 +13,15 @@ body.sushiShop .listadoShop .productoShop .priceRow {
   display: flex !important;
   grid-column: 2;
   grid-row: 2;
-  flex-direction: column !important;
+  flex-direction: row !important;
   flex-wrap: nowrap !important;
-  align-items: flex-end !important;
-  justify-content: flex-start !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
   align-self: start;
-  gap: var(--sc-card-price-gap) !important;
+  justify-self: end;
+  column-gap: 6px !important;
+  row-gap: 0 !important;
+  width: max-content !important;
   min-width: var(--sc-card-price-width) !important;
   min-height: var(--sc-card-title-height) !important;
   margin: 0 !important;
@@ -29,10 +32,11 @@ body.sushiShop .listadoShop .productoShop .priceRow {
   font-variant-numeric: tabular-nums;
 }
 
-/* Precio vigente. */
 body.sushiShop .listadoShop .productoShop .price,
 body.sushiShop .listadoShop .productoShop .priceHijass {
   order: 1;
+  flex: 0 0 auto !important;
+  align-self: center !important;
   float: none !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -42,12 +46,13 @@ body.sushiShop .listadoShop .productoShop .priceHijass {
   line-height: var(--sc-card-price-line-height) !important;
   font-weight: var(--sc-font-weight-semibold) !important;
   letter-spacing: var(--sc-card-price-tracking) !important;
+  white-space: nowrap !important;
 }
 
-/* Precio anterior tachado; queda detrás del vigente también antes de normalizar el DOM. */
 body.sushiShop .listadoShop .productoShop .ofertaPrice {
   order: 2;
   flex: 0 0 auto !important;
+  align-self: center !important;
   float: none !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -61,22 +66,85 @@ body.sushiShop .listadoShop .productoShop .ofertaPrice {
   opacity: 1 !important;
 }
 
-body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
-  display: none !important;
+/* Precio anterior e iconos forman una unidad horizontal cuando ambos existen. */
+body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  order: 2 !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  align-self: center !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
 }
 
-/* Compacta y lista mantienen precio y metadata unidos; el bloque secundario baja completo si no entra. */
+/* 1/2/3 fuegos y hoja usan su geometría SVG original y comparten base. */
+body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  order: 2 !important;
+  flex: 0 0 auto !important;
+  align-items: flex-end !important;
+  align-self: center !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: auto !important;
+  height: 13px !important;
+  min-height: 13px !important;
+  max-height: 13px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--sc-color-trait) !important;
+  line-height: 0 !important;
+  overflow: visible !important;
+}
+
+body.sushiShop .listadoShop .productoShop .sc-product-price-traits img {
+  display: block !important;
+  flex: 0 0 auto !important;
+  align-self: flex-end !important;
+  max-width: 16px !important;
+  max-height: 13px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  overflow: visible !important;
+}
+
+body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
+  display: block !important;
+  flex: 0 0 auto !important;
+  align-self: flex-end !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: 13px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  transform: none !important;
+}
+
+/* La hoja baja ópticamente hasta apoyar en la misma base de los fuegos. */
+body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait='vegetariano'] {
+  align-self: flex-end !important;
+  transform: translateY(1px) !important;
+  transform-origin: 50% 100% !important;
+}
+
+/* Compacta y lista pueden quebrar el bloque secundario completo, pero nunca separan precio e iconos dentro de su grupo. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-flavors,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   display: none !important;
 }
 
-/* Una única geometría para phone, tablet y desktop: precio vigente anclado al inicio y
-   tachado + rasgos inmediatamente después. El centrado es vertical, no horizontal. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow,
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
-  display: flex !important;
-  flex-direction: row !important;
   flex-wrap: wrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
@@ -106,78 +174,21 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   white-space: nowrap !important;
 }
 
-/* El tachado e iconos forman una unidad. Así, si falta ancho, bajan juntos sin mover el precio vigente. */
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  order: 2 !important;
-  flex: 0 0 auto !important;
+/* Normal es la variante legacy de compact: mantiene precio e iconos en la misma línea. */
+html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .priceRow {
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  align-self: center !important;
   justify-content: flex-start !important;
-  gap: 5px !important;
+  justify-self: start !important;
+  column-gap: 6px !important;
   width: max-content !important;
-  min-width: max-content !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  min-width: 0 !important;
+  min-height: var(--sc-card-compact-price-row-height) !important;
   white-space: nowrap !important;
 }
 
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta .ofertaPrice,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta .ofertaPrice {
-  align-self: center !important;
-  margin: 0 !important;
-}
-
-/* Fuego y hoja comparten base dentro del grupo, sin depender del baseline tipográfico. */
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  order: 2 !important;
-  flex: 0 0 auto !important;
-  align-items: flex-end !important;
-  align-self: center !important;
-  justify-content: flex-start !important;
-  gap: 5px !important;
-  width: auto !important;
-  height: 13px !important;
-  min-height: 13px !important;
-  max-height: 13px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  color: var(--sc-color-trait) !important;
-  line-height: 0 !important;
-  overflow: visible !important;
-}
-
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits img,
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon {
-  display: block !important;
-  flex: 0 0 auto !important;
-  align-self: flex-end !important;
-  max-width: 16px !important;
-  max-height: 13px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  object-fit: contain !important;
-  overflow: visible !important;
-  transform: none !important;
-}
-
-/* La hoja tiene un vacío óptico inferior distinto al fuego; baja 1px para compartir su base. */
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait='vegetariano'],
-html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .sc-product-price-traits .sc-trait-icon[data-sc-trait='vegetariano'] {
-  align-self: flex-end !important;
-  transform: translateY(1px) !important;
-  transform-origin: 50% 100% !important;
-}
-
-/* view-stability.css se carga después y usa baseline en lista. Esta variante más específica
-   preserva el centrado vertical cuando existe precio anterior sin depender del orden del CSS. */
+/* view-stability.css se carga después y usa baseline en lista. Esta variante preserva el centro óptico. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow.sc-price-row-has-offer {
   align-items: center !important;
 }

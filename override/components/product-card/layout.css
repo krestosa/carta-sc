@@ -39,7 +39,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   display: grid !important;
   position: relative !important;
   flex: 1 1 auto;
-  grid-template-columns: minmax(0, 1fr) var(--sc-card-price-width);
+  grid-template-columns: minmax(0, 1fr) minmax(var(--sc-card-price-width), max-content);
   grid-template-rows: auto auto auto var(--sc-card-meta-row-height);
   column-gap: var(--sc-card-content-gap);
   align-content: start;
