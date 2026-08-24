@@ -1,53 +1,65 @@
 # Design token architecture
 
-`tokens/design.tokens.json` is the only design-token source. It follows the Design Tokens Community Group Format Module 2025.10 vocabulary directly.
+`tokens/design.tokens.json` is the canonical reusable design language for SushiClub web interfaces. It uses DTCG 2025.10 value shapes, aliases and standard `$type` values, while the project decides which design decisions are worth turning into tokens.
 
-The file intentionally does not use a `$schema` property. The 2025.10 Format Module does not define one; properties beginning with `$` are reserved by the format, so adding a tool-specific `$schema` would make the source less portable rather than more conformant.
+## Two layers
 
-## What belongs in DTCG
+The file has two deliberate layers:
 
-A value belongs in `design.tokens.json` only when it is a product-wide design decision that is meaningful across component boundaries and can be represented with an official DTCG 2025.10 `$type`.
+- `reference`: foundational values. Application CSS and TypeScript must not consume these directly.
+- `system`: the public semantic API. Generated CSS and TypeScript are derived only from this layer.
 
-Current global token types:
+This keeps raw values replaceable without coupling components to a palette, numeric scale or implementation detail.
 
-- `color`: palette and semantic light/dark theme colors.
-- `dimension`: responsive boundaries, accessibility dimensions and shared layout alignment.
-- `fontFamily`: application typeface stacks.
-- `fontWeight`: application font weights.
-- `number`: only genuinely shared unitless values such as the product-media aspect ratio and semantic layer level.
-- `typography`: semantic heading/body roles. Font size, weight, family, tracking and line height live together in the official composite.
-- `border`: semantic default, strong and focus borders.
+## What becomes a token
 
-The builder accepts only official 2025.10 types. A type being supported by DTCG does not mean the project must create a token of that type.
+Promote a value when it is part of the reusable visual language, is expected to appear on more than one page/component, or must stay synchronized between design, CSS and TypeScript.
 
-## What does not belong in DTCG
+Current system areas include:
 
-Component geometry, one-off spacing, component radii, component shadows, local opacity, local z-index, local text sizes and similar implementation details stay with their owning CSS file as local custom properties when reuse or responsive/state override justifies a variable. Otherwise they stay as literals.
+- semantic light/dark colors and scrim;
+- font family, weights and reusable typography roles;
+- reusable corner shapes;
+- the site spacing vocabulary;
+- shared layout boundaries and gutters;
+- accessibility sizes and strokes;
+- semantic borders;
+- reusable elevations;
+- shared state opacity;
+- global layer levels;
+- shared media aspect ratios;
+- motion durations, curves, transitions and spring parameters.
 
-Do not create numeric token tables such as `dimension.one`, `spacing.4` or equivalent. Names must describe a design decision, not restate a raw number.
+Only standard DTCG 2025.10 `$type` names are used. Project concepts such as `shape`, `spacing`, `layer`, `state`, `media` and `motion.spring` are groups, not custom token types. For example, corner radii and spacing use `dimension`, layer levels and spring parameters use `number`, and complete text styles use `typography`.
 
-Motion is intentionally TypeScript-owned. Animation durations, easings, springs, orchestration offsets and runtime timing constants live under `override/motion/` or the feature/component TypeScript that owns them. DTCG `duration`, `cubicBezier` and `transition` are valid standard types, but this project does not use them because motion is maintained alongside the runtime.
+Do not create a token merely because a literal exists. A one-off `6px` offset remains a literal; a component-specific value that needs local overrides remains a custom property owned by that component. Tokens represent reusable decisions, not a catalog of numbers.
 
-## Penpot / Tokens Studio compatibility
+## Component ownership
 
-Names such as `spacing`, `sizing`, `font-size`, `letter-spacing`, `border-radius`, `stroke-width`, `opacity`, `rotation`, `text-case` and `text-decoration` may appear as token categories in design tools. They are not all DTCG `$type` values.
+Generated global variables are the public system API. Component variables remain private to their owner:
 
-For DTCG 2025.10 interoperability:
+- `--sc-card-*` belongs to product-card;
+- `--sc-modal-*` belongs to product-modal;
+- `--sc-category-*` belongs to category navigation;
+- feature-specific prefixes follow the same rule.
 
-- spacing, sizing, font size, letter spacing, radius and stroke width are represented as `dimension`;
-- opacity and rotation can only be represented as `number` when they are truly global design decisions;
-- text case and text decoration are not 2025.10 token types and remain tool/platform concerns;
-- complete type styles use the standard `typography` composite token.
+If another owner needs one of those values, either the dependency is wrong or the value should be promoted to the system token file.
 
-Tool-specific metadata belongs in `$extensions` only when it is actually required. The canonical source does not depend on Penpot or Tokens Studio extensions.
+## Motion ownership
 
-## Generated platform API
+Motion values are tokens because timing, easing and spring behavior form a reusable interaction language across the site. TypeScript owns orchestration, sequencing and runtime behavior.
+
+`tokens/design.tokens.json` therefore owns durations, easing curves, transition presets and spring parameters. `tokens.generated.ts` exposes those values, and `override/motion/config.ts` composes them for the animation engine. There is no second set of hardcoded motion constants.
+
+## Generated APIs
 
 `npm run tokens:build` generates:
 
-- `override/core/tokens.generated.css`: the small CSS API for global design decisions.
-- `override/core/tokens.generated.ts`: media-query constants derived from global breakpoint tokens.
+- `override/core/tokens.generated.css` for CSS;
+- `override/core/tokens.generated.ts` for TypeScript.
 
-Application CSS consumes those semantic generated variables rather than raw token paths. Component variables remain local to their owner.
+Generated files are outputs and must not be edited by hand. Reference tokens are never emitted as public CSS variables.
 
-`npm run tokens:verify` validates the DTCG file, rebuilds the generated artifacts, verifies that the committed generated files are current, and runs the architecture audit in strict mode.
+## Validation
+
+`npm run tokens:verify` validates the token document, regenerates platform outputs and runs the architecture audit. The audit rejects unsupported `$type` values, broken aliases, legacy token APIs, direct reference-layer consumption, duplicated global palette/easing literals and invalid cross-component custom-property ownership.

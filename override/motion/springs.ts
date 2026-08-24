@@ -1,23 +1,28 @@
+import { systemTokens } from '../core/tokens.generated.js';
 import type { MotionSpringSpec } from './types.js';
 
 type SpringPreset = Readonly<MotionSpringSpec>;
+type SpringGroup = Readonly<Record<string, SpringPreset>>;
 
-const preset = (stiffness: number, damping: number): SpringPreset => Object.freeze({ stiffness, damping });
+const preset = (value: { readonly stiffness: number; readonly damping: number }): SpringPreset =>
+  Object.freeze({ stiffness: value.stiffness, damping: value.damping });
+
+const spring = systemTokens.motion.springs;
 
 export const motionSprings = Object.freeze({
   spatial: Object.freeze({
-    fast: preset(1400, 0.9),
-    default: preset(700, 0.9),
-    slow: preset(300, 0.9),
-  }),
+    fast: preset(spring.spatial.fast),
+    default: preset(spring.spatial.default),
+    slow: preset(spring.spatial.slow),
+  }) satisfies SpringGroup,
   effects: Object.freeze({
-    fast: preset(3800, 1),
-    default: preset(1600, 1),
-    slow: preset(800, 1),
-  }),
+    fast: preset(spring.effects.fast),
+    default: preset(spring.effects.default),
+    slow: preset(spring.effects.slow),
+  }) satisfies SpringGroup,
   indicator: Object.freeze({
-    soft: preset(500, 1),
-    firm: preset(1000, 1),
-  }),
-  focus: preset(1500, 1),
+    soft: preset(spring.indicator.soft),
+    firm: preset(spring.indicator.firm),
+  }) satisfies SpringGroup,
+  focus: preset(spring.focus),
 });
