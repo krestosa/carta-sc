@@ -12,8 +12,6 @@
     "rootDir": ".",
     "outDir": ".generated/browser",
     "removeComments": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "noEmitOnError": true,
     "types": []
   },
