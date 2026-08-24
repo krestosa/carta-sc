@@ -14,7 +14,6 @@ body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
   right: calc(-1 * var(--sc-space-extra-small));
   bottom: calc(-1 * var(--sc-space-large));
   left: calc(-1 * var(--sc-space-extra-small));
-  z-index: -1;
   border-radius: var(--sc-shape-control);
   background: currentColor;
   opacity: 0;
