@@ -1,4 +1,5 @@
-/* Alinea ópticamente iconos y texto dentro de una misma caja vertical de 16px. */
+/* Alineación óptica compartida por desktop, tablet y mobile. Los breakpoints no alteran
+   la caja interna de icono/texto: solo pueden cambiar la densidad exterior del toolbar. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox {
   display: inline-flex !important;
   align-items: center !important;
@@ -10,9 +11,13 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   align-items: center !important;
   justify-content: center !important;
   align-self: center !important;
+  width: auto !important;
+  min-width: 0 !important;
   height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
   line-height: 0 !important;
-  transform: translateY(1px) !important;
+  transform: none !important;
 }
 
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .ref_label {
@@ -20,11 +25,13 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   align-items: center !important;
   align-self: center !important;
   min-height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
   line-height: 16px !important;
 }
 
 /* Iguala el alto óptico de cada llama en los tres niveles de picante. El ancho queda libre
-   para conservar la cantidad y proporción original de llamas sin deformar ningún SVG. */
+   para que el gap hacia el texto se mida desde el borde real de cada SVG. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='poco picante'] .sc-trait-icon,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='picante'] .sc-trait-icon,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='muy picante'] .sc-trait-icon {
@@ -32,10 +39,14 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   height: 10.667px !important;
   min-height: 10.667px !important;
   max-height: 10.667px !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
 }
 
-/* La hoja conserva su apoyo relativo sobre la misma base óptica que los fuegos. */
+/* En filtros la hoja usa el mismo centro de caja que los fuegos. Los offsets ópticos que
+   existen junto al precio/card no se heredan a los chips. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon[data-sc-trait='vegetariano'] {
-  transform: translateY(1px) !important;
-  transform-origin: 50% 100% !important;
+  align-self: center !important;
+  transform: none !important;
+  transform-origin: 50% 50% !important;
 }
