@@ -74,3 +74,17 @@ body.sushiShop ::selection {
   background: var(--sc-color-ink);
   color: var(--sc-color-surface);
 }
+
+/* Los SVG de picor/vegetariano provienen de símbolos heredados que pueden traer tinta negra fija.
+   En tema oscuro normalizamos únicamente su salida visual, preservando geometría, alpha y tema claro. */
+html[data-sc-theme-resolved='dark'] body.sushiShop .sc-trait-icon {
+  filter: brightness(0) invert(1) !important;
+  opacity: .72 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-sc-theme='system'] body.sushiShop .sc-trait-icon {
+    filter: brightness(0) invert(1) !important;
+    opacity: .72 !important;
+  }
+}
