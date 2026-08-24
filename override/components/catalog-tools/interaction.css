@@ -55,10 +55,15 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   outline:0!important;background:transparent!important;color:var(--sc-color-heading)!important;opacity:1!important;cursor:pointer!important;white-space:nowrap!important;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   transition:border-color var(--sc-transition-standard),background-color var(--sc-transition-standard),color var(--sc-transition-standard),box-shadow var(--sc-transition-standard)!important;
 }
+/* El wrapper abraza el SVG real: el gap hacia el texto se mide desde el borde visual del icono,
+   no desde una caja fija que penalizaba al fuego simple. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .imgRef{
-  display:inline-flex!important;flex:0 0 var(--sc-filter-icon-size)!important;align-items:center!important;justify-content:center!important;width:var(--sc-filter-icon-size)!important;min-width:var(--sc-filter-icon-size)!important;height:var(--sc-filter-icon-size)!important;margin:0!important;padding:0!important;color:currentColor!important;line-height:0!important;
+  display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:0!important;height:var(--sc-filter-icon-size)!important;margin:0!important;padding:0!important;color:currentColor!important;line-height:0!important;
 }
-body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .imgRef .sc-trait-icon{flex:0 0 auto!important;max-width:var(--sc-filter-icon-size)!important;max-height:var(--sc-filter-icon-size)!important;margin:0!important;}
+/* En filtros todos los traits se centran por su caja SVG. Los offsets ópticos de card/precio no aplican aquí. */
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .imgRef .sc-trait-icon{
+  display:block!important;flex:0 0 auto!important;align-self:center!important;width:auto!important;height:auto!important;max-width:none!important;max-height:var(--sc-filter-icon-size)!important;margin:0!important;transform:none!important;transform-origin:50% 50%!important;
+}
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .ref_label{display:block!important;flex:0 0 auto!important;margin:0!important;padding:0!important;color:currentColor!important;line-height:16px!important;white-space:nowrap!important;}
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::before{content:''!important;position:absolute!important;inset:0!important;z-index:0!important;border-radius:inherit!important;background:var(--sc-state-layer-color)!important;opacity:0!important;pointer-events:none!important;transition:opacity var(--sc-transition-fast)!important;}
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip::after{content:none!important;display:none!important;}
