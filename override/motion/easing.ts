@@ -1,3 +1,5 @@
+import { motionConfig } from './config.js';
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -9,11 +11,17 @@ interface CubicBezier {
   readonly y2: number;
 }
 
-const STANDARD_BEZIER: CubicBezier = Object.freeze({ x1: 0.2, y1: 0, x2: 0, y2: 1 });
+function curve(values: readonly number[]): CubicBezier {
+  const [x1 = 0, y1 = 0, x2 = 1, y2 = 1] = values;
+  return Object.freeze({ x1, y1, x2, y2 });
+}
+
+const STANDARD_BEZIER = curve(motionConfig.curves.standard);
 const BEZIERS: Readonly<Record<string, CubicBezier>> = Object.freeze({
   standard: STANDARD_BEZIER,
-  'standard.accelerate': { x1: 0.3, y1: 0, x2: 1, y2: 1 },
-  'standard.decelerate': { x1: 0, y1: 0, x2: 0, y2: 1 },
+  'standard.accelerate': curve(motionConfig.curves.accelerate),
+  'standard.decelerate': curve(motionConfig.curves.decelerate),
+  linear: curve(motionConfig.curves.linear),
 });
 
 function cubicCoordinate(t: number, first: number, second: number): number {
@@ -28,15 +36,15 @@ function cubicDerivative(t: number, first: number, second: number): number {
     + 3 * t * t * (1 - second);
 }
 
-function cubicBezierValue(curve: CubicBezier, progress: number): number {
+function cubicBezierValue(curveValue: CubicBezier, progress: number): number {
   const x = clamp(progress, 0, 1);
   if (x === 0 || x === 1) return x;
 
   let t = x;
   for (let iteration = 0; iteration < 8; iteration += 1) {
-    const estimate = cubicCoordinate(t, curve.x1, curve.x2) - x;
+    const estimate = cubicCoordinate(t, curveValue.x1, curveValue.x2) - x;
     if (Math.abs(estimate) < 1e-7) break;
-    const derivative = cubicDerivative(t, curve.x1, curve.x2);
+    const derivative = cubicDerivative(t, curveValue.x1, curveValue.x2);
     if (Math.abs(derivative) < 1e-7) break;
     t = clamp(t - estimate / derivative, 0, 1);
   }
@@ -44,14 +52,14 @@ function cubicBezierValue(curve: CubicBezier, progress: number): number {
   let low = 0;
   let high = 1;
   for (let iteration = 0; iteration < 12; iteration += 1) {
-    const estimate = cubicCoordinate(t, curve.x1, curve.x2);
+    const estimate = cubicCoordinate(t, curveValue.x1, curveValue.x2);
     if (Math.abs(estimate - x) < 1e-7) break;
     if (estimate < x) low = t;
     else high = t;
     t = (low + high) / 2;
   }
 
-  return cubicCoordinate(t, curve.y1, curve.y2);
+  return cubicCoordinate(t, curveValue.y1, curveValue.y2);
 }
 
 export function easeValue(name: string | undefined, progress: number): number {
