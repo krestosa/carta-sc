@@ -31,6 +31,7 @@ const REQUIRED_SOURCE_PATHS = [
   'lab/handoff/staticize.ts',
   'lab/handoff/static-server.ts',
   'scripts/sync-runtime.ts',
+  'scripts/optimize-runtime.ts',
   'scripts/lib',
 ] as const;
 
@@ -60,6 +61,11 @@ const ALLOWED_SOURCE_TOP_LEVEL = new Set([
   'tsconfig.browser.json',
   'tsconfig.tooling.json',
   'types',
+]);
+
+const ALLOWED_BUILD_SCRIPTS = new Set([
+  'scripts/sync-runtime.ts',
+  'scripts/optimize-runtime.ts',
 ]);
 
 class HandoffValidator {
@@ -126,7 +132,7 @@ class HandoffValidator {
         throw new Error(`Unrelated lab tooling leaked into handoff source: ${relativePath}`);
       }
       if (relativePath.startsWith('scripts/')
-        && relativePath !== 'scripts/sync-runtime.ts'
+        && !ALLOWED_BUILD_SCRIPTS.has(relativePath)
         && !relativePath.startsWith('scripts/lib/')) {
         throw new Error(`Unrelated build script leaked into handoff source: ${relativePath}`);
       }
