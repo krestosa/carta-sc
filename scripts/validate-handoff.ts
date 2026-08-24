@@ -8,12 +8,15 @@ interface ValidationInputs {
   readonly referenceRoot: string | null;
 }
 
+interface HandoffPackage {
+  readonly type?: string;
+  readonly scripts?: Readonly<Record<string, string>>;
+}
+
 const REQUIRED_ROOT_ENTRIES = [
-  'build.ps1',
-  'build.sh',
+  'build.mjs',
   'compiled',
-  'serve.ps1',
-  'serve.sh',
+  'package.json',
   'server.mjs',
   'source',
 ] as const;
@@ -73,6 +76,7 @@ class HandoffValidator {
 
   run(): void {
     this.#requireHandoffShape();
+    this.#validateRootPackage();
     this.#validateSourceBoundary(path.join(this.inputs.handoffRoot, 'source'));
     this.#validateCompiledBoundary(path.join(this.inputs.handoffRoot, 'compiled'));
     if (this.inputs.referenceRoot) this.#validateCatalogParity(this.inputs.referenceRoot);
@@ -99,11 +103,30 @@ class HandoffValidator {
       }
     }
 
-    for (const launcher of ['build.ps1', 'build.sh', 'serve.ps1', 'serve.sh', 'server.mjs']) {
-      const file = path.join(this.inputs.handoffRoot, launcher);
+    for (const entry of ['build.mjs', 'package.json', 'server.mjs']) {
+      const file = path.join(this.inputs.handoffRoot, entry);
       if (!fs.statSync(file).isFile() || fs.statSync(file).size === 0) {
-        throw new Error(`Missing handoff launcher: ${launcher}`);
+        throw new Error(`Missing Node handoff entrypoint: ${entry}`);
       }
+    }
+  }
+
+  #validateRootPackage(): void {
+    const packageFile = path.join(this.inputs.handoffRoot, 'package.json');
+    const manifest = JSON.parse(fs.readFileSync(packageFile, 'utf8')) as HandoffPackage;
+    if (manifest.type !== 'module') throw new Error('Handoff package must use Node ESM');
+    if (manifest.scripts?.build !== 'node build.mjs') throw new Error('Handoff build must run through npm -> Node');
+    if (manifest.scripts?.serve !== 'node server.mjs compiled 4173') throw new Error('Handoff serve must run through npm -> Node');
+
+    const buildRunner = fs.readFileSync(path.join(this.inputs.handoffRoot, 'build.mjs'), 'utf8');
+    if (!buildRunner.includes("process.platform === 'win32' ? 'npm.cmd' : 'npm'")) {
+      throw new Error('Handoff build runner is not cross-platform npm aware');
+    }
+    if (!buildRunner.includes('shell: false')) {
+      throw new Error('Handoff build runner must not invoke a shell');
+    }
+    if (/\.ps1\b|\.sh\b|powershell|pwsh|bash/i.test(buildRunner)) {
+      throw new Error('Platform-specific shell logic leaked into Node handoff runner');
     }
   }
 
