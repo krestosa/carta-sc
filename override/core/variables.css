@@ -1,2 +1,1 @@
-/* Compatibility entrypoint. Canonical values live in tokens/design.tokens.json. */
-@import "./tokens.generated.css?v=unversioned";
+/* Compatibility entrypoint. Canonical values live in tokens/design.tokens.json and are emitted by tokens.generated.css. */
