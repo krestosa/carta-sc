@@ -123,8 +123,8 @@ class ResponsiveContractValidator {
 
     const categoryControls = readProjectFile('override/components/category-nav/controls.css');
     this.#validation.check(
-      categoryControls.includes('inset: calc(-1 * var(--sc-token-dimension-six)) 0;'),
-      'desktop category control hit area must stay vertically expanded by the DTCG 6px dimension without extending horizontally',
+      categoryControls.includes('inset: -6px 0;'),
+      'desktop category control hit area must stay vertically expanded by 6px without extending horizontally',
     );
 
     const boundary = readProjectFile('override/core/viewport-boundary.css');
