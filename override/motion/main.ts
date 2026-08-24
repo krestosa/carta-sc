@@ -1,4 +1,5 @@
 import { media, queries } from '../core/variables.js';
+import { installMotionCssVariables } from './config.js';
 import { easeValue } from './easing.js';
 import { bindMicroInteraction as bindMicroInteractionBehavior } from './micro-interaction.js';
 import { animatePath, animateSpringPath } from './path.js';
@@ -22,6 +23,7 @@ import type {
 type MotionCallback = (dependencies: MotionDependencies) => void;
 
 const root = document.documentElement;
+installMotionCssVariables(root);
 root.classList.add('sc-motion-engine-ready');
 
 export const prefersReducedMotion = (): boolean =>
