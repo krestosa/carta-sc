@@ -125,10 +125,11 @@ console.log(`[design-token-audit] ${findings.length} raw supported-design-value 
 for (const [category, count] of ordered) console.log(`  ${category}: ${count}`);
 
 for (const [category] of ordered) {
-  const sample = findings.filter((finding) => finding.category === category).slice(0, 8);
-  if (!sample.length) continue;
-  console.log(`\n[${category}] examples:`);
-  for (const finding of sample) console.log(`  ${finding.file}:${finding.line} ${finding.property}: ${finding.value}`);
+  const categoryFindings = findings.filter((finding) => finding.category === category);
+  const output = strict ? categoryFindings : categoryFindings.slice(0, 8);
+  if (!output.length) continue;
+  console.log(`\n[${category}] ${strict ? 'findings' : 'examples'}:`);
+  for (const finding of output) console.log(`  ${finding.file}:${finding.line} ${finding.property}: ${finding.value}`);
 }
 
 if (strict && findings.length) {
