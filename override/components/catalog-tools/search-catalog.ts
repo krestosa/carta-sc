@@ -9,12 +9,15 @@ import {
 } from './search-domain.js';
 import { fieldMatches, normalizeSearchText } from './search-ranking.js';
 
+const QUERY_CACHE_LIMIT = 32;
+
 export class SearchCatalogIndex {
   #inventory: SearchItem[] = [];
   #searchable: SearchItem[] = [];
   #groups: SearchGroup[] = [];
   #hosts: SearchHost[] = [];
   #queryCandidates: SearchItem[] = [];
+  #queryCache = new Map<string, SearchItem[]>();
   #lastQuery = '';
   #captured = false;
 
@@ -110,13 +113,34 @@ export class SearchCatalogIndex {
     }
     if (query === this.#lastQuery) return this.#queryCandidates;
 
-    const source = this.#lastQuery && query.length > this.#lastQuery.length && query.startsWith(this.#lastQuery)
-      ? this.#queryCandidates
-      : this.#searchable;
+    const cached = this.#queryCache.get(query);
+    if (cached) {
+      this.#queryCache.delete(query);
+      this.#queryCache.set(query, cached);
+      this.#lastQuery = query;
+      this.#queryCandidates = cached;
+      return cached;
+    }
+
+    let source: readonly SearchItem[] = this.#searchable;
+    if (this.#lastQuery && query.length > this.#lastQuery.length && query.startsWith(this.#lastQuery)) {
+      source = this.#queryCandidates;
+    } else {
+      for (let end = query.length - 1; end > 0; end -= 1) {
+        const prefix = this.#queryCache.get(query.slice(0, end));
+        if (prefix) {
+          source = prefix;
+          break;
+        }
+      }
+    }
+
     const tokens = query.split(' ');
-    this.#queryCandidates = source.filter((item) => fieldMatches(item.text, query, tokens));
+    const next = source.filter((item) => fieldMatches(item.text, query, tokens));
+    this.#queryCandidates = next;
     this.#lastQuery = query;
-    return this.#queryCandidates;
+    this.#rememberQuery(query, next);
+    return next;
   }
 
   resetCandidates(): void {
@@ -130,8 +154,17 @@ export class SearchCatalogIndex {
     this.#groups = [];
     this.#hosts = [];
     this.#queryCandidates = [];
+    this.#queryCache.clear();
     this.#lastQuery = '';
     this.#captured = false;
+  }
+
+  #rememberQuery(query: string, items: SearchItem[]): void {
+    if (this.#queryCache.has(query)) this.#queryCache.delete(query);
+    this.#queryCache.set(query, items);
+    if (this.#queryCache.size <= QUERY_CACHE_LIMIT) return;
+    const oldest = this.#queryCache.keys().next().value as string | undefined;
+    if (oldest) this.#queryCache.delete(oldest);
   }
 
   #hostFor(parent: Node): SearchHost {
