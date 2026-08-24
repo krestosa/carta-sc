@@ -11,11 +11,15 @@ const SHARED_COMPONENT_FILES = [
   'override/components/section-heading/section-heading.css',
 ] as const;
 
+function rebaseStagedProductionCss(css: string): string {
+  return css.replaceAll('../../../_remote-assets/', '../_remote-assets/');
+}
+
 export function applyLabOverrides(): void {
   const mainCss = path.join(SITE, 'override', 'main.css');
   assert(isDir(SITE) && isFile(mainCss), 'lab Pages staging context is incomplete');
 
-  const manifest = read(mainCss);
+  const manifest = rebaseStagedProductionCss(read(mainCss));
   assert(
     !LAB_STYLES.some((name) => manifest.includes(`lab-inline:${name}`)),
     'lab first-paint CSS already present in staged production stylesheet',
