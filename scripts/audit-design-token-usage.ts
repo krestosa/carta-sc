@@ -18,6 +18,17 @@ const generated = new Set([
   'override/core/tokens.generated.ts',
 ]);
 
+const removedNumericDimensions = [
+  'zero','one','two','three','four','five','six','seven','eight','nine','ten','twelve','thirteen','fourteen','fifteen','sixteen','eighteen','twenty','twenty-two','twenty-four','twenty-six','twenty-eight','thirty','thirty-two','thirty-four','thirty-eight','forty-two','forty-four','forty-eight','fifty-two','fifty-five','sixty','sixty-four','one-seventy','one-eighty-four','one-ninety','two-thirty-eight','three-twenty','five-sixty',
+] as const;
+const removedNumericDimensionCss = new RegExp(`--sc-token-dimension-(?:${removedNumericDimensions.join('|')})(?![a-z-])`, 'gi');
+const removedTypographyPrimitiveCss = /--sc-token-dimension-(?:font-[a-z-]+|tracking-(?:zero|modal-title))\b/gi;
+const removedComponentNumericCss = /--sc-token-component-dimension-font-ten-three-quarter\b/gi;
+const removedNumberPrimitiveCss = /--sc-token-number-(?:zero|one)\b/gi;
+const removedDimensionPath = /\bdimension\.(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|twelve|thirteen|fourteen|fifteen|sixteen|eighteen|twenty|twentyTwo|twentyFour|twentySix|twentyEight|thirty|thirtyTwo|thirtyFour|thirtyEight|fortyTwo|fortyFour|fortyEight|fiftyTwo|fiftyFive|sixty|sixtyFour|oneSeventy|oneEightyFour|oneNinety|twoThirtyEight|threeTwenty|fiveSixty|font[A-Z][A-Za-z]*|trackingZero|trackingModalTitle)\b/g;
+const removedNumberPath = /\bnumber\.(?:zero|one)\b/g;
+const removedComponentPath = /\bcomponent\.dimension\.fontTenThreeQuarter\b/g;
+
 async function walk(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(entries.map(async (entry) => {
@@ -50,15 +61,31 @@ function numericMatches(value: string, units: string): number[] {
   return [...value.matchAll(pattern)].map((match) => Number.parseFloat(match[0] ?? '0'));
 }
 
-function hasRawDimension(value: string): boolean {
-  return numericMatches(value, 'px|rem').some((number) => number !== 0);
-}
-
 function hasRawDuration(value: string): boolean {
   return numericMatches(value, 'ms|s').some((number) => number !== 0);
 }
 
+function auditForbiddenReferences(file: string, source: string): void {
+  const patterns: Array<[string, RegExp]> = [
+    ['numericDimensionToken', removedNumericDimensionCss],
+    ['numericTypographyPrimitive', removedTypographyPrimitiveCss],
+    ['numericComponentPrimitive', removedComponentNumericCss],
+    ['numericNumberPrimitive', removedNumberPrimitiveCss],
+    ['numericDimensionPath', removedDimensionPath],
+    ['numericNumberPath', removedNumberPath],
+    ['numericComponentPath', removedComponentPath],
+  ];
+
+  for (const [category, pattern] of patterns) {
+    pattern.lastIndex = 0;
+    for (const match of source.matchAll(pattern)) {
+      add(category, file, lineOf(source, match.index ?? 0), 'removed-token-reference', match[0] ?? '');
+    }
+  }
+}
+
 function auditCss(file: string, source: string): void {
+  auditForbiddenReferences(file, source);
   const cleaned = stripNonComponentCss(source);
   const declaration = /(^|[;{\n])\s*([\w-]+)\s*:\s*([^;{}]+)(?=;|})/g;
   for (const match of cleaned.matchAll(declaration)) {
@@ -77,27 +104,19 @@ function auditCss(file: string, source: string): void {
     if (/^(?:box-shadow|text-shadow)$/i.test(property) && !resetOnly && !tokenized) add('shadow', file, line, property, value);
     if (property === 'font-family' && !resetOnly && !tokenized) add('fontFamily', file, line, property, value);
     if (property === 'font-weight' && /^\s*\d+/.test(value) && !tokenized) add('fontWeight', file, line, property, value);
-    if (/^(?:font-size|letter-spacing)$/i.test(property) && hasRawDimension(value) && !tokenized) add('typography', file, line, property, value);
     if (/^border(?:-(?:top|right|bottom|left))?$/i.test(property) && !resetOnly && !tokenized) add('border', file, line, property, value);
     if (/^border-style$/i.test(property) && /\b(?:solid|dashed|dotted|double|groove|ridge|inset|outset)\b/.test(value) && !tokenized) add('strokeStyle', file, line, property, value);
     if (/^transition(?:-\w+)?$/i.test(property) && !resetOnly && !tokenized && (hasRawDuration(value) || /cubic-bezier\(/.test(value))) add('transition', file, line, property, value);
-    if (/^(?:opacity|z-index|line-height)$/i.test(property) && /^\s*-?\d*\.?\d+\s*(?:!important)?\s*$/.test(value)) {
-      const number = Number.parseFloat(value);
-      const structuralOpacity = property === 'opacity' && (number === 0 || number === 1);
-      const structuralZero = number === 0;
-      if (!structuralOpacity && !structuralZero && !tokenized) add('number', file, line, property, value);
-    }
-    if (hasRawDimension(value) && !tokenized && !resetOnly) add('dimension', file, line, property, value);
   }
 }
 
 function auditTs(file: string, source: string): void {
+  auditForbiddenReferences(file, source);
   const cleaned = source.replace(/\/\*[\s\S]*?\*\//g, blankPreservingLines);
   const literals: Array<[string, RegExp]> = [
     ['color', /['"](?:#[0-9a-f]{3,8}|rgba?\(|hsla?\()[^'"]*['"]/gi],
     ['duration', /\b(?:duration|delay|debounce|throttle|timeout|interval)\w*\s*[:=]\s*(?!0\b)\d+(?:\.\d+)?\b/gi],
     ['cubicBezier', /['"]cubic-bezier\([^'"]+['"]/gi],
-    ['dimension', /['"]-?(?!0(?:px|rem)['"])\d*\.?\d+(?:px|rem)['"]/gi],
   ];
   for (const [category, pattern] of literals) {
     for (const match of cleaned.matchAll(pattern)) {
@@ -121,7 +140,7 @@ for (const absolute of await walk(scanRoot)) {
 const counts = new Map<string, number>();
 for (const finding of findings) counts.set(finding.category, (counts.get(finding.category) ?? 0) + 1);
 const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-console.log(`[design-token-audit] ${findings.length} raw supported-design-value occurrences`);
+console.log(`[design-token-audit] ${findings.length} semantic token-policy violations`);
 for (const [category, count] of ordered) console.log(`  ${category}: ${count}`);
 
 for (const [category] of ordered) {
