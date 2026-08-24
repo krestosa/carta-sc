@@ -8,6 +8,12 @@ function sameValues(actual: ReadonlySet<string>, expected: ReadonlySet<string>):
   return actual.size === expected.size && [...expected].every((value) => actual.has(value));
 }
 
+function cssCustomProperty(source: string, name: string, value: string): boolean {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedValue = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`${escapedName}\\s*:\\s*${escapedValue}(?:\\s*[;}]|$)`).test(source);
+}
+
 class ResponsiveContractValidator {
   readonly #validation: ValidationReporter = createValidationReporter();
 
@@ -49,30 +55,32 @@ class ResponsiveContractValidator {
       'catalog-tools.css must not own list geometry',
     );
 
-    for (const [token, label] of [
-      ['--sc-compact-columns: 4', 'desktop density must default to 4 columns'],
-      ['--sc-compact-columns: 3', 'tablet density must override to 3 columns'],
-      ['--sc-compact-columns: 2', 'phone density must override to 2 columns'],
+    for (const [value, label] of [
+      ['4', 'desktop density must default to 4 columns'],
+      ['3', 'tablet density must override to 3 columns'],
+      ['2', 'phone density must override to 2 columns'],
     ] as const) {
-      this.#validation.check(tools.includes(token), label);
+      this.#validation.check(cssCustomProperty(tools, '--sc-compact-columns', value), label);
     }
 
     const grid = readProjectFile('override/features/catalog/layout.css');
-    this.#validation.check(grid.includes('--sc-catalog-base-columns: 4'), 'catalog desktop base must be 4 columns');
+    this.#validation.check(
+      cssCustomProperty(grid, '--sc-catalog-base-columns', '4'),
+      'catalog desktop base must be 4 columns',
+    );
   }
 
   #validateListGeometry(): void {
     const list = readProjectFile('override/components/catalog-tools/view-stability.css');
-    for (const token of [
-      '--sc-view-list-image-width: 210px',
-      '--sc-view-list-image-width: 160px',
-      '--sc-view-list-image-width: 150px',
-    ]) {
-      this.#validation.check(list.includes(token), `Missing list token ${token}`);
+    for (const value of ['210px', '160px', '150px']) {
+      this.#validation.check(
+        cssCustomProperty(list, '--sc-view-list-image-width', value),
+        `Missing list token --sc-view-list-image-width: ${value}`,
+      );
     }
 
     this.#validation.check(
-      list.includes('grid-template-columns: var(--sc-view-list-image-width) minmax(0, 1fr) !important'),
+      /grid-template-columns\s*:\s*var\(\s*--sc-view-list-image-width\s*\)\s+minmax\(\s*0\s*,\s*1fr\s*\)\s*!important/.test(list),
       'shared two-column list anatomy missing',
     );
     this.#validation.check(
@@ -123,7 +131,7 @@ class ResponsiveContractValidator {
 
     const categoryControls = readProjectFile('override/components/category-nav/controls.css');
     this.#validation.check(
-      categoryControls.includes('inset: -6px 0;'),
+      /inset\s*:\s*-6px\s+0(?:\s*!important)?\s*;/.test(categoryControls),
       'desktop category control hit area must stay vertically expanded by 6px without extending horizontally',
     );
 
