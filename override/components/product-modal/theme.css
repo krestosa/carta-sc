@@ -1,40 +1,27 @@
-/* Ajustes de tema del modal y render del icono de cierre. */
-body.sushiShop .sc-product-modal__close svg,
-body.sushiShop .sc-product-modal__close svg path {
-  fill: currentColor !important;
-  stroke: none !important;
+/* Theme-specific modal implementation values stay on the modal owner; global semantic colors remain DTCG-backed. */
+body.sushiShop .sc-product-modal__close svg,body.sushiShop .sc-product-modal__close svg path{fill:currentColor!important;stroke:none!important;}
+html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal{
+  --sc-modal-action-background:#d8d8d3;
+  --sc-modal-close-border:rgb(255 255 255 / .12);
+  --sc-modal-close-background:rgb(10 10 10 / .88);
+  --sc-modal-close-border-hover:rgb(255 255 255 / .22);
+  --sc-modal-close-background-hover:rgb(20 20 20 / .98);
 }
-
-html[data-sc-theme-resolved='dark'] body.sushiShop {
-  --sc-modal-action-background: var(--sc-token-component-color-dark-action);
-}
-html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close::before {
-  border-color: var(--sc-token-component-color-white12) !important;
-  background: var(--sc-token-component-color-dark-close) !important;
-}
-html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close:hover::before,
-html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal__close:focus-visible::before {
-  border-color: var(--sc-token-component-color-white22) !important;
-  background: var(--sc-token-component-color-dark-close-hover) !important;
-}
-
-@media (prefers-color-scheme: light) {
-  html[data-sc-theme='system'] body.sushiShop { --sc-modal-action-background: var(--sc-token-color-palette-ink); }
-  html[data-sc-theme='system'] body.sushiShop .sc-product-modal__close::before {
-    border-color: initial !important;
-    background: initial !important;
+@media(prefers-color-scheme:light){
+  html[data-sc-theme='system'] body.sushiShop .sc-product-modal{
+    --sc-modal-action-background:var(--sc-color-ink);
+    --sc-modal-close-border:rgb(0 0 0 / .07);
+    --sc-modal-close-background:rgb(255 255 255 / .86);
+    --sc-modal-close-border-hover:rgb(0 0 0 / .16);
+    --sc-modal-close-background-hover:rgb(255 255 255 / .98);
   }
 }
-
-@media (prefers-color-scheme: dark) {
-  html[data-sc-theme='system'] body.sushiShop { --sc-modal-action-background: var(--sc-token-component-color-dark-action); }
-  html[data-sc-theme='system'] body.sushiShop .sc-product-modal__close::before {
-    border-color: var(--sc-token-component-color-white12) !important;
-    background: var(--sc-token-component-color-dark-close) !important;
-  }
-  html[data-sc-theme='system'] body.sushiShop .sc-product-modal__close:hover::before,
-  html[data-sc-theme='system'] body.sushiShop .sc-product-modal__close:focus-visible::before {
-    border-color: var(--sc-token-component-color-white22) !important;
-    background: var(--sc-token-component-color-dark-close-hover) !important;
+@media(prefers-color-scheme:dark){
+  html[data-sc-theme='system'] body.sushiShop .sc-product-modal{
+    --sc-modal-action-background:#d8d8d3;
+    --sc-modal-close-border:rgb(255 255 255 / .12);
+    --sc-modal-close-background:rgb(10 10 10 / .88);
+    --sc-modal-close-border-hover:rgb(255 255 255 / .22);
+    --sc-modal-close-background-hover:rgb(20 20 20 / .98);
   }
 }
