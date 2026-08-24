@@ -1,5 +1,6 @@
-import { motionTokens, selectors } from '../../core/variables.js';
 import { revealGate, scrollState } from '../../core/state.js';
+import { selectors } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 import { SECTION_RULE_PROPERTY, SectionHeadingLayout } from './layout.js';
@@ -117,7 +118,7 @@ export class SectionHeadingController {
     const time = Math.max(0, Math.min(1, progress)) * total;
     lines.forEach((line, index) => {
       const local = Math.max(0, Math.min(1, time - index * REVEAL.lineStagger));
-      const eased = motion.engine.ease(motionTokens.easings.out, local);
+      const eased = motion.engine.ease(motionConfig.easings.out, local);
       line.style.transform = `translate3d(0,${REVEAL.lineOffsetPercent * (1 - eased)}%,0)`;
       line.style.opacity = String(eased);
       line.style.visibility = 'visible';
@@ -166,7 +167,7 @@ export class SectionHeadingController {
     state.started = true;
     state.autoplay?.cancel();
     const from = state.maxProgress;
-    state.autoplay = motion.engine.tween(REVEAL.initialDuration, motionTokens.easings.out, (progress) => {
+    state.autoplay = motion.engine.tween(REVEAL.initialDuration, motionConfig.easings.out, (progress) => {
       state.maxProgress = from + (1 - from) * progress;
       this.#renderProgress(element, state.maxProgress);
     }, {
