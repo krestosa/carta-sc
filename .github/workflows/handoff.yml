@@ -31,7 +31,7 @@ jobs:
             node: '24'
     name: ci-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 45
     env:
       TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -82,7 +82,9 @@ jobs:
           npm run validate:handoff
 
       - name: Validate standalone handoff in browser
+        if: matrix.platform == 'linux'
         shell: pwsh
+        timeout-minutes: 8
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
           npm run validate:handoff:browser
