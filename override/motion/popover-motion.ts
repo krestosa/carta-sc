@@ -1,4 +1,5 @@
-import { motionTokens, queries } from '../core/variables.js';
+import { queries } from '../core/variables.js';
+import { motionConfig } from './config.js';
 import { motion } from './main.js';
 import type { MotionHandle } from './types.js';
 
@@ -41,8 +42,8 @@ class AnchoredPopoverMotion {
     };
 
     entry.handles = [
-      motion.engine.springTransform(surface, { scale: OPEN_SCALE }, motionTokens.springs.spatial.fast, { onComplete: complete }),
-      motion.engine.springOpacity(surface, 1, motionTokens.springs.effects.fast, { onComplete: complete }),
+      motion.engine.springTransform(surface, { scale: OPEN_SCALE }, motionConfig.springs.spatial.fast, { onComplete: complete }),
+      motion.engine.springOpacity(surface, 1, motionConfig.springs.effects.fast, { onComplete: complete }),
     ];
   }
 
@@ -70,8 +71,8 @@ class AnchoredPopoverMotion {
     };
 
     entry.handles = [
-      motion.engine.springTransform(surface, { scale: CLOSED_SCALE }, motionTokens.springs.spatial.fast, { onComplete: complete }),
-      motion.engine.springOpacity(surface, 0, motionTokens.springs.effects.fast, { onComplete: complete }),
+      motion.engine.springTransform(surface, { scale: CLOSED_SCALE }, motionConfig.springs.spatial.fast, { onComplete: complete }),
+      motion.engine.springOpacity(surface, 0, motionConfig.springs.effects.fast, { onComplete: complete }),
     ];
   }
 
