@@ -14,3 +14,4 @@ export const imageBatchConfig = Object.freeze({
 export const MOBILE_LOGO_URL = 'https://www.sushiclub.com.ar/gfx/web-sushiclub2_black_m2.png';
 export const IMAGE_STAGE_SELECTOR = '.imgShop,.imgLiquidNoFillShop';
 export const NEAR_VIEWPORT_MARGIN = 0;
+export const IMAGE_WAVE_ROW_TOLERANCE_PX = 4;
