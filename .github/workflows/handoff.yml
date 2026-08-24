@@ -45,6 +45,9 @@ jobs:
         working-directory: handoff
         run: npm run build
 
+      - name: Prepare Pages deployment marker
+        run: : > .pages-site/.nojekyll
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
