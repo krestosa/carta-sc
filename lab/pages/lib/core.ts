@@ -53,7 +53,13 @@ export function buildId(): string {
     hash.update(fs.readFileSync(file));
     hash.update('\0');
   }
-  return hash.digest('base64url').slice(0, 20);
+  return hash.digest('hex');
+}
+
+export function githubSha(): string {
+  const sha = (process.env.GITHUB_SHA ?? '').trim().toLowerCase();
+  if (/^[0-9a-f]{40}$/.test(sha)) return sha;
+  return buildId().slice(0, 40);
 }
 
 export function assert(condition: unknown, message: string): asserts condition {
@@ -106,7 +112,6 @@ export function remove(target: string): void {
   try {
     fs.chmodSync(target, 0o777);
   } catch {
-    // The retry below is authoritative; chmod is only a Windows read-only recovery path.
   }
 
   fs.rmSync(target, {
