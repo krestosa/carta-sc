@@ -20,7 +20,7 @@ const REQUIRED_TEMPLATES = new Set([
 ]);
 
 const TEMPLATE_PATTERN = /<template\b[^>]*\bdata-sc-template=["']([^"']+)["'][^>]*>([\s\S]*?)<\/template>/gi;
-const COMPILED_SLOT = /const COMPILED_TEMPLATES\s*=\s*null;\s*\/\*__SC_TEMPLATE_PAYLOAD__\*\//g;
+const COMPILED_SLOT = /const\s+COMPILED_TEMPLATES\s*=\s*null\s*;/g;
 
 function collectTemplates(): Record<string, string> {
   const payload: Record<string, string> = {};
@@ -67,13 +67,10 @@ export function compileTemplates(): void {
 
   let registry = read(registryPath);
   const markerMatches = [...registry.matchAll(COMPILED_SLOT)];
-  assert(markerMatches.length === 1, 'Template registry compile marker must exist exactly once');
+  assert(markerMatches.length === 1, 'Template registry compile slot must exist exactly once');
 
   const serialized = JSON.stringify(payload).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-  registry = registry.replace(
-    COMPILED_SLOT,
-    `const COMPILED_TEMPLATES = ${serialized}; /*__SC_TEMPLATE_PAYLOAD__*/`,
-  );
+  registry = registry.replace(COMPILED_SLOT, `const COMPILED_TEMPLATES = ${serialized};`);
   write(registryPath, registry);
   console.log(`Compiled ${Object.keys(payload).length} override templates.`);
 }
