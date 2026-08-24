@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { SITE, assert, read, replaceRegexOnce, write } from '../../lib/core.js';
 
-export function stampLegacyBootstrap(sha: string): void {
+export function stampLegacyBootstrap(version: string): void {
   const file = path.join(SITE, '_js_dev/main.js');
   const source = read(file);
   write(
@@ -9,15 +9,15 @@ export function stampLegacyBootstrap(sha: string): void {
     replaceRegexOnce(
       source,
       /var\s+version='[^']+';/,
-      `var version='${sha}';`,
+      `var version='${version}';`,
       'Could not stamp the legacy bootstrap version exactly once',
     ),
   );
 }
 
-export function verifyLegacyBootstrap(sha: string): void {
+export function verifyLegacyBootstrap(version: string): void {
   assert(
-    read(path.join(SITE, '_js_dev/main.js')).includes(`var version='${sha}';`),
+    read(path.join(SITE, '_js_dev/main.js')).includes(`var version='${version}';`),
     'Stamped legacy bootstrap version is missing',
   );
 }
