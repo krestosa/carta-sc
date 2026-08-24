@@ -18,6 +18,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   padding: 0 !important;
   line-height: 0 !important;
   transform: none !important;
+  translate: none !important;
 }
 
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .ref_label {
@@ -39,7 +40,8 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   height: 10.667px !important;
   min-height: 10.667px !important;
   max-height: 10.667px !important;
-  transform: translateY(-1px) !important;
+  transform: none !important;
+  translate: 0 -1px !important;
   transform-origin: 50% 50% !important;
 }
 
@@ -47,6 +49,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
    misma caja compartida; no es una variante responsive y se aplica igual en todos los tamaños. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon[data-sc-trait='vegetariano'] {
   align-self: center !important;
-  transform: translateY(1px) !important;
+  transform: none !important;
+  translate: 0 1px !important;
   transform-origin: 50% 50% !important;
 }
