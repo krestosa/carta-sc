@@ -51,6 +51,10 @@ const EXCLUDED_SOURCE_EXTENSIONS = new Set([
   '.sh',
 ]);
 
+const REQUIRED_HIDDEN_SOURCE_FILES = new Set([
+  'lab/pages/.nojekyll',
+]);
+
 function currentCommitSha(): string {
   try {
     return execFileSync('git', ['rev-parse', 'HEAD'], {
@@ -161,6 +165,12 @@ class HandoffBuildPipeline {
 
   #copySource(): void {
     copyTree(ROOT, PATHS.source, (relative, absolute) => this.#shouldCopySource(relative, absolute));
+    for (const relative of REQUIRED_HIDDEN_SOURCE_FILES) {
+      assert(
+        fs.existsSync(path.join(PATHS.source, ...relative.split('/'))),
+        `Required handoff source file is missing: ${relative}`,
+      );
+    }
   }
 
   #shouldCopySource(relative: string, absolute: string): boolean {
@@ -168,7 +178,7 @@ class HandoffBuildPipeline {
     const segments = normalized.split('/');
     const topLevel = segments[0] ?? normalized;
     if (!SOURCE_TOP_LEVEL.has(topLevel)) return false;
-    if (segments.some((segment) => segment.startsWith('.'))) return false;
+    if (segments.some((segment) => segment.startsWith('.')) && !REQUIRED_HIDDEN_SOURCE_FILES.has(normalized)) return false;
 
     const isDirectory = fs.statSync(absolute).isDirectory();
     if (!isDirectory && EXCLUDED_SOURCE_EXTENSIONS.has(path.extname(normalized).toLowerCase())) return false;
