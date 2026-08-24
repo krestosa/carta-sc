@@ -6,12 +6,12 @@ body.sushiShop .sc-catalog-tools {
   --sc-disabled-opacity: .38;
   --sc-filter-radius: 8px;
   --sc-filter-height: 32px;
-  --sc-filter-padding-inline: 8px;
-  --sc-filter-content-gap: 8px;
-  --sc-filter-group-gap: 8px;
+  --sc-filter-padding-inline: var(--sc-space-small);
+  --sc-filter-content-gap: var(--sc-space-small);
+  --sc-filter-group-gap: var(--sc-space-small);
   --sc-filter-icon-size: 18px;
   --sc-control-target-size: 48px;
-  --sc-control-visual-inset: 4px;
+  --sc-control-visual-inset: var(--sc-space-extra-small);
   --sc-view-toggle-size: var(--sc-control-target-size);
   --sc-tools-primary-height: var(--sc-control-target-size);
   --sc-tools-trait-gap: var(--sc-filter-group-gap);
