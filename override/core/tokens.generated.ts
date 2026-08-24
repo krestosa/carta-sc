@@ -33,9 +33,9 @@ export const systemTokens = Object.freeze({
       "copy": "rgb(200 200 194)",
       "muted": "rgb(156 156 149)",
       "trait": "rgb(111 111 111)",
-      "surface": "rgb(10 10 10)",
-      "surfaceTransparent": "rgb(10 10 10 / 0)",
-      "surfaceRaised": "rgb(18 18 16)",
+      "surface": "rgb(0 0 0)",
+      "surfaceTransparent": "rgb(0 0 0 / 0)",
+      "surfaceRaised": "rgb(10 10 10)",
       "border": "rgb(45 45 41)",
       "borderStrong": "rgb(68 68 62)",
       "focusRing": "rgb(243 243 240)"
