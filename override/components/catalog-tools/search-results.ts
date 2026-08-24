@@ -8,8 +8,11 @@ import {
 } from './search-domain.js';
 import { rankSearchItem } from './search-ranking.js';
 
+const RANK_CACHE_LIMIT = 32;
+
 export class SearchResultPresenter {
   #visibleItems: SearchItem[] = [];
+  #rankCache = new Map<string, Map<number, number>>();
   #epoch = 0;
   #active = false;
 
@@ -33,6 +36,7 @@ export class SearchResultPresenter {
     const tokens = query ? query.split(' ') : [];
     const visible: SearchItem[] = [];
     const epoch = ++this.#epoch;
+    const ranks = this.#ranksFor(query);
 
     for (const group of groups) {
       group.count = 0;
@@ -45,7 +49,11 @@ export class SearchResultPresenter {
 
     for (const item of candidates) {
       if (!filterMaskPasses(item.traitMask, filterMask)) continue;
-      const rank = rankSearchItem(item, query, tokens);
+      let rank = ranks.get(item.index);
+      if (rank === undefined) {
+        rank = rankSearchItem(item, query, tokens);
+        ranks.set(item.index, rank);
+      }
       if (rank < 0) continue;
       item.rank = rank;
       item.matchEpoch = epoch;
@@ -129,8 +137,26 @@ export class SearchResultPresenter {
 
   clear(): void {
     this.#visibleItems = [];
+    this.#rankCache.clear();
     this.#epoch = 0;
     this.#active = false;
+  }
+
+  #ranksFor(query: string): Map<number, number> {
+    const cached = this.#rankCache.get(query);
+    if (cached) {
+      this.#rankCache.delete(query);
+      this.#rankCache.set(query, cached);
+      return cached;
+    }
+
+    const ranks = new Map<number, number>();
+    this.#rankCache.set(query, ranks);
+    if (this.#rankCache.size > RANK_CACHE_LIMIT) {
+      const oldest = this.#rankCache.keys().next().value as string | undefined;
+      if (oldest !== undefined) this.#rankCache.delete(oldest);
+    }
+    return ranks;
   }
 
   #setHeadingHidden(
