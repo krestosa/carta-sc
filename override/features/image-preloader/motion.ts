@@ -293,7 +293,7 @@ export class ImagePlaceholderMotion {
     });
   }
 
-  markReady(stage: HTMLElement): void {
+  markReady(stage: HTMLElement, animate = true): void {
     this.#registered.add(stage);
     const card = cardFor(stage);
     const wasLoading = stage.classList.contains('sc-image-loading');
@@ -301,7 +301,7 @@ export class ImagePlaceholderMotion {
     this.#cancel(stage);
     this.#setActive(stage, false);
 
-    if (queries.reducedMotion.matches || !wasLoading) {
+    if (!animate || queries.reducedMotion.matches || !wasLoading) {
       this.#settleReady(stage);
       return;
     }
@@ -319,6 +319,24 @@ export class ImagePlaceholderMotion {
       const reveal = cubicBezierValue(STANDARD, clamp(elapsed / REVEAL_DURATION_MS));
       setAlpha(stage, 1 - reveal, reveal);
     }, () => this.#settleReady(stage));
+  }
+
+  suspend(stage: HTMLElement): void {
+    const card = cardFor(stage);
+    const wasRevealing = stage.classList.contains('sc-image-revealing');
+    this.#cancel(stage);
+    this.#setActive(stage, false);
+
+    if (wasRevealing) {
+      this.#settleReady(stage);
+      return;
+    }
+
+    stage.classList.remove('sc-image-transitioning');
+    card?.classList.remove('sc-card-placeholder-transitioning');
+    clearAlpha(stage);
+    removeSharedProperty(stage, PHASE_PROPERTY);
+    removeSharedProperty(stage, WAVE_DELAY_PROPERTY);
   }
 
   release(stage: HTMLElement): void {
