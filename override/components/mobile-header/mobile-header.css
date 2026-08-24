@@ -1,13 +1,9 @@
 /* Presentación del header móvil y su menú. */
-/* Tokens locales del componente. */
 body.sushiShop {
-  --sc-radius-control: 4px;
   --sc-mobile-header-height: 100px;
   --sc-mobile-logo-width: 333px;
   --sc-mobile-menu-icon-size: 18px;
   --sc-z-mobile-header: 20;
-  --sc-z-mobile-menu: 1000;
-  --sc-z-mobile-panel: 1001;
 }
 
 @media (max-width: 992px) {
@@ -94,7 +90,7 @@ body.sushiShop {
     background: transparent !important;
     overflow: visible !important;
     pointer-events: none !important;
-    z-index: var(--sc-z-mobile-menu) !important;
+    z-index: var(--sc-layer-mobile-menu) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
@@ -111,7 +107,7 @@ body.sushiShop {
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    border-radius: var(--sc-radius-control) !important;
+    border-radius: var(--sc-shape-control) !important;
     background: transparent !important;
     box-shadow: none !important;
     text-shadow: none !important;
@@ -125,7 +121,7 @@ body.sushiShop {
     content: '' !important;
     position: absolute !important;
     inset: 4px !important;
-    border-radius: var(--sc-radius-control) !important;
+    border-radius: var(--sc-shape-control) !important;
     background: var(--sc-color-ink) !important;
     transform: scale(1);
     transform-origin: 50% 50%;
@@ -148,7 +144,7 @@ body.sushiShop {
     width: var(--sc-mobile-menu-icon-size) !important;
     height: var(--sc-mobile-menu-icon-size) !important;
     margin: 0 !important;
-    z-index: var(--sc-z-raised) !important;
+    z-index: var(--sc-layer-raised) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_icon-bar,
@@ -184,7 +180,7 @@ body.sushiShop {
     transform: translate3d(0,-8px,0) !important;
     transform-origin: 50% 0 !important;
     transition: opacity var(--sc-motion-short3) var(--sc-motion-ease-decelerate),transform var(--sc-motion-short4) var(--sc-motion-ease-decelerate),visibility 0s linear var(--sc-motion-short4) !important;
-    z-index: var(--sc-z-mobile-panel) !important;
+    z-index: var(--sc-layer-mobile-panel) !important;
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] {
     opacity: 1 !important;
