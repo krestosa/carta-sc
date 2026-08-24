@@ -1,9 +1,9 @@
 /* Icono grilla/lista con interpolación geométrica local de sus rectángulos SVG. */
 body.sushiShop .sc-view-state-icon {
   display:block;
-  flex:0 0 var(--sc-view-icon-size,24px);
-  width:var(--sc-view-icon-size,24px);
-  height:var(--sc-view-icon-size,24px);
+  flex:0 0 var(--sc-view-icon-size);
+  width:var(--sc-view-icon-size);
+  height:var(--sc-view-icon-size);
   overflow:visible;
   color:currentColor;
   fill:currentColor;
