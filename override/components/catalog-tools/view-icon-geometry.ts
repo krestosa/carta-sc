@@ -1,5 +1,6 @@
 import type { CatalogViewMode } from '../../core/types.js';
-import { motionTokens, queries } from '../../core/variables.js';
+import { queries } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 import { catalogViewLabel, viewIconKey, type ViewIconKey } from './view-state.js';
@@ -15,7 +16,7 @@ export class CatalogViewIconController {
         ? 'block'
         : property === 'visibility'
           ? 'visible'
-          : 'var(--sc-color-ink,#0a0a0a)';
+          : 'var(--sc-color-ink)';
       host.style.setProperty(property, value, 'important');
     }
 
@@ -35,7 +36,7 @@ export class CatalogViewIconController {
     for (const shape of this.liveShapes(host)) {
       shape.style.setProperty('display', 'inline', 'important');
       shape.style.setProperty('visibility', 'visible', 'important');
-      shape.style.setProperty('fill', 'var(--sc-color-ink,#0a0a0a)', 'important');
+      shape.style.setProperty('fill', 'var(--sc-color-ink)', 'important');
     }
   }
 
@@ -55,7 +56,7 @@ export class CatalogViewIconController {
       button.setAttribute('aria-label', label);
       button.setAttribute('title', label);
       button.style.setProperty('visibility', 'visible', 'important');
-      button.style.setProperty('color', 'var(--sc-color-ink,#0a0a0a)', 'important');
+      button.style.setProperty('color', 'var(--sc-color-ink)', 'important');
     }
     if (!host) return;
 
@@ -137,14 +138,14 @@ export class CatalogViewIconController {
       const attributes = this.#numericAttributes(target);
       handles.push(reduced
         ? motion.engine.attributes(shape, attributes, {
-            duration: motionTokens.durations.short2,
-            ease: motionTokens.easings.standard,
+            duration: motionConfig.durations.short2,
+            ease: motionConfig.easings.standard,
             onComplete: complete,
           })
         : motion.engine.springAttributes(
             shape,
             attributes,
-            motionTokens.springs.spatial.fast,
+            motionConfig.springs.spatial.fast,
             { onComplete: complete },
           ));
     });
