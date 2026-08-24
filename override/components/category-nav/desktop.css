@@ -1,8 +1,8 @@
 /* Estructura y estado activo del riel en desktop. */
 body.sushiShop {
-  --sc-z-category-indicator: 9;
-  --sc-z-category-overflow: 50;
-  --sc-z-category-controls: 70;
+  --sc-layer-category-indicator: 9;
+  --sc-layer-category-overflow: 50;
+  --sc-layer-category-controls: 70;
   --sc-category-height: 46px;
   --sc-category-gap: var(--sc-space-extra-large);
   --sc-category-gap-compact: var(--sc-space-large);
@@ -148,7 +148,7 @@ body.sushiShop {
     margin-left: 0 !important;
     background: var(--sc-color-ink) !important;
     opacity: 1;
-    z-index: var(--sc-z-category-indicator) !important;
+    z-index: var(--sc-layer-category-indicator) !important;
     pointer-events: none !important;
     transition: none !important;
     will-change: transform;
