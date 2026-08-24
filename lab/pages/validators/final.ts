@@ -26,19 +26,18 @@ function validateRequiredFiles(issues: string[]): void {
   }
 }
 
-function expectedOverrideTarget(source: string): string {
-  const sourceRoot = path.join(ROOT, 'override');
-  const relative = path.relative(sourceRoot, source).replaceAll(path.sep, '/');
-  return relative.endsWith('.ts') ? relative.replace(/\.ts$/, '.js') : relative;
-}
-
 function validateOverrideCoverage(issues: string[]): void {
-  const sourceRoot = path.join(ROOT, 'override');
+  const productionRoot = path.join(ROOT, '.generated', 'production', 'override');
   const targetRoot = path.join(SITE, 'override');
-  const missing: string[] = [];
+  if (!fs.existsSync(productionRoot)) {
+    issues.push('optimized production override is missing during final validation');
+    return;
+  }
 
-  for (const source of walk(sourceRoot)) {
-    const relative = expectedOverrideTarget(source);
+  const missing: string[] = [];
+  for (const source of walk(productionRoot)) {
+    if (!fs.statSync(source).isFile()) continue;
+    const relative = path.relative(productionRoot, source).replaceAll(path.sep, '/');
     const target = path.join(targetRoot, ...relative.split('/'));
     if (!fs.existsSync(target) || !fs.statSync(target).isFile() || fs.statSync(target).size === 0) {
       missing.push(relative);
@@ -46,7 +45,15 @@ function validateOverrideCoverage(issues: string[]): void {
   }
 
   if (missing.length > 0) {
-    issues.push(`override staging is incomplete; missing=${missing.sort().join(',')}`);
+    issues.push(`optimized override staging is incomplete; missing=${missing.sort().join(',')}`);
+  }
+
+  const modularCss = walk(targetRoot)
+    .filter((file) => file.endsWith('.css') && displayPath(file) !== 'override/main.css')
+    .map(displayPath)
+    .sort();
+  if (modularCss.length > 0) {
+    issues.push(`source CSS leaked into optimized override artifact: ${modularCss.join(',')}`);
   }
 }
 
