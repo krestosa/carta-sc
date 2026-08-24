@@ -61,7 +61,8 @@ const EXCLUDED_SOURCE_EXTENSIONS = new Set([
 const SOURCE_PACKAGE_SCRIPTS = {
   'compile:tooling': 'tsc -p tsconfig.tooling.json',
   'compile:browser': 'tsc -p tsconfig.browser.json',
-  'build:runtime': 'npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js',
+  'runtime:optimize': 'node .build/tooling/scripts/optimize-runtime.js',
+  'build:runtime': 'npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js && npm run runtime:optimize',
   'build:site': 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
   'build:compiled': 'npm run build:site && node .build/tooling/lab/handoff/staticize.js .pages-site ../compiled',
   'build:handoff': 'npm run build:compiled',
@@ -193,7 +194,8 @@ class HandoffBuildPipeline {
       return normalized === 'scripts'
         || normalized === 'scripts/lib'
         || normalized.startsWith('scripts/lib/')
-        || normalized === 'scripts/sync-runtime.ts';
+        || normalized === 'scripts/sync-runtime.ts'
+        || normalized === 'scripts/optimize-runtime.ts';
     }
 
     return true;
