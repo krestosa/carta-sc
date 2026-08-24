@@ -5,7 +5,7 @@ html.sc-image-preloader-active {
   --sc-image-preloader-overlay-z: 2;
   --sc-image-preloader-content-z: 1;
   --sc-image-preloader-skeleton-z: 4;
-  --sc-image-preloader-pill-radius: 999px;
+  --sc-image-preloader-pill-radius: var(--sc-shape-full);
   --sc-image-preloader-cover-alpha: 1;
   --sc-image-preloader-content-alpha: 0;
   --sc-image-preloader-phase: 0ms;
