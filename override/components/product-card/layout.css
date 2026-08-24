@@ -30,6 +30,7 @@ body.sushiShop .listadoShop .productoShop.ConCarr {
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
+  border-radius: var(--sc-shape-card);
   vertical-align: top;
 }
 
@@ -44,6 +45,7 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   align-content: start;
   min-width: 0;
   height: 100%;
+  border-radius: inherit;
   color: inherit;
   text-decoration: none !important;
   cursor: pointer;
