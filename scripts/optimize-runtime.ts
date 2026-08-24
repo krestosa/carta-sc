@@ -36,11 +36,17 @@ interface CssStats {
   readonly sourceBytes: number;
   readonly productionBytes: number;
   readonly selectorsRemoved: number;
+  readonly customPropertiesRemoved: number;
 }
 
 interface CssPruneResult {
   readonly css: string;
   readonly selectorsRemoved: number;
+}
+
+interface CustomPropertyPruneResult {
+  readonly css: string;
+  readonly customPropertiesRemoved: number;
 }
 
 function normalize(value: string): string {
@@ -405,16 +411,45 @@ function pruneCss(source: string, usage: UsageIndex): CssPruneResult {
   return { css: output, selectorsRemoved };
 }
 
+function pruneUnusedCustomProperties(source: string, usage: UsageIndex): CustomPropertyPruneResult {
+  const occurrences = new Map<string, number>();
+  for (const match of source.matchAll(/--sc-[\w-]+/g)) {
+    const name = match[0];
+    occurrences.set(name, (occurrences.get(name) ?? 0) + 1);
+  }
+
+  const removable = new Set(
+    [...occurrences]
+      .filter(([name, count]) => count === 1 && !tokenIsUsed(name, usage))
+      .map(([name]) => name),
+  );
+  if (!removable.size) return { css: source, customPropertiesRemoved: 0 };
+
+  let customPropertiesRemoved = 0;
+  const css = source.replace(
+    /(^|[;{])(\s*)(--sc-[\w-]+)\s*:\s*([^;{}]*);/gm,
+    (full, boundary: string, spacing: string, name: string) => {
+      if (!removable.has(name)) return full;
+      customPropertiesRemoved += 1;
+      return `${boundary}${spacing}`;
+    },
+  );
+
+  return { css, customPropertiesRemoved };
+}
+
 function buildProductionCss(): CssStats {
   const source = inlineCss(CSS_ENTRY);
   const usage = buildUsageIndex();
   const pruned = pruneCss(source, usage);
-  const css = `${pruned.css.trim()}\n`;
+  const customProperties = pruneUnusedCustomProperties(pruned.css, usage);
+  const css = `${customProperties.css.trim()}\n`;
   fs.writeFileSync(PRODUCTION_CSS, css);
   return {
     sourceBytes: Buffer.byteLength(source),
     productionBytes: Buffer.byteLength(css),
     selectorsRemoved: pruned.selectorsRemoved,
+    customPropertiesRemoved: customProperties.customPropertiesRemoved,
   };
 }
 
@@ -431,7 +466,8 @@ export function optimizeRuntime(): void {
   console.log(
     `[production-runtime] JS ${runtime.sourceFiles} -> ${runtime.productionFiles} modules `
     + `(${runtime.removedFiles} unreachable removed, ${percentage(runtime.sourceBytes, runtime.productionBytes)} bytes removed); `
-    + `CSS ${css.selectorsRemoved} unused selectors removed, ${percentage(css.sourceBytes, css.productionBytes)} bytes removed`,
+    + `CSS ${css.selectorsRemoved} unused selectors + ${css.customPropertiesRemoved} unused custom properties removed, `
+    + `${percentage(css.sourceBytes, css.productionBytes)} bytes removed`,
   );
 }
 
