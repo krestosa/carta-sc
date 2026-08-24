@@ -76,14 +76,29 @@ import { fileURLToPath } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const source = path.join(root, 'source');
 const staging = path.join(source, '.generated', 'handoff-site');
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const node = process.execPath;
+const npmExecPath = process.env.npm_execpath?.trim() || '';
 const env = { ...process.env, GITHUB_SHA: '${sha}', SC_SITE_DIR: staging };
 
 function run(command, args) {
   const result = spawnSync(command, args, { cwd: source, stdio: 'inherit', env, shell: false });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+function runNpm(args) {
+  if (/\\.(?:c?js|mjs)$/i.test(npmExecPath)) {
+    run(node, [npmExecPath, ...args]);
+    return;
+  }
+
+  if (process.platform === 'win32') {
+    const cmd = process.env.ComSpec || 'cmd.exe';
+    run(cmd, ['/d', '/s', '/c', ['npm.cmd', ...args].join(' ')]);
+    return;
+  }
+
+  run('npm', args);
 }
 
 function cleanStaging() {
@@ -97,9 +112,9 @@ function cleanStaging() {
 
 cleanStaging();
 try {
-  run(npm, ['ci']);
-  run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.tooling.json']);
-  run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.browser.json']);
+  runNpm(['ci']);
+  run(node, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.tooling.json']);
+  run(node, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.browser.json']);
   run(node, ['.build/tooling/scripts/sync-runtime.js']);
   run(node, ['.build/tooling/scripts/optimize-runtime.js']);
   run(node, ['.build/tooling/lab/pages/build.js']);
