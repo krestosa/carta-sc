@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -11,11 +12,48 @@ export const LAB = path.join(ROOT, 'lab', 'pages');
 export const PAGE_ASSETS = path.join(LAB, 'assets');
 
 const TRANSIENT_REMOVE_CODES = new Set(['EBUSY', 'EPERM', 'EACCES']);
+const BUILD_ID_EXTENSIONS = new Set(['.css', '.html', '.js', '.json', '.ts']);
+const BUILD_ID_INPUTS = [
+  path.join(ROOT, 'index.html'),
+  path.join(ROOT, '_js_dev', 'main.js'),
+  path.join(ROOT, 'override'),
+  path.join(ROOT, 'lab', 'pages'),
+  path.join(ROOT, 'scripts', 'sync-runtime.ts'),
+  path.join(ROOT, 'scripts', 'optimize-runtime.ts'),
+  path.join(ROOT, 'scripts', 'lib'),
+  path.join(ROOT, 'package-lock.json'),
+  path.join(ROOT, 'tsconfig.base.json'),
+  path.join(ROOT, 'tsconfig.browser.json'),
+  path.join(ROOT, 'tsconfig.tooling.json'),
+] as const;
 
-export function githubSha(): string {
-  const sha = process.env.GITHUB_SHA ?? '';
-  if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error('GITHUB_SHA is missing or invalid');
-  return sha;
+function isBuildIdInput(file: string): boolean {
+  const relativePath = path.relative(ROOT, file).replaceAll(path.sep, '/');
+  if (relativePath.split('/').some((segment) => segment.startsWith('.'))) return false;
+  return BUILD_ID_EXTENSIONS.has(path.extname(relativePath).toLowerCase());
+}
+
+function buildIdFiles(): string[] {
+  const files = BUILD_ID_INPUTS.flatMap((input) => {
+    if (!fs.existsSync(input)) return [];
+    if (fs.statSync(input).isDirectory()) return walk(input).filter(isBuildIdInput);
+    return isBuildIdInput(input) ? [input] : [];
+  });
+  return [...new Set(files)].sort((left, right) => relative(left).localeCompare(relative(right)));
+}
+
+export function buildId(): string {
+  const files = buildIdFiles();
+  if (files.length === 0) throw new Error('Could not derive build identity from local source files');
+
+  const hash = crypto.createHash('sha256');
+  for (const file of files) {
+    hash.update(relative(file));
+    hash.update('\0');
+    hash.update(fs.readFileSync(file));
+    hash.update('\0');
+  }
+  return hash.digest('base64url').slice(0, 20);
 }
 
 export function assert(condition: unknown, message: string): asserts condition {
