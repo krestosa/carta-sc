@@ -15,7 +15,7 @@ interface ModalMotionState { token: number; handles: CancelableMotion[] }
 const states = new WeakMap<HTMLElement, ModalMotionState>();
 
 function backdropColor(modal: HTMLElement): string {
-  return getComputedStyle(modal).getPropertyValue('--sc-modal-overlay-color').trim() || 'transparent';
+  return getComputedStyle(modal).getPropertyValue('--sc-color-scrim').trim() || 'transparent';
 }
 function stateFor(modal: HTMLElement): ModalMotionState {
   const existing = states.get(modal);

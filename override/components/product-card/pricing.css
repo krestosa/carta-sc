@@ -1,4 +1,13 @@
 /* Precios de card; cada vista decide la posición de la fila. */
+body.sushiShop {
+  --sc-card-compact-price-row-height: 18px;
+  --sc-card-list-price-row-height: 18px;
+}
+
+@media (min-width: 641px) and (max-width: 992px) {
+  body.sushiShop { --sc-card-compact-price-row-height: 16px; }
+}
+
 body.sushiShop .listadoShop .productoShop .priceRow {
   box-sizing: border-box;
   display: flex !important;
@@ -79,11 +88,11 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow {
-  min-height: var(--sc-compact-price-line-height) !important;
+  min-height: var(--sc-card-compact-price-row-height) !important;
 }
 
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
-  min-height: var(--sc-view-list-price-height, 18px) !important;
+  min-height: var(--sc-card-list-price-row-height) !important;
 }
 
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .priceRow .price,

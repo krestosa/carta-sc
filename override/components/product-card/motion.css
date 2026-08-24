@@ -1,8 +1,3 @@
-/* Token local del componente. */
-body.sushiShop {
-  --sc-motion-card: var(--sc-motion-medium3);
-}
-
 /* La card conserva geometría estable; el reveal mueve top y no transforma imágenes. */
 .sushiShop .listadoShop .productoShop {
   position: relative;

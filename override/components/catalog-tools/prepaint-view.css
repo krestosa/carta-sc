@@ -92,8 +92,8 @@ html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .sc-p
 html:not([data-sc-catalog-view]) body.sushiShop .listadoShop .productoShop .descrip {
   grid-column: 1 !important;
   grid-row: 4 !important;
-  min-height: var(--sc-card-description-height) !important;
-  max-height: var(--sc-card-description-height) !important;
+  min-height: var(--sc-compact-description-height) !important;
+  max-height: var(--sc-compact-description-height) !important;
   margin-top: var(--sc-compact-description-margin-top) !important;
   padding-top: var(--sc-compact-description-padding-top) !important;
   font-size: var(--sc-compact-description-size) !important;
