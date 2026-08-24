@@ -1,4 +1,4 @@
-import { motionTokens } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
 export interface CartScrollProfile {
@@ -14,7 +14,7 @@ interface CartScrollEntry {
 
 const SCROLL_MOTION = {
   velocityFloor: 55,
-  settleDelay: motionTokens.durations.short1,
+  settleDelay: motionConfig.durations.short1,
 } as const;
 
 export function setupCartScroll(engine: MotionEngine, profile: CartScrollProfile, reduced: boolean): () => void {
@@ -55,7 +55,7 @@ export function setupCartScroll(engine: MotionEngine, profile: CartScrollProfile
     for (const entry of entries) {
       if (!entry.target) continue;
       stopMove(entry);
-      entry.move = engine.springTransform(entry.target, { y }, motionTokens.springs.spatial.fast, {
+      entry.move = engine.springTransform(entry.target, { y }, motionConfig.springs.spatial.fast, {
         onComplete: () => { entry.move = null; },
       });
     }
