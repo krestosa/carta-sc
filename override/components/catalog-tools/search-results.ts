@@ -99,7 +99,7 @@ export class SearchResultPresenter {
       item.visible = !item.wasHidden;
       item.matchEpoch = 0;
       item.rank = NO_SEARCH_RANK;
-      item.card.style.removeProperty('order');
+      if (item.card.style.order) item.card.style.removeProperty('order');
     }
     for (const group of groups) {
       group.node.hidden = group.wasHidden;
@@ -109,7 +109,7 @@ export class SearchResultPresenter {
       if (group.titleNode) {
         group.titleNode.hidden = group.titleWasHidden;
         group.titleVisible = !group.titleWasHidden;
-        group.titleNode.style.removeProperty('order');
+        if (group.titleNode.style.order) group.titleNode.style.removeProperty('order');
       }
       for (const segment of group.segments) {
         segment.count = 0;
@@ -117,7 +117,7 @@ export class SearchResultPresenter {
         if (segment.heading) {
           segment.heading.hidden = segment.headingWasHidden;
           segment.headingVisible = !segment.headingWasHidden;
-          segment.heading.style.removeProperty('order');
+          if (segment.heading.style.order) segment.heading.style.removeProperty('order');
         }
       }
     }
@@ -151,10 +151,19 @@ export class SearchResultPresenter {
     }
   }
 
+  #setOrder(node: HTMLElement, order: number): void {
+    const value = String(order);
+    if (node.style.order !== value) node.style.order = value;
+  }
+
   #orderGroupContent(group: SearchGroup, query: string, epoch: number): void {
     if (!query) {
-      group.items.forEach((item) => item.card.style.removeProperty('order'));
-      group.segments.forEach((segment) => segment.heading?.style.removeProperty('order'));
+      group.items.forEach((item) => {
+        if (item.card.style.order) item.card.style.removeProperty('order');
+      });
+      group.segments.forEach((segment) => {
+        if (segment.heading?.style.order) segment.heading.style.removeProperty('order');
+      });
       return;
     }
 
@@ -166,8 +175,8 @@ export class SearchResultPresenter {
       const items = segment.items
         .filter((item) => item.matchEpoch === epoch)
         .sort((a, b) => a.rank - b.rank || a.index - b.index);
-      if (segment.heading) segment.heading.style.order = String(base);
-      items.forEach((item, index) => { item.card.style.order = String(base + index + 1); });
+      if (segment.heading) this.#setOrder(segment.heading, base);
+      items.forEach((item, index) => this.#setOrder(item.card, base + index + 1));
     });
   }
 
