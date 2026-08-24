@@ -1,9 +1,9 @@
 /* Geometría local de títulos y subtítulos de sección. La tipografía proviene del sistema DTCG global. */
 body.sushiShop {
   --sc-section-rule-scale: 1;
-  --sc-section-title-margin: 6px 0 -3px;
-  --sc-section-title-padding: 18px 0 12px;
-  --sc-section-subtitle-margin: 8px 0 -3px;
+  --sc-section-title-margin: var(--sc-space-small) 0 calc(-1 * var(--sc-space-extra-small));
+  --sc-section-title-padding: var(--sc-space-large) 0 var(--sc-space-medium);
+  --sc-section-subtitle-margin: var(--sc-space-small) 0 calc(-1 * var(--sc-space-extra-small));
 }
 
 body.sushiShop .listadoShop .titleShopSeccion {
