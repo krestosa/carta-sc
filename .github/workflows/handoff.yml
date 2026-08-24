@@ -51,7 +51,7 @@ jobs:
           env -u GITHUB_SHA -u GITHUB_REF -u GITHUB_REPOSITORY -u GITHUB_WORKSPACE npm run build
 
       - name: Prepare Pages deployment marker
-        run: : > .pages-site/.nojekyll
+        run: touch .pages-site/.nojekyll
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
