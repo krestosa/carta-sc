@@ -1,6 +1,6 @@
 /* Base del catálogo y contenedor principal. */
 body.sushiShop {
-  --sc-catalog-container-inline-space: 64px;
+  --sc-catalog-container-inline-space: var(--sc-space-quad-extra-large);
 }
 
 @font-face {
@@ -67,6 +67,6 @@ body.sushiShop .containerShop .col-md-9.normCols {
 
 @media (min-width: 993px) and (max-width: 1120px) {
   body.sushiShop {
-    --sc-catalog-container-inline-space: 48px;
+    --sc-catalog-container-inline-space: var(--sc-space-triple-extra-large);
   }
 }
