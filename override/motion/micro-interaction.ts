@@ -1,5 +1,5 @@
 import type { Cleanup } from '../core/types.js';
-import { motionTokens } from '../core/variables.js';
+import { motionConfig } from './config.js';
 import type { MicroInteractionOptions, MotionEngine, MotionHandle } from './types.js';
 
 export function bindMicroInteraction(
@@ -47,7 +47,7 @@ export function bindMicroInteraction(
     }
 
     target.style.transformOrigin = options.transformOrigin ?? '50% 50%';
-    activeTween = engine.springTransform(target, { rotation }, motionTokens.springs.spatial.fast, {
+    activeTween = engine.springTransform(target, { rotation }, motionConfig.springs.spatial.fast, {
       onComplete: () => {
         activeTween = null;
         if (clearAtEnd) clearTransform();
@@ -67,9 +67,9 @@ export function bindMicroInteraction(
     }
 
     const returnAngle = hovered || focused ? rotationFor('active') : 0;
-    activeTween = engine.springTransform(target, { rotation: rotationFor('press') }, motionTokens.springs.spatial.fast, {
+    activeTween = engine.springTransform(target, { rotation: rotationFor('press') }, motionConfig.springs.spatial.fast, {
       onComplete: () => {
-        activeTween = engine.springTransform(target, { rotation: returnAngle }, motionTokens.springs.spatial.fast, {
+        activeTween = engine.springTransform(target, { rotation: returnAngle }, motionConfig.springs.spatial.fast, {
           onComplete: () => {
             activeTween = null;
             if (returnAngle === 0) clearTransform();
