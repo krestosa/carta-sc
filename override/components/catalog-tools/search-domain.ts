@@ -6,6 +6,7 @@ export interface SearchSegment {
   headingVisible: boolean;
   count: number;
   bestRank: number;
+  searchOrderBase: number;
 }
 
 export interface SearchHost {
@@ -64,6 +65,7 @@ export function createSearchSegment(heading: HTMLElement | null, index: number):
     items: [],
     count: 0,
     bestRank: NO_SEARCH_RANK,
+    searchOrderBase: 0,
     index,
   };
 }
