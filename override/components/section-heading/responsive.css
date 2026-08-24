@@ -20,4 +20,12 @@
   body.sushiShop .listadoShop .subTitleShopSeccion {
     margin: 5px 0 -2px !important;
   }
+
+  body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) {
+    margin: 2px 0 -2px !important;
+  }
+
+  body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div {
+    padding: 12px 0 10px !important;
+  }
 }
