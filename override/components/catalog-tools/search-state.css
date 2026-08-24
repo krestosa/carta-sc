@@ -9,11 +9,15 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .produc
   display: none !important;
 }
 
-/* Conserva el espacio antes de la primera sección visible. */
+/* Conserva el espacio entre secciones, pero la primera visible ocupa exactamente el origen
+   vertical de la primera sección del catálogo normal. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
   margin-top: var(--sc-space-large) !important;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) {
+  margin-top: 0 !important;
+}
+html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source.sc-search-first-visible:not([hidden]) {
   margin-top: 0 !important;
 }
 
