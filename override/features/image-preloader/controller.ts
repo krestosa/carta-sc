@@ -1,10 +1,13 @@
 import {
   IMAGE_STAGE_SELECTOR,
-  imageBatchConfig,
-  imagePreloaderPolicy,
+  IMAGE_WAVE_ROW_TOLERANCE_PX,
   MOBILE_LOGO_URL,
 } from './config.js';
 import { ImagePlaceholderMotion } from './motion.js';
+
+const SCROLL_SETTLE_MS = 96;
+
+type ImagePriority = 'high' | 'low';
 
 interface ImageBinding {
   stage: HTMLElement;
@@ -13,20 +16,24 @@ interface ImageBinding {
   error: () => void;
 }
 
+interface StageEntry {
+  readonly stage: HTMLElement;
+  readonly image: HTMLImageElement;
+  readonly rect: DOMRect;
+}
+
 export class ImagePreloaderController {
-  readonly #assignedPriority = new WeakSet<HTMLImageElement>();
   readonly #bindings = new Map<HTMLImageElement, ImageBinding>();
   readonly #placeholderMotion = new ImagePlaceholderMotion();
+  readonly #stages = new Set<HTMLElement>();
 
   #observer: MutationObserver | null = null;
-  #intersection: IntersectionObserver | null = null;
   #readyHandler: (() => void) | null = null;
   #started = false;
   #generation = 0;
-  #initialQueue: HTMLElement[] = [];
-  #initialIdle = 0;
-  #initialTimer = 0;
-  #waveFrame = 0;
+  #refreshFrame = 0;
+  #cleanupFrame = 0;
+  #scrollTimer = 0;
 
   get started(): boolean {
     return this.#started;
@@ -55,7 +62,8 @@ export class ImagePreloaderController {
 
   scan(root: ParentNode | Node = document): void {
     if (!this.#started) return;
-    this.#stagesIn(root).forEach((stage) => this.#collectStage(stage));
+    for (const stage of this.#stagesIn(root)) this.#stages.add(stage);
+    this.#scheduleViewportRefresh();
   }
 
   start(): void {
@@ -82,15 +90,19 @@ export class ImagePreloaderController {
       document.removeEventListener('DOMContentLoaded', this.#readyHandler);
       this.#readyHandler = null;
     }
-    this.#cancelInitialScan();
-    if (this.#waveFrame) cancelAnimationFrame(this.#waveFrame);
-    this.#waveFrame = 0;
+    window.removeEventListener('scroll', this.#handleScroll);
+    window.removeEventListener('resize', this.#handleResize);
+    if (this.#refreshFrame) cancelAnimationFrame(this.#refreshFrame);
+    if (this.#cleanupFrame) cancelAnimationFrame(this.#cleanupFrame);
+    if (this.#scrollTimer) clearTimeout(this.#scrollTimer);
+    this.#refreshFrame = 0;
+    this.#cleanupFrame = 0;
+    this.#scrollTimer = 0;
     this.#observer?.disconnect();
-    this.#intersection?.disconnect();
     this.#observer = null;
-    this.#intersection = null;
     this.#unbindNativeImages();
     this.#placeholderMotion.destroy();
+    this.#stages.clear();
     document.documentElement.classList.remove('sc-image-preloader-active');
   }
 
@@ -100,7 +112,7 @@ export class ImagePreloaderController {
     if (logo) {
       logo.loading = 'eager';
       logo.decoding = 'async';
-      try { logo.fetchPriority = 'high'; } catch { /* Compatibilidad de navegador. */ }
+      try { logo.fetchPriority = 'high'; } catch { /* Browser compatibility. */ }
       if (!logo.hasAttribute('width')) logo.width = 333;
       if (!logo.hasAttribute('height')) logo.height = 100;
     }
@@ -109,8 +121,16 @@ export class ImagePreloaderController {
     if (banner) banner.decoding = 'async';
   }
 
+  #catalogueRoot(): ParentNode {
+    return document.querySelector<HTMLElement>('.containerShop') ?? document;
+  }
+
   #stageFor(image: HTMLImageElement | null): HTMLElement | null {
     return image?.closest<HTMLElement>(IMAGE_STAGE_SELECTOR) ?? null;
+  }
+
+  #imageForStage(stage: HTMLElement): HTMLImageElement | null {
+    return stage.querySelector<HTMLImageElement>('img[src],img[srcset],img[data-sc-src]');
   }
 
   #deferredWithoutSource(image: HTMLImageElement): boolean {
@@ -129,21 +149,17 @@ export class ImagePreloaderController {
       || stage.classList.contains('sc-image-transitioning');
   }
 
+  #prepareNetworkPriority(image: HTMLImageElement, priority: ImagePriority): void {
+    image.loading = 'eager';
+    image.decoding = 'async';
+    try { image.fetchPriority = priority; } catch { /* Browser compatibility. */ }
+  }
+
   #activateDeferredSource(image: HTMLImageElement): void {
     const source = image.getAttribute('data-sc-src')?.trim() ?? '';
     if (!source || image.getAttribute('src')?.trim()) return;
     image.removeAttribute('data-sc-src');
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!this.#started || !image.isConnected || image.getAttribute('src')?.trim()) return;
-        image.src = source;
-      });
-    });
-  }
-
-  #catalogueRoot(): ParentNode {
-    return document.querySelector<HTMLElement>('.containerShop') ?? document;
+    image.src = source;
   }
 
   #unbindNativeImage(image: HTMLImageElement): void {
@@ -154,15 +170,13 @@ export class ImagePreloaderController {
     this.#bindings.delete(image);
   }
 
+  #unbindNativeImages(): void {
+    for (const image of [...this.#bindings.keys()]) this.#unbindNativeImage(image);
+  }
+
   #markReadyIfTracked(stage: HTMLElement): void {
     if (!this.#isPlaceholderTracked(stage)) return;
     this.#placeholderMotion.markReady(stage);
-  }
-
-  #revealLoaded(image: HTMLImageElement, stage: HTMLElement, token: number): void {
-    const current = this.#stageFor(image) ?? stage;
-    if (!current || !this.#started || token !== this.#generation || !this.#imageReady(image)) return;
-    this.#markReadyIfTracked(current);
   }
 
   #bindNativeImage(image: HTMLImageElement, stage: HTMLElement): void {
@@ -171,9 +185,6 @@ export class ImagePreloaderController {
       this.#unbindNativeImage(image);
       return;
     }
-
-    this.#placeholderMotion.markLoading(stage, true);
-    this.#scheduleWaveSync();
 
     const existing = this.#bindings.get(image);
     if (existing) {
@@ -188,10 +199,18 @@ export class ImagePreloaderController {
       load: () => undefined,
       error: () => undefined,
     };
+
     binding.load = () => {
-      this.#revealLoaded(image, binding.stage, binding.token);
+      const current = this.#stageFor(image) ?? binding.stage;
+      if (
+        current
+        && this.#started
+        && binding.token === this.#generation
+        && this.#imageReady(image)
+      ) this.#markReadyIfTracked(current);
       if (this.#imageReady(image)) this.#unbindNativeImage(image);
     };
+
     binding.error = () => {
       if (this.#started && binding.token === this.#generation) {
         this.#markReadyIfTracked(binding.stage);
@@ -209,32 +228,16 @@ export class ImagePreloaderController {
     }
   }
 
-  #unbindNativeImages(): void {
-    for (const image of [...this.#bindings.keys()]) this.#unbindNativeImage(image);
-  }
-
-  #release(root: Node): void {
-    if (!(root instanceof Element)) return;
-    this.#stagesIn(root).forEach((stage) => this.#placeholderMotion.release(stage));
-    if (root instanceof HTMLImageElement) {
-      this.#intersection?.unobserve(root);
-      this.#unbindNativeImage(root);
-    }
-    root.querySelectorAll<HTMLImageElement>('img').forEach((image) => {
-      this.#intersection?.unobserve(image);
-      this.#unbindNativeImage(image);
-    });
-  }
-
-  #activateVisibleImage(image: HTMLImageElement): void {
-    const stage = this.#stageFor(image);
-    if (!stage) return;
+  #activateVisibleImage(entry: StageEntry): void {
+    const { image, stage } = entry;
+    this.#prepareNetworkPriority(image, 'high');
 
     if (this.#imageReady(image)) {
       this.#markReadyIfTracked(stage);
       return;
     }
 
+    this.#placeholderMotion.markLoading(stage, true);
     this.#bindNativeImage(image, stage);
     this.#activateDeferredSource(image);
 
@@ -244,51 +247,22 @@ export class ImagePreloaderController {
     }
   }
 
-  #ensureIntersection(): IntersectionObserver | null {
-    if (this.#intersection || !('IntersectionObserver' in window)) return this.#intersection;
-    this.#intersection = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!(entry.target instanceof HTMLImageElement)) continue;
-        const image = entry.target;
-        if (!entry.isIntersecting) continue;
-        this.#intersection?.unobserve(image);
-        this.#activateVisibleImage(image);
-      }
-    }, { root: null, rootMargin: '0px', threshold: 0 });
-    return this.#intersection;
+  #prefetchImage(entry: StageEntry): void {
+    const { image, stage } = entry;
+    if (this.#imageReady(image)) return;
+    this.#prepareNetworkPriority(image, 'low');
+    this.#bindNativeImage(image, stage);
+    this.#activateDeferredSource(image);
   }
 
-  #setPriority(image: HTMLImageElement): void {
-    if (this.#assignedPriority.has(image)) return;
-    this.#assignedPriority.add(image);
-    image.loading = 'lazy';
-    image.decoding = 'async';
-    try { image.fetchPriority = 'low'; } catch { /* Compatibilidad de navegador. */ }
-  }
-
-  #collectImage(image: HTMLImageElement, explicitStage?: HTMLElement | null): void {
-    const stage = explicitStage ?? this.#stageFor(image);
-    if (!stage) return;
-    this.#setPriority(image);
-
-    if (this.#imageReady(image)) {
-      this.#markReadyIfTracked(stage);
-      return;
+  #release(root: Node): void {
+    if (!(root instanceof Element)) return;
+    for (const stage of this.#stagesIn(root)) {
+      this.#stages.delete(stage);
+      this.#placeholderMotion.release(stage);
     }
-
-    const intersection = this.#ensureIntersection();
-    if (intersection) {
-      intersection.observe(image);
-      return;
-    }
-
-    this.#activateVisibleImage(image);
-  }
-
-  #collectStage(stage: HTMLElement | undefined): void {
-    if (!stage) return;
-    const image = stage.querySelector<HTMLImageElement>('img[src],img[srcset],img[data-sc-src]');
-    if (image) this.#collectImage(image, stage);
+    if (root instanceof HTMLImageElement) this.#unbindNativeImage(root);
+    root.querySelectorAll<HTMLImageElement>('img').forEach((image) => this.#unbindNativeImage(image));
   }
 
   #stagesIn(root: ParentNode | Node | null): HTMLElement[] {
@@ -303,91 +277,152 @@ export class ImagePreloaderController {
     return [...stages];
   }
 
-  #activePlaceholderStages(): HTMLElement[] {
-    return [...document.querySelectorAll<HTMLElement>(
-      '.listadoShop .productoShop .sc-image-loading.sc-image-active',
-    )];
+  #entryFor(stage: HTMLElement): StageEntry | null {
+    if (!stage.isConnected) return null;
+    const image = this.#imageForStage(stage);
+    if (!image) return null;
+    const rect = stage.closest<HTMLElement>('.productoShop')?.getBoundingClientRect()
+      ?? stage.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    return { stage, image, rect };
   }
 
-  #scheduleWaveSync(): void {
-    if (this.#waveFrame) return;
-    this.#waveFrame = requestAnimationFrame(() => {
-      this.#waveFrame = 0;
-      this.#placeholderMotion.synchronize(this.#activePlaceholderStages());
-    });
+  #isInsideViewport(rect: DOMRect): boolean {
+    return rect.bottom > 0
+      && rect.top < window.innerHeight
+      && rect.right > 0
+      && rect.left < window.innerWidth;
   }
 
-  #cancelInitialScan(): void {
-    if (this.#initialIdle && window.cancelIdleCallback) window.cancelIdleCallback(this.#initialIdle);
-    if (this.#initialTimer) clearTimeout(this.#initialTimer);
-    this.#initialIdle = 0;
-    this.#initialTimer = 0;
-    this.#initialQueue = [];
+  #isHorizontallyRelevant(rect: DOMRect): boolean {
+    return rect.right > 0 && rect.left < window.innerWidth;
   }
 
-  #runInitialBatch = (deadline: IdleDeadline | null = null): void => {
-    this.#initialIdle = 0;
-    this.#initialTimer = 0;
+  #sortByWaveOrder(entries: readonly StageEntry[]): StageEntry[] {
+    return [...entries].sort((a, b) => (
+      Math.abs(a.rect.top - b.rect.top) > IMAGE_WAVE_ROW_TOLERANCE_PX
+        ? a.rect.top - b.rect.top
+        : b.rect.left - a.rect.left
+    ));
+  }
+
+  #nextRowBelowViewport(entries: readonly StageEntry[]): StageEntry[] {
+    const below = entries
+      .filter((entry) => entry.rect.top >= window.innerHeight && this.#isHorizontallyRelevant(entry.rect))
+      .sort((a, b) => a.rect.top - b.rect.top || b.rect.left - a.rect.left);
+    const first = below[0];
+    if (!first) return [];
+    return this.#sortByWaveOrder(
+      below.filter((entry) => Math.abs(entry.rect.top - first.rect.top) <= IMAGE_WAVE_ROW_TOLERANCE_PX),
+    );
+  }
+
+  #collectEntries(): StageEntry[] {
+    const entries: StageEntry[] = [];
+    for (const stage of [...this.#stages]) {
+      const entry = this.#entryFor(stage);
+      if (!entry) {
+        if (!stage.isConnected) this.#stages.delete(stage);
+        continue;
+      }
+      entries.push(entry);
+    }
+    return entries;
+  }
+
+  #deactivateOutsideViewport(entries: readonly StageEntry[]): void {
+    for (const entry of entries) {
+      if (this.#isInsideViewport(entry.rect)) continue;
+      if (this.#isPlaceholderTracked(entry.stage)) this.#placeholderMotion.release(entry.stage);
+    }
+  }
+
+  #refreshViewport = (): void => {
+    this.#refreshFrame = 0;
     if (!this.#started) return;
 
-    const startedAt = performance.now();
-    let count = 0;
-    while (
-      this.#initialQueue.length
-      && count < imageBatchConfig.size
-      && performance.now() - startedAt < imageBatchConfig.budgetMs
-      && (!deadline || deadline.didTimeout || deadline.timeRemaining() > 2)
-    ) {
-      this.#collectStage(this.#initialQueue.shift());
-      count += 1;
+    const entries = this.#collectEntries();
+    const visible = this.#sortByWaveOrder(entries.filter((entry) => this.#isInsideViewport(entry.rect)));
+    const visibleStages = new Set(visible.map((entry) => entry.stage));
+
+    for (const entry of entries) {
+      if (visibleStages.has(entry.stage)) continue;
+      if (this.#isPlaceholderTracked(entry.stage)) this.#placeholderMotion.release(entry.stage);
     }
-    if (this.#initialQueue.length) this.#scheduleInitialBatch();
+
+    for (const entry of visible) this.#activateVisibleImage(entry);
+    for (const entry of this.#nextRowBelowViewport(entries)) this.#prefetchImage(entry);
+
+    this.#placeholderMotion.synchronize(
+      visible
+        .map((entry) => entry.stage)
+        .filter((stage) => stage.classList.contains('sc-image-loading') && stage.classList.contains('sc-image-active')),
+    );
   };
 
-  #scheduleInitialBatch(): void {
-    if (!this.#started || !this.#initialQueue.length || this.#initialIdle || this.#initialTimer) return;
-    this.#initialTimer = window.setTimeout(() => {
-      this.#initialTimer = 0;
-      if (!this.#started || !this.#initialQueue.length) return;
-      if (window.requestIdleCallback) {
-        this.#initialIdle = window.requestIdleCallback(this.#runInitialBatch, { timeout: imageBatchConfig.idleTimeout });
-      } else {
-        this.#runInitialBatch();
-      }
-    }, imageBatchConfig.delayMs);
+  #scheduleViewportRefresh(): void {
+    if (!this.#started || this.#refreshFrame) return;
+    this.#refreshFrame = requestAnimationFrame(this.#refreshViewport);
   }
 
-  #scanInitial(root: ParentNode | Node): void {
-    this.#cancelInitialScan();
-    const stages = this.#stagesIn(root);
-    const syncCount = Math.min(imageBatchConfig.sync, stages.length);
-    stages.slice(0, syncCount).forEach((stage) => this.#collectStage(stage));
-    this.#initialQueue = stages.slice(syncCount);
-    this.#scheduleInitialBatch();
+  #cleanupOutsideViewport = (): void => {
+    this.#cleanupFrame = 0;
+    if (!this.#started) return;
+    this.#deactivateOutsideViewport(this.#collectEntries());
+  };
+
+  #scheduleViewportCleanup(): void {
+    if (!this.#started || this.#cleanupFrame) return;
+    this.#cleanupFrame = requestAnimationFrame(this.#cleanupOutsideViewport);
   }
+
+  #scheduleSettledRefresh(): void {
+    if (this.#scrollTimer) clearTimeout(this.#scrollTimer);
+    this.#scrollTimer = window.setTimeout(() => {
+      this.#scrollTimer = 0;
+      this.#scheduleViewportRefresh();
+    }, SCROLL_SETTLE_MS);
+  }
+
+  #handleScroll = (): void => {
+    this.#scheduleViewportCleanup();
+    this.#scheduleSettledRefresh();
+  };
+
+  #handleResize = (): void => {
+    this.#scheduleViewportCleanup();
+    this.#scheduleViewportRefresh();
+  };
 
   #observe(root: ParentNode | Node): void {
     if (this.#observer || !('MutationObserver' in window) || !document.documentElement) return;
     this.#observer = new MutationObserver((mutations) => {
+      let needsRefresh = false;
       for (const mutation of mutations) {
         if (mutation.type === 'attributes') {
-          if (mutation.target instanceof HTMLImageElement) this.#collectImage(mutation.target);
+          if (mutation.target instanceof HTMLImageElement) {
+            const stage = this.#stageFor(mutation.target);
+            if (stage) this.#stages.add(stage);
+            needsRefresh = true;
+          }
           continue;
         }
+
         mutation.removedNodes.forEach((node) => this.#release(node));
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof Element)) return;
-          if (node instanceof HTMLImageElement) this.#collectImage(node);
-          else this.scan(node);
+          for (const stage of this.#stagesIn(node)) this.#stages.add(stage);
+          needsRefresh = true;
         });
       }
+      if (needsRefresh) this.#scheduleViewportRefresh();
     });
 
     this.#observer.observe(root instanceof Element ? root : document.documentElement, {
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ['src', 'srcset'],
+      attributeFilter: ['src', 'srcset', 'data-sc-src'],
     });
   }
 
@@ -395,7 +430,10 @@ export class ImagePreloaderController {
     if (!this.#started) return;
     this.#decorateCriticalMedia();
     const root = this.#catalogueRoot();
+    for (const stage of this.#stagesIn(root)) this.#stages.add(stage);
     this.#observe(root);
-    this.#scanInitial(root);
+    window.addEventListener('scroll', this.#handleScroll, { passive: true });
+    window.addEventListener('resize', this.#handleResize, { passive: true });
+    this.#scheduleViewportRefresh();
   }
 }
