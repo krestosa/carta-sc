@@ -37,7 +37,7 @@
     width: 100% !important;
     height: var(--sc-category-height) !important;
     margin: 0 !important;
-    padding: 15px var(--sc-category-mobile-padding-inline) var(--sc-category-toolbar-margin-bottom) !important;
+    padding: var(--sc-token-dimension-fifteen) var(--sc-category-mobile-padding-inline) var(--sc-category-toolbar-margin-bottom) !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     background: var(--sc-color-surface) !important;
@@ -75,7 +75,7 @@
     gap: var(--sc-category-gap) !important;
     overflow: visible !important;
     background: transparent !important;
-    font-size: 13.333px !important;
+    font-size: var(--sc-token-component-dimension-font-thirteen-third) !important;
     transform: none !important;
     transform-origin: 0 0 !important;
   }
@@ -153,7 +153,7 @@
   /* Indicador activo; su movimiento queda a cargo de JS. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     display: block !important;
-    bottom: -12px !important;
+    bottom: calc(-1 * var(--sc-token-dimension-twelve)) !important;
     height: var(--sc-category-indicator-height) !important;
     margin-left: 0 !important;
     background: var(--sc-color-ink) !important;
