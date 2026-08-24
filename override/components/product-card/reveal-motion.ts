@@ -1,6 +1,6 @@
 import { scrollState } from '../../core/state.js';
 import type { Cleanup } from '../../core/types.js';
-import { selectors } from '../../core/variables.js';
+import { classes, selectors } from '../../core/variables.js';
 import { imagePreloader } from '../../features/image-preloader/image-preloader.js';
 import { motionConfig } from '../../motion/config.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
@@ -69,6 +69,7 @@ class ProductCardRevealController {
   }
 
   revealVisibleCards = (): void => {
+    if (this.#searching()) return;
     for (const card of this.#cards) {
       const state = this.#stateFor(card);
       if (!state.prepared) this.#arm(card);
@@ -94,6 +95,10 @@ class ProductCardRevealController {
     };
     this.#states.set(card, state);
     return state;
+  }
+
+  #searching(): boolean {
+    return Boolean(document.body?.classList.contains(classes.catalogSearching));
   }
 
   #renderable(card: HTMLElement): boolean {
@@ -229,7 +234,7 @@ class ProductCardRevealController {
     const y = window.scrollY || window.pageYOffset || 0;
     if (Math.abs(y - this.#lastY) > 0.5) this.#direction = y > this.#lastY ? 1 : -1;
     this.#lastY = y;
-    if (this.#scrollFrame) return;
+    if (this.#scrollFrame || this.#searching()) return;
     this.#scrollFrame = requestAnimationFrame(() => {
       this.#scrollFrame = 0;
       this.revealVisibleCards();
@@ -240,6 +245,7 @@ class ProductCardRevealController {
     if (!('IntersectionObserver' in window)) return;
     const threshold = this.#profile.threshold ?? 0.05;
     this.#observer = new IntersectionObserver((entries) => {
+      if (this.#searching()) return;
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         const card = entry.target as HTMLElement;
@@ -259,6 +265,7 @@ class ProductCardRevealController {
     const container = document.querySelector<HTMLElement>(selectors.container);
     if (!container || !('MutationObserver' in window)) return;
     this.#mutationObserver = new MutationObserver((mutations) => {
+      if (this.#searching()) return;
       for (const mutation of mutations) {
         if (mutation.type !== 'attributes' || mutation.attributeName !== 'hidden') continue;
         const target = mutation.target as HTMLElement;
