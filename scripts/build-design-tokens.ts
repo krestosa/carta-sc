@@ -1,30 +1,60 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
+const DTCG_TYPES = [
+  'color',
+  'dimension',
+  'fontFamily',
+  'fontWeight',
+  'duration',
+  'cubicBezier',
+  'number',
+  'strokeStyle',
+  'border',
+  'transition',
+  'shadow',
+  'gradient',
+  'typography',
+] as const;
+
+type DtcgType = (typeof DTCG_TYPES)[number];
 interface TokenNode {
   $type?: string;
   $value?: unknown;
   [key: string]: unknown;
 }
-
 type TokenDocument = Record<string, unknown>;
-type FlatToken = { path: string; type: string; value: unknown };
+type FlatToken = { path: string; type: DtcgType; value: unknown };
+type DimensionValue = { value: number; unit: 'px' | 'rem' };
+type DurationValue = { value: number; unit: 'ms' | 's' };
+type ColorValue = { colorSpace: string; components: Array<number | string>; alpha?: number; hex?: string };
+type ShadowValue = { color: unknown; offsetX: unknown; offsetY: unknown; blur: unknown; spread: unknown };
+type TypographyValue = { fontFamily: unknown; fontSize: unknown; fontWeight: unknown; letterSpacing: unknown; lineHeight: unknown };
 
 const root = process.cwd();
 const sourcePath = resolve(root, 'tokens/design.tokens.json');
 const cssPath = resolve(root, 'override/core/tokens.generated.css');
 const tsPath = resolve(root, 'override/core/tokens.generated.ts');
-
 const document = JSON.parse(await readFile(sourcePath, 'utf8')) as TokenDocument;
 const tokens = new Map<string, FlatToken>();
+const typeSet = new Set<string>(DTCG_TYPES);
 
-function visit(node: unknown, path: string[], inheritedType?: string): void {
+function isDtcgType(value: string): value is DtcgType {
+  return typeSet.has(value);
+}
+
+function visit(node: unknown, path: string[], inheritedType?: DtcgType): void {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return;
   const object = node as TokenNode;
-  const type = typeof object.$type === 'string' ? object.$type : inheritedType;
+  let type = inheritedType;
+  if (typeof object.$type === 'string') {
+    if (!isDtcgType(object.$type)) throw new Error(`$type DTCG desconocido: ${object.$type} en ${path.join('.')}`);
+    type = object.$type;
+  }
   if ('$value' in object) {
     if (!type) throw new Error(`Token sin $type resoluble: ${path.join('.')}`);
-    tokens.set(path.join('.'), { path: path.join('.'), type, value: object.$value });
+    const tokenPath = path.join('.');
+    tokens.set(tokenPath, { path: tokenPath, type, value: object.$value });
     return;
   }
   for (const [key, value] of Object.entries(object)) {
@@ -35,72 +65,201 @@ function visit(node: unknown, path: string[], inheritedType?: string): void {
 
 visit(document, []);
 
-function resolveToken(path: string, stack: string[] = []): FlatToken {
-  const token = tokens.get(path);
-  if (!token) throw new Error(`Alias a token inexistente: ${path}`);
-  if (stack.includes(path)) throw new Error(`Ciclo de aliases: ${[...stack, path].join(' -> ')}`);
-  if (typeof token.value === 'string') {
-    const match = token.value.match(/^\{([^}]+)\}$/);
-    if (match) return resolveToken(match[1], [...stack, path]);
+function aliasPath(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const match = /^\{([^}]+)\}$/.exec(value);
+  return match?.[1] ?? null;
+}
+
+function resolveValue(value: unknown, stack: string[] = []): unknown {
+  const reference = aliasPath(value);
+  if (reference) {
+    if (stack.includes(reference)) throw new Error(`Ciclo de aliases: ${[...stack, reference].join(' -> ')}`);
+    const target = tokens.get(reference);
+    if (!target) throw new Error(`Alias a token inexistente: ${reference}`);
+    return resolveValue(target.value, [...stack, reference]);
   }
-  return token;
+  if (Array.isArray(value)) return value.map((item) => resolveValue(item, stack));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveValue(item, stack)]));
+  }
+  return value;
+}
+
+function token(path: string): FlatToken {
+  const found = tokens.get(path);
+  if (!found) throw new Error(`Token inexistente: ${path}`);
+  return found;
+}
+
+function resolved(path: string): unknown {
+  return resolveValue(token(path).value, [path]);
+}
+
+function formatColor(value: unknown): string {
+  const color = value as ColorValue;
+  if (!color || !Array.isArray(color.components) || color.components.length < 3) throw new Error('Color DTCG inválido');
+  const alpha = color.alpha ?? 1;
+  if (alpha === 1 && color.hex) return color.hex;
+  if (color.colorSpace === 'srgb' && color.components.slice(0, 3).every((component) => typeof component === 'number')) {
+    const channels = color.components.slice(0, 3).map((component) => Math.round((component as number) * 255));
+    return `rgb(${channels.join(' ')} / ${alpha})`;
+  }
+  const components = color.components.join(' ');
+  return `color(${color.colorSpace} ${components}${alpha === 1 ? '' : ` / ${alpha}`})`;
+}
+
+function formatDimension(value: unknown): string {
+  const dimension = value as DimensionValue;
+  return `${dimension.value}${dimension.unit}`;
+}
+
+function formatDuration(value: unknown): string {
+  const duration = value as DurationValue;
+  return `${duration.value}${duration.unit}`;
+}
+
+function formatCubicBezier(value: unknown): string {
+  return `cubic-bezier(${(value as number[]).join(', ')})`;
+}
+
+function formatFontFamily(value: unknown): string {
+  const values = Array.isArray(value) ? value as string[] : [String(value)];
+  return values.map((part) => /\s/.test(part) ? `'${part.replace(/'/g, "\\'")}'` : part).join(', ');
+}
+
+function formatStrokeStyle(value: unknown): string {
+  if (typeof value === 'string') return value;
+  const style = value as { dashArray?: unknown[] };
+  return style.dashArray?.length ? 'dashed' : 'solid';
+}
+
+function cssForType(type: DtcgType, value: unknown): string {
+  switch (type) {
+    case 'color': return formatColor(value);
+    case 'dimension': return formatDimension(value);
+    case 'fontFamily': return formatFontFamily(value);
+    case 'fontWeight': return String(value);
+    case 'duration': return formatDuration(value);
+    case 'cubicBezier': return formatCubicBezier(value);
+    case 'number': return String(value);
+    case 'strokeStyle': return formatStrokeStyle(value);
+    case 'border': {
+      const border = value as { color: unknown; width: unknown; style: unknown };
+      return `${formatDimension(border.width)} ${formatStrokeStyle(border.style)} ${formatColor(border.color)}`;
+    }
+    case 'transition': {
+      const transition = value as { duration: unknown; delay: unknown; timingFunction: unknown };
+      return `${formatDuration(transition.duration)} ${formatCubicBezier(transition.timingFunction)} ${formatDuration(transition.delay)}`;
+    }
+    case 'shadow': {
+      const values = Array.isArray(value) ? value as ShadowValue[] : [value as ShadowValue];
+      return values.map((shadow) => [
+        formatDimension(shadow.offsetX),
+        formatDimension(shadow.offsetY),
+        formatDimension(shadow.blur),
+        formatDimension(shadow.spread),
+        formatColor(shadow.color),
+      ].join(' ')).join(', ');
+    }
+    case 'gradient': {
+      const stops = value as Array<{ color: unknown; position: number }>;
+      return stops.map((stop) => `${formatColor(stop.color)} ${stop.position * 100}%`).join(', ');
+    }
+    case 'typography': {
+      const typography = value as TypographyValue;
+      return `${cssForType('fontWeight', typography.fontWeight)} ${formatDimension(typography.fontSize)}/${String(typography.lineHeight)} ${formatFontFamily(typography.fontFamily)}`;
+    }
+  }
 }
 
 function cssValue(path: string): string {
-  const token = resolveToken(path);
-  switch (token.type) {
-    case 'color': {
-      const value = token.value as { hex?: string };
-      if (!value?.hex) throw new Error(`Color sin hex fallback: ${path}`);
-      return value.hex;
-    }
-    case 'dimension':
-    case 'duration': {
-      const value = token.value as { value: number; unit: string };
-      return `${value.value}${value.unit}`;
-    }
-    case 'number': return String(token.value);
-    case 'fontFamily': return (token.value as string[]).map((part) => /\s/.test(part) ? `'${part}'` : part).join(', ');
-    case 'cubicBezier': return `cubic-bezier(${(token.value as number[]).join(', ')})`;
-    default: throw new Error(`Tipo no soportado para CSS: ${token.type} (${path})`);
-  }
+  const source = token(path);
+  const reference = aliasPath(source.value);
+  const type = reference ? token(reference).type : source.type;
+  return cssForType(type, resolved(path));
 }
 
 function numberValue(path: string): number {
-  const token = resolveToken(path);
-  if (token.type === 'number') return token.value as number;
-  if (token.type === 'dimension' || token.type === 'duration') return (token.value as { value: number }).value;
+  const source = token(path);
+  const value = resolved(path);
+  if (source.type === 'number' || source.type === 'fontWeight') return Number(value);
+  if (source.type === 'dimension' || source.type === 'duration') return Number((value as { value: number }).value);
   throw new Error(`Token no numérico: ${path}`);
 }
 
-const lightColors = ['ink', 'heading', 'copy', 'muted', 'trait', 'surface', 'surfaceRaised', 'border', 'borderStrong'] as const;
-const cssName = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+function durationMs(path: string): number {
+  const value = resolved(path) as DurationValue;
+  return value.unit === 's' ? value.value * 1000 : value.value;
+}
 
-const css = `/* GENERATED from tokens/design.tokens.json (DTCG 2025.10). Do not edit manually. */
+function typographyVars(path: string, name: string): string[] {
+  const value = resolved(path) as TypographyValue;
+  return [
+    `  --sc-type-${name}-font-family: ${formatFontFamily(value.fontFamily)};`,
+    `  --sc-type-${name}-font-size: ${formatDimension(value.fontSize)};`,
+    `  --sc-type-${name}-font-weight: ${String(value.fontWeight)};`,
+    `  --sc-type-${name}-letter-spacing: ${formatDimension(value.letterSpacing)};`,
+    `  --sc-type-${name}-line-height: ${String(value.lineHeight)};`,
+  ];
+}
+
+const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+const semanticColors = ['ink', 'heading', 'copy', 'muted', 'trait', 'surface', 'surfaceTransparent', 'surfaceRaised', 'border', 'borderStrong'] as const;
+const durationNames = ['short1','short2','short3','short4','medium1','medium2','medium3','medium4','long1','long2','long3','long4','extraLong1','extraLong2','extraLong3','extraLong4'] as const;
+const typographyNames = ['search', 'filter', 'modalTitle', 'modalBody', 'modalPrice', 'submenu'] as const;
+
+function themeBlock(mode: 'light' | 'dark', indent = '  '): string {
+  const borderMode = `border.${mode}`;
+  return [
+    ...semanticColors.map((name) => `${indent}--sc-color-${cssName(name)}: ${cssValue(`color.${mode}.${name}`)};`),
+    `${indent}--sc-border-default: ${cssValue(`${borderMode}.default`)};`,
+    `${indent}--sc-border-strong: ${cssValue(`${borderMode}.strong`)};`,
+    `${indent}--sc-border-focus: ${cssValue(`${borderMode}.focus`)};`,
+  ].join('\n');
+}
+
+const typographyCss = typographyNames.flatMap((name) => typographyVars(`typography.${name}`, cssName(name))).join('\n');
+const css = `/* GENERATED from tokens/design.tokens.json. DTCG 2025.10 source of truth. Do not edit. */
 :root,
 html[data-sc-theme-resolved='light'] {
-${lightColors.map((name) => `  --sc-color-${cssName(name)}: ${cssValue(`color.light.${name}`)};`).join('\n')}
-  --sc-color-surface-transparent: rgba(245,245,245,0);
+${themeBlock('light')}
   --sc-font-primary: ${cssValue('font.family.primary')};
   --sc-font-weight-regular: ${cssValue('font.weight.regular')};
   --sc-font-weight-semibold: ${cssValue('font.weight.semibold')};
-  --sc-border-hairline: ${cssValue('size.borderHairline')};
-  --sc-focus-ring-width: ${cssValue('size.focusRing')};
-  --sc-focus-ring-width-subtle: ${cssValue('size.focusRingSubtle')};
-  --sc-focus-ring-offset: ${cssValue('size.focusOffset')};
-  --sc-focus-ring-offset-tight: ${cssValue('size.focusOffsetTight')};
-  --sc-touch-target: ${cssValue('size.touchTarget')};
-  --sc-z-raised: ${cssValue('zIndex.raised')};
-  --sc-z-theme-popover: ${cssValue('zIndex.themePopover')};
-  --sc-content-max-width: ${cssValue('size.contentMaxWidth')};
-  --sc-catalog-gutter: ${cssValue('size.catalogGutter')};
-  --sc-catalog-inline-space: ${cssValue('size.catalogInlineSpace')};
-  --sc-product-image-ratio: ${cssValue('ratio.productImageWidth')} / ${cssValue('ratio.productImageHeight')};
-${['short1','short2','short3','short4','medium1','medium2','medium3','medium4','long1','long2','long3','long4','extraLong1','extraLong2','extraLong3','extraLong4'].map((name) => `  --sc-motion-${cssName(name)}: ${cssValue(`motion.duration.${name}`)};`).join('\n')}
+  --sc-border-hairline: ${cssValue('dimension.one')};
+  --sc-focus-ring-width: ${cssValue('dimension.two')};
+  --sc-focus-ring-width-subtle: ${cssValue('dimension.one')};
+  --sc-focus-ring-offset: ${cssValue('dimension.three')};
+  --sc-focus-ring-offset-tight: ${cssValue('dimension.two')};
+  --sc-touch-target: ${cssValue('dimension.fortyFour')};
+  --sc-z-raised: ${cssValue('number.zRaised')};
+  --sc-z-theme-popover: ${cssValue('number.zThemePopover')};
+  --sc-z-modal: ${cssValue('number.zModal')};
+  --sc-content-max-width: ${cssValue('dimension.contentMaxWidth')};
+  --sc-catalog-gutter: ${cssValue('dimension.thirtyTwo')};
+  --sc-catalog-inline-space: ${cssValue('dimension.sixtyFour')};
+  --sc-product-image-ratio: ${cssValue('number.productImageWidth')} / ${cssValue('number.productImageHeight')};
+  --sc-overlay-modal: ${cssValue('color.palette.black32')};
+  --sc-shadow-modal: ${cssValue('shadow.modal')};
+  --sc-shadow-submenu: ${cssValue('shadow.submenu')};
+  --sc-gradient-sticky-shadow-stops: ${cssValue('gradient.stickyShadow')};
+  --sc-opacity-trait-icon: ${cssValue('number.opacityTraitIcon')};
+  --sc-opacity-placeholder: ${cssValue('number.opacityPlaceholder')};
+  --sc-opacity-sticky-desktop: ${cssValue('number.opacityStickyDesktop')};
+  --sc-opacity-sticky-mobile: ${cssValue('number.opacityStickyMobile')};
+  --sc-scale-pressed: ${cssValue('number.scalePressed')};
+  --sc-scale-submenu-pressed: ${cssValue('number.scaleSubmenuPressed')};
+${durationNames.map((name) => `  --sc-motion-${cssName(name)}: ${cssValue(`motion.duration.${name}`)};`).join('\n')}
   --sc-motion-ease-standard: ${cssValue('motion.easing.standard')};
   --sc-motion-ease-accelerate: ${cssValue('motion.easing.accelerate')};
   --sc-motion-ease-decelerate: ${cssValue('motion.easing.decelerate')};
   --sc-motion-ease-linear: ${cssValue('motion.easing.linear')};
+  --sc-transition-fast: ${cssValue('motion.transition.fast')};
+  --sc-transition-standard: ${cssValue('motion.transition.standard')};
+  --sc-transition-icon: ${cssValue('motion.transition.icon')};
+  --sc-transition-theme: ${cssValue('motion.transition.theme')};
+${typographyCss}
   --sc-focus-ring-color: var(--sc-color-ink);
   --sc-motion-ease-out: var(--sc-motion-ease-decelerate);
   --sc-motion-fast: var(--sc-motion-short3);
@@ -109,38 +268,33 @@ ${['short1','short2','short3','short4','medium1','medium2','medium3','medium4','
 }
 
 html[data-sc-theme-resolved='dark'] {
-${lightColors.map((name) => `  --sc-color-${cssName(name)}: ${cssValue(`color.dark.${name}`)};`).join('\n')}
-  --sc-color-surface-transparent: rgba(10,10,10,0);
+${themeBlock('dark')}
 }
 
 @media (prefers-color-scheme: light) {
   html[data-sc-theme='system'] {
-${lightColors.map((name) => `    --sc-color-${cssName(name)}: ${cssValue(`color.light.${name}`)};`).join('\n')}
-    --sc-color-surface-transparent: rgba(245,245,245,0);
+${themeBlock('light', '    ')}
   }
 }
 
 @media (prefers-color-scheme: dark) {
   html[data-sc-theme='system'] {
-${lightColors.map((name) => `    --sc-color-${cssName(name)}: ${cssValue(`color.dark.${name}`)};`).join('\n')}
-    --sc-color-surface-transparent: rgba(10,10,10,0);
+${themeBlock('dark', '    ')}
   }
 }
 `;
 
-const durationNames = ['short1','short2','short3','short4','medium1','medium2','medium3','medium4','long1','long2','long3','long4','extraLong1','extraLong2','extraLong3','extraLong4'] as const;
-const durationObject = Object.fromEntries(durationNames.map((name) => [name, numberValue(`motion.duration.${name}`) / 1000]));
+const durationObject = Object.fromEntries(durationNames.map((name) => [name, durationMs(`motion.duration.${name}`) / 1000]));
 const easingObject = Object.fromEntries(['standard','accelerate','decelerate','linear'].map((name) => [name, cssValue(`motion.easing.${name}`)]));
 const spring = (path: string) => ({ stiffness: numberValue(`${path}.stiffness`), damping: numberValue(`${path}.damping`) });
-
-const ts = `/* GENERATED from tokens/design.tokens.json (DTCG 2025.10). Do not edit manually. */
+const ts = `/* GENERATED from tokens/design.tokens.json. DTCG 2025.10 source of truth. Do not edit. */
 export const tokenMedia = Object.freeze({
-  phone: '(max-width: ${cssValue('size.breakpointPhone')})',
-  mobile: '(max-width: ${cssValue('size.breakpointMobile')})',
-  tablet: '(min-width: ${cssValue('size.breakpointTabletMin')}) and (max-width: ${cssValue('size.breakpointTabletMax')})',
-  compact: '(max-width: ${cssValue('size.breakpointTabletMax')})',
-  compactWide: '(min-width: ${numberValue('size.breakpointPhone') + 1}px) and (max-width: ${cssValue('size.breakpointTabletMax')})',
-  desktop: '(min-width: ${cssValue('size.breakpointDesktop')})',
+  phone: '(max-width: ${cssValue('dimension.breakpointPhone')})',
+  mobile: '(max-width: ${cssValue('dimension.breakpointMobile')})',
+  tablet: '(min-width: ${cssValue('dimension.breakpointTabletMin')}) and (max-width: ${cssValue('dimension.breakpointTabletMax')})',
+  compact: '(max-width: ${cssValue('dimension.breakpointTabletMax')})',
+  compactWide: '(min-width: ${numberValue('dimension.breakpointPhone') + 1}px) and (max-width: ${cssValue('dimension.breakpointTabletMax')})',
+  desktop: '(min-width: ${cssValue('dimension.breakpointDesktop')})',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   reducedTransparency: '(prefers-reduced-transparency: reduce)',
   moreContrast: '(prefers-contrast: more)',
@@ -148,7 +302,7 @@ export const tokenMedia = Object.freeze({
 } as const);
 
 export const tokenMotion = Object.freeze({
-  geometryRefreshDelay: ${numberValue('motion.duration.geometryRefreshDelay')},
+  geometryRefreshDelay: ${durationMs('motion.duration.geometryRefreshDelay')},
   durations: Object.freeze(${JSON.stringify(durationObject, null, 2)}),
   springs: Object.freeze({
     spatial: Object.freeze({ fast: Object.freeze(${JSON.stringify(spring('motion.spring.spatial.fast'))}), default: Object.freeze(${JSON.stringify(spring('motion.spring.spatial.default'))}), slow: Object.freeze(${JSON.stringify(spring('motion.spring.spatial.slow'))}) }),
@@ -157,8 +311,19 @@ export const tokenMotion = Object.freeze({
     focus: Object.freeze(${JSON.stringify(spring('motion.spring.focus'))}),
   }),
   cssEasings: Object.freeze(${JSON.stringify(easingObject, null, 2)}),
+  transitions: Object.freeze({
+    fast: ${JSON.stringify(cssValue('motion.transition.fast'))},
+    standard: ${JSON.stringify(cssValue('motion.transition.standard'))},
+    icon: ${JSON.stringify(cssValue('motion.transition.icon'))},
+    theme: ${JSON.stringify(cssValue('motion.transition.theme'))},
+  }),
 } as const);
+
+export const tokenTypes = Object.freeze(${JSON.stringify(DTCG_TYPES)} as const);
 `;
 
 await Promise.all([writeFile(cssPath, css), writeFile(tsPath, ts)]);
-console.log(`[design-tokens] ${tokens.size} tokens -> ${cssPath}, ${tsPath}`);
+const usedTypes = [...new Set([...tokens.values()].map((entry) => entry.type))].sort();
+const missingTypes = DTCG_TYPES.filter((type) => !usedTypes.includes(type));
+if (missingTypes.length) throw new Error(`Tipos DTCG no representados: ${missingTypes.join(', ')}`);
+console.log(`[design-tokens] ${tokens.size} tokens; DTCG types ${usedTypes.length}/${DTCG_TYPES.length} -> CSS + TypeScript`);
