@@ -53,9 +53,9 @@ class CategoryLayoutController {
   }
 
   #syncCompact(): void {
+    const container = document.querySelector<HTMLElement>(selectors.container);
+    if (container) this.#markFirstCatalogSection(container);
     document.body?.classList.remove(classes.catalogLayoutReady);
-    document.querySelectorAll<HTMLElement>(`${selectors.productList}.sc-first-catalog-section`)
-      .forEach((node) => node.classList.remove('sc-first-catalog-section'));
 
     this.#captureNavigation();
     if (this.#navigation && this.#originalParent && document.documentElement.contains(this.#originalParent)) {
