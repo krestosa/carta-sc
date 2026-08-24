@@ -1,99 +1,196 @@
-name: TypeScript CI and Cross-Platform Handoff
+name: Build, Handoff and Pages
 
 on:
   push:
     branches:
       - type
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: typescript-ci-${{ github.event.pull_request.number || github.ref }}
+  group: type-release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci:
-    if: github.ref == 'refs/heads/type' || (github.event_name == 'pull_request' && github.head_ref == 'type')
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux
-            os: ubuntu-latest
-            node: '22'
-          - platform: windows
-            os: windows-latest
-            node: '24'
-    name: ci-${{ matrix.platform }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    env:
-      TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-
+  build:
+    name: build-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - name: Checkout exact type commit
+      - name: Checkout triggering commit
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
 
-      - name: Set up Node ${{ matrix.node }}
+      - name: Set up Node 22
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies
         timeout-minutes: 5
         run: npm ci
 
-      - name: Verify checked out type SHA
-        shell: pwsh
+      - name: Verify checkout
+        shell: bash
         run: |
-          $actual = git rev-parse HEAD
-          if ($actual -ne $env:TYPE_SHA) { throw "Checkout SHA mismatch: $actual != $env:TYPE_SHA" }
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$GITHUB_SHA"
 
-      - name: Run cross-platform TypeScript validation
-        timeout-minutes: 12
-        shell: pwsh
-        run: |
-          $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run ci:core
+      - name: Build application, Pages and handoff
+        timeout-minutes: 15
+        run: npm run build
 
-      - name: Build handoff
-        timeout-minutes: 12
-        shell: pwsh
-        run: |
-          $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run build:handoff
-
-      - name: Validate handoff structure
-        timeout-minutes: 5
-        shell: pwsh
-        run: |
-          $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run validate:handoff
-
-      - name: Validate standalone handoff in browser
-        if: github.event_name == 'workflow_dispatch' && matrix.platform == 'linux'
-        shell: pwsh
+      - name: Browser smoke test
+        if: github.event_name == 'workflow_dispatch'
         timeout-minutes: 8
-        run: |
-          $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run validate:handoff:browser
+        run: npm run validate:handoff:browser
 
-      - name: Upload Windows handoff
-        if: github.event_name == 'workflow_dispatch' && matrix.platform == 'windows'
+      - name: Create deployment manifest
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import crypto from 'node:crypto';
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const root = path.resolve('.pages-site');
+          const output = path.join(root, '_deploy-manifest.json');
+          const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+            const full = path.join(dir, entry.name);
+            return entry.isDirectory() ? walk(full) : [full];
+          });
+          const files = walk(root)
+            .filter((file) => file !== output)
+            .sort()
+            .map((file) => {
+              const bytes = fs.readFileSync(file);
+              return {
+                path: path.relative(root, file).replaceAll(path.sep, '/'),
+                size: bytes.length,
+                sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+              };
+            });
+          const manifest = {
+            sha: process.env.GITHUB_SHA,
+            fileCount: files.length,
+            files,
+          };
+          fs.writeFileSync(output, `${JSON.stringify(manifest)}\n`);
+          console.log(`Deployment manifest: ${files.length} files for ${process.env.GITHUB_SHA}`);
+          NODE
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: '.pages-site'
+
+      - name: Upload handoff artifact
         uses: actions/upload-artifact@v7
         with:
-          name: handoff-${{ matrix.platform }}-${{ env.TYPE_SHA }}
+          name: handoff-${{ github.sha }}
           path: handoff
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 7
           compression-level: 6
+
+  windows:
+    name: verify-windows
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout triggering commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        timeout-minutes: 5
+        run: npm ci
+
+      - name: Verify checkout
+        shell: pwsh
+        run: |
+          $actual = git rev-parse HEAD
+          if ($actual -ne $env:GITHUB_SHA) { throw "Checkout SHA mismatch: $actual != $env:GITHUB_SHA" }
+
+      - name: Verify cross-platform build inputs
+        timeout-minutes: 12
+        run: npm run verify
+
+  deploy:
+    name: deploy-pages
+    needs:
+      - build
+      - windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy exact Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify public deployment commit
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          node --input-type=module <<'NODE'
+          const base = (process.env.PAGE_URL ?? '').replace(/\/$/, '');
+          const sha = process.env.GITHUB_SHA ?? '';
+          if (!base) throw new Error('Pages did not return a deployment URL');
+
+          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          async function text(path, nonce) {
+            const response = await fetch(`${base}${path}${path.includes('?') ? '&' : '?'}verify=${nonce}`, {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache, no-store, max-age=0' },
+              signal: AbortSignal.timeout(15_000),
+            });
+            if (!response.ok) throw new Error(`${response.status} ${path}`);
+            return response.text();
+          }
+
+          let lastError = null;
+          for (let attempt = 1; attempt <= 20; attempt += 1) {
+            const nonce = `${sha}-${attempt}-${Date.now()}`;
+            try {
+              const [manifestText, html, css, js] = await Promise.all([
+                text('/_deploy-manifest.json', nonce),
+                text('/', nonce),
+                text('/override/main.css', nonce),
+                text('/override/main.js', nonce),
+              ]);
+              const manifest = JSON.parse(manifestText);
+              if (manifest.sha !== sha) throw new Error(`manifest SHA ${manifest.sha} != ${sha}`);
+              if (!html.includes(`const VERSION = '${sha}';`)) throw new Error('public HTML is not the triggering commit');
+              if (css.trim().length < 1000) throw new Error('public CSS is unexpectedly small');
+              if (js.trim().length < 100) throw new Error('public runtime entry is unexpectedly small');
+              console.log(`Verified Pages deployment for ${sha}`);
+              process.exit(0);
+            } catch (error) {
+              lastError = error;
+              if (attempt < 20) await sleep(3000);
+            }
+          }
+          throw new Error(`Pages did not converge to ${sha}: ${lastError instanceof Error ? lastError.message : lastError}`);
+          NODE
