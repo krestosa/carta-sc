@@ -88,9 +88,13 @@ class PagesBuildPipeline {
     copyTree(ROOT, SITE, (relative, absolute) => this.shouldStageSource(relative, absolute));
     assert(!fs.existsSync(path.join(SITE, 'handoff')), 'handoff artifact leaked into Pages staging');
 
-    const generatedOverride = path.join(ROOT, '.generated', 'browser', 'override');
-    assert(fs.existsSync(generatedOverride), 'Browser TypeScript output is missing; run build:runtime first');
-    copyTree(generatedOverride, path.join(SITE, 'override'));
+    const productionOverride = path.join(ROOT, '.generated', 'production', 'override');
+    assert(
+      fs.existsSync(path.join(productionOverride, 'main.js'))
+      && fs.existsSync(path.join(productionOverride, 'main.css')),
+      'Optimized production runtime is missing; run build:runtime first',
+    );
+    copyTree(productionOverride, path.join(SITE, 'override'));
     copyFile(path.join(LAB, '.nojekyll'), path.join(SITE, '.nojekyll'));
   }
 
@@ -99,6 +103,7 @@ class PagesBuildPipeline {
     const topLevel = normalized.split('/', 1)[0] ?? normalized;
     if (ROOT_EXCLUDES.has(topLevel)) return false;
     if (absolute === SITE || absolute.startsWith(`${SITE}${path.sep}`)) return false;
+    if (normalized.startsWith('override/') && normalized.endsWith('.css')) return false;
     return !normalized.endsWith('.ts');
   }
 
@@ -151,6 +156,7 @@ class PagesBuildPipeline {
   private runtimeSyntaxTargets(final: boolean): RuntimeSyntaxTarget[] {
     const targets: RuntimeSyntaxTarget[] = [
       { file: path.join(SITE, 'override', 'main.js'), mode: 'module' },
+      { file: path.join(SITE, 'override', 'runtime-main.js'), mode: 'module' },
       { file: path.join(SITE, '_pages', 'legacy.js'), mode: 'classic' },
       { file: path.join(SITE, '_pages', 'shop.js'), mode: 'classic' },
     ];
