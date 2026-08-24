@@ -2,7 +2,7 @@ import { motion } from '../../motion/main.js';
 import { motionConfig } from '../../motion/config.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';
 
-const TIMING = Object.freeze({ open: 220, close: 150 });
+const TIMING = Object.freeze({ open: 220, close: motionConfig.durationMs.short3 });
 const OFFSET = Object.freeze({ open: 20, close: -10 });
 const EASING = Object.freeze({
   open: motionConfig.cssEasings.standard,
