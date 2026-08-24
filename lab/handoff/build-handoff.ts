@@ -19,12 +19,6 @@ interface RootPackage {
   readonly devDependencies?: Readonly<Record<string, string>>;
 }
 
-interface LauncherDefinition {
-  readonly name: 'build.sh' | 'build.ps1' | 'serve.sh' | 'serve.ps1';
-  readonly content: (sha: string) => string;
-  readonly executable?: boolean;
-}
-
 const PATHS: HandoffPaths = {
   root: path.join(ROOT, 'handoff'),
   source: path.join(ROOT, 'handoff', 'source'),
@@ -65,53 +59,7 @@ const SOURCE_PACKAGE_SCRIPTS = {
   'build:site': 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
   'build:compiled': 'npm run build:site && node .build/tooling/lab/handoff/staticize.js .pages-site ../compiled',
   'build:handoff': 'npm run build:compiled',
-  'serve:compiled': 'npm run compile:tooling && node .build/tooling/lab/handoff/static-server.js ../compiled 4173',
-  build: 'npm run build:compiled',
-  serve: 'npm run serve:compiled',
 } as const;
-
-const LAUNCHERS: readonly LauncherDefinition[] = [
-  {
-    name: 'build.sh',
-    executable: true,
-    content: (sha) => `#!/usr/bin/env bash
-set -euo pipefail
-ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
-cd "$ROOT/source"
-export GITHUB_SHA="${'${GITHUB_SHA:-'}${sha}}"
-npm ci
-npm run build:handoff
-`,
-  },
-  {
-    name: 'build.ps1',
-    content: (sha) => `$ErrorActionPreference = 'Stop'
-$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location (Join-Path $Root 'source')
-if (-not $env:GITHUB_SHA) { $env:GITHUB_SHA = '${sha}' }
-npm ci
-npm run build:handoff
-`,
-  },
-  {
-    name: 'serve.sh',
-    executable: true,
-    content: () => `#!/usr/bin/env bash
-set -euo pipefail
-ROOT="$(cd "$(dirname "${'${BASH_SOURCE[0]}'}")" && pwd)"
-cd "$ROOT"
-node server.mjs compiled 4173
-`,
-  },
-  {
-    name: 'serve.ps1',
-    content: () => `$ErrorActionPreference = 'Stop'
-$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location $Root
-node server.mjs compiled 4173
-`,
-  },
-];
 
 function currentCommitSha(): string {
   try {
@@ -129,6 +77,27 @@ function isCommitSha(value: string): boolean {
   return /^[0-9a-f]{40}$/i.test(value);
 }
 
+function nodeBuildRunner(sha: string): string {
+  return `import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.dirname(fileURLToPath(import.meta.url));
+const source = path.join(root, 'source');
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const env = { ...process.env, GITHUB_SHA: '${sha}' };
+
+function run(args) {
+  const result = spawnSync(npm, args, { cwd: source, stdio: 'inherit', env, shell: false });
+  if (result.error) throw result.error;
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+run(['ci']);
+run(['run', 'build:handoff']);
+`;
+}
+
 class HandoffBuildPipeline {
   readonly #sha = currentCommitSha();
 
@@ -139,8 +108,8 @@ class HandoffBuildPipeline {
     this.#copySource();
     this.#writeSourcePackage();
     staticizeCompiled(SITE, PATHS.compiled);
-    this.#writeServer();
-    this.#writeLaunchers();
+    this.#writeRootPackage();
+    this.#writeNodeEntrypoints();
     process.stdout.write(`Handoff built from ${this.#sha}\n`);
   }
 
@@ -212,18 +181,26 @@ class HandoffBuildPipeline {
     });
   }
 
-  #writeServer(): void {
+  #writeRootPackage(): void {
+    const rootPackage = readJson<RootPackage>(path.join(ROOT, 'package.json'));
+    writeJson(path.join(PATHS.root, 'package.json'), {
+      name: `${rootPackage.name}-handoff`,
+      private: true,
+      version: rootPackage.version,
+      type: 'module',
+      engines: rootPackage.engines,
+      scripts: {
+        build: 'node build.mjs',
+        serve: 'node server.mjs compiled 4173',
+      },
+    });
+  }
+
+  #writeNodeEntrypoints(): void {
     const compiledServer = path.join(ROOT, '.build', 'tooling', 'lab', 'handoff', 'static-server.js');
     assert(fs.existsSync(compiledServer), 'compiled handoff server is missing');
     copyFile(compiledServer, path.join(PATHS.root, 'server.mjs'));
-  }
-
-  #writeLaunchers(): void {
-    for (const launcher of LAUNCHERS) {
-      const file = path.join(PATHS.root, launcher.name);
-      write(file, launcher.content(this.#sha));
-      if (launcher.executable) fs.chmodSync(file, 0o755);
-    }
+    write(path.join(PATHS.root, 'build.mjs'), nodeBuildRunner(this.#sha));
   }
 }
 
