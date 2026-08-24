@@ -1,4 +1,4 @@
-import { motionTokens } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 
@@ -21,7 +21,7 @@ export class MobileMenuIconController {
     this.#motion.delete(path);
     if (previous && previous !== state) {
       const ran = motion.runLoaded(({ engine }) => {
-        const handle = engine.springPath(path, shape, motionTokens.springs.spatial.fast, {
+        const handle = engine.springPath(path, shape, motionConfig.springs.spatial.fast, {
           onComplete: () => this.#motion.delete(path),
         });
         this.#motion.set(path, handle);
