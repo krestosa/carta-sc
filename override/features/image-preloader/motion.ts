@@ -133,7 +133,7 @@ function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
   }
   return entries.sort((a, b) => Math.abs(a.top - b.top) > IMAGE_WAVE_ROW_TOLERANCE_PX
     ? a.top - b.top
-    : b.left - a.left);
+    : a.left - b.left);
 }
 
 function applyWaveLayout(stages: readonly HTMLElement[]): void {
