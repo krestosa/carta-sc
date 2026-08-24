@@ -46,8 +46,20 @@ const transitions = Object.freeze({
 });
 
 const motionCssVariables = Object.freeze({
+  '--sc-motion-short1': `${durationMs.short1}ms`,
+  '--sc-motion-short2': `${durationMs.short2}ms`,
+  '--sc-motion-short3': `${durationMs.short3}ms`,
+  '--sc-motion-short4': `${durationMs.short4}ms`,
+  '--sc-motion-medium1': `${durationMs.medium1}ms`,
+  '--sc-motion-medium3': `${durationMs.medium3}ms`,
+  '--sc-motion-medium4': `${durationMs.medium4}ms`,
+  '--sc-motion-long3': `${durationMs.long3}ms`,
   '--sc-motion-fast': `${durationMs.short3}ms`,
   '--sc-motion-icon': `${durationMs.short4}ms`,
+  '--sc-motion-ease-standard': cssEasings.standard,
+  '--sc-motion-ease-accelerate': cssEasings.accelerate,
+  '--sc-motion-ease-decelerate': cssEasings.decelerate,
+  '--sc-motion-ease-linear': cssEasings.linear,
   '--sc-motion-ease-out': cssEasings.decelerate,
   '--sc-transition-fast': transitions.fast,
   '--sc-transition-standard': transitions.standard,
