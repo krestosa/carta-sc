@@ -19,7 +19,7 @@ body.sushiShop .listadoShop .productoShop .priceRow {
   justify-content: flex-end !important;
   align-self: start;
   justify-self: end;
-  column-gap: 6px !important;
+  column-gap: var(--sc-space-small) !important;
   row-gap: 0 !important;
   width: max-content !important;
   min-width: var(--sc-card-price-width) !important;
@@ -75,7 +75,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
   align-items: center !important;
   align-self: center !important;
   justify-content: flex-start !important;
-  gap: 5px !important;
+  gap: var(--sc-space-small) !important;
   width: max-content !important;
   min-width: max-content !important;
   margin: 0 !important;
@@ -83,8 +83,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
   white-space: nowrap !important;
 }
 
-/* 1/2/3 fuegos y hoja usan su geometría SVG original. El grupo comparte el centro
-   óptico del texto y recibe una separación mínima adicional respecto del precio. */
+/* 1/2/3 fuegos y hoja usan su geometría SVG original. El grupo comparte el centro óptico del texto. */
 body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
   display: inline-flex !important;
@@ -93,12 +92,12 @@ body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   align-items: flex-end !important;
   align-self: center !important;
   justify-content: flex-start !important;
-  gap: 5px !important;
+  gap: var(--sc-space-extra-small) !important;
   width: auto !important;
   height: 13px !important;
   min-height: 13px !important;
   max-height: 13px !important;
-  margin: 0 0 0 2px !important;
+  margin: 0 !important;
   padding: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
@@ -150,8 +149,8 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .pri
   flex-wrap: wrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  column-gap: 6px !important;
-  row-gap: 2px !important;
+  column-gap: var(--sc-space-small) !important;
+  row-gap: var(--sc-space-extra-small) !important;
   width: 100% !important;
   min-width: 0 !important;
   white-space: normal !important;
@@ -183,7 +182,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .p
   align-items: center !important;
   justify-content: flex-start !important;
   justify-self: start !important;
-  column-gap: 6px !important;
+  column-gap: var(--sc-space-small) !important;
   width: max-content !important;
   min-width: 0 !important;
   min-height: var(--sc-card-compact-price-row-height) !important;
