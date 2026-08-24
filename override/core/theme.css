@@ -1,63 +1,25 @@
-/* Contrato global de color; el motor local interpola cambios manuales. */
+/* Contrato global de tema. Los valores visuales provienen de tokens.generated.css. */
 :root,
 html[data-sc-theme-resolved='light'] {
   color-scheme: light;
+}
+
+html[data-sc-theme-resolved='dark'] {
+  color-scheme: dark;
 }
 
 html[data-sc-theme-resolved] {
   background-color: var(--sc-color-surface);
 }
 
-/* Paleta oscura resuelta. */
-html[data-sc-theme-resolved='dark'] {
-  color-scheme: dark;
-  --sc-color-ink: #f3f3f0;
-  --sc-color-heading: #fff;
-  --sc-color-copy: #c8c8c2;
-  --sc-color-muted: #9c9c95;
-  --sc-color-trait: #6f6f6f;
-  --sc-color-surface: #0a0a0a;
-  --sc-color-surface-raised: #121210;
-  --sc-color-surface-transparent: rgba(10,10,10,0);
-  --sc-color-border: #2d2d29;
-  --sc-color-border-strong: #44443e;
-}
-
-/* Tema automático en sistema claro. */
 @media (prefers-color-scheme: light) {
-  html[data-sc-theme='system'] {
-    color-scheme: light;
-    --sc-color-ink: #0a0a0a;
-    --sc-color-heading: #303030;
-    --sc-color-copy: #5f5f5f;
-    --sc-color-muted: #767676;
-    --sc-color-trait: #989898;
-    --sc-color-surface: #f5f5f5;
-    --sc-color-surface-raised: #fbfbfa;
-    --sc-color-surface-transparent: rgba(245,245,245,0);
-    --sc-color-border: #e3e3de;
-    --sc-color-border-strong: #d1d1cb;
-  }
+  html[data-sc-theme='system'] { color-scheme: light; }
 }
 
-/* Tema automático en sistema oscuro. */
 @media (prefers-color-scheme: dark) {
-  html[data-sc-theme='system'] {
-    color-scheme: dark;
-    --sc-color-ink: #f3f3f0;
-    --sc-color-heading: #fff;
-    --sc-color-copy: #c8c8c2;
-    --sc-color-muted: #9c9c95;
-    --sc-color-trait: #6f6f6f;
-    --sc-color-surface: #0a0a0a;
-    --sc-color-surface-raised: #121210;
-    --sc-color-surface-transparent: rgba(10,10,10,0);
-    --sc-color-border: #2d2d29;
-    --sc-color-border-strong: #44443e;
-  }
+  html[data-sc-theme='system'] { color-scheme: dark; }
 }
 
-/* Aplica superficie y tinta al documento. */
 body.sushiShop,
 body.sushiShop .sepFooter {
   background-color: var(--sc-color-surface) !important;
@@ -73,18 +35,4 @@ body.sushiShop a {
 body.sushiShop ::selection {
   background: var(--sc-color-ink);
   color: var(--sc-color-surface);
-}
-
-/* Los SVG de picor/vegetariano provienen de símbolos heredados que pueden traer tinta negra fija.
-   En tema oscuro normalizamos únicamente su salida visual, preservando geometría, alpha y tema claro. */
-html[data-sc-theme-resolved='dark'] body.sushiShop .sc-trait-icon {
-  filter: brightness(0) invert(1) !important;
-  opacity: .72 !important;
-}
-
-@media (prefers-color-scheme: dark) {
-  html[data-sc-theme='system'] body.sushiShop .sc-trait-icon {
-    filter: brightness(0) invert(1) !important;
-    opacity: .72 !important;
-  }
 }
