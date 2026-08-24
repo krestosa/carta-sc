@@ -1,5 +1,9 @@
-/* Alineación óptica compartida por desktop, tablet y mobile. Los breakpoints no alteran
-   la caja interna de icono/texto: solo pueden cambiar la densidad exterior del toolbar. */
+/* Alineación óptica de los filtros. La caja y el gap son compartidos; solo el offset vertical
+   del SVG se calibra por breakpoint para compensar la rasterización/tipografía de cada densidad. */
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+  --sc-filter-trait-optical-y: 1px;
+}
+
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox {
   display: inline-flex !important;
   align-items: center !important;
@@ -31,14 +35,14 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   line-height: 16px !important;
 }
 
-/* Todos los traits comparten el mismo centro óptico. El ancho queda libre para que el gap
-   hacia el texto se mida desde el borde real del SVG, independientemente de 1/2/3 fuegos. */
+/* Fuego y hoja comparten exactamente el mismo offset dentro de cada breakpoint. El ancho
+   queda intrínseco para que el gap al texto se mida desde el borde real del SVG. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon {
   align-self: center !important;
   width: auto !important;
   margin: 0 !important;
   transform: none !important;
-  translate: 0 1px !important;
+  translate: 0 var(--sc-filter-trait-optical-y) !important;
   transform-origin: 50% 50% !important;
 }
 
@@ -50,7 +54,23 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   max-height: 10.667px !important;
 }
 
-body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon[data-sc-trait='vegetariano'] {
-  transform: none !important;
-  translate: 0 1px !important;
+/* Desktop: el centro geométrico necesita 1px hacia abajo. */
+@media (min-width: 993px) {
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+    --sc-filter-trait-optical-y: 1px;
+  }
+}
+
+/* Tablet: la rasterización queda centrada sin corrección. */
+@media (min-width: 641px) and (max-width: 992px) {
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+    --sc-filter-trait-optical-y: 0px;
+  }
+}
+
+/* Mobile: los SVG se perciben bajos; se compensan 1px hacia arriba. */
+@media (max-width: 640px) {
+  body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
+    --sc-filter-trait-optical-y: -1px;
+  }
 }
