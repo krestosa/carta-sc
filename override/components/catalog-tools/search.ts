@@ -23,6 +23,9 @@ export class CatalogSearchController {
 
   #nodes: SearchNodes | null = null;
   #lastState = '';
+  #inputFrame = 0;
+  #inputTask = 0;
+  #pendingInputValue = '';
 
   constructor(options: CatalogSearchOptions = {}) {
     this.#onRestore = options.onRestore ?? (() => undefined);
@@ -48,9 +51,8 @@ export class CatalogSearchController {
     root.querySelectorAll('.sc-sort-control').forEach((node) => node.remove());
 
     const onInput = (): void => {
-      this.#lastState = '';
-      this.apply(input.value);
       this.#syncClear();
+      this.#scheduleInputApply(input.value);
     };
     const onInputKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape' || !input.value) return;
@@ -150,6 +152,7 @@ export class CatalogSearchController {
   clear(focusInput = false): void {
     const nodes = this.#nodes;
     if (!nodes) return;
+    this.#cancelPendingInput();
     nodes.input.value = '';
     this.#lastState = '';
     this.apply('');
@@ -158,6 +161,7 @@ export class CatalogSearchController {
   }
 
   destroy(): void {
+    this.#cancelPendingInput();
     if (this.#presenter.active) this.#restore(false);
     else document.body?.classList.remove(classes.catalogSearching);
     this.#nodes = null;
@@ -165,6 +169,35 @@ export class CatalogSearchController {
     this.#catalog.clear();
     this.#presenter.clear();
     this.#activeFilters.clear();
+  }
+
+  #scheduleInputApply(value: string): void {
+    this.#pendingInputValue = value;
+    if (this.#inputFrame || this.#inputTask) return;
+
+    this.#inputFrame = requestAnimationFrame(() => {
+      this.#inputFrame = 0;
+      if (!this.#nodes) return;
+
+      // Run the catalogue mutation after this frame paints the typed character. This keeps the
+      // keyboard/input path responsive on mobile while still coalescing multiple events per frame.
+      this.#inputTask = window.setTimeout(() => {
+        this.#inputTask = 0;
+        if (!this.#nodes) return;
+        const nextValue = this.#pendingInputValue;
+        this.#pendingInputValue = '';
+        this.#lastState = '';
+        this.apply(nextValue);
+      }, 0);
+    });
+  }
+
+  #cancelPendingInput(): void {
+    if (this.#inputFrame) cancelAnimationFrame(this.#inputFrame);
+    if (this.#inputTask) clearTimeout(this.#inputTask);
+    this.#inputFrame = 0;
+    this.#inputTask = 0;
+    this.#pendingInputValue = '';
   }
 
   #enterSearchMode(): void {
@@ -217,6 +250,7 @@ export class CatalogSearchController {
     const key = filterKeyFromTarget(root, target);
     if (!key) return false;
 
+    this.#cancelPendingInput();
     toggleFilter(this.#activeFilters, key);
     this.#syncFilterButtons();
     this.#lastState = '';
