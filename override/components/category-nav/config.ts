@@ -1,3 +1,4 @@
+import { systemTokens } from '../../core/tokens.generated.js';
 import { queries } from '../../core/variables.js';
 
 export const CATEGORY_SELECTORS = {
@@ -9,7 +10,7 @@ export const CATEGORY_SELECTORS = {
 } as const;
 
 export const CATEGORY_SCROLL = {
-  offsetGap: 12,
+  offsetGap: Number.parseFloat(systemTokens.spacing.medium),
   currentMarkOffset: 2,
   programmaticGraceMs: 180,
   settleTolerance: 0.75,
