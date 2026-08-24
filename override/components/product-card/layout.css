@@ -6,13 +6,9 @@ body.sushiShop {
   --sc-card-content-gap: 18px;
   --sc-card-title-height: 54px;
   --sc-card-title-padding-top: 13px;
-  --sc-card-title-size: 15.5px;
-  --sc-card-title-line-height: 1.26;
-  --sc-card-title-tracking: -.015em;
   --sc-card-description-height: 59px;
   --sc-card-description-offset: 10px;
-  --sc-card-description-size: 12.5px;
-  --sc-card-description-line-height: 16px;
+  --sc-card-description-line-box: 16px;
   --sc-card-price-width: 76px;
   --sc-card-price-gap: 1px;
   --sc-card-price-size: 15.5px;
@@ -24,7 +20,6 @@ body.sushiShop {
   --sc-card-action-active-scale: .97;
 }
 
-/* La card exterior solo organiza el contenido. */
 body.sushiShop .listadoShop .productoShop,
 body.sushiShop .listadoShop .productoShop.ConCarr {
   box-sizing: border-box;
@@ -38,7 +33,6 @@ body.sushiShop .listadoShop .productoShop.ConCarr {
   vertical-align: top;
 }
 
-/* El enlace interno define la grilla principal. */
 body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   box-sizing: border-box;
   display: grid !important;
@@ -56,7 +50,6 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
   outline: none;
 }
 
-/* Imagen siempre ocupa el ancho de la card. */
 body.sushiShop .listadoShop .productoShop .imgShop {
   box-sizing: border-box;
   grid-column: 1 / -1;
@@ -64,7 +57,7 @@ body.sushiShop .listadoShop .productoShop .imgShop {
   width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
-  aspect-ratio: var(--sc-product-image-ratio);
+  aspect-ratio: var(--sc-media-product-aspect-ratio);
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
@@ -73,7 +66,6 @@ body.sushiShop .listadoShop .productoShop .imgShop {
   overflow: hidden !important;
 }
 
-/* Reserva una fila estable para rasgos del producto. */
 body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   box-sizing: border-box !important;
   display: flex !important;
@@ -103,7 +95,6 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   outline-offset: 6px;
 }
 
-/* Evita renderizar cards fuera de pantalla y reserva su alto. */
 @supports (content-visibility: auto) {
   body.sushiShop .listadoShop .productoShop {
     content-visibility: auto;
@@ -119,7 +110,6 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   }
 }
 
-/* Ajusta la reserva para tablet. */
 @media (min-width: 641px) and (max-width: 992px) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop {
@@ -132,7 +122,6 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   }
 }
 
-/* Ajusta la reserva para móvil. */
 @media (max-width: 640px) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop {
@@ -145,7 +134,6 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
   }
 }
 
-/* Fuerza render completo al pasar el puntero. */
 @media (hover: hover) and (pointer: fine) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop:hover {
