@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { SITE, githubSha, read, write } from '../lib/core.js';
+import { SITE, buildId, read, write } from '../lib/core.js';
 import { criticalMedia, splitCss } from './first-paint/css.js';
 import { injectLoader, verify } from './first-paint/delivery.js';
 import { hardLazy, injectCatalogToolsShell, mirrorCriticalMedia } from './first-paint/media.js';
@@ -12,7 +12,7 @@ interface FirstPaintMetrics {
 }
 
 class FirstPaintOptimizer {
-  readonly #sha = githubSha();
+  readonly #sha = buildId();
   readonly #index = path.join(SITE, 'index.html');
   #html = read(this.#index);
   #metrics: FirstPaintMetrics | null = null;
