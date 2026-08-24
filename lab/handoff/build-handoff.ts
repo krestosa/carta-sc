@@ -148,15 +148,18 @@ class HandoffBuildPipeline {
   #makeSourceStandalone(): void {
     const coreFile = path.join(PATHS.source, 'lab', 'pages', 'lib', 'core.ts');
     const source = fs.readFileSync(coreFile, 'utf8');
-    const pattern = /export function githubSha\(\): string \{\n[\s\S]*?\n\}/;
-    assert(pattern.test(source), 'Could not localize handoff build identity');
-    write(
-      coreFile,
-      source.replace(
-        pattern,
-        `export function githubSha(): string {\n  return buildId().slice(0, 40);\n}`,
-      ),
-    );
+    const startMarker = 'export function githubSha(): string {';
+    const endMarker = 'export function assert(';
+    const start = source.indexOf(startMarker);
+    const duplicate = source.indexOf(startMarker, start + startMarker.length);
+    const end = start >= 0 ? source.indexOf(endMarker, start + startMarker.length) : -1;
+    assert(start >= 0 && duplicate < 0 && end > start, 'Could not localize handoff build identity');
+
+    const before = source.slice(0, start);
+    const after = source.slice(end);
+    const localized = `${before}export function githubSha(): string {\n  return buildId().slice(0, 40);\n}\n\n${after}`;
+    assert(!localized.includes('GITHUB_SHA'), 'Repository build identity leaked into standalone handoff source');
+    write(coreFile, localized);
   }
 
   #shouldCopySource(relative: string, absolute: string): boolean {
