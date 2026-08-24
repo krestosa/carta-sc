@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -46,7 +46,7 @@ export function buildId(): string {
   const files = buildIdFiles();
   if (files.length === 0) throw new Error('Could not derive build identity from local source files');
 
-  const hash = crypto.createHash('sha256');
+  const hash = createHash('sha256');
   for (const file of files) {
     hash.update(relative(file));
     hash.update('\0');
