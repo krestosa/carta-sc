@@ -6,7 +6,7 @@ body.sushiShop .sc-catalog-view-toggle,
 body.sushiShop .sc-theme-icon,
 body.sushiShop .sc-view-state-icon{visibility:visible!important;opacity:1!important;}
 body.sushiShop .sc-theme-toggle,
-body.sushiShop .sc-catalog-view-toggle{color:var(--sc-color-ink,var(--sc-token-color-palette-ink))!important;}
+body.sushiShop .sc-catalog-view-toggle{color:var(--sc-color-ink)!important;}
 body.sushiShop .sc-theme-icon,
 body.sushiShop .sc-view-state-icon{display:block!important;width:var(--sc-view-icon-size)!important;min-width:var(--sc-view-icon-size)!important;max-width:var(--sc-view-icon-size)!important;height:var(--sc-view-icon-size)!important;min-height:var(--sc-view-icon-size)!important;max-height:var(--sc-view-icon-size)!important;overflow:visible!important;}
 body.sushiShop .sc-view-state-icon [data-sc-view-live]{display:inline!important;visibility:visible!important;opacity:1!important;}
