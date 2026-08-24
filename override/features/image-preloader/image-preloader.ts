@@ -19,6 +19,7 @@ let syncListenersBound = false;
 let initialPreloadFrame = 0;
 let initialPreloadAttempts = 0;
 let initialRowsReady = false;
+let initialReadyHandler: (() => void) | null = null;
 
 function synchronizeWave(): void {
   syncFrame = 0;
@@ -30,19 +31,16 @@ function scheduleWaveSync(): void {
 }
 
 function positionedCards(): CardPosition[] {
-  return Array.from(document.querySelectorAll<HTMLElement>('.containerShop .listadoShop .productoShop'))
-    .filter((card) => !card.hidden && card.offsetParent !== null)
-    .map((card) => {
-      const rect = card.getBoundingClientRect();
-      return { card, top: rect.top, left: rect.left };
-    })
-    .filter(({ card, top, left }) => {
-      const rect = card.getBoundingClientRect();
-      return Number.isFinite(top) && Number.isFinite(left) && rect.width > 0 && rect.height > 0;
-    })
-    .sort((left, right) => Math.abs(left.top - right.top) > ROW_TOLERANCE_PX
-      ? left.top - right.top
-      : left.left - right.left);
+  const positioned: CardPosition[] = [];
+  for (const card of document.querySelectorAll<HTMLElement>('.containerShop .listadoShop .productoShop')) {
+    if (card.hidden || card.offsetParent === null) continue;
+    const rect = card.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    positioned.push({ card, top: rect.top, left: rect.left });
+  }
+  return positioned.sort((left, right) => Math.abs(left.top - right.top) > ROW_TOLERANCE_PX
+    ? left.top - right.top
+    : left.left - right.left);
 }
 
 function preloadInitialRows(): boolean {
@@ -88,6 +86,20 @@ function scheduleInitialRowsPreload(): void {
   });
 }
 
+function startInitialRowsPreload(): void {
+  if (initialRowsReady || !controller.started) return;
+  if (document.readyState !== 'loading') {
+    scheduleInitialRowsPreload();
+    return;
+  }
+  if (initialReadyHandler) return;
+  initialReadyHandler = () => {
+    initialReadyHandler = null;
+    scheduleInitialRowsPreload();
+  };
+  document.addEventListener('DOMContentLoaded', initialReadyHandler, { once: true });
+}
+
 function bindWaveSync(): void {
   if (syncListenersBound) return;
   syncListenersBound = true;
@@ -107,7 +119,7 @@ function unbindWaveSync(): void {
 export const warmHttpCache = (image: HTMLImageElement | null): void => controller.warmCache(image);
 export const scanImages = (root: ParentNode | Node = document): void => {
   controller.scan(root);
-  scheduleInitialRowsPreload();
+  startInitialRowsPreload();
   scheduleWaveSync();
 };
 export const startImagePreloader = (): void => {
@@ -116,11 +128,15 @@ export const startImagePreloader = (): void => {
   initialRowsReady = false;
   initialPreloadAttempts = 0;
   controller.start();
-  scheduleInitialRowsPreload();
+  startInitialRowsPreload();
   scheduleWaveSync();
 };
 export const destroyImagePreloader = (): void => {
   unbindWaveSync();
+  if (initialReadyHandler) {
+    document.removeEventListener('DOMContentLoaded', initialReadyHandler);
+    initialReadyHandler = null;
+  }
   if (initialPreloadFrame) cancelAnimationFrame(initialPreloadFrame);
   initialPreloadFrame = 0;
   initialPreloadAttempts = 0;
