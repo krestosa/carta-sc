@@ -22,6 +22,7 @@ class ResponsiveContractValidator {
     this.#validateDensityGrid();
     this.#validateListGeometry();
     this.#validateNoDesktopStructuralForks();
+    this.#validateSharedVisualGeometry();
     this.#validateViewportWidthSafety();
     this.#validation.finish('Responsive contract validation failed', 'Responsive contract validation passed.');
   }
@@ -105,6 +106,22 @@ class ResponsiveContractValidator {
         `${file} contains a desktop-only structural fork`,
       );
     }
+  }
+
+  #validateSharedVisualGeometry(): void {
+    const traitIcons = readProjectFile('override/components/catalog-tools/trait-icon-sizing.css');
+    this.#validation.check(
+      !/@media\s*\([^)]*(?:min|max)-width/.test(traitIcons),
+      'filter trait icon alignment must remain shared across desktop, tablet and mobile',
+    );
+    this.#validation.check(
+      /\.imgRef[\s\S]*?transform\s*:\s*none\s*!important/.test(traitIcons),
+      'filter trait icon wrapper must not carry a breakpoint-specific optical offset',
+    );
+    this.#validation.check(
+      /data-sc-trait=['"]vegetariano['"][^}]*transform\s*:\s*none\s*!important/.test(traitIcons),
+      'vegetarian filter icon must share the same vertical center as the fire icons',
+    );
   }
 
   #validateViewportWidthSafety(): void {
