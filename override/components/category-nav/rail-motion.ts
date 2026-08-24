@@ -1,4 +1,5 @@
-import { motionTokens, queries } from '../../core/variables.js';
+import { queries } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 
@@ -25,7 +26,7 @@ export function moveRailTo(scroller: HTMLElement, value: number, onComplete?: ()
     return;
   }
 
-  const handle = motion.engine.spring(motionTokens.springs.spatial.default, (progress) => {
+  const handle = motion.engine.spring(motionConfig.springs.spatial.default, (progress) => {
     scroller.scrollLeft = start + (target - start) * progress;
   }, {
     onComplete: () => {
