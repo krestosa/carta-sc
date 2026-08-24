@@ -1,4 +1,4 @@
-import { motionTokens } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
 const BADGE_MOTION = {
@@ -27,8 +27,8 @@ export function setupCartBadges(engine: MotionEngine, reduced: boolean): () => v
     if (reduced) {
       badge.style.opacity = String(BADGE_MOTION.reducedOpacity);
       const fade = engine.opacity(badge, 1, {
-        duration: motionTokens.durations.short2,
-        ease: motionTokens.easings.decelerate,
+        duration: motionConfig.durations.short2,
+        ease: motionConfig.easings.decelerate,
         clear: true,
         onComplete: () => {
           active.delete(badge);
@@ -40,9 +40,9 @@ export function setupCartBadges(engine: MotionEngine, reduced: boolean): () => v
     }
 
     const handles: MotionHandle[] = [];
-    const up = engine.springTransform(badge, { scale: BADGE_MOTION.pulseScale }, motionTokens.springs.spatial.fast, {
+    const up = engine.springTransform(badge, { scale: BADGE_MOTION.pulseScale }, motionConfig.springs.spatial.fast, {
       onComplete: () => {
-        const down = engine.springTransform(badge, { scale: 1 }, motionTokens.springs.spatial.fast, {
+        const down = engine.springTransform(badge, { scale: 1 }, motionConfig.springs.spatial.fast, {
           clear: true,
           onComplete: () => {
             active.delete(badge);
