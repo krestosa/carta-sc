@@ -44,7 +44,7 @@ body.sushiShop .nav-top-li.sc-submenu-open > a.anchorLink .sc-category-submenu-c
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile{border-bottom:var(--sc-border-default)!important;}
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabsTopShop::before{content:none!important;display:none!important;}
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before,body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after{content:none!important;display:none!important;}
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller{width:calc(100% - (var(--sc-touch-target) * 2))!important;margin-left:var(--sc-touch-target)!important;margin-right:var(--sc-touch-target)!important;padding-left:0!important;padding-right:0!important;}
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller{width:calc(100% - var(--sc-touch-target) - var(--sc-touch-target))!important;margin-left:var(--sc-touch-target)!important;margin-right:var(--sc-touch-target)!important;padding-left:0!important;padding-right:0!important;}
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow{width:var(--sc-touch-target)!important;min-width:var(--sc-touch-target)!important;height:100%!important;top:0!important;bottom:0!important;transform:none!important;}
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow::before{inset:0!important;}
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow--left{left:0!important;right:auto!important;}
