@@ -87,6 +87,11 @@ class PagesBuildPipeline {
       'Optimized production runtime is missing; run verify before building Pages',
     );
     copyTree(productionOverride, path.join(SITE, 'override'));
+
+    const stylesRuntime = path.join(ROOT, '.generated', 'browser', 'styles', 'styles.js');
+    assert(fs.existsSync(stylesRuntime), 'Compiled styles showcase runtime is missing; run compile:browser before building Pages');
+    ensureDir(path.join(SITE, 'styles'));
+    fs.copyFileSync(stylesRuntime, path.join(SITE, 'styles', 'styles.js'));
   }
 
   private shouldStageSource(relative: string, absolute: string): boolean {
@@ -149,6 +154,7 @@ class PagesBuildPipeline {
     const targets: RuntimeSyntaxTarget[] = [
       { file: path.join(SITE, 'override', 'main.js'), mode: 'module' },
       { file: path.join(SITE, 'override', 'runtime-main.js'), mode: 'module' },
+      { file: path.join(SITE, 'styles', 'styles.js'), mode: 'module' },
       { file: path.join(SITE, '_pages', 'legacy.js'), mode: 'classic' },
       { file: path.join(SITE, '_pages', 'shop.js'), mode: 'classic' },
     ];
