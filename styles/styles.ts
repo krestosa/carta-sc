@@ -16,9 +16,33 @@ interface SpringPair {
   damping?: number;
 }
 
+interface ComponentSpec {
+  readonly name: string;
+  readonly selector: string;
+  readonly source: string;
+  readonly onDemand?: boolean;
+}
+
 const tokenSources = new Map<string, TokenSource>();
 let flatTokens: FlatToken[] = [];
-let selectedTheme: 'system' | 'light' | 'dark' = 'system';
+let runtimeObserver: MutationObserver | null = null;
+let rootObserver: MutationObserver | null = null;
+let resizeFrame = 0;
+
+const COMPONENTS: readonly ComponentSpec[] = [
+  { name: 'Category rail', selector: '.sc-catalog-toolbar,.topShopMenuMobile', source: 'components/category-nav' },
+  { name: 'Search', selector: '.sc-catalog-search', source: 'components/catalog-tools/search.ts' },
+  { name: 'Filter chips', selector: '.sc-filter-chip', source: 'components/catalog-tools/search-filters.ts' },
+  { name: 'Theme control', selector: '.sc-theme-control', source: 'components/catalog-tools/theme-controller.ts' },
+  { name: 'View toggle', selector: '.sc-catalog-view-toggle', source: 'components/catalog-tools/view.ts' },
+  { name: 'Section heading', selector: '.titleShopSeccion', source: 'components/section-heading' },
+  { name: 'Product card', selector: '.productoShop', source: 'components/product-card' },
+  { name: 'Price row', selector: '.priceRow', source: 'components/product-card/pricing.css' },
+  { name: 'Trait icons', selector: '.sc-trait-icon', source: 'components/product-card/trait-icons.ts' },
+  { name: 'Product modal', selector: '.sc-product-modal', source: 'components/product-modal', onDemand: true },
+  { name: 'Catalog search state', selector: '.sc-catalog-search-results', source: 'components/catalog-tools/search-results.ts' },
+  { name: 'Motion runtime', selector: '[data-sc-theme-icon],[data-sc-view-icon],.sc-category-indicator', source: 'motion/ + component motion' },
+] as const;
 
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -137,16 +161,12 @@ function border(value: unknown): string {
 
 function transition(value: unknown): string {
   if (!isRecord(value)) return String(value ?? '');
-  const duration = dimension(value.duration);
-  const timing = cubicBezier(value.timingFunction);
-  const delay = dimension(value.delay);
-  return `${duration} ${timing} ${delay}`;
+  return `${dimension(value.duration)} ${cubicBezier(value.timingFunction)} ${dimension(value.delay)}`;
 }
 
 function cssValue(value: unknown, type: string): string {
   if (type === 'color') return color(value);
-  if (type === 'dimension') return dimension(value);
-  if (type === 'duration') return dimension(value);
+  if (type === 'dimension' || type === 'duration') return dimension(value);
   if (type === 'fontFamily') return fontFamily(value);
   if (type === 'cubicBezier') return cubicBezier(value);
   if (type === 'shadow') return shadow(value);
@@ -177,21 +197,7 @@ function resolvedNumber(path: string): number | null {
   return null;
 }
 
-function setTheme(theme: typeof selectedTheme): void {
-  selectedTheme = theme;
-  const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const resolved = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
-  document.documentElement.dataset.stylesTheme = theme;
-  document.documentElement.dataset.stylesResolved = resolved;
-  document.documentElement.dataset.scTheme = theme;
-  document.documentElement.dataset.scThemeResolved = resolved;
-  document.querySelectorAll<HTMLButtonElement>('[data-theme-option]').forEach((button) => {
-    button.setAttribute('aria-pressed', String(button.dataset.themeOption === theme));
-  });
-  renderCssVariables();
-}
-
-function currentBreakpoint(): string {
+function currentBreakpoint(): 'mobile' | 'tablet' | 'desktop' {
   const width = window.innerWidth;
   const phone = resolvedNumber('system.layout.breakpointPhone') ?? 640;
   const tabletMax = resolvedNumber('system.layout.breakpointTabletMax') ?? 992;
@@ -200,22 +206,49 @@ function currentBreakpoint(): string {
   return 'desktop';
 }
 
+function currentTheme(): { mode: string; resolved: string } {
+  const root = document.documentElement;
+  return {
+    mode: root.getAttribute('data-sc-theme') ?? 'system',
+    resolved: root.getAttribute('data-sc-theme-resolved') ?? 'light',
+  };
+}
+
 function renderStatus(): void {
-  const systemGroups = new Set(flatTokens.filter((entry) => entry.path.startsWith('system.')).map((entry) => entry.path.split('.')[1]).filter(Boolean));
-  const referenceCount = flatTokens.filter((entry) => entry.path.startsWith('reference.')).length;
   const systemCount = flatTokens.filter((entry) => entry.path.startsWith('system.')).length;
+  const theme = currentTheme();
   byId('system-status').innerHTML = [
     ['Tokens', flatTokens.length],
     ['System roles', systemCount],
-    ['Reference', referenceCount],
-    ['Groups', systemGroups.size],
+    ['Theme', `${theme.mode} / ${theme.resolved}`],
+    ['Breakpoint', currentBreakpoint()],
   ].map(([label, value]) => `<div class="styles-stat"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
+}
+
+function renderComponentInventory(): void {
+  const target = document.getElementById('component-inventory');
+  if (!target) return;
+  target.innerHTML = COMPONENTS.map((component) => {
+    const matches = document.querySelectorAll(component.selector).length;
+    const status = matches > 0 ? `${matches} live` : component.onDemand ? 'on demand' : 'mounting';
+    return `<article class="styles-component-card"><strong>${escapeHtml(component.name)}</strong><code>${escapeHtml(component.source)}</code><span>${escapeHtml(status)}</span></article>`;
+  }).join('');
+
+  const theme = currentTheme();
+  const view = document.documentElement.getAttribute('data-sc-catalog-view') ?? 'compact';
+  const chips = document.querySelectorAll('.sc-filter-chip').length;
+  const state = document.getElementById('live-component-state');
+  if (state) state.textContent = `${theme.resolved} · ${view} · ${chips} filters`;
 }
 
 function renderGrid(): void {
   const breakpoint = currentBreakpoint();
   const columns = breakpoint === 'desktop' ? 12 : breakpoint === 'tablet' ? 8 : 4;
-  const gutterPath = breakpoint === 'desktop' ? 'system.layout.gridGutter.desktop' : breakpoint === 'tablet' ? 'system.layout.gridGutter.compact' : 'system.layout.gridGutter.mobile';
+  const gutterPath = breakpoint === 'desktop'
+    ? 'system.layout.gridGutter.desktop'
+    : breakpoint === 'tablet'
+      ? 'system.layout.gridGutter.compact'
+      : 'system.layout.gridGutter.mobile';
   const gutterToken = token(gutterPath);
   const max = token('system.layout.contentMaxWidth');
   byId('grid-meta').innerHTML = [
@@ -224,6 +257,10 @@ function renderGrid(): void {
     `gutter ${gutterToken ? cssValue(gutterToken.resolved, gutterToken.type) : '—'}`,
     `max-width ${max ? cssValue(max.resolved, max.type) : '—'}`,
   ].map((text) => `<span class="styles-meta-pill">${escapeHtml(text)}</span>`).join('');
+
+  const grid = byId('grid-demo');
+  grid.style.gridTemplateColumns = `repeat(${columns},minmax(0,1fr))`;
+  grid.replaceChildren(...Array.from({ length: columns }, () => document.createElement('span')));
 }
 
 function renderColors(): void {
@@ -241,7 +278,7 @@ function renderColors(): void {
   const scrim = token('system.color.scrim');
   if (scrim) {
     const value = cssValue(scrim.resolved, scrim.type);
-    root.insertAdjacentHTML('beforeend', `<div class="styles-group-title"><h3>shared</h3><span>overlay</span></div><div class="styles-color-grid"><article class="styles-color-card"><div class="styles-color-swatch" style="background:${escapeHtml(value)},linear-gradient(135deg,#fff 50%,#ddd 50%)"></div><div class="styles-color-info"><strong>scrim</strong><code>${escapeHtml(value)}</code></div></article></div>`);
+    root.insertAdjacentHTML('beforeend', `<div class="styles-group-title"><h3>shared</h3><span>overlay</span></div><div class="styles-color-grid"><article class="styles-color-card"><div class="styles-color-swatch" style="background:${escapeHtml(value)}"></div><div class="styles-color-info"><strong>scrim</strong><code>${escapeHtml(value)}</code></div></article></div>`);
   }
 }
 
@@ -292,7 +329,7 @@ function renderElevation(): void {
   byId('elevation-list').innerHTML = tokensUnder('system.elevation').map((entry) => {
     const value = cssValue(entry.resolved, entry.type);
     const name = entry.path.replace('system.elevation.', '');
-    return `<article class="styles-system-card"><div class="styles-system-card__preview"><span class="styles-system-card__shape" style="width:92px;height:54px;border-radius:8px;background:var(--styles-raised);box-shadow:${escapeHtml(value)}"></span></div><strong>${escapeHtml(name)}</strong><code>${escapeHtml(value)}</code></article>`;
+    return `<article class="styles-system-card"><div class="styles-system-card__preview"><span class="styles-system-card__shape" style="width:92px;height:54px;border-radius:var(--sc-shape-control);background:var(--sc-color-surface-raised);box-shadow:${escapeHtml(value)}"></span></div><strong>${escapeHtml(name)}</strong><code>${escapeHtml(value)}</code></article>`;
   }).join('');
 }
 
@@ -316,11 +353,7 @@ function runTransition(row: HTMLElement): void {
   const duration = Number(row.dataset.duration ?? 700);
   const easing = row.dataset.easing ?? 'linear';
   dot.getAnimations().forEach((animation) => animation.cancel());
-  dot.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${distance}px)` }], {
-    duration,
-    easing,
-    fill: 'both',
-  });
+  dot.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${distance}px)` }], { duration, easing, fill: 'both' });
 }
 
 function runSpring(row: HTMLElement): void {
@@ -338,9 +371,8 @@ function runSpring(row: HTMLElement): void {
   const frame = (now: number): void => {
     const delta = Math.min(.032, Math.max(.001, (now - previous) / 1000));
     previous = now;
-    const steps = 4;
-    const dt = delta / steps;
-    for (let index = 0; index < steps; index += 1) {
+    const dt = delta / 4;
+    for (let index = 0; index < 4; index += 1) {
       const acceleration = stiffness * (1 - position) - damping * velocity;
       velocity += acceleration * dt;
       position += velocity * dt;
@@ -403,7 +435,8 @@ function renderSizes(): void {
     const name = entry.path.replace('system.', '');
     const px = resolvedNumber(entry.path) ?? 0;
     const size = Math.min(76, Math.max(1, px));
-    return `<article class="styles-system-card"><div class="styles-system-card__preview"><span style="display:block;width:${size}px;height:${size}px;max-width:76px;max-height:76px;border:${Math.max(1,Math.min(4,px))}px solid var(--styles-ink);border-radius:4px"></span></div><strong>${escapeHtml(name)}</strong><code>${escapeHtml(value)}</code></article>`;
+    const stroke = Math.max(1, Math.min(4, px));
+    return `<article class="styles-system-card"><div class="styles-system-card__preview"><span style="display:block;width:${size}px;height:${size}px;max-width:76px;max-height:76px;border:${stroke}px solid var(--sc-color-ink);border-radius:var(--sc-shape-extra-small)"></span></div><strong>${escapeHtml(name)}</strong><code>${escapeHtml(value)}</code></article>`;
   }).join('');
 }
 
@@ -413,7 +446,7 @@ function renderBreakpoints(): void {
   byId('breakpoint-list').innerHTML = entries.map((entry) => {
     const name = entry.path.replace('system.layout.', '');
     const value = cssValue(entry.resolved, entry.type);
-    const highlighted = name.toLowerCase().includes(active) ? 'outline:2px solid var(--styles-ink);outline-offset:-2px;' : '';
+    const highlighted = name.toLowerCase().includes(active) ? 'outline:var(--sc-focus-ring-width) solid var(--sc-color-ink);outline-offset:calc(-1 * var(--sc-focus-ring-width));' : '';
     return `<article class="styles-system-card" style="${highlighted}"><div class="styles-system-card__preview"><strong style="font-size:26px;letter-spacing:-.04em">${escapeHtml(value)}</strong></div><strong>${escapeHtml(name)}</strong><code>${highlighted ? `ACTIVE · ${escapeHtml(value)}` : escapeHtml(value)}</code></article>`;
   }).join('');
 }
@@ -432,17 +465,21 @@ function collectCssVariables(): string[] {
     }
   };
   for (const sheet of Array.from(document.styleSheets)) {
-    try { if (sheet.cssRules) visitRules(sheet.cssRules); } catch { /* same-origin CSS is inspectable; skip anything else */ }
+    try { if (sheet.cssRules) visitRules(sheet.cssRules); } catch { /* ignore cross-origin legacy styles */ }
   }
   return [...found].sort();
+}
+
+function computedVariable(name: string): string {
+  const root = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (root) return root;
+  return getComputedStyle(document.body).getPropertyValue(name).trim() || '—';
 }
 
 function renderCssVariables(): void {
   const target = document.getElementById('css-variable-table');
   if (!target) return;
-  const computed = getComputedStyle(document.documentElement);
-  const variables = collectCssVariables();
-  target.innerHTML = variables.map((name) => `<tr><td><code>${escapeHtml(name)}</code></td><td><code>${escapeHtml(computed.getPropertyValue(name).trim() || '—')}</code></td></tr>`).join('');
+  target.innerHTML = collectCssVariables().map((name) => `<tr><td><code>${escapeHtml(name)}</code></td><td><code>${escapeHtml(computedVariable(name))}</code></td></tr>`).join('');
 }
 
 function renderTokens(): void {
@@ -470,31 +507,27 @@ function replayAllMotion(): void {
   document.querySelectorAll<HTMLElement>('[data-motion-demo]').forEach((row, index) => {
     window.setTimeout(() => {
       if (row.hasAttribute('data-spring')) runSpring(row); else runTransition(row);
-    }, Math.min(index * 24, 360));
+    }, Math.min(index * 20, 300));
   });
 }
 
-function setupNavigation(): void {
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('.styles-sidebar a')];
-  const sections = links.map((link) => document.querySelector<HTMLElement>(link.hash)).filter((section): section is HTMLElement => Boolean(section));
-  const observer = new IntersectionObserver((entries) => {
-    const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (!visible?.target.id) return;
-    links.forEach((link) => link.classList.toggle('is-active', link.hash === `#${visible.target.id}`));
-  }, { rootMargin: '-15% 0px -68% 0px', threshold: [0, .2, .5] });
-  sections.forEach((section) => observer.observe(section));
+function refreshRuntimeDocumentation(): void {
+  renderStatus();
+  renderComponentInventory();
+  renderCssVariables();
 }
 
-function setupThemeControls(): void {
-  document.querySelectorAll<HTMLButtonElement>('[data-theme-option]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const value = button.dataset.themeOption;
-      if (value === 'system' || value === 'light' || value === 'dark') setTheme(value);
-    });
-  });
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (selectedTheme === 'system') setTheme('system');
-  });
+function watchProductionRuntime(): void {
+  runtimeObserver?.disconnect();
+  rootObserver?.disconnect();
+
+  runtimeObserver = new MutationObserver(() => requestAnimationFrame(renderComponentInventory));
+  runtimeObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'aria-pressed'] });
+
+  rootObserver = new MutationObserver(() => requestAnimationFrame(refreshRuntimeDocumentation));
+  rootObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-sc-theme', 'data-sc-theme-resolved', 'data-sc-catalog-view'] });
+
+  window.addEventListener('sc:themechange', refreshRuntimeDocumentation);
 }
 
 function renderAll(): void {
@@ -510,31 +543,42 @@ function renderAll(): void {
   renderSizes();
   renderBreakpoints();
   renderTokens();
+  renderComponentInventory();
   requestAnimationFrame(renderCssVariables);
 }
 
 async function initialize(): Promise<void> {
-  setupThemeControls();
-  setTheme('system');
   try {
-    const response = await fetch('../tokens/design.tokens.json', { cache: 'no-store' });
+    const response = await fetch('./design.tokens.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const source: unknown = await response.json();
     collectTokens(source);
-    flatTokens = [...tokenSources.values()].map((entry) => ({ ...entry, resolved: resolveToken(entry.path) }))
+    flatTokens = [...tokenSources.values()]
+      .map((entry) => ({ ...entry, resolved: resolveToken(entry.path) }))
       .sort((a, b) => a.path.localeCompare(b.path));
+
     renderAll();
     setupTokenFilter();
-    setupNavigation();
-    byId<HTMLButtonElement>('replay-motion').addEventListener('click', replayAllMotion);
+    watchProductionRuntime();
+
     window.addEventListener('resize', () => {
-      renderGrid();
-      renderBreakpoints();
+      if (resizeFrame) cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        resizeFrame = 0;
+        renderGrid();
+        renderBreakpoints();
+        renderStatus();
+      });
     }, { passive: true });
-    window.setTimeout(replayAllMotion, 240);
+
+    window.setTimeout(() => {
+      refreshRuntimeDocumentation();
+      replayAllMotion();
+    }, 320);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     byId('system-status').innerHTML = `<div class="styles-error">No se pudo leer el sistema: ${escapeHtml(message)}</div>`;
+    renderComponentInventory();
   }
 }
 
