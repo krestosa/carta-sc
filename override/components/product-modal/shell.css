@@ -1,8 +1,9 @@
-/* Estructura y geometría del modal de producto. */
-/* Los aliases locales agrupan geometría propia del componente; no son tokens globales. */
-body.sushiShop {
+/* Product-modal geometry and layering are component implementation values, not global design tokens. */
+body.sushiShop .sc-product-modal {
+  --sc-modal-overlay-color: rgb(0 0 0 / .32);
+  --sc-modal-z: 9000;
+  --sc-modal-shadow: 0 18px 55px rgb(0 0 0 / .22);
   --sc-modal-dialog-block-space: 16px;
-  --sc-modal-title-line-height: var(--sc-token-number-line-height-modal-title);
   --sc-modal-traits-size: 15px;
   --sc-modal-close-offset: 6px;
   --sc-modal-close-visual-size: 28px;
@@ -11,99 +12,12 @@ body.sushiShop {
   --sc-modal-dialog-radius: 28px;
   --sc-modal-phone-dialog-inline-space: 16px;
 }
-
-body.sushiShop.sc-product-modal-open {
-  overflow: hidden !important;
-}
-
-body.sushiShop .sc-product-modal {
-  box-sizing: border-box !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  padding: clamp(8px,2.2vw,24px) !important;
-  background-color: var(--sc-overlay-modal);
-  z-index: var(--sc-z-modal) !important;
-}
-
-body.sushiShop .sc-product-modal__dialog {
-  box-sizing: border-box !important;
-  position: relative !important;
-  width: min(560px,100%) !important;
-  max-height: calc(100vh - var(--sc-modal-dialog-block-space)) !important;
-  max-height: calc(100dvh - var(--sc-modal-dialog-block-space)) !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  overscroll-behavior: contain !important;
-  background: var(--sc-color-surface) !important;
-  border: 0 !important;
-  border-radius: var(--sc-modal-dialog-radius) !important;
-  box-shadow: var(--sc-shadow-modal) !important;
-  outline: none !important;
-}
-
-body.sushiShop .sc-product-modal__image-stage {
-  box-sizing: border-box !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  aspect-ratio: var(--sc-product-image-ratio) !important;
-  overflow: hidden !important;
-  background: transparent !important;
-}
-body.sushiShop .sc-product-modal__image {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  transform-origin: 50% 50% !important;
-}
-
-body.sushiShop .sc-product-modal__content {
-  box-sizing: border-box !important;
-  padding: clamp(18px,2.25vw,26px) !important;
-}
-
-body.sushiShop .sc-product-modal__footer {
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: clamp(12px,2vw,24px) !important;
-  width: 100% !important;
-  margin: clamp(14px,2vh,18px) 0 0 !important;
-  padding: clamp(12px,1.8vh,16px) 0 0 !important;
-  border-top: var(--sc-border-default) !important;
-}
-
-body.sushiShop .sc-product-modal__price-row {
-  display: grid !important;
-  flex: 1 1 auto !important;
-  grid-template-columns: max-content max-content !important;
-  grid-template-rows: auto auto !important;
-  align-items: center !important;
-  justify-content: start !important;
-  column-gap: 6px !important;
-  row-gap: 1px !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  font-family: var(--sc-font-primary) !important;
-  font-variant-numeric: tabular-nums !important;
-  white-space: nowrap !important;
-}
-
-body.sushiShop .sc-product-modal__actions {
-  flex: 0 1 clamp(184px,42%,238px) !important;
-  min-width: 170px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+body.sushiShop.sc-product-modal-open{overflow:hidden!important;}
+body.sushiShop .sc-product-modal{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;position:fixed!important;inset:0!important;width:100%!important;height:100%!important;padding:clamp(8px,2.2vw,24px)!important;background-color:var(--sc-modal-overlay-color);z-index:var(--sc-modal-z)!important;}
+body.sushiShop .sc-product-modal__dialog{box-sizing:border-box!important;position:relative!important;width:min(560px,100%)!important;max-height:calc(100vh - var(--sc-modal-dialog-block-space))!important;max-height:calc(100dvh - var(--sc-modal-dialog-block-space))!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;background:var(--sc-color-surface)!important;border:0!important;border-radius:var(--sc-modal-dialog-radius)!important;box-shadow:var(--sc-modal-shadow)!important;outline:none!important;}
+body.sushiShop .sc-product-modal__image-stage{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;aspect-ratio:var(--sc-product-image-ratio)!important;overflow:hidden!important;background:transparent!important;}
+body.sushiShop .sc-product-modal__image{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;transform-origin:50% 50%!important;}
+body.sushiShop .sc-product-modal__content{box-sizing:border-box!important;padding:clamp(18px,2.25vw,26px)!important;}
+body.sushiShop .sc-product-modal__footer{box-sizing:border-box!important;display:flex!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;gap:clamp(12px,2vw,24px)!important;width:100%!important;margin:clamp(14px,2vh,18px) 0 0!important;padding:clamp(12px,1.8vh,16px) 0 0!important;border-top:var(--sc-border-default)!important;}
+body.sushiShop .sc-product-modal__price-row{display:grid!important;flex:1 1 auto!important;grid-template-columns:max-content max-content!important;grid-template-rows:auto auto!important;align-items:center!important;justify-content:start!important;column-gap:6px!important;row-gap:1px!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;font-family:var(--sc-font-primary)!important;font-variant-numeric:tabular-nums!important;white-space:nowrap!important;}
+body.sushiShop .sc-product-modal__actions{flex:0 1 clamp(184px,42%,238px)!important;min-width:170px!important;margin:0!important;padding:0!important;}
