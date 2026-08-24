@@ -35,6 +35,8 @@ const SOURCE_TOP_LEVEL = new Set([
   'package-lock.json',
   'package.json',
   'scripts',
+  'styles',
+  'tokens',
   'tsconfig.base.json',
   'tsconfig.browser.json',
   'tsconfig.tooling.json',
