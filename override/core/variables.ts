@@ -1,4 +1,4 @@
-import { tokenMedia, tokenMotion } from './tokens.generated.js';
+import { tokenMedia } from './tokens.generated.js';
 
 const MEDIA = tokenMedia;
 
@@ -34,26 +34,5 @@ export const classes = Object.freeze({
   staticInitialSection: 'sc-static-initial-section',
 });
 
-export const motionTokens = Object.freeze({
-  ...tokenMotion,
-  easings: Object.freeze({
-    standard: 'standard',
-    accelerate: 'standard.accelerate',
-    decelerate: 'standard.decelerate',
-    linear: 'linear',
-    out: 'standard.decelerate',
-    strongOut: 'standard.decelerate',
-    in: 'standard.accelerate',
-    inOut: 'standard',
-  }),
-});
-
-export const config = Object.freeze({
-  media,
-  queries,
-  selectors,
-  classes,
-  motion: motionTokens,
-});
-
+export const config = Object.freeze({ media, queries, selectors, classes });
 export type RuntimeConfig = typeof config;
