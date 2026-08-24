@@ -74,7 +74,7 @@ function auditCss(file: string, source: string): void {
     if (hasRawDuration(value) && !tokenized) add('duration', file, line, property, value);
     if (/cubic-bezier\(/i.test(value) && !tokenized) add('cubicBezier', file, line, property, value);
     if (/gradient\(/i.test(value) && !/var\(--sc-(?:token-gradient|gradient-)/.test(value)) add('gradient', file, line, property, value);
-    if (/^(?:box-shadow|text-shadow)$/i.test(property) && !resetOnly && !/var\(--sc-(?:token-shadow|shadow-)/.test(value)) add('shadow', file, line, property, value);
+    if (/^(?:box-shadow|text-shadow)$/i.test(property) && !resetOnly && !tokenized) add('shadow', file, line, property, value);
     if (property === 'font-family' && !resetOnly && !tokenized) add('fontFamily', file, line, property, value);
     if (property === 'font-weight' && /^\s*\d+/.test(value) && !tokenized) add('fontWeight', file, line, property, value);
     if (/^(?:font-size|letter-spacing)$/i.test(property) && hasRawDimension(value) && !tokenized) add('typography', file, line, property, value);
@@ -102,7 +102,7 @@ function auditTs(file: string, source: string): void {
   for (const [category, pattern] of literals) {
     for (const match of cleaned.matchAll(pattern)) {
       const value = match[0] ?? '';
-      if (/token(?:Media|Motion|Types)|var\(--sc-token-/.test(value)) continue;
+      if (/token(?:Media|Motion|Runtime|Types)|var\(--sc-token-/.test(value)) continue;
       add(`${category}:ts`, file, lineOf(cleaned, match.index ?? 0), 'typescript-literal', value);
     }
   }
