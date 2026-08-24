@@ -21,7 +21,7 @@ function relativeModuleSpecifiers(source: string): ModuleSpecifier[] {
   });
 }
 
-export function stampModuleGraph(sha: string): void {
+export function stampModuleGraph(version: string): void {
   const files = moduleFiles();
   assert(files.length > 1, 'Compiled override module graph is missing');
 
@@ -34,14 +34,14 @@ export function stampModuleGraph(sha: string): void {
         const prefix = groups?.prefix ?? '';
         const quote = groups?.quote ?? "'";
         const specifier = groups?.path ?? '';
-        return `${prefix}${quote}${specifier}?v=${sha}${quote}`;
+        return `${prefix}${quote}${specifier}?v=${version}${quote}`;
       },
     );
     write(file, stamped.replace(/^\s*\/\/[#@]\s*sourceMappingURL=.*$/gm, ''));
   }
 }
 
-export function verifyModuleGraph(sha: string): void {
+export function verifyModuleGraph(version: string): void {
   const main = read(path.join(SITE, 'override/main.js'));
   const versionHelper = read(path.join(SITE, 'override/core/module-version.js'));
   assert(main.includes('moduleAssetVersion(import.meta.url)'), 'ES-module entrypoint must derive its version from module metadata');
@@ -53,7 +53,7 @@ export function verifyModuleGraph(sha: string): void {
     const source = read(file);
     for (const specifier of relativeModuleSpecifiers(source)) {
       assert(
-        specifier.version === sha,
+        specifier.version === version,
         `Unversioned module dependency remains in ${path.relative(SITE, file)}: ${specifier.path}`,
       );
     }
