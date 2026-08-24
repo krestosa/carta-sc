@@ -12,10 +12,11 @@ const PRODUCTION_CSS = path.join(PRODUCTION_OVERRIDE, 'main.css');
 const RUNTIME_ENTRY = path.join(BROWSER_OVERRIDE, 'main.js');
 
 const CONTENT_EXTENSIONS = new Set([
-  '.html', '.htm', '.php', '.ts', '.js', '.json', '.svg',
+  '.html', '.htm', '.php', '.js', '.json', '.svg',
 ]);
 const IGNORED_DIRECTORIES = new Set([
-  '.git', '.build', '.generated', '.migration', '.pages-site', 'handoff', 'node_modules',
+  '.git', '.build', '.generated', '.migration', '.pages-site', 'handoff', 'lab', 'node_modules',
+  'scripts', 'tokens', 'types',
 ]);
 
 interface UsageIndex {
@@ -217,24 +218,26 @@ function inlineCss(file: string, stack: readonly string[] = []): string {
   );
 }
 
+function indexUsageSource(source: string, tokens: Set<string>, dynamicPrefixes: Set<string>): void {
+  for (const match of source.matchAll(/[-_a-zA-Z][-_a-zA-Z0-9]*/g)) {
+    if (match[0]) tokens.add(match[0]);
+  }
+  for (const match of source.matchAll(/([_a-zA-Z][-_a-zA-Z0-9]*-)\$\{/g)) {
+    if (match[1]) dynamicPrefixes.add(match[1]);
+  }
+  for (const match of source.matchAll(/['"`]([_a-zA-Z][-_a-zA-Z0-9]*-)['"`]\s*\+/g)) {
+    if (match[1]) dynamicPrefixes.add(match[1]);
+  }
+}
+
 function buildUsageIndex(): UsageIndex {
   const tokens = new Set<string>();
   const dynamicPrefixes = new Set<string>();
+  const staticFiles = walkFiles(ROOT).filter((file) => CONTENT_EXTENSIONS.has(path.extname(file).toLowerCase()));
+  const productionJs = walkFiles(PRODUCTION_OVERRIDE, new Set()).filter((file) => file.endsWith('.js'));
 
-  for (const file of walkFiles(ROOT)) {
-    if (!CONTENT_EXTENSIONS.has(path.extname(file).toLowerCase())) continue;
-    const source = fs.readFileSync(file, 'utf8');
-
-    for (const match of source.matchAll(/[-_a-zA-Z][-_a-zA-Z0-9]*/g)) {
-      if (match[0]) tokens.add(match[0]);
-    }
-
-    for (const match of source.matchAll(/([_a-zA-Z][-_a-zA-Z0-9]*-)\$\{/g)) {
-      if (match[1]) dynamicPrefixes.add(match[1]);
-    }
-    for (const match of source.matchAll(/['"`]([_a-zA-Z][-_a-zA-Z0-9]*-)['"`]\s*\+/g)) {
-      if (match[1]) dynamicPrefixes.add(match[1]);
-    }
+  for (const file of [...staticFiles, ...productionJs]) {
+    indexUsageSource(fs.readFileSync(file, 'utf8'), tokens, dynamicPrefixes);
   }
 
   return { tokens, dynamicPrefixes: [...dynamicPrefixes].sort() };
