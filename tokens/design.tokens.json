@@ -1,4 +1,6 @@
 {
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "$description": "Global SushiClub design decisions only. Component geometry, component-specific motion and implementation constants stay with their owner.",
   "color": {
     "$description": "Global palette and semantic theme colors shared across the application.",
     "palette": {
@@ -34,7 +36,8 @@
       "surfaceTransparent": { "$value": "{color.palette.surfaceTransparent}" },
       "surfaceRaised": { "$value": "{color.palette.surfaceRaised}" },
       "border": { "$value": "{color.palette.border}" },
-      "borderStrong": { "$value": "{color.palette.borderStrong}" }
+      "borderStrong": { "$value": "{color.palette.borderStrong}" },
+      "focusRing": { "$value": "{color.palette.ink}" }
     },
     "dark": {
       "$type": "color",
@@ -47,7 +50,8 @@
       "surfaceTransparent": { "$value": "{color.palette.darkSurfaceTransparent}" },
       "surfaceRaised": { "$value": "{color.palette.darkSurfaceRaised}" },
       "border": { "$value": "{color.palette.darkBorder}" },
-      "borderStrong": { "$value": "{color.palette.darkBorderStrong}" }
+      "borderStrong": { "$value": "{color.palette.darkBorderStrong}" },
+      "focusRing": { "$value": "{color.palette.darkInk}" }
     }
   },
   "dimension": {
@@ -120,13 +124,13 @@
       "$type": "border",
       "default": { "$value": { "color": "{color.light.border}", "width": "{dimension.borderHairline}", "style": "solid" } },
       "strong": { "$value": { "color": "{color.light.borderStrong}", "width": "{dimension.borderHairline}", "style": "solid" } },
-      "focus": { "$value": { "color": "{color.light.ink}", "width": "{dimension.focusRingWidth}", "style": "solid" } }
+      "focus": { "$value": { "color": "{color.light.focusRing}", "width": "{dimension.focusRingWidth}", "style": "solid" } }
     },
     "dark": {
       "$type": "border",
       "default": { "$value": { "color": "{color.dark.border}", "width": "{dimension.borderHairline}", "style": "solid" } },
       "strong": { "$value": { "color": "{color.dark.borderStrong}", "width": "{dimension.borderHairline}", "style": "solid" } },
-      "focus": { "$value": { "color": "{color.dark.ink}", "width": "{dimension.focusRingWidth}", "style": "solid" } }
+      "focus": { "$value": { "color": "{color.dark.focusRing}", "width": "{dimension.focusRingWidth}", "style": "solid" } }
     }
   }
 }
