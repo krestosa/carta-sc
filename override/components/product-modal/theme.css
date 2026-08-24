@@ -1,27 +1,6 @@
-/* Theme-specific modal implementation values stay on the modal owner; global semantic colors remain DTCG-backed. */
-body.sushiShop .sc-product-modal__close svg,body.sushiShop .sc-product-modal__close svg path{fill:currentColor!important;stroke:none!important;}
-html[data-sc-theme-resolved='dark'] body.sushiShop .sc-product-modal{
-  --sc-modal-action-background:#d8d8d3;
-  --sc-modal-close-border:color-mix(in srgb,var(--sc-color-heading) 12%,transparent);
-  --sc-modal-close-background:color-mix(in srgb,var(--sc-color-surface-raised) 88%,transparent);
-  --sc-modal-close-border-hover:color-mix(in srgb,var(--sc-color-heading) 22%,transparent);
-  --sc-modal-close-background-hover:color-mix(in srgb,var(--sc-color-surface-raised) 96%,var(--sc-color-ink) 4%);
-}
-@media(prefers-color-scheme:light){
-  html[data-sc-theme='system'] body.sushiShop .sc-product-modal{
-    --sc-modal-action-background:var(--sc-color-ink);
-    --sc-modal-close-border:color-mix(in srgb,var(--sc-color-ink) 7%,transparent);
-    --sc-modal-close-background:color-mix(in srgb,var(--sc-color-surface-raised) 86%,transparent);
-    --sc-modal-close-border-hover:color-mix(in srgb,var(--sc-color-ink) 16%,transparent);
-    --sc-modal-close-background-hover:color-mix(in srgb,var(--sc-color-surface-raised) 98%,transparent);
-  }
-}
-@media(prefers-color-scheme:dark){
-  html[data-sc-theme='system'] body.sushiShop .sc-product-modal{
-    --sc-modal-action-background:#d8d8d3;
-    --sc-modal-close-border:color-mix(in srgb,var(--sc-color-heading) 12%,transparent);
-    --sc-modal-close-background:color-mix(in srgb,var(--sc-color-surface-raised) 88%,transparent);
-    --sc-modal-close-border-hover:color-mix(in srgb,var(--sc-color-heading) 22%,transparent);
-    --sc-modal-close-background-hover:color-mix(in srgb,var(--sc-color-surface-raised) 96%,var(--sc-color-ink) 4%);
-  }
+/* Theme-specific modal styling is fully expressed through the global semantic token API. */
+body.sushiShop .sc-product-modal__close svg,
+body.sushiShop .sc-product-modal__close svg path {
+  fill: currentColor !important;
+  stroke: none !important;
 }
