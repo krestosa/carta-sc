@@ -215,11 +215,24 @@ class ProductCardRevealController {
       this.#finish(card);
       return;
     }
+    if (card.classList.contains('sc-card-placeholder-ready')) {
+      this.#reveal(card);
+      return;
+    }
     if (this.#observer) {
       this.#observer.observe(card);
       state.observed = true;
     }
   };
+
+  #revealReadyCard(card: HTMLElement): void {
+    if (card.hidden) return;
+    const state = this.#stateFor(card);
+    if (!state.prepared) this.#arm(card);
+    if (state.done || state.started || !this.#renderable(card)) return;
+    if (this.#searching()) this.#finish(card);
+    else this.#reveal(card);
+  }
 
   #armNode(node: Node): void {
     if (!(node instanceof HTMLElement) || node.hidden) return;
@@ -265,17 +278,28 @@ class ProductCardRevealController {
     const container = document.querySelector<HTMLElement>(selectors.container);
     if (!container || !('MutationObserver' in window)) return;
     this.#mutationObserver = new MutationObserver((mutations) => {
-      if (this.#searching()) return;
       for (const mutation of mutations) {
-        if (mutation.type !== 'attributes' || mutation.attributeName !== 'hidden') continue;
+        if (mutation.type !== 'attributes') continue;
         const target = mutation.target as HTMLElement;
+
+        if (mutation.attributeName === 'class') {
+          if (
+            target.matches(selectors.productCard)
+            && target.classList.contains('sc-card-placeholder-ready')
+          ) {
+            this.#revealReadyCard(target);
+          }
+          continue;
+        }
+
+        if (mutation.attributeName !== 'hidden' || this.#searching()) continue;
         if (!target.hidden) this.#armNode(target);
       }
     });
     this.#mutationObserver.observe(container, {
       subtree: true,
       attributes: true,
-      attributeFilter: ['hidden'],
+      attributeFilter: ['hidden', 'class'],
     });
   }
 }
