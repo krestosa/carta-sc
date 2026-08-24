@@ -40,15 +40,10 @@ jobs:
         timeout-minutes: 15
         run: npm run build
 
-      - name: Rebuild isolated generated Handoff
+      - name: Rebuild generated Handoff
         timeout-minutes: 10
-        shell: bash
-        run: |
-          isolated="$RUNNER_TEMP/carta-sc-handoff"
-          rm -rf "$isolated"
-          cp -a handoff "$isolated"
-          cd "$isolated"
-          env -u GITHUB_SHA -u GITHUB_REF -u GITHUB_REPOSITORY -u GITHUB_WORKSPACE npm run build
+        working-directory: handoff
+        run: npm run build
 
       - name: Prepare Pages deployment marker
         run: touch .pages-site/.nojekyll
@@ -96,23 +91,10 @@ jobs:
         timeout-minutes: 15
         run: npm run build
 
-      - name: Rebuild isolated generated Handoff
+      - name: Rebuild generated Handoff
         timeout-minutes: 10
-        shell: pwsh
-        run: |
-          $isolated = Join-Path $env:RUNNER_TEMP 'carta-sc-handoff'
-          Remove-Item $isolated -Recurse -Force -ErrorAction SilentlyContinue
-          Copy-Item -Path handoff -Destination $isolated -Recurse
-          Remove-Item Env:GITHUB_SHA -ErrorAction SilentlyContinue
-          Remove-Item Env:GITHUB_REF -ErrorAction SilentlyContinue
-          Remove-Item Env:GITHUB_REPOSITORY -ErrorAction SilentlyContinue
-          Remove-Item Env:GITHUB_WORKSPACE -ErrorAction SilentlyContinue
-          Push-Location $isolated
-          try {
-            npm run build
-          } finally {
-            Pop-Location
-          }
+        working-directory: handoff
+        run: npm run build
 
       - name: Upload Windows Handoff
         uses: actions/upload-artifact@v7
