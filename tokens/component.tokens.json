@@ -21,7 +21,9 @@
       "themeMenuWidth": { "$value": { "value": 176, "unit": "px" } },
       "themeMenuWidthMobile": { "$value": { "value": 182, "unit": "px" } },
       "themeOptionHeight": { "$value": { "value": 36, "unit": "px" } },
-      "trackingThemeOption": { "$value": { "value": -0.06, "unit": "px" } }
+      "trackingThemeOption": { "$value": { "value": -0.06, "unit": "px" } },
+      "modalOpenOffset": { "$value": { "value": 20, "unit": "px" } },
+      "modalCloseOffset": { "$value": { "value": -10, "unit": "px" } }
     },
     "number": {
       "$type": "number",
@@ -39,6 +41,8 @@
     "duration": {
       "$type": "duration",
       "searchReveal": { "$value": { "value": 220, "unit": "ms" } },
+      "modalOpen": { "$value": { "value": 220, "unit": "ms" } },
+      "modalClose": { "$value": { "value": 150, "unit": "ms" } },
       "imagePreloaderCycle": { "$value": { "value": 1500, "unit": "ms" } },
       "imagePreloaderDelay": { "$value": { "value": 80, "unit": "ms" } }
     },
