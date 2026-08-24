@@ -168,7 +168,7 @@ function cssForType(type: DtcgType, value: unknown): string {
     }
     case 'typography': {
       const typography = value as TypographyValue;
-      return `${cssForType('fontWeight', typography.fontWeight)} ${formatDimension(typography.fontSize)}/${String(typography.lineHeight)} ${formatFontFamily(typography.fontFamily)}`;
+      return `${String(typography.fontWeight)} ${formatDimension(typography.fontSize)}/${String(typography.lineHeight)} ${formatFontFamily(typography.fontFamily)}`;
     }
   }
 }
@@ -193,6 +193,9 @@ function durationMs(path: string): number {
   return value.unit === 's' ? value.value * 1000 : value.value;
 }
 
+const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+const tokenCssName = (path: string): string => `--sc-token-${path.split('.').map(cssName).join('-')}`;
+
 function typographyVars(path: string, name: string): string[] {
   const value = resolved(path) as TypographyValue;
   return [
@@ -204,7 +207,6 @@ function typographyVars(path: string, name: string): string[] {
   ];
 }
 
-const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 const semanticColors = ['ink', 'heading', 'copy', 'muted', 'trait', 'surface', 'surfaceTransparent', 'surfaceRaised', 'border', 'borderStrong'] as const;
 const durationNames = ['short1','short2','short3','short4','medium1','medium2','medium3','medium4','long1','long2','long3','long4','extraLong1','extraLong2','extraLong3','extraLong4'] as const;
 const typographyNames = ['search', 'filter', 'modalTitle', 'modalBody', 'modalPrice', 'submenu'] as const;
@@ -219,8 +221,16 @@ function themeBlock(mode: 'light' | 'dark', indent = '  '): string {
   ].join('\n');
 }
 
+const canonicalCss = [...tokens.keys()]
+  .sort()
+  .map((path) => `  ${tokenCssName(path)}: ${cssValue(path)};`)
+  .join('\n');
 const typographyCss = typographyNames.flatMap((name) => typographyVars(`typography.${name}`, cssName(name))).join('\n');
 const css = `/* GENERATED from tokens/design.tokens.json. DTCG 2025.10 source of truth. Do not edit. */
+:root {
+${canonicalCss}
+}
+
 :root,
 html[data-sc-theme-resolved='light'] {
 ${themeBlock('light')}
