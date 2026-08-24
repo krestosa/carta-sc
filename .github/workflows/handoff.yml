@@ -31,7 +31,7 @@ jobs:
             node: '24'
     name: ci-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 35
     env:
       TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -49,6 +49,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        timeout-minutes: 5
         run: npm ci
 
       - name: Verify checked out type SHA
@@ -58,24 +59,21 @@ jobs:
           if ($actual -ne $env:TYPE_SHA) { throw "Checkout SHA mismatch: $actual != $env:TYPE_SHA" }
 
       - name: Run full TypeScript CI
+        timeout-minutes: 15
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
           npm run ci
 
       - name: Build handoff
-        shell: pwsh
-        run: |
-          $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run build:handoff
-
-      - name: Rebuild handoff over existing output
+        timeout-minutes: 12
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
           npm run build:handoff
 
       - name: Validate handoff structure
+        timeout-minutes: 5
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
