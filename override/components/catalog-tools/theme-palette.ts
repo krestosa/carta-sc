@@ -1,3 +1,4 @@
+import { tokenRuntime } from '../../core/tokens.generated.js';
 import { motionTokens, queries } from '../../core/variables.js';
 
 export interface PaletteSnapshot {
@@ -54,7 +55,7 @@ class ThemePaletteTransitionController {
       return context;
     }
 
-    node.style.backgroundColor = from['--sc-color-surface'] || '#000';
+    node.style.backgroundColor = from['--sc-color-surface'] || tokenRuntime.color['color.palette.ink'];
     node.style.opacity = '0';
     node.style.willChange = 'opacity';
     prepared?.(context);
