@@ -5,7 +5,7 @@ body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink {
   touch-action: manipulation;
 }
 
-/* El pseudo amplía el target a ~48px y funciona como state layer sin alterar la línea activa. */
+/* El pseudo amplía el target a ~48px y mantiene state layer solo para foco/pressed. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::before,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
   content: '';
@@ -21,10 +21,6 @@ body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
   transition: opacity var(--sc-transition-fast);
 }
 
-body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:hover::before,
-body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink:hover::before {
-  opacity: var(--sc-state-opacity-hover);
-}
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible::before,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink:focus-visible::before {
   opacity: var(--sc-state-opacity-focus);
