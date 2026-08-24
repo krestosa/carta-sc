@@ -30,8 +30,8 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   line-height: 16px !important;
 }
 
-/* Iguala el alto óptico de cada llama en los tres niveles de picante. El ancho queda libre
-   para que el gap hacia el texto se mida desde el borde real de cada SVG. */
+/* Los tres niveles de fuego comparten altura y un ajuste óptico de 1px hacia arriba.
+   El ancho queda libre para que el gap hacia el texto se mida desde el borde real del SVG. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='poco picante'] .sc-trait-icon,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='picante'] .sc-trait-icon,
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='muy picante'] .sc-trait-icon {
@@ -39,14 +39,14 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   height: 10.667px !important;
   min-height: 10.667px !important;
   max-height: 10.667px !important;
-  transform: none !important;
+  transform: translateY(-1px) !important;
   transform-origin: 50% 50% !important;
 }
 
-/* En filtros la hoja usa el mismo centro de caja que los fuegos. Los offsets ópticos que
-   existen junto al precio/card no se heredan a los chips. */
+/* La hoja tiene un centro visual distinto al de su viewBox de 11px. Baja 1px dentro de la
+   misma caja compartida; no es una variante responsive y se aplica igual en todos los tamaños. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon[data-sc-trait='vegetariano'] {
   align-self: center !important;
-  transform: none !important;
+  transform: translateY(1px) !important;
   transform-origin: 50% 50% !important;
 }
