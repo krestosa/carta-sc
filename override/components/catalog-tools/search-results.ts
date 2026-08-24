@@ -88,7 +88,13 @@ export class SearchResultPresenter {
       for (const segment of group.segments) {
         this.#setHeadingHidden(segment.heading, segment.count === 0, segment, 'headingVisible');
       }
-      this.#orderGroupContent(group, query, epoch);
+      this.#prepareGroupOrder(group, query);
+    }
+
+    if (query) {
+      for (const item of visible) {
+        if (item.group.visible) this.#setMatchedItemOrder(item);
+      }
     }
 
     this.#reorderHosts(hosts, query, true);
@@ -122,6 +128,7 @@ export class SearchResultPresenter {
       for (const segment of group.segments) {
         segment.count = 0;
         segment.bestRank = NO_SEARCH_RANK;
+        segment.searchOrderBase = 0;
         if (segment.heading) {
           segment.heading.hidden = segment.headingWasHidden;
           segment.headingVisible = !segment.headingWasHidden;
@@ -182,28 +189,41 @@ export class SearchResultPresenter {
     if (node.style.order !== value) node.style.order = value;
   }
 
-  #orderGroupContent(group: SearchGroup, query: string, epoch: number): void {
+  #prepareGroupOrder(group: SearchGroup, query: string): void {
     if (!query) {
-      group.items.forEach((item) => {
+      for (const item of group.items) {
         if (item.card.style.order) item.card.style.removeProperty('order');
-      });
-      group.segments.forEach((segment) => {
+      }
+      for (const segment of group.segments) {
+        segment.searchOrderBase = 0;
         if (segment.heading?.style.order) segment.heading.style.removeProperty('order');
-      });
+      }
       return;
     }
 
+    const rankStride = group.items.length + 1;
+    const segmentStride = rankStride * (NO_SEARCH_RANK + 1);
     const segments = group.segments
       .filter((segment) => segment.count > 0)
       .sort((a, b) => a.bestRank - b.bestRank || a.index - b.index);
+
+    for (const segment of group.segments) {
+      if (segment.count === 0) segment.searchOrderBase = 0;
+    }
     segments.forEach((segment, position) => {
-      const base = 1000 + position * 1000;
-      const items = segment.items
-        .filter((item) => item.matchEpoch === epoch)
-        .sort((a, b) => a.rank - b.rank || a.index - b.index);
+      const base = (position + 1) * segmentStride;
+      segment.searchOrderBase = base;
       if (segment.heading) this.#setOrder(segment.heading, base);
-      items.forEach((item, index) => this.#setOrder(item.card, base + index + 1));
     });
+  }
+
+  #setMatchedItemOrder(item: SearchItem): void {
+    const group = item.group;
+    const firstIndex = group.items[0]?.index ?? item.index;
+    const localIndex = item.index - firstIndex;
+    const rankStride = group.items.length + 1;
+    const order = item.segment.searchOrderBase + 1 + item.rank * rankStride + localIndex;
+    this.#setOrder(item.card, order);
   }
 
   #reorderHosts(hosts: readonly SearchHost[], query: string, markFirstVisible: boolean): void {
