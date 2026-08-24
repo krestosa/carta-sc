@@ -34,7 +34,7 @@ body.sushiShop {
     top: 50% !important;
     left: 50% !important;
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100% - 72px) !important;
+    max-width: calc(100% - (2 * var(--sc-space-double-extra-large))) !important;
     height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -98,7 +98,7 @@ body.sushiShop {
     display: flex !important;
     position: absolute !important;
     top: 50% !important;
-    right: 14px !important;
+    right: var(--sc-space-large) !important;
     float: none !important;
     align-items: center !important;
     justify-content: center !important;
@@ -120,7 +120,7 @@ body.sushiShop {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn::before {
     content: '' !important;
     position: absolute !important;
-    inset: 4px !important;
+    inset: var(--sc-space-extra-small) !important;
     border-radius: var(--sc-shape-control) !important;
     background: var(--sc-color-ink) !important;
     transform: scale(1);
@@ -140,7 +140,7 @@ body.sushiShop {
     float: none !important;
     flex-direction: column !important;
     justify-content: center !important;
-    gap: 4px !important;
+    gap: var(--sc-space-extra-small) !important;
     width: var(--sc-mobile-menu-icon-size) !important;
     height: var(--sc-mobile-menu-icon-size) !important;
     margin: 0 !important;
@@ -169,7 +169,7 @@ body.sushiShop {
     height: auto !important;
     max-height: calc(100vh - var(--sc-mobile-header-height)) !important;
     margin: 0 !important;
-    padding: 8px 12px 14px !important;
+    padding: var(--sc-space-small) var(--sc-space-large) var(--sc-space-large) !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     background: var(--sc-color-ink) !important;
@@ -177,7 +177,7 @@ body.sushiShop {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    transform: translate3d(0,-8px,0) !important;
+    transform: translate3d(0,calc(-1 * var(--sc-space-small)),0) !important;
     transform-origin: 50% 0 !important;
     transition: opacity var(--sc-motion-short3) var(--sc-motion-ease-decelerate),transform var(--sc-motion-short4) var(--sc-motion-ease-decelerate),visibility 0s linear var(--sc-motion-short4) !important;
     z-index: var(--sc-layer-mobile-panel) !important;
@@ -202,7 +202,7 @@ body.sushiShop {
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100% - 64px) !important;
+    max-width: calc(100% - (2 * var(--sc-space-double-extra-large))) !important;
   }
 
   body.sushiShop .brandOnlyMobile img {
@@ -213,7 +213,7 @@ body.sushiShop {
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
-    right: 12px !important;
+    right: var(--sc-space-large) !important;
   }
 }
 
