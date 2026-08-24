@@ -232,3 +232,25 @@ body.sushiShop {
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] { transition-delay: 0s !important; }
 }
+
+@media (max-width: 992px) {
+  html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
+    background: var(--sc-color-surface-raised) !important;
+    color: var(--sc-color-ink) !important;
+  }
+  html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
+  html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
+    color: var(--sc-color-ink) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 992px) {
+  html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
+    background: var(--sc-color-surface-raised) !important;
+    color: var(--sc-color-ink) !important;
+  }
+  html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
+  html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
+    color: var(--sc-color-ink) !important;
+  }
+}
