@@ -11,6 +11,8 @@ import type { SearchNodes } from './search-domain.js';
 import { normalizeSearchText } from './search-ranking.js';
 import { SearchResultPresenter } from './search-results.js';
 
+const SEARCH_UPDATING_CLASS = 'sc-catalog-search-updating';
+
 export interface CatalogSearchOptions {
   readonly onRestore?: () => void;
 }
@@ -122,6 +124,7 @@ export class CatalogSearchController {
       this.#lastState = stateKey;
       if (this.#presenter.active) this.#restore(true);
       else {
+        document.body?.classList.remove(SEARCH_UPDATING_CLASS);
         nodes.root.classList.remove('sc-search-has-value');
         this.#setEmpty(1);
         if (nodes.status) nodes.status.textContent = '';
@@ -130,7 +133,9 @@ export class CatalogSearchController {
     }
 
     if (!this.#catalog.captured) this.#catalog.capture(nodes.results);
+    const continuingSearch = this.#presenter.active;
     this.#enterSearchMode();
+    document.body?.classList.toggle(SEARCH_UPDATING_CLASS, continuingSearch);
     this.#lastState = stateKey;
     nodes.root.classList.toggle('sc-search-has-value', Boolean(query));
 
@@ -164,6 +169,7 @@ export class CatalogSearchController {
     this.#cancelPendingInput();
     if (this.#presenter.active) this.#restore(false);
     else document.body?.classList.remove(classes.catalogSearching);
+    document.body?.classList.remove(SEARCH_UPDATING_CLASS);
     this.#nodes = null;
     this.#lastState = '';
     this.#catalog.clear();
@@ -179,8 +185,8 @@ export class CatalogSearchController {
       this.#inputFrame = 0;
       if (!this.#nodes) return;
 
-      // Run the catalogue mutation after this frame paints the typed character. This keeps the
-      // keyboard/input path responsive on mobile while still coalescing multiple events per frame.
+      // Let the browser paint the typed character before mutating the catalogue. Multiple input
+      // events within the same frame collapse into one search update, which is critical on mobile.
       this.#inputTask = window.setTimeout(() => {
         this.#inputTask = 0;
         if (!this.#nodes) return;
@@ -215,7 +221,7 @@ export class CatalogSearchController {
     );
     this.#catalog.resetCandidates();
     this.#lastState = '';
-    document.body.classList.remove(classes.catalogSearching);
+    document.body.classList.remove(classes.catalogSearching, SEARCH_UPDATING_CLASS);
     this.#nodes?.root.classList.remove('sc-search-has-value');
     this.#setEmpty(1);
     if (this.#nodes?.status) this.#nodes.status.textContent = '';
