@@ -427,7 +427,7 @@ function pruneUnusedCustomProperties(source: string, usage: UsageIndex): CustomP
 
   let customPropertiesRemoved = 0;
   const css = source.replace(
-    /(^|[;{])(\s*)(--sc-[\w-]+)\s*:\s*([^;{}]*);/gm,
+    /(^|(?<=[;{]))(\s*)(--sc-[\w-]+)\s*:\s*([^;{}]*);/gm,
     (full, boundary: string, spacing: string, name: string) => {
       if (!removable.has(name)) return full;
       customPropertiesRemoved += 1;
