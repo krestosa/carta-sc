@@ -30,6 +30,14 @@ function applyInitialTheme(): void {
   root.setAttribute('data-sc-theme-resolved', resolvedTheme(theme));
 }
 
+function applyMobileViewportPolicy(): void {
+  const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+  if (!viewport) return;
+  const content = viewport.content;
+  if (/\binteractive-widget\s*=/.test(content)) return;
+  viewport.content = `${content.replace(/\s*,\s*$/, '')}, interactive-widget=resizes-content`;
+}
+
 function releasePrepaint(error: unknown): void {
   root.setAttribute('data-sc-catalog-reveal-ready', 'true');
   root.classList.remove('sc-catalog-reveal-prepaint');
@@ -42,6 +50,7 @@ async function startRuntime(): Promise<void> {
 }
 
 applyInitialTheme();
+applyMobileViewportPolicy();
 
 try {
   await startRuntime();
