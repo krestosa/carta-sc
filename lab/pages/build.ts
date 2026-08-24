@@ -72,23 +72,27 @@ interface RuntimeSyntaxTarget {
 
 type ValidationStage = 'pre' | 'final';
 
-function currentCommitSha(): string {
+function resolveBuildSha(): string {
   try {
-    return execFileSync('git', ['rev-parse', 'HEAD'], {
+    const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: ROOT,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim().toLowerCase();
+    if (/^[0-9a-f]{40}$/i.test(gitSha)) return gitSha;
   } catch {
-    return '';
+    // Standalone handoff source intentionally has no .git directory.
   }
+
+  const embeddedSha = (process.env.GITHUB_SHA ?? '').trim().toLowerCase();
+  return /^[0-9a-f]{40}$/i.test(embeddedSha) ? embeddedSha : '';
 }
 
 class PagesBuildPipeline {
-  readonly #sha = currentCommitSha();
+  readonly #sha = resolveBuildSha();
 
   run = async (): Promise<void> => {
-    assert(/^[0-9a-f]{40}$/i.test(this.#sha), 'Could not resolve current Git commit for Pages build');
+    assert(/^[0-9a-f]{40}$/i.test(this.#sha), 'Could not resolve build commit for Pages artifact');
     process.env.GITHUB_SHA = this.#sha;
     validateSnapshotIntegration();
     this.stageRuntime();
