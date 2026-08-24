@@ -125,27 +125,29 @@ function durationSeconds(path: string): number {
   const value = resolved(path) as DurationValue;
   return (value.unit === 's' ? value.value * 1000 : value.value) / 1000;
 }
+function dimensionNumber(path: string): number {
+  const value = resolved(path) as DimensionValue;
+  if (value.unit !== 'px') throw new Error(`Se esperaba dimensión px para ${path}`);
+  return value.value;
+}
 
 const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-const tokenCssName = (path: string): string => `--sc-token-${path.split('.').map(cssName).join('-')}`;
 const semanticColors = ['ink', 'heading', 'copy', 'muted', 'trait', 'surface', 'surfaceTransparent', 'surfaceRaised', 'border', 'borderStrong'] as const;
 const durationNames = ['short1','short2','short3','short4','medium1','medium2','medium3','medium4','long1','long2','long3','long4','extraLong1','extraLong2','extraLong3','extraLong4'] as const;
 const easingNames = ['standard','accelerate','decelerate','linear'] as const;
 const transitionNames = ['fast','standard','icon','theme'] as const;
+
 function themeBlock(mode: 'light' | 'dark', indent = '  '): string {
   return [
     ...semanticColors.map((name) => `${indent}--sc-color-${cssName(name)}: ${cssValue(`color.${mode}.${name}`)};`),
+    `${indent}--sc-focus-ring-color: ${cssValue(`color.${mode}.focusRing`)};`,
     `${indent}--sc-border-default: ${cssValue(`border.${mode}.default`)};`,
     `${indent}--sc-border-strong: ${cssValue(`border.${mode}.strong`)};`,
     `${indent}--sc-border-focus: ${cssValue(`border.${mode}.focus`)};`,
   ].join('\n');
 }
-const canonicalCss = [...tokens.keys()].sort().map((path) => `  ${tokenCssName(path)}: ${cssValue(path)};`).join('\n');
-const css = `/* GENERATED from tokens/design.tokens.json (DTCG 2025.10). Do not edit manually. */
-:root {
-${canonicalCss}
-}
 
+const css = `/* GENERATED from the global DTCG 2025.10 source tokens/design.tokens.json. Do not edit manually. */
 :root,
 html[data-sc-theme-resolved='light'] {
 ${themeBlock('light')}
@@ -162,11 +164,6 @@ ${themeBlock('light')}
 ${durationNames.map((name) => `  --sc-motion-${cssName(name)}: ${cssValue(`motion.duration.${name}`)};`).join('\n')}
 ${easingNames.map((name) => `  --sc-motion-ease-${cssName(name)}: ${cssValue(`motion.easing.${name}`)};`).join('\n')}
 ${transitionNames.map((name) => `  --sc-transition-${cssName(name)}: ${cssValue(`motion.transition.${name}`)};`).join('\n')}
-  --sc-focus-ring-color: var(--sc-color-ink);
-  --sc-motion-ease-out: var(--sc-motion-ease-decelerate);
-  --sc-motion-fast: var(--sc-motion-short3);
-  --sc-motion-theme: var(--sc-motion-long3);
-  --sc-motion-icon: var(--sc-motion-short4);
 }
 
 html[data-sc-theme-resolved='dark'] {
@@ -185,17 +182,19 @@ ${themeBlock('dark', '    ')}
   }
 }
 `;
+
 const durationObject = Object.fromEntries(durationNames.map((name) => [name, durationSeconds(`motion.duration.${name}`)]));
 const easingCssObject = Object.fromEntries(easingNames.map((name) => [name, cssValue(`motion.easing.${name}`)]));
 const easingCurveObject = Object.fromEntries(easingNames.map((name) => [name, resolved(`motion.easing.${name}`)]));
 const transitionObject = Object.fromEntries(transitionNames.map((name) => [name, cssValue(`motion.transition.${name}`)]));
-const ts = `/* GENERATED from tokens/design.tokens.json (DTCG 2025.10). Do not edit manually. */
+const compactWideMin = dimensionNumber('dimension.breakpointPhone') + 1;
+const ts = `/* GENERATED from the global DTCG 2025.10 source tokens/design.tokens.json. Do not edit manually. */
 export const tokenMedia = Object.freeze({
   phone: '(max-width: ${cssValue('dimension.breakpointPhone')})',
   mobile: '(max-width: ${cssValue('dimension.breakpointMobile')})',
   tablet: '(min-width: ${cssValue('dimension.breakpointTabletMin')}) and (max-width: ${cssValue('dimension.breakpointTabletMax')})',
   compact: '(max-width: ${cssValue('dimension.breakpointTabletMax')})',
-  compactWide: '(min-width: 641px) and (max-width: ${cssValue('dimension.breakpointTabletMax')})',
+  compactWide: '(min-width: ${compactWideMin}px) and (max-width: ${cssValue('dimension.breakpointTabletMax')})',
   desktop: '(min-width: ${cssValue('dimension.breakpointDesktop')})',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   reducedTransparency: '(prefers-reduced-transparency: reduce)',
@@ -209,9 +208,8 @@ export const tokenMotion = Object.freeze({
   curves: Object.freeze(${JSON.stringify(easingCurveObject, null, 2)}),
   transitions: Object.freeze(${JSON.stringify(transitionObject, null, 2)}),
 } as const);
-
-export const tokenTypes = Object.freeze(${JSON.stringify(DTCG_TYPES)} as const);
 `;
+
 await Promise.all([writeFile(cssPath, css), writeFile(tsPath, ts)]);
 const usedTypes = [...new Set([...tokens.values()].map((entry) => entry.type))].sort();
-console.log(`[design-tokens] ${tokens.size} global tokens; DTCG types used: ${usedTypes.join(', ')} -> CSS + TypeScript`);
+console.log(`[design-tokens] ${tokens.size} global tokens; standard DTCG types used: ${usedTypes.join(', ')} -> CSS + TypeScript`);
