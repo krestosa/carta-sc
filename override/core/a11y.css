@@ -18,16 +18,16 @@
   margin: 0 -23px -23px 0;
 }
 
-/* Da a los logos enlazados un target real de 48px manteniendo intacto el tamaño del arte. */
+/* Los logos enlazados consumen el target y spacing globales. */
 body.sushiShop .logosHome .logos > a {
   box-sizing: border-box !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 48px !important;
-  min-height: 48px !important;
-  margin: 4px !important;
-  padding: 8px !important;
+  min-width: var(--sc-touch-target) !important;
+  min-height: var(--sc-touch-target) !important;
+  margin: var(--sc-space-extra-small) !important;
+  padding: var(--sc-space-small) !important;
   vertical-align: middle !important;
 }
 
@@ -49,8 +49,8 @@ body.sushiShop .logosHome .logos > a img {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    min-height: 24px;
+    min-width: var(--sc-icon-size);
+    min-height: var(--sc-icon-size);
     margin-inline: 2px;
     vertical-align: middle;
   }
@@ -67,7 +67,7 @@ body.sushiShop .logosHome .logos > a img {
   body.sushiShop {
     --sc-color-border: var(--sc-color-ink);
     --sc-color-border-strong: var(--sc-color-ink);
-    --sc-focus-ring-width-subtle: 2px;
+    --sc-focus-ring-width-subtle: var(--sc-focus-ring-width);
   }
 
   body.sushiShop .sc-catalog-search,
@@ -78,14 +78,14 @@ body.sushiShop .logosHome .logos > a img {
   }
 }
 
-/* Elimina transparencias opcionales cuando el usuario pide superficies sólidas. */
+/* Mantiene sólidas las superficies elevadas cuando el usuario reduce transparencias. */
 @media (prefers-reduced-transparency: reduce) {
   body.sushiShop .sc-theme-menu,
   body.sushiShop > .sc-category-submenu,
   body.sushiShop .sc-product-modal__close::before {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: var(--sc-color-surface) !important;
+    background: var(--sc-color-surface-raised) !important;
   }
 }
 
