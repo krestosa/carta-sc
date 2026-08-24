@@ -51,16 +51,6 @@ const EXCLUDED_SOURCE_EXTENSIONS = new Set([
   '.sh',
 ]);
 
-const SOURCE_PACKAGE_SCRIPTS = {
-  'compile:tooling': 'tsc -p tsconfig.tooling.json',
-  'compile:browser': 'tsc -p tsconfig.browser.json',
-  'runtime:optimize': 'node .build/tooling/scripts/optimize-runtime.js',
-  'build:runtime': 'npm run compile:tooling && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js && npm run runtime:optimize',
-  'build:site': 'npm run build:runtime && node .build/tooling/lab/pages/build.js',
-  'build:compiled': 'npm run build:site && node .build/tooling/lab/handoff/staticize.js .pages-site ../compiled',
-  'build:handoff': 'npm run build:compiled',
-} as const;
-
 function currentCommitSha(): string {
   try {
     return execFileSync('git', ['rev-parse', 'HEAD'], {
@@ -85,16 +75,22 @@ import { fileURLToPath } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const source = path.join(root, 'source');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const node = process.execPath;
 const env = { ...process.env, GITHUB_SHA: '${sha}' };
 
-function run(args) {
-  const result = spawnSync(npm, args, { cwd: source, stdio: 'inherit', env, shell: false });
+function run(command, args) {
+  const result = spawnSync(command, args, { cwd: source, stdio: 'inherit', env, shell: false });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-run(['ci']);
-run(['run', 'build:handoff']);
+run(npm, ['ci']);
+run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.tooling.json']);
+run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.browser.json']);
+run(node, ['.build/tooling/scripts/sync-runtime.js']);
+run(node, ['.build/tooling/scripts/optimize-runtime.js']);
+run(node, ['.build/tooling/lab/pages/build.js']);
+run(node, ['.build/tooling/lab/handoff/staticize.js', '.pages-site', '../compiled']);
 `;
 }
 
@@ -176,7 +172,6 @@ class HandoffBuildPipeline {
       version: rootPackage.version,
       type: rootPackage.type,
       engines: rootPackage.engines,
-      scripts: SOURCE_PACKAGE_SCRIPTS,
       devDependencies: rootPackage.devDependencies,
     });
   }
