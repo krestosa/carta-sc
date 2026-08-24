@@ -143,7 +143,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
   grid-column: 1 / -1;
   grid-row: 2;
   width: 100%;
-  height: var(--sc-token-dimension-twelve);
+  height: 12px;
   margin-top: var(--sc-card-title-padding-top);
 }
 
@@ -154,8 +154,8 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
   grid-column: 1 / -1;
   grid-row: 3;
   width: 86%;
-  height: var(--sc-token-dimension-eight);
-  margin-top: calc(var(--sc-card-description-offset) + var(--sc-token-dimension-one));
+  height: 8px;
+  margin-top: calc(var(--sc-card-description-offset) + 1px);
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
