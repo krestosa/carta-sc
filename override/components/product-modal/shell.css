@@ -1,24 +1,21 @@
 /* Estructura y geometría del modal de producto. */
-/* Tokens locales del componente. */
+/* Los aliases locales existen solo por legibilidad; todos resuelven a artefactos DTCG generados. */
 body.sushiShop {
-  --sc-modal-dialog-block-space: 16px;
-  --sc-modal-title-line-height: 1.2;
-  --sc-modal-traits-size: 15px;
-  --sc-modal-close-offset: 6px;
-  --sc-modal-close-visual-size: 28px;
-  --sc-modal-close-icon-size: 12px;
-  --sc-modal-dialog-motion-offset-y: 10px;
-  --sc-modal-dialog-radius: 28px;
-  --sc-modal-phone-dialog-inline-space: 16px;
-  --sc-z-modal: 9000;
+  --sc-modal-dialog-block-space: var(--sc-token-dimension-sixteen);
+  --sc-modal-title-line-height: var(--sc-token-number-line-height-modal-title);
+  --sc-modal-traits-size: var(--sc-token-dimension-fifteen);
+  --sc-modal-close-offset: var(--sc-token-dimension-six);
+  --sc-modal-close-visual-size: var(--sc-token-dimension-twenty-eight);
+  --sc-modal-close-icon-size: var(--sc-token-dimension-twelve);
+  --sc-modal-dialog-motion-offset-y: var(--sc-token-dimension-ten);
+  --sc-modal-dialog-radius: var(--sc-token-dimension-twenty-eight);
+  --sc-modal-phone-dialog-inline-space: var(--sc-token-dimension-sixteen);
 }
 
-/* Bloquea el scroll de fondo mientras el modal está abierto. */
 body.sushiShop.sc-product-modal-open {
   overflow: hidden !important;
 }
 
-/* Capa de fondo y centrado del diálogo. */
 body.sushiShop .sc-product-modal {
   box-sizing: border-box !important;
   display: flex !important;
@@ -28,16 +25,15 @@ body.sushiShop .sc-product-modal {
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  padding: clamp(8px,2.2vw,24px) !important;
-  background-color: rgba(0,0,0,.32);
+  padding: clamp(var(--sc-token-dimension-eight),2.2vw,var(--sc-token-dimension-twenty-four)) !important;
+  background-color: var(--sc-overlay-modal);
   z-index: var(--sc-z-modal) !important;
 }
 
-/* El diálogo limita altura y mantiene scroll interno. */
 body.sushiShop .sc-product-modal__dialog {
   box-sizing: border-box !important;
   position: relative !important;
-  width: min(560px,100%) !important;
+  width: min(var(--sc-token-dimension-five-sixty),100%) !important;
   max-height: calc(100vh - var(--sc-modal-dialog-block-space)) !important;
   max-height: calc(100dvh - var(--sc-modal-dialog-block-space)) !important;
   overflow-x: hidden !important;
@@ -46,11 +42,10 @@ body.sushiShop .sc-product-modal__dialog {
   background: var(--sc-color-surface) !important;
   border: 0 !important;
   border-radius: var(--sc-modal-dialog-radius) !important;
-  box-shadow: 0 18px 55px rgba(0,0,0,.22) !important;
+  box-shadow: var(--sc-shadow-modal) !important;
   outline: none !important;
 }
 
-/* Mantiene la imagen completa dentro de su ratio. */
 body.sushiShop .sc-product-modal__image-stage {
   box-sizing: border-box !important;
   display: flex !important;
@@ -72,24 +67,22 @@ body.sushiShop .sc-product-modal__image {
 
 body.sushiShop .sc-product-modal__content {
   box-sizing: border-box !important;
-  padding: clamp(18px,2.25vw,26px) !important;
+  padding: clamp(var(--sc-token-dimension-eighteen),2.25vw,var(--sc-token-dimension-twenty-six)) !important;
 }
 
-/* Separa precio y acciones al pie. */
 body.sushiShop .sc-product-modal__footer {
   box-sizing: border-box !important;
   display: flex !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: clamp(12px,2vw,24px) !important;
+  gap: clamp(var(--sc-token-dimension-twelve),2vw,var(--sc-token-dimension-twenty-four)) !important;
   width: 100% !important;
-  margin: clamp(14px,2vh,18px) 0 0 !important;
-  padding: clamp(12px,1.8vh,16px) 0 0 !important;
-  border-top: var(--sc-border-hairline) solid var(--sc-color-border) !important;
+  margin: clamp(var(--sc-token-dimension-fourteen),2vh,var(--sc-token-dimension-eighteen)) 0 0 !important;
+  padding: clamp(var(--sc-token-dimension-twelve),1.8vh,var(--sc-token-dimension-sixteen)) 0 0 !important;
+  border-top: var(--sc-border-default) !important;
 }
 
-/* Precio actual y anterior en una grilla compacta. */
 body.sushiShop .sc-product-modal__price-row {
   display: grid !important;
   flex: 1 1 auto !important;
@@ -97,8 +90,8 @@ body.sushiShop .sc-product-modal__price-row {
   grid-template-rows: auto auto !important;
   align-items: center !important;
   justify-content: start !important;
-  column-gap: 6px !important;
-  row-gap: 1px !important;
+  column-gap: var(--sc-token-dimension-six) !important;
+  row-gap: var(--sc-token-dimension-one) !important;
   min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -109,8 +102,8 @@ body.sushiShop .sc-product-modal__price-row {
 }
 
 body.sushiShop .sc-product-modal__actions {
-  flex: 0 1 clamp(184px,42%,238px) !important;
-  min-width: 170px !important;
+  flex: 0 1 clamp(var(--sc-token-dimension-one-eighty-four),42%,var(--sc-token-dimension-two-thirty-eight)) !important;
+  min-width: var(--sc-token-dimension-one-seventy) !important;
   margin: 0 !important;
   padding: 0 !important;
 }
