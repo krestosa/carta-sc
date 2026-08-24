@@ -1,4 +1,5 @@
-import { queries, motionTokens, selectors } from '../../core/variables.js';
+import { queries, selectors } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 import { CATEGORY_SCROLL, CATEGORY_SELECTORS } from './config.js';
@@ -114,8 +115,8 @@ export function confirmCategoryTarget(target: HTMLElement): void {
   confirmationMotions.get(heading)?.cancel();
   heading.style.opacity = '0.62';
   const handle = motion.engine.opacity(heading, 1, {
-    duration: motionTokens.durations.medium1,
-    ease: motionTokens.easings.decelerate,
+    duration: motionConfig.durations.medium1,
+    ease: motionConfig.easings.decelerate,
     clear: true,
     onComplete: () => {
       if (confirmationMotions.get(heading) === handle) confirmationMotions.delete(heading);
