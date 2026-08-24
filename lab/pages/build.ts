@@ -89,9 +89,12 @@ class PagesBuildPipeline {
     copyTree(productionOverride, path.join(SITE, 'override'));
 
     const stylesRuntime = path.join(ROOT, '.generated', 'browser', 'styles', 'styles.js');
+    const stylesTokens = path.join(ROOT, 'tokens', 'design.tokens.json');
     assert(fs.existsSync(stylesRuntime), 'Compiled styles showcase runtime is missing; run compile:browser before building Pages');
+    assert(fs.existsSync(stylesTokens), 'Canonical styles showcase tokens are missing');
     ensureDir(path.join(SITE, 'styles'));
     fs.copyFileSync(stylesRuntime, path.join(SITE, 'styles', 'styles.js'));
+    fs.copyFileSync(stylesTokens, path.join(SITE, 'styles', 'design.tokens.json'));
   }
 
   private shouldStageSource(relative: string, absolute: string): boolean {
