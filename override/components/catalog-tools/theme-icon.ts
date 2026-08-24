@@ -1,5 +1,6 @@
 import type { ThemeMode } from '../../core/types.js';
-import { motionTokens, queries } from '../../core/variables.js';
+import { queries } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 
@@ -96,25 +97,25 @@ export class ThemeIconController {
     const path = to === 'system' ? AUTO_PATH : to === 'dark' ? MOON_PATH : SUN_PATH;
     const direction = to === 'dark' ? -1 : 1;
 
-    this.#track(motion.engine.springPath(parts.core, path, motionTokens.springs.spatial.fast));
+    this.#track(motion.engine.springPath(parts.core, path, motionConfig.springs.spatial.fast));
     this.#track(motion.engine.springAttributes(
       parts.bite,
       { cx: MOON_BITE.cx, cy: MOON_BITE.cy, r: to === 'dark' ? MOON_BITE.radius : 0 },
-      motionTokens.springs.spatial.fast,
+      motionConfig.springs.spatial.fast,
     ));
-    this.#track(motion.engine.springAttributes(parts.ring, { r: 8.4 }, motionTokens.springs.spatial.fast));
+    this.#track(motion.engine.springAttributes(parts.ring, { r: 8.4 }, motionConfig.springs.spatial.fast));
     this.#track(motion.engine.opacity(parts.ring, to === 'system' ? 1 : 0, {
-      duration: motionTokens.durations.short3,
-      ease: motionTokens.easings.standard,
+      duration: motionConfig.durations.short3,
+      ease: motionConfig.easings.standard,
     }));
     this.#track(motion.engine.springTransform(
       parts.rotor,
       { rotation: direction * 5.5 },
-      motionTokens.springs.spatial.fast,
+      motionConfig.springs.spatial.fast,
       {
         onComplete: () => {
           if (token !== this.#geometryToken) return;
-          this.#track(motion.engine.springTransform(parts.rotor, { rotation: 0 }, motionTokens.springs.spatial.fast));
+          this.#track(motion.engine.springTransform(parts.rotor, { rotation: 0 }, motionConfig.springs.spatial.fast));
         },
       },
     ));
@@ -128,22 +129,22 @@ export class ThemeIconController {
       parts.lines.forEach((line, index) => this.#springRay(
         line,
         0,
-        index * (motionTokens.durations.short1 / 4),
+        index * (motionConfig.durations.short1 / 4),
       ));
     } else {
       [...parts.lines].reverse().forEach((line, index) => this.#springRay(
         line,
         1,
-        index * (motionTokens.durations.short1 / 4),
+        index * (motionConfig.durations.short1 / 4),
       ));
       this.#track(motion.engine.opacity(parts.rays, 0, {
-        duration: motionTokens.durations.short2,
-        delay: motionTokens.durations.short1,
-        ease: motionTokens.easings.accelerate,
+        duration: motionConfig.durations.short2,
+        delay: motionConfig.durations.short1,
+        ease: motionConfig.easings.accelerate,
       }));
     }
 
-    this.#track(motion.engine.delay(motionTokens.durations.medium3, () => {
+    this.#track(motion.engine.delay(motionConfig.durations.medium3, () => {
       if (token !== this.#geometryToken) return;
       this.#handles = [];
       this.applyStatic(root, to);
@@ -169,7 +170,7 @@ export class ThemeIconController {
 
   #springRay(line: SVGLineElement, to: number, delay: number): void {
     const from = Number.parseFloat(line.style.strokeDashoffset || line.getAttribute('stroke-dashoffset') || '0');
-    this.#track(motion.engine.spring(motionTokens.springs.effects.fast, (progress) => {
+    this.#track(motion.engine.spring(motionConfig.springs.effects.fast, (progress) => {
       line.style.strokeDashoffset = String(from + (to - from) * progress);
     }, { delay }));
   }
