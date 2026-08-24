@@ -1,35 +1,43 @@
 {
   "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
-  "$description": "Canonical SushiClub design tokens. Generated CSS and TypeScript must derive from this file.",
+  "$description": "Canonical SushiClub design-token document. DTCG 2025.10 is the source of truth; generated platform artifacts must derive from this document.",
   "color": {
     "palette": {
       "$type": "color",
-      "black": { "$value": { "colorSpace": "srgb", "components": [0.0392, 0.0392, 0.0392], "hex": "#0a0a0a" } },
+      "ink": { "$value": { "colorSpace": "srgb", "components": [0.0392, 0.0392, 0.0392], "hex": "#0a0a0a" } },
       "heading": { "$value": { "colorSpace": "srgb", "components": [0.1882, 0.1882, 0.1882], "hex": "#303030" } },
       "copy": { "$value": { "colorSpace": "srgb", "components": [0.3725, 0.3725, 0.3725], "hex": "#5f5f5f" } },
       "muted": { "$value": { "colorSpace": "srgb", "components": [0.4627, 0.4627, 0.4627], "hex": "#767676" } },
       "trait": { "$value": { "colorSpace": "srgb", "components": [0.5961, 0.5961, 0.5961], "hex": "#989898" } },
       "surface": { "$value": { "colorSpace": "srgb", "components": [0.9608, 0.9608, 0.9608], "hex": "#f5f5f5" } },
+      "surfaceTransparent": { "$value": { "colorSpace": "srgb", "components": [0.9608, 0.9608, 0.9608], "alpha": 0, "hex": "#f5f5f5" } },
       "surfaceRaised": { "$value": { "colorSpace": "srgb", "components": [0.9843, 0.9843, 0.9804], "hex": "#fbfbfa" } },
       "border": { "$value": { "colorSpace": "srgb", "components": [0.8902, 0.8902, 0.8706], "hex": "#e3e3de" } },
       "borderStrong": { "$value": { "colorSpace": "srgb", "components": [0.8196, 0.8196, 0.7961], "hex": "#d1d1cb" } },
-      "darkInk": { "$value": { "colorSpace": "srgb", "components": [0.9529, 0.9529, 0.9412], "hex": "#f3f3f0" } },
       "white": { "$value": { "colorSpace": "srgb", "components": [1, 1, 1], "hex": "#ffffff" } },
+      "darkInk": { "$value": { "colorSpace": "srgb", "components": [0.9529, 0.9529, 0.9412], "hex": "#f3f3f0" } },
       "darkCopy": { "$value": { "colorSpace": "srgb", "components": [0.7843, 0.7843, 0.7608], "hex": "#c8c8c2" } },
       "darkMuted": { "$value": { "colorSpace": "srgb", "components": [0.6118, 0.6118, 0.5843], "hex": "#9c9c95" } },
       "darkTrait": { "$value": { "colorSpace": "srgb", "components": [0.4353, 0.4353, 0.4353], "hex": "#6f6f6f" } },
       "darkSurfaceRaised": { "$value": { "colorSpace": "srgb", "components": [0.0706, 0.0706, 0.0627], "hex": "#121210" } },
+      "darkSurfaceTransparent": { "$value": { "colorSpace": "srgb", "components": [0.0392, 0.0392, 0.0392], "alpha": 0, "hex": "#0a0a0a" } },
       "darkBorder": { "$value": { "colorSpace": "srgb", "components": [0.1765, 0.1765, 0.1608], "hex": "#2d2d29" } },
-      "darkBorderStrong": { "$value": { "colorSpace": "srgb", "components": [0.2667, 0.2667, 0.2431], "hex": "#44443e" } }
+      "darkBorderStrong": { "$value": { "colorSpace": "srgb", "components": [0.2667, 0.2667, 0.2431], "hex": "#44443e" } },
+      "black08": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.08, "hex": "#000000" } },
+      "black10": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.10, "hex": "#000000" } },
+      "black22": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.22, "hex": "#000000" } },
+      "black32": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.32, "hex": "#000000" } },
+      "blackTransparent": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0, "hex": "#000000" } }
     },
     "light": {
       "$type": "color",
-      "ink": { "$value": "{color.palette.black}" },
+      "ink": { "$value": "{color.palette.ink}" },
       "heading": { "$value": "{color.palette.heading}" },
       "copy": { "$value": "{color.palette.copy}" },
       "muted": { "$value": "{color.palette.muted}" },
       "trait": { "$value": "{color.palette.trait}" },
       "surface": { "$value": "{color.palette.surface}" },
+      "surfaceTransparent": { "$value": "{color.palette.surfaceTransparent}" },
       "surfaceRaised": { "$value": "{color.palette.surfaceRaised}" },
       "border": { "$value": "{color.palette.border}" },
       "borderStrong": { "$value": "{color.palette.borderStrong}" }
@@ -41,11 +49,73 @@
       "copy": { "$value": "{color.palette.darkCopy}" },
       "muted": { "$value": "{color.palette.darkMuted}" },
       "trait": { "$value": "{color.palette.darkTrait}" },
-      "surface": { "$value": "{color.palette.black}" },
+      "surface": { "$value": "{color.palette.ink}" },
+      "surfaceTransparent": { "$value": "{color.palette.darkSurfaceTransparent}" },
       "surfaceRaised": { "$value": "{color.palette.darkSurfaceRaised}" },
       "border": { "$value": "{color.palette.darkBorder}" },
       "borderStrong": { "$value": "{color.palette.darkBorderStrong}" }
     }
+  },
+  "dimension": {
+    "$type": "dimension",
+    "zero": { "$value": { "value": 0, "unit": "px" } },
+    "one": { "$value": { "value": 1, "unit": "px" } },
+    "two": { "$value": { "value": 2, "unit": "px" } },
+    "three": { "$value": { "value": 3, "unit": "px" } },
+    "four": { "$value": { "value": 4, "unit": "px" } },
+    "five": { "$value": { "value": 5, "unit": "px" } },
+    "six": { "$value": { "value": 6, "unit": "px" } },
+    "seven": { "$value": { "value": 7, "unit": "px" } },
+    "eight": { "$value": { "value": 8, "unit": "px" } },
+    "nine": { "$value": { "value": 9, "unit": "px" } },
+    "ten": { "$value": { "value": 10, "unit": "px" } },
+    "twelve": { "$value": { "value": 12, "unit": "px" } },
+    "thirteen": { "$value": { "value": 13, "unit": "px" } },
+    "fourteen": { "$value": { "value": 14, "unit": "px" } },
+    "fifteen": { "$value": { "value": 15, "unit": "px" } },
+    "sixteen": { "$value": { "value": 16, "unit": "px" } },
+    "eighteen": { "$value": { "value": 18, "unit": "px" } },
+    "twenty": { "$value": { "value": 20, "unit": "px" } },
+    "twentyTwo": { "$value": { "value": 22, "unit": "px" } },
+    "twentyFour": { "$value": { "value": 24, "unit": "px" } },
+    "twentySix": { "$value": { "value": 26, "unit": "px" } },
+    "twentyEight": { "$value": { "value": 28, "unit": "px" } },
+    "thirty": { "$value": { "value": 30, "unit": "px" } },
+    "thirtyTwo": { "$value": { "value": 32, "unit": "px" } },
+    "thirtyFour": { "$value": { "value": 34, "unit": "px" } },
+    "thirtyEight": { "$value": { "value": 38, "unit": "px" } },
+    "fortyTwo": { "$value": { "value": 42, "unit": "px" } },
+    "fortyFour": { "$value": { "value": 44, "unit": "px" } },
+    "fortyEight": { "$value": { "value": 48, "unit": "px" } },
+    "fiftyTwo": { "$value": { "value": 52, "unit": "px" } },
+    "fiftyFive": { "$value": { "value": 55, "unit": "px" } },
+    "sixty": { "$value": { "value": 60, "unit": "px" } },
+    "sixtyFour": { "$value": { "value": 64, "unit": "px" } },
+    "oneSeventy": { "$value": { "value": 170, "unit": "px" } },
+    "oneEightyFour": { "$value": { "value": 184, "unit": "px" } },
+    "oneNinety": { "$value": { "value": 190, "unit": "px" } },
+    "twoThirtyEight": { "$value": { "value": 238, "unit": "px" } },
+    "threeTwenty": { "$value": { "value": 320, "unit": "px" } },
+    "fiveSixty": { "$value": { "value": 560, "unit": "px" } },
+    "contentMaxWidth": { "$value": { "value": 1240, "unit": "px" } },
+    "breakpointPhone": { "$value": { "value": 640, "unit": "px" } },
+    "breakpointMobile": { "$value": { "value": 767, "unit": "px" } },
+    "breakpointTabletMin": { "$value": { "value": 768, "unit": "px" } },
+    "breakpointTabletMax": { "$value": { "value": 992, "unit": "px" } },
+    "breakpointDesktop": { "$value": { "value": 993, "unit": "px" } },
+    "fontEleven": { "$value": { "value": 11, "unit": "px" } },
+    "fontElevenQuarter": { "$value": { "value": 11.25, "unit": "px" } },
+    "fontElevenHalf": { "$value": { "value": 11.5, "unit": "px" } },
+    "fontTwelve": { "$value": { "value": 12, "unit": "px" } },
+    "fontTwelveHalf": { "$value": { "value": 12.5, "unit": "px" } },
+    "fontThirteen": { "$value": { "value": 13, "unit": "px" } },
+    "fontThirteenHalf": { "$value": { "value": 13.5, "unit": "px" } },
+    "fontFifteen": { "$value": { "value": 15, "unit": "px" } },
+    "fontFifteenHalf": { "$value": { "value": 15.5, "unit": "px" } },
+    "fontSeventeen": { "$value": { "value": 17, "unit": "px" } },
+    "fontTwenty": { "$value": { "value": 20, "unit": "px" } },
+    "trackingZero": { "$value": { "value": 0, "unit": "px" } },
+    "trackingModalTitle": { "$value": { "value": -0.5, "unit": "px" } }
   },
   "font": {
     "family": {
@@ -53,41 +123,34 @@
       "primary": { "$value": ["SC Acumin", "Arial", "sans-serif"] }
     },
     "weight": {
-      "$type": "number",
+      "$type": "fontWeight",
       "regular": { "$value": 400 },
       "semibold": { "$value": 600 }
     }
   },
-  "size": {
-    "$type": "dimension",
-    "borderHairline": { "$value": { "value": 1, "unit": "px" } },
-    "focusRing": { "$value": { "value": 2, "unit": "px" } },
-    "focusRingSubtle": { "$value": { "value": 1, "unit": "px" } },
-    "focusOffset": { "$value": { "value": 3, "unit": "px" } },
-    "focusOffsetTight": { "$value": { "value": 2, "unit": "px" } },
-    "touchTarget": { "$value": { "value": 44, "unit": "px" } },
-    "contentMaxWidth": { "$value": { "value": 1240, "unit": "px" } },
-    "catalogGutter": { "$value": { "value": 32, "unit": "px" } },
-    "catalogInlineSpace": { "$value": { "value": 64, "unit": "px" } },
-    "breakpointPhone": { "$value": { "value": 640, "unit": "px" } },
-    "breakpointMobile": { "$value": { "value": 767, "unit": "px" } },
-    "breakpointTabletMin": { "$value": { "value": 768, "unit": "px" } },
-    "breakpointTabletMax": { "$value": { "value": 992, "unit": "px" } },
-    "breakpointDesktop": { "$value": { "value": 993, "unit": "px" } }
-  },
-  "ratio": {
+  "number": {
     "$type": "number",
+    "zero": { "$value": 0 },
+    "one": { "$value": 1 },
+    "lineHeightModalTitle": { "$value": 1.2 },
+    "lineHeightBody": { "$value": 1.52 },
+    "lineHeightSubmenu": { "$value": 1.25 },
+    "opacityTraitIcon": { "$value": 0.72 },
+    "opacityPlaceholder": { "$value": 0.88 },
+    "opacityStickyDesktop": { "$value": 0.42 },
+    "opacityStickyMobile": { "$value": 0.36 },
+    "scalePressed": { "$value": 0.88 },
+    "scaleSubmenuPressed": { "$value": 0.985 },
     "productImageWidth": { "$value": 286 },
-    "productImageHeight": { "$value": 200 }
-  },
-  "zIndex": {
-    "$type": "number",
-    "raised": { "$value": 1 },
-    "themePopover": { "$value": 120 }
+    "productImageHeight": { "$value": 200 },
+    "zRaised": { "$value": 1 },
+    "zThemePopover": { "$value": 120 },
+    "zModal": { "$value": 9000 }
   },
   "motion": {
     "duration": {
       "$type": "duration",
+      "zero": { "$value": { "value": 0, "unit": "ms" } },
       "short1": { "$value": { "value": 50, "unit": "ms" } },
       "short2": { "$value": { "value": 100, "unit": "ms" } },
       "short3": { "$value": { "value": 150, "unit": "ms" } },
@@ -113,6 +176,13 @@
       "decelerate": { "$value": [0, 0, 0, 1] },
       "linear": { "$value": [0, 0, 1, 1] }
     },
+    "transition": {
+      "$type": "transition",
+      "fast": { "$value": { "duration": "{motion.duration.short3}", "delay": "{motion.duration.zero}", "timingFunction": "{motion.easing.decelerate}" } },
+      "standard": { "$value": { "duration": "{motion.duration.short3}", "delay": "{motion.duration.zero}", "timingFunction": "{motion.easing.standard}" } },
+      "icon": { "$value": { "duration": "{motion.duration.short4}", "delay": "{motion.duration.zero}", "timingFunction": "{motion.easing.decelerate}" } },
+      "theme": { "$value": { "duration": "{motion.duration.long3}", "delay": "{motion.duration.zero}", "timingFunction": "{motion.easing.standard}" } }
+    },
     "spring": {
       "spatial": {
         "fast": { "stiffness": { "$type": "number", "$value": 1400 }, "damping": { "$type": "number", "$value": 0.9 } },
@@ -130,5 +200,45 @@
       },
       "focus": { "stiffness": { "$type": "number", "$value": 1500 }, "damping": { "$type": "number", "$value": 1 } }
     }
+  },
+  "stroke": {
+    "$type": "strokeStyle",
+    "solid": { "$value": "solid" },
+    "dashed": { "$value": "dashed" }
+  },
+  "border": {
+    "light": {
+      "$type": "border",
+      "default": { "$value": { "color": "{color.light.border}", "width": "{dimension.one}", "style": "{stroke.solid}" } },
+      "strong": { "$value": { "color": "{color.light.borderStrong}", "width": "{dimension.one}", "style": "{stroke.solid}" } },
+      "focus": { "$value": { "color": "{color.light.ink}", "width": "{dimension.two}", "style": "{stroke.solid}" } }
+    },
+    "dark": {
+      "$type": "border",
+      "default": { "$value": { "color": "{color.dark.border}", "width": "{dimension.one}", "style": "{stroke.solid}" } },
+      "strong": { "$value": { "color": "{color.dark.borderStrong}", "width": "{dimension.one}", "style": "{stroke.solid}" } },
+      "focus": { "$value": { "color": "{color.dark.ink}", "width": "{dimension.two}", "style": "{stroke.solid}" } }
+    }
+  },
+  "shadow": {
+    "$type": "shadow",
+    "modal": { "$value": { "color": "{color.palette.black22}", "offsetX": "{dimension.zero}", "offsetY": "{dimension.eighteen}", "blur": "{dimension.fiftyFive}", "spread": "{dimension.zero}" } },
+    "submenu": { "$value": { "color": "{color.palette.black08}", "offsetX": "{dimension.zero}", "offsetY": "{dimension.twelve}", "blur": "{dimension.twentyEight}", "spread": "{dimension.zero}" } }
+  },
+  "gradient": {
+    "$type": "gradient",
+    "stickyShadow": { "$value": [
+      { "color": "{color.palette.black10}", "position": 0 },
+      { "color": "{color.palette.blackTransparent}", "position": 1 }
+    ] }
+  },
+  "typography": {
+    "$type": "typography",
+    "search": { "$value": { "fontFamily": "{font.family.primary}", "fontSize": "{dimension.fontFifteen}", "fontWeight": "{font.weight.regular}", "letterSpacing": "{dimension.trackingZero}", "lineHeight": 1.3333333333 } },
+    "filter": { "$value": { "fontFamily": "{font.family.primary}", "fontSize": "{dimension.fontElevenQuarter}", "fontWeight": "{font.weight.regular}", "letterSpacing": "{dimension.trackingZero}", "lineHeight": 1.4222222222 } },
+    "modalTitle": { "$value": { "fontFamily": "{font.family.primary}", "fontSize": "{dimension.fontTwenty}", "fontWeight": "{font.weight.semibold}", "letterSpacing": "{dimension.trackingModalTitle}", "lineHeight": "{number.lineHeightModalTitle}" } },
+    "modalBody": { "$value": { "fontFamily": "{font.family.primary}", "fontSize": "{dimension.fontThirteenHalf}", "fontWeight": "{font.weight.regular}", "letterSpacing": "{dimension.trackingZero}", "lineHeight": "{number.lineHeightBody}" } },
+    "modalPrice": { "$value": { "fontFamily": "{font.family.primary}", "fontSize": "{dimension.fontSeventeen}", "fontWeight": "{font.weight.semibold}", "letterSpacing": "{dimension.trackingZero}", "lineHeight": "{number.lineHeightModalTitle}" } },
+    "submenu": { "$value": { "fontFamily": "{font.family.primary}", "fontSize": "{dimension.fontTwelve}", "fontWeight": "{font.weight.regular}", "letterSpacing": "{dimension.trackingZero}", "lineHeight": "{number.lineHeightSubmenu}" } }
   }
 }
