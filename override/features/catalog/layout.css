@@ -3,20 +3,17 @@ body.sushiShop {
   --sc-catalog-base-columns: 4;
   --sc-catalog-grid-row-gap: 36px;
   --sc-catalog-section-bottom: 74px;
-  --sc-catalog-gutter: 28px;
 }
 
-/* Oculta controles legacy que ya no participan. */
 body.sushiShop .topShop.bottomShop,
 body.sushiShop .productoShop .sumar {
   display: none !important;
 }
 
-/* Grilla base de alta densidad. */
 body.sushiShop .listadoShop {
   display: grid !important;
   grid-template-columns: repeat(var(--sc-catalog-base-columns), minmax(0, 1fr));
-  column-gap: var(--sc-catalog-gutter);
+  column-gap: var(--sc-layout-grid-gutter);
   row-gap: var(--sc-catalog-grid-row-gap) !important;
   width: 100% !important;
   margin: 0 0 var(--sc-catalog-section-bottom) !important;
@@ -29,7 +26,6 @@ body.sushiShop .listadoShop:empty {
   display: none !important;
 }
 
-/* Títulos y separadores ocupan todas las columnas. */
 body.sushiShop .listadoShop > :not(.productoShop) {
   grid-column: 1 / -1;
   min-width: 0;
@@ -47,70 +43,28 @@ body.sushiShop .listadoShop > br {
   display: none !important;
 }
 
-/* Tablet: tres columnas y gutters menores. */
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
     --sc-catalog-base-columns: 3;
     --sc-catalog-grid-row-gap: 34px;
     --sc-catalog-section-bottom: 64px;
-    --sc-catalog-gutter: 24px;
+    --sc-catalog-container-inline-space: 40px;
   }
 
   body.sushiShop .containerShop {
-    box-sizing: border-box;
-    width: calc(100% - 40px) !important;
     max-width: 940px !important;
-    margin-right: auto !important;
-    margin-left: auto !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
-  }
-
-  body.sushiShop .containerShop > .row {
-    margin-right: 0 !important;
-    margin-left: 0 !important;
-  }
-
-  body.sushiShop .containerShop .col-md-9.normCols {
-    float: none !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    height: auto !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
   }
 }
 
-/* Móvil: dos columnas y contenedor más estrecho. */
 @media (max-width: 640px) {
   body.sushiShop {
     --sc-catalog-base-columns: 2;
     --sc-catalog-grid-row-gap: 28px;
     --sc-catalog-section-bottom: 44px;
-    --sc-catalog-gutter: 20px;
+    --sc-catalog-container-inline-space: 32px;
   }
 
   body.sushiShop .containerShop {
-    box-sizing: border-box;
-    width: calc(100% - 32px) !important;
     max-width: none !important;
-    margin-right: auto !important;
-    margin-left: auto !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
-  }
-
-  body.sushiShop .containerShop > .row {
-    margin-right: 0 !important;
-    margin-left: 0 !important;
-  }
-
-  body.sushiShop .containerShop .col-md-9.normCols {
-    float: none !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    height: auto !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
   }
 }
