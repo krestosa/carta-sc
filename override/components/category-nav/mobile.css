@@ -1,6 +1,5 @@
 /* Estructura y estado activo del riel en tablet/móvil. */
 @media (max-width: 992px) {
-  /* Mantiene el riel fijo y ocupa todo el ancho. */
   body.sushiShop .fixedTopShop.wtopShopMenuMobile {
     position: sticky !important;
     top: 0 !important;
@@ -10,7 +9,7 @@
     margin: 0 !important;
     padding: 0 !important;
     background: var(--sc-color-surface) !important;
-    z-index: var(--sc-z-category-sticky) !important;
+    z-index: var(--sc-layer-sticky) !important;
     box-shadow: none !important;
   }
 
@@ -31,7 +30,6 @@
     overflow: hidden !important;
   }
 
-  /* Scroll horizontal sin scrollbar visible. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     box-sizing: border-box;
     width: 100% !important;
@@ -80,7 +78,6 @@
     transform-origin: 0 0 !important;
   }
 
-  /* Línea base compartida por las categorías. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-tabsTopShop::before {
     content: '';
     position: absolute;
@@ -104,7 +101,6 @@
     background: transparent !important;
   }
 
-  /* Normaliza links y estados de interacción. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink {
     display: block !important;
     position: relative !important;
@@ -115,10 +111,10 @@
     background: transparent !important;
     color: var(--sc-color-copy) !important;
     box-shadow: none !important;
-    font-family: var(--sc-font-primary) !important;
-    line-height: var(--sc-category-link-line-height) !important;
-    font-weight: var(--sc-font-weight-regular) !important;
-    letter-spacing: var(--sc-category-link-tracking) !important;
+    font-family: var(--sc-typography-label-font-family) !important;
+    line-height: var(--sc-typography-label-line-height) !important;
+    font-weight: var(--sc-typography-label-font-weight) !important;
+    letter-spacing: var(--sc-typography-label-letter-spacing) !important;
     text-transform: none !important;
     white-space: nowrap !important;
     text-decoration: none !important;
@@ -150,7 +146,6 @@
     display: none !important;
   }
 
-  /* Indicador activo; su movimiento queda a cargo de JS. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     display: block !important;
     bottom: -12px !important;
@@ -176,7 +171,6 @@
   }
 }
 
-/* Compacta el espacio entre categorías en móvil chico. */
 @media (max-width: 640px) {
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     padding-left: var(--sc-category-mobile-padding-inline) !important;
@@ -188,7 +182,6 @@
   }
 }
 
-/* Respeta reducción de movimiento. */
 @media (prefers-reduced-motion: reduce) {
   body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink {
     transition: none !important;
