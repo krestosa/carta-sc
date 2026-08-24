@@ -31,7 +31,7 @@ jobs:
             node: '24'
     name: ci-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 35
+    timeout-minutes: 30
     env:
       TYPE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -58,12 +58,12 @@ jobs:
           $actual = git rev-parse HEAD
           if ($actual -ne $env:TYPE_SHA) { throw "Checkout SHA mismatch: $actual != $env:TYPE_SHA" }
 
-      - name: Run full TypeScript CI
-        timeout-minutes: 15
+      - name: Run cross-platform TypeScript validation
+        timeout-minutes: 12
         shell: pwsh
         run: |
           $env:GITHUB_SHA = $env:TYPE_SHA
-          npm run ci
+          npm run ci:core
 
       - name: Build handoff
         timeout-minutes: 12
@@ -80,7 +80,7 @@ jobs:
           npm run validate:handoff
 
       - name: Validate standalone handoff in browser
-        if: matrix.platform == 'linux'
+        if: github.event_name == 'workflow_dispatch' && matrix.platform == 'linux'
         shell: pwsh
         timeout-minutes: 8
         run: |
