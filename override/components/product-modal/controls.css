@@ -10,17 +10,17 @@ body.sushiShop .sc-product-modal__cart-button {
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
-  height: var(--sc-token-dimension-forty-eight) !important;
-  min-height: var(--sc-token-dimension-forty-eight) !important;
-  padding: 0 var(--sc-token-dimension-twenty-two) !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 22px !important;
   border: var(--sc-border-hairline) solid var(--sc-color-ink) !important;
-  border-radius: var(--sc-token-dimension-twenty-four) !important;
-  clip-path: inset(0 round var(--sc-token-dimension-twenty-four)) !important;
+  border-radius: 24px !important;
+  clip-path: inset(0 round 24px) !important;
   overflow: hidden !important;
   background: var(--sc-color-ink) !important;
   color: var(--sc-color-surface) !important;
   font-family: var(--sc-token-font-family-primary) !important;
-  font-size: var(--sc-token-dimension-fourteen) !important;
+  font-size: 14px !important;
   line-height: var(--sc-token-number-line-height-modal-title) !important;
   font-weight: var(--sc-token-font-weight-semibold) !important;
   text-decoration: none !important;
@@ -97,7 +97,7 @@ body.sushiShop .sc-product-modal__close:focus-visible::before {
 body.sushiShop .sc-product-modal__close:active::before { transform: scale(var(--sc-token-component-number-scale-close-pressed)); }
 body.sushiShop .sc-product-modal__close:focus-visible {
   outline: var(--sc-focus-ring-width) solid var(--sc-focus-ring-color) !important;
-  outline-offset: var(--sc-token-dimension-one) !important;
+  outline-offset: 1px !important;
   color: var(--sc-color-ink) !important;
 }
 
