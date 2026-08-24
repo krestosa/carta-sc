@@ -1,24 +1,43 @@
-/* Interacción del riel; desktop y mobile conservan la geometría visual. */
+/* Interacción del riel: conserva la línea activa y normaliza target/state layer. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink {
+  isolation: isolate;
   touch-action: manipulation;
 }
 
-/* Amplía el target sin agrandar el texto. */
+/* El pseudo amplía el target a ~48px y funciona como state layer sin alterar la línea activa. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::before,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
   content: '';
   position: absolute;
-  top: -14px;
-  right: -4px;
-  bottom: -14px;
-  left: -4px;
+  top: calc(-1 * var(--sc-space-large));
+  right: calc(-1 * var(--sc-space-extra-small));
+  bottom: calc(-1 * var(--sc-space-large));
+  left: calc(-1 * var(--sc-space-extra-small));
+  z-index: -1;
+  border-radius: var(--sc-shape-control);
+  background: currentColor;
+  opacity: 0;
   pointer-events: auto;
+  transition: opacity var(--sc-transition-fast);
 }
 
-@media (max-width: 992px) {
+body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:hover::before,
+body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink:hover::before {
+  opacity: var(--sc-state-opacity-hover);
+}
+body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible::before,
+body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink:focus-visible::before {
+  opacity: var(--sc-state-opacity-focus);
+}
+body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:active::before,
+body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink:active::before {
+  opacity: var(--sc-state-opacity-pressed);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::before,
   body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
-    top: -13px;
-    bottom: -13px;
+    transition: none;
   }
 }
