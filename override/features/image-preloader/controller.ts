@@ -24,6 +24,11 @@ interface StagePosition {
   readonly left: number;
 }
 
+interface DecodeTask {
+  readonly source: string;
+  readonly promise: Promise<boolean>;
+}
+
 function stageImage(stage: HTMLElement): HTMLImageElement | null {
   return stage.querySelector<HTMLImageElement>('img[src],img[srcset],img[data-sc-src]');
 }
@@ -47,12 +52,14 @@ function orderedStages(stages: Iterable<HTMLElement>): HTMLElement[] {
   return positioned
     .sort((left, right) => Math.abs(left.top - right.top) > ROW_TOLERANCE_PX
       ? left.top - right.top
-      : right.left - left.left)
+      : left.left - right.left)
     .map((entry) => entry.stage);
 }
 
 export class ImagePreloaderController {
   readonly #bindings = new Map<HTMLImageElement, ImageBinding>();
+  readonly #decodedSources = new WeakMap<HTMLImageElement, string>();
+  readonly #decodeTasks = new WeakMap<HTMLImageElement, DecodeTask>();
   readonly #placeholderMotion = new ImagePlaceholderMotion();
   readonly #stages = new Set<HTMLElement>();
   readonly #visibleStages = new Set<HTMLElement>();
@@ -168,14 +175,74 @@ export class ImagePreloaderController {
     return image?.closest<HTMLElement>(IMAGE_STAGE_SELECTOR) ?? null;
   }
 
+  #sourceKey(image: HTMLImageElement): string {
+    return image.currentSrc || image.getAttribute('src')?.trim() || '';
+  }
+
   #deferredWithoutSource(image: HTMLImageElement): boolean {
     const deferred = image.getAttribute('data-sc-src')?.trim() ?? '';
     const source = image.getAttribute('src')?.trim() ?? '';
     return Boolean(deferred && !source && !image.currentSrc);
   }
 
-  #imageReady(image: HTMLImageElement): boolean {
-    return !this.#deferredWithoutSource(image) && image.complete && image.naturalWidth > 0;
+  #networkReady(image: HTMLImageElement): boolean {
+    return !this.#deferredWithoutSource(image)
+      && image.complete
+      && image.naturalWidth > 0
+      && Boolean(this.#sourceKey(image));
+  }
+
+  #decodedReady(image: HTMLImageElement): boolean {
+    if (!this.#networkReady(image)) return false;
+    const source = this.#sourceKey(image);
+    return this.#decodedSources.get(image) === source;
+  }
+
+  #invalidateDecode(image: HTMLImageElement): void {
+    this.#decodedSources.delete(image);
+    this.#decodeTasks.delete(image);
+  }
+
+  #nextPaint(): Promise<void> {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  }
+
+  #decodeImage(image: HTMLImageElement): Promise<boolean> {
+    if (this.#decodedReady(image)) return Promise.resolve(true);
+    if (!this.#networkReady(image)) return Promise.resolve(false);
+
+    const source = this.#sourceKey(image);
+    const existing = this.#decodeTasks.get(image);
+    if (existing?.source === source) return existing.promise;
+
+    const promise = (async (): Promise<boolean> => {
+      if (typeof image.decode === 'function') {
+        try {
+          await image.decode();
+        } catch {
+          await this.#nextPaint();
+          try {
+            await image.decode();
+          } catch {
+            return false;
+          }
+        }
+      }
+
+      if (!this.#networkReady(image) || this.#sourceKey(image) !== source) return false;
+      await this.#nextPaint();
+      if (!this.#networkReady(image) || this.#sourceKey(image) !== source) return false;
+
+      this.#decodedSources.set(image, source);
+      return true;
+    })();
+
+    this.#decodeTasks.set(image, { source, promise });
+    void promise.finally(() => {
+      const current = this.#decodeTasks.get(image);
+      if (current?.promise === promise) this.#decodeTasks.delete(image);
+    });
+    return promise;
   }
 
   #setPriority(image: HTMLImageElement, priority: ImagePriority): void {
@@ -187,8 +254,15 @@ export class ImagePreloaderController {
   #activateDeferredSource(image: HTMLImageElement): void {
     const source = image.getAttribute('data-sc-src')?.trim() ?? '';
     if (!source || image.getAttribute('src')?.trim()) return;
+    this.#invalidateDecode(image);
     image.removeAttribute('data-sc-src');
     image.src = source;
+  }
+
+  #isPlaceholderTracked(stage: HTMLElement): boolean {
+    return stage.classList.contains('sc-image-loading')
+      || stage.classList.contains('sc-image-revealing')
+      || stage.classList.contains('sc-image-transitioning');
   }
 
   #unbindNativeImage(image: HTMLImageElement): void {
@@ -199,11 +273,40 @@ export class ImagePreloaderController {
     this.#bindings.delete(image);
   }
 
+  async #resolveImage(image: HTMLImageElement, stage: HTMLElement, token: number): Promise<void> {
+    if (!this.#networkReady(image)) return;
+    if (!await this.#decodeImage(image)) return;
+    if (!this.#started || token !== this.#generation || !this.#decodedReady(image)) return;
+
+    const current = this.#stageFor(image) ?? stage;
+    if (!current || !current.isConnected) return;
+
+    const visible = this.#visibleStages.has(current);
+    if (visible || this.#isPlaceholderTracked(current)) {
+      this.#placeholderMotion.markReady(current, visible);
+      this.#scheduleWaveSync();
+    }
+
+    this.#unbindNativeImage(image);
+  }
+
   #bindNativeImage(image: HTMLImageElement, stage: HTMLElement): void {
+    if (this.#decodedReady(image)) {
+      if (this.#visibleStages.has(stage) || this.#isPlaceholderTracked(stage)) {
+        this.#placeholderMotion.markReady(stage, this.#visibleStages.has(stage));
+        this.#scheduleWaveSync();
+      }
+      this.#unbindNativeImage(image);
+      return;
+    }
+
     const existing = this.#bindings.get(image);
     if (existing) {
       existing.stage = stage;
       existing.token = this.#generation;
+      if (this.#networkReady(image)) {
+        void this.#resolveImage(image, stage, existing.token);
+      }
       return;
     }
 
@@ -215,22 +318,17 @@ export class ImagePreloaderController {
     };
 
     binding.load = () => {
+      void this.#resolveImage(image, binding.stage, binding.token);
+    };
+
+    binding.error = () => {
       const current = this.#stageFor(image) ?? binding.stage;
       if (
         this.#started
         && binding.token === this.#generation
         && current
-        && this.#imageReady(image)
+        && (this.#visibleStages.has(current) || this.#isPlaceholderTracked(current))
       ) {
-        this.#placeholderMotion.markReady(current, this.#visibleStages.has(current));
-        this.#scheduleWaveSync();
-      }
-      if (this.#imageReady(image)) this.#unbindNativeImage(image);
-    };
-
-    binding.error = () => {
-      const current = this.#stageFor(image) ?? binding.stage;
-      if (this.#started && binding.token === this.#generation && current) {
         this.#placeholderMotion.markReady(current, false);
         this.#scheduleWaveSync();
       }
@@ -240,6 +338,10 @@ export class ImagePreloaderController {
     this.#bindings.set(image, binding);
     image.addEventListener('load', binding.load);
     image.addEventListener('error', binding.error);
+
+    if (this.#networkReady(image)) {
+      void this.#resolveImage(image, stage, binding.token);
+    }
   }
 
   #unbindNativeImages(): void {
@@ -252,7 +354,7 @@ export class ImagePreloaderController {
     if (!image) return;
 
     this.#setPriority(image, 'high');
-    if (this.#imageReady(image)) {
+    if (this.#decodedReady(image)) {
       this.#placeholderMotion.markReady(stage, false);
       this.#unbindNativeImage(image);
       return;
@@ -261,6 +363,12 @@ export class ImagePreloaderController {
     this.#placeholderMotion.markLoading(stage, true);
     this.#bindNativeImage(image, stage);
     this.#activateDeferredSource(image);
+
+    if (this.#networkReady(image)) {
+      const binding = this.#bindings.get(image);
+      void this.#resolveImage(image, stage, binding?.token ?? this.#generation);
+    }
+    this.#scheduleWaveSync();
   }
 
   #prefetchStage(stage: HTMLElement): void {
@@ -270,17 +378,23 @@ export class ImagePreloaderController {
       || this.#visibleStages.has(stage)
       || !this.#prefetchStages.has(stage)
     ) return;
+
     const image = stageImage(stage);
     if (!image) return;
 
     this.#setPriority(image, 'low');
-    if (this.#imageReady(image)) {
+    if (this.#decodedReady(image)) {
       this.#unbindNativeImage(image);
       return;
     }
 
     this.#bindNativeImage(image, stage);
     this.#activateDeferredSource(image);
+
+    if (this.#networkReady(image)) {
+      const binding = this.#bindings.get(image);
+      void this.#resolveImage(image, stage, binding?.token ?? this.#generation);
+    }
   }
 
   #currentPrefetchRow(): HTMLElement[] {
@@ -293,11 +407,11 @@ export class ImagePreloaderController {
     }
     if (!positioned.length) return [];
 
-    positioned.sort((left, right) => left.top - right.top || right.left - left.left);
+    positioned.sort((left, right) => left.top - right.top || left.left - right.left);
     const rowTop = positioned[0]?.top ?? Number.POSITIVE_INFINITY;
     return positioned
       .filter((entry) => Math.abs(entry.top - rowTop) <= ROW_TOLERANCE_PX)
-      .sort((left, right) => right.left - left.left)
+      .sort((left, right) => left.left - right.left)
       .map((entry) => entry.stage);
   }
 
@@ -455,7 +569,9 @@ export class ImagePreloaderController {
   #bindViewportEvents(): void {
     this.#hasNativeScrollEnd = 'onscrollend' in window;
     window.addEventListener('scroll', this.#handleScroll, { passive: true });
-    if (this.#hasNativeScrollEnd) window.addEventListener('scrollend', this.#handleScrollEnd, { passive: true });
+    if (this.#hasNativeScrollEnd) {
+      window.addEventListener('scrollend', this.#handleScrollEnd, { passive: true });
+    }
     window.addEventListener('resize', this.#handleLayoutChange, { passive: true });
     window.addEventListener('sc:motionrefresh', this.#handleLayoutChange);
   }
@@ -474,8 +590,16 @@ export class ImagePreloaderController {
       for (const mutation of mutations) {
         if (mutation.type === 'attributes') {
           if (mutation.target instanceof HTMLImageElement) {
+            if (mutation.attributeName === 'src' || mutation.attributeName === 'srcset') {
+              this.#invalidateDecode(mutation.target);
+            }
             const stage = this.#stageFor(mutation.target);
-            if (stage) this.#registerStage(stage);
+            if (stage) {
+              this.#registerStage(stage);
+              if (this.#visibleStages.has(stage) && !this.#scrolling) {
+                this.#activateVisibleStage(stage);
+              }
+            }
           }
           continue;
         }
