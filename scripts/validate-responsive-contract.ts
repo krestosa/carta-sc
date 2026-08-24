@@ -111,16 +111,28 @@ class ResponsiveContractValidator {
   #validateSharedVisualGeometry(): void {
     const traitIcons = readProjectFile('override/components/catalog-tools/trait-icon-sizing.css');
     this.#validation.check(
-      !/@media\s*\([^)]*(?:min|max)-width/.test(traitIcons),
-      'filter trait icon alignment must remain shared across desktop, tablet and mobile',
-    );
-    this.#validation.check(
       /\.imgRef[\s\S]*?transform\s*:\s*none\s*!important/.test(traitIcons),
-      'filter trait icon wrapper must not carry a breakpoint-specific optical offset',
+      'filter trait icon wrapper must not carry an optical offset',
     );
     this.#validation.check(
-      /data-sc-trait=['"]vegetariano['"][^}]*transform\s*:\s*none\s*!important/.test(traitIcons),
-      'vegetarian filter icon must share the same vertical center as the fire icons',
+      /translate\s*:\s*0\s+var\(\s*--sc-filter-trait-optical-y\s*\)\s*!important/.test(traitIcons),
+      'all filter trait SVGs must consume the shared per-breakpoint optical offset',
+    );
+    this.#validation.check(
+      /@media\s*\(min-width\s*:\s*993px\)[\s\S]*?--sc-filter-trait-optical-y\s*:\s*1px/.test(traitIcons),
+      'desktop filter trait calibration must be +1px',
+    );
+    this.#validation.check(
+      /@media\s*\(min-width\s*:\s*641px\)\s*and\s*\(max-width\s*:\s*992px\)[\s\S]*?--sc-filter-trait-optical-y\s*:\s*0px/.test(traitIcons),
+      'tablet filter trait calibration must be 0px',
+    );
+    this.#validation.check(
+      /@media\s*\(max-width\s*:\s*640px\)[\s\S]*?--sc-filter-trait-optical-y\s*:\s*-1px/.test(traitIcons),
+      'mobile filter trait calibration must be -1px',
+    );
+    this.#validation.check(
+      !/data-sc-trait=['"]vegetariano['"][^}]*translate\s*:/.test(traitIcons),
+      'vegetarian filter icon must not diverge from the breakpoint calibration shared by fire icons',
     );
   }
 
