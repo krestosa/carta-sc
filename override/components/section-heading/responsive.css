@@ -1,31 +1,15 @@
-/* Ajusta escala y alineación de títulos en tablet sin cambiar la jerarquía definida en
-   layout.css. Solo reduce tipografía y tracking para conservar el ritmo del catálogo. */
+/* La escala tipográfica responsive proviene de los roles DTCG globales. Aquí solo vive geometría local. */
 @media (max-width: 992px) {
   body.sushiShop .listadoShop .titleShopSeccion,
-  body.sushiShop .listadoShop .titleShopSeccion > div {
-    text-align: left !important;
-  }
-
-  body.sushiShop .listadoShop .titleShopSeccion {
-    font-size: 22px !important;
-    line-height: var(--sc-section-title-line-height) !important;
-    letter-spacing: -.032em !important;
-  }
-
+  body.sushiShop .listadoShop .titleShopSeccion > div,
   body.sushiShop .listadoShop .subTitleShopSeccion {
-    font-size: 16px !important;
-    line-height: 1.16 !important;
-    letter-spacing: -.018em !important;
     text-align: left !important;
   }
 }
 
-/* En móvil compacta márgenes, padding y cuerpo tipográfico para ganar altura útil sin
-   eliminar la separación visual entre categoría, subcategoría y productos. */
 @media (max-width: 640px) {
   body.sushiShop .listadoShop .titleShopSeccion {
     margin: 2px 0 -2px !important;
-    font-size: 20px !important;
   }
 
   body.sushiShop .listadoShop .titleShopSeccion > div {
@@ -35,6 +19,5 @@
 
   body.sushiShop .listadoShop .subTitleShopSeccion {
     margin: 5px 0 -2px !important;
-    font-size: 15.5px !important;
   }
 }
