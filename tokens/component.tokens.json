@@ -25,7 +25,8 @@
       "themeOptionHeight": { "$value": { "value": 36, "unit": "px" } },
       "trackingThemeOption": { "$value": { "value": -0.06, "unit": "px" } },
       "modalOpenOffset": { "$value": { "value": 20, "unit": "px" } },
-      "modalCloseOffset": { "$value": { "value": -10, "unit": "px" } }
+      "modalCloseOffset": { "$value": { "value": -10, "unit": "px" } },
+      "pillRadius": { "$value": { "value": 999, "unit": "px" } }
     },
     "number": {
       "$type": "number",
@@ -38,7 +39,10 @@
       "strokeThemeRay": { "$value": 1.65 },
       "strokeOptionRing": { "$value": 1.35 },
       "strokeOptionRay": { "$value": 1.25 },
-      "strokeClose": { "$value": 1.6 }
+      "strokeClose": { "$value": 1.6 },
+      "zOverlay": { "$value": 2 },
+      "zControl": { "$value": 3 },
+      "zSkeleton": { "$value": 4 }
     },
     "duration": {
       "$type": "duration",
