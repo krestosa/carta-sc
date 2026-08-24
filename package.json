@@ -12,7 +12,11 @@
     "typecheck": "npm run typecheck:browser && npm run typecheck:tooling",
     "compile:tooling": "tsc -p tsconfig.tooling.json",
     "compile:browser": "tsc -p tsconfig.browser.json",
+    "tokens:validate": "npx --yes --package @terrazzo/cli@2.5.0 tz check tokens/design.tokens.json",
     "tokens:build": "npm run compile:tooling && node .build/tooling/scripts/build-design-tokens.js",
+    "tokens:audit": "npm run compile:tooling && node .build/tooling/scripts/audit-design-token-usage.js",
+    "tokens:audit:strict": "npm run compile:tooling && node .build/tooling/scripts/audit-design-token-usage.js --strict",
+    "tokens:verify": "npm run tokens:validate && npm run tokens:build && npm run tokens:audit",
     "build:runtime": "npm run tokens:build && npm run compile:browser && node .build/tooling/scripts/sync-runtime.js",
     "validate": "npm run build:runtime && node .build/tooling/scripts/validate-source-boundary.js && node .build/tooling/scripts/validate-overrides.js && node .build/tooling/scripts/validate-production-boundary.js && node .build/tooling/scripts/validate-responsive-contract.js",
     "build:pages": "npm run build:runtime && node .build/tooling/lab/pages/build.js",
@@ -21,7 +25,7 @@
     "validate:handoff": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff.js handoff",
     "validate:handoff:browser": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff-browser.js handoff/compiled",
     "build": "npm run validate",
-    "ci": "npm run typecheck && npm run validate && npm run build:pages"
+    "ci": "npm run typecheck && npm run tokens:verify && npm run validate && npm run build:pages"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
