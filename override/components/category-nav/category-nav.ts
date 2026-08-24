@@ -1,5 +1,5 @@
 import type { Cleanup } from '../../core/types.js';
-import { motionTokens, selectors } from '../../core/variables.js';
+import { selectors } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';
 import { CategoryActiveState } from './active-state.js';
 import {
@@ -26,6 +26,8 @@ import { CategoryRailController } from './rail.js';
 import { CategoryScrollSpy } from './scroll-spy.js';
 import { CategorySubmenu } from './submenu.js';
 
+const GEOMETRY_REFRESH_DELAY_MS = 180;
+
 class CategoryNavigationController {
   readonly #rail: CategoryRailController;
   readonly #activeState: CategoryActiveState;
@@ -42,20 +44,10 @@ class CategoryNavigationController {
   #initialized = false;
 
   constructor() {
-    this.#rail = new CategoryRailController({
-      invalidateOffset: invalidateCategoryOffset,
-      refreshMetrics: () => this.#scrollSpy.refresh(),
-    });
-    this.#activeState = new CategoryActiveState({
-      requestCenter: this.#rail.requestCenter,
-      scheduleRail: this.#rail.scheduleRail,
-    });
+    this.#rail = new CategoryRailController({ invalidateOffset: invalidateCategoryOffset, refreshMetrics: () => this.#scrollSpy.refresh() });
+    this.#activeState = new CategoryActiveState({ requestCenter: this.#rail.requestCenter, scheduleRail: this.#rail.scheduleRail });
     this.#scrollSpy = new CategoryScrollSpy(this.#activeState);
-    this.#programmaticScroll = new ProgrammaticCategoryScroll({
-      refreshMetrics: this.#scrollSpy.refresh,
-      releaseSpyHold: this.#scrollSpy.release,
-      scheduleSpy: this.#scrollSpy.schedule,
-    });
+    this.#programmaticScroll = new ProgrammaticCategoryScroll({ refreshMetrics: this.#scrollSpy.refresh, releaseSpyHold: this.#scrollSpy.release, scheduleSpy: this.#scrollSpy.schedule });
   }
 
   initialize(): Cleanup {
@@ -71,7 +63,7 @@ class CategoryNavigationController {
       applyCategorySemantics();
       this.#submenu.scan();
       this.#refreshGeometry();
-    }, motionTokens.geometryRefreshDelay);
+    }, GEOMETRY_REFRESH_DELAY_MS);
     void document.fonts?.ready.then(this.#refreshGeometry).catch(() => undefined);
     return this.destroy;
   }
@@ -91,21 +83,10 @@ class CategoryNavigationController {
     pauseCategoryIndicator();
   };
 
-  refreshMetrics(): void {
-    this.#scrollSpy.refresh();
-  }
-
-  repair(): void {
-    this.#scheduleStructure();
-  }
-
-  current(): HTMLElement | null {
-    return this.#scrollSpy.current();
-  }
-
-  setActive(target: HTMLElement | null, animate = true): void {
-    this.#activeState.set(target, animate);
-  }
+  refreshMetrics(): void { this.#scrollSpy.refresh(); }
+  repair(): void { this.#scheduleStructure(); }
+  current(): HTMLElement | null { return this.#scrollSpy.current(); }
+  setActive(target: HTMLElement | null, animate = true): void { this.#activeState.set(target, animate); }
 
   #activateAndScroll(target: HTMLElement, activeTarget: HTMLElement = target): void {
     invalidateCategoryOffset();
@@ -116,44 +97,25 @@ class CategoryNavigationController {
   }
 
   #onCategory = (event: MouseEvent): void => {
-    if (event.defaultPrevented
-      || event.button > 0
-      || event.metaKey
-      || event.ctrlKey
-      || event.shiftKey
-      || event.altKey) return;
-
+    if (event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const origin = event.target instanceof Element ? event.target : null;
     const link = origin?.closest<HTMLAnchorElement>('a.anchorLink, a.anchorLinkSub, a.sc-category-submenu-link');
     if (!link) return;
-
     const submenuLink = link.classList.contains('sc-category-submenu-link');
     if (link.closest('.topPullDown,.dropdown-menu') && !submenuLink) return;
-    const inManagedNav = link.closest(selectors.categoryToolbar)
-      || link.closest(`${CATEGORY_SELECTORS.mobileWrapper} ${CATEGORY_SELECTORS.mobileRail}`)
-      || link.closest('.sc-category-submenu');
+    const inManagedNav = link.closest(selectors.categoryToolbar) || link.closest(`${CATEGORY_SELECTORS.mobileWrapper} ${CATEGORY_SELECTORS.mobileRail}`) || link.closest('.sc-category-submenu');
     if (!inManagedNav) return;
-
     const target = anchorForHref(link.getAttribute('href'));
     if (!target) return;
     const owner = submenuLink ? subcategoryOwner(link) : null;
     const hasChildren = !submenuLink && this.#submenu.has(link);
     const compact = !desktopCategories.matches;
-
     event.preventDefault();
     event.stopImmediatePropagation();
     closeLegacyCategoryMenus();
     cleanCategoryHash();
-
-    if (submenuLink) {
-      this.#submenu.close(false);
-      this.#activateAndScroll(target, owner ?? target);
-      return;
-    }
-    if (hasChildren && compact) {
-      this.#submenu.open(link, true);
-      return;
-    }
+    if (submenuLink) { this.#submenu.close(false); this.#activateAndScroll(target, owner ?? target); return; }
+    if (hasChildren && compact) { this.#submenu.open(link, true); return; }
     if (hasChildren) this.#submenu.open(link, true);
     this.#activateAndScroll(target);
   };
@@ -163,7 +125,6 @@ class CategoryNavigationController {
     if (!select?.matches(CATEGORY_SELECTORS.select)) return;
     const target = anchorForHref(select.value);
     if (!target) return;
-
     event.preventDefault();
     event.stopImmediatePropagation();
     closeLegacyCategoryMenus();
@@ -179,7 +140,6 @@ class CategoryNavigationController {
       this.#boundScrollers.delete(scroller);
     }
   }
-
   #bindRailScrollers(): void {
     this.#pruneRailScrollers();
     for (const scroller of document.querySelectorAll<HTMLElement>(`${CATEGORY_SELECTORS.scroller},${CATEGORY_SELECTORS.mobileScroller}`)) {
@@ -188,14 +148,10 @@ class CategoryNavigationController {
       scroller.addEventListener('scroll', this.#rail.scheduleOverflow, { passive: true });
     }
   }
-
   #unbindRailScrollers(): void {
-    for (const scroller of this.#boundScrollers) {
-      scroller.removeEventListener('scroll', this.#rail.scheduleOverflow);
-    }
+    for (const scroller of this.#boundScrollers) scroller.removeEventListener('scroll', this.#rail.scheduleOverflow);
     this.#boundScrollers.clear();
   }
-
   #refreshGeometry = (): void => {
     if (!this.#initialized) return;
     invalidateCategoryOffset();
@@ -203,32 +159,13 @@ class CategoryNavigationController {
     this.#rail.scheduleRail();
     this.#submenu.schedulePosition();
   };
-
   #resize = (): void => {
     if (!this.#initialized || this.#resizeFrame) return;
-    this.#resizeFrame = requestAnimationFrame(() => {
-      this.#resizeFrame = 0;
-      this.#refreshGeometry();
-    });
+    this.#resizeFrame = requestAnimationFrame(() => { this.#resizeFrame = 0; this.#refreshGeometry(); });
   };
-
-  #windowScroll = (): void => {
-    this.#rail.scheduleSticky();
-    this.#scrollSpy.schedule();
-    this.#submenu.schedulePosition();
-  };
-
-  #interrupt = (): void => {
-    this.#programmaticScroll.interrupt();
-    this.#scrollSpy.release();
-  };
-
-  #observeStructure(): void {
-    if (this.#structureObserver && document.body) {
-      this.#structureObserver.observe(document.body, { childList: true, subtree: true });
-    }
-  }
-
+  #windowScroll = (): void => { this.#rail.scheduleSticky(); this.#scrollSpy.schedule(); this.#submenu.schedulePosition(); };
+  #interrupt = (): void => { this.#programmaticScroll.interrupt(); this.#scrollSpy.release(); };
+  #observeStructure(): void { if (this.#structureObserver && document.body) this.#structureObserver.observe(document.body, { childList: true, subtree: true }); }
   #refreshMotionSafely(): void {
     if (!this.#initialized || this.#motionRefreshFrame) return;
     this.#motionRefreshFrame = requestAnimationFrame(() => {
@@ -240,17 +177,12 @@ class CategoryNavigationController {
       this.#observeStructure();
     });
   }
-
   #syncStructure = (): void => {
     if (this.#structureFrame) cancelAnimationFrame(this.#structureFrame);
     this.#structureFrame = 0;
     if (!this.#initialized) return;
-
     invalidateCategoryOffset();
-    syncCategoryLayout({
-      refreshMetrics: this.#scrollSpy.refresh,
-      scheduleRail: this.#rail.scheduleRail,
-    });
+    syncCategoryLayout({ refreshMetrics: this.#scrollSpy.refresh, scheduleRail: this.#rail.scheduleRail });
     applyCategorySemantics();
     this.#submenu.scan();
     this.#bindRailScrollers();
@@ -258,34 +190,20 @@ class CategoryNavigationController {
     this.#structureObserver?.takeRecords();
     this.#refreshMotionSafely();
   };
-
-  #scheduleStructure = (): void => {
-    if (this.#initialized && !this.#structureFrame) {
-      this.#structureFrame = requestAnimationFrame(this.#syncStructure);
-    }
-  };
-
+  #scheduleStructure = (): void => { if (this.#initialized && !this.#structureFrame) this.#structureFrame = requestAnimationFrame(this.#syncStructure); };
   #structural = (node: Node): boolean => {
     if (!(node instanceof Element)) return false;
     const selector = `${selectors.container}, ${selectors.categoryToolbar}, ${CATEGORY_SELECTORS.mobileWrapper}, .wrapp-nav-tabsTopShop`;
     return node.matches(selector) || Boolean(node.querySelector(selectors.container));
   };
-
   #watchStructure(): void {
     if (this.#structureObserver || !document.body) return;
     this.#structureObserver = new MutationObserver((mutations) => {
-      if (mutations.some((mutation) => [...mutation.addedNodes, ...mutation.removedNodes].some(this.#structural))) {
-        this.#scheduleStructure();
-      }
+      if (mutations.some((mutation) => [...mutation.addedNodes, ...mutation.removedNodes].some(this.#structural))) this.#scheduleStructure();
     });
     this.#observeStructure();
   }
-
-  #breakpoint = (): void => {
-    this.#submenu.close(false);
-    this.#syncStructure();
-  };
-
+  #breakpoint = (): void => { this.#submenu.close(false); this.#syncStructure(); };
   #addListeners(): void {
     document.addEventListener('click', this.#onCategory, true);
     document.addEventListener('change', this.#onSelect, true);
@@ -301,7 +219,6 @@ class CategoryNavigationController {
     window.addEventListener('touchstart', this.#interrupt, { passive: true });
     desktopCategories.addEventListener('change', this.#breakpoint);
   }
-
   #removeListeners(): void {
     document.removeEventListener('click', this.#onCategory, true);
     document.removeEventListener('change', this.#onSelect, true);
@@ -317,49 +234,20 @@ class CategoryNavigationController {
     window.removeEventListener('touchstart', this.#interrupt);
     desktopCategories.removeEventListener('change', this.#breakpoint);
   }
-
   #cancelScheduledWork(): void {
     if (this.#resizeFrame) cancelAnimationFrame(this.#resizeFrame);
     if (this.#structureFrame) cancelAnimationFrame(this.#structureFrame);
     if (this.#motionRefreshFrame) cancelAnimationFrame(this.#motionRefreshFrame);
     if (this.#geometryTimer) clearTimeout(this.#geometryTimer);
-    this.#resizeFrame = 0;
-    this.#structureFrame = 0;
-    this.#motionRefreshFrame = 0;
-    this.#geometryTimer = 0;
+    this.#resizeFrame = 0; this.#structureFrame = 0; this.#motionRefreshFrame = 0; this.#geometryTimer = 0;
   }
 }
 
 const categoryNavigation = new CategoryNavigationController();
-
-export function initializeCategoryNavigation(): Cleanup {
-  return categoryNavigation.initialize();
-}
-
-export function destroyCategoryNavigation(): void {
-  categoryNavigation.destroy();
-}
-
-export function refreshCategoryNavMetrics(): void {
-  categoryNavigation.refreshMetrics();
-}
-
-export function repairCategoryNavigation(): void {
-  categoryNavigation.repair();
-}
-
-export function currentCategory(): HTMLElement | null {
-  return categoryNavigation.current();
-}
-
-export function setActiveCategory(target: HTMLElement | null, animate = true): void {
-  categoryNavigation.setActive(target, animate);
-}
-
-export {
-  anchorForHref,
-  categoryLinks,
-  isCategoryIndicatorDirty,
-  markCategoryIndicatorDirty,
-  moveCategoryIndicator,
-};
+export function initializeCategoryNavigation(): Cleanup { return categoryNavigation.initialize(); }
+export function destroyCategoryNavigation(): void { categoryNavigation.destroy(); }
+export function refreshCategoryNavMetrics(): void { categoryNavigation.refreshMetrics(); }
+export function repairCategoryNavigation(): void { categoryNavigation.repair(); }
+export function currentCategory(): HTMLElement | null { return categoryNavigation.current(); }
+export function setActiveCategory(target: HTMLElement | null, animate = true): void { categoryNavigation.setActive(target, animate); }
+export { anchorForHref, categoryLinks, isCategoryIndicatorDirty, markCategoryIndicatorDirty, moveCategoryIndicator };
