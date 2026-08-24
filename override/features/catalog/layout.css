@@ -22,6 +22,12 @@ body.sushiShop .listadoShop {
   align-items: stretch;
 }
 
+/* La primera grilla normal comparte el mismo arranque vertical que la primera sección visible
+   durante búsqueda. Es una regla estructural común a desktop, tablet y mobile. */
+body.sushiShop:not(.sc-catalog-searching) .listadoShop.sc-first-catalog-section {
+  margin-top: calc(-1 * var(--sc-space-quad-extra-large)) !important;
+}
+
 body.sushiShop .listadoShop:empty {
   display: none !important;
 }
