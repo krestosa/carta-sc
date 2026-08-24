@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
@@ -36,9 +36,16 @@ jobs:
         timeout-minutes: 5
         run: npm ci
 
+      - name: Verify source and generated design system
+        timeout-minutes: 10
+        run: npm run verify
+
       - name: Build Pages and Handoff
-        timeout-minutes: 15
-        run: npm run build
+        timeout-minutes: 10
+        run: |
+          node .build/tooling/lab/pages/build.js
+          node .build/tooling/lab/handoff/build-handoff.js
+          node .build/tooling/scripts/validate-handoff.js handoff
 
       - name: Rebuild generated Handoff
         timeout-minutes: 10
@@ -72,7 +79,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
@@ -87,9 +94,16 @@ jobs:
         timeout-minutes: 5
         run: npm ci
 
+      - name: Verify source and generated design system
+        timeout-minutes: 10
+        run: npm run verify
+
       - name: Build Pages and Handoff
-        timeout-minutes: 15
-        run: npm run build
+        timeout-minutes: 10
+        run: |
+          node .build/tooling/lab/pages/build.js
+          node .build/tooling/lab/handoff/build-handoff.js
+          node .build/tooling/scripts/validate-handoff.js handoff
 
       - name: Rebuild generated Handoff
         timeout-minutes: 10
@@ -111,6 +125,9 @@ jobs:
     needs: linux
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy Pages
         id: deployment
