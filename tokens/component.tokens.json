@@ -30,6 +30,10 @@
     },
     "number": {
       "$type": "number",
+      "stateHoverOpacity": { "$value": 0.08 },
+      "stateFocusOpacity": { "$value": 0.10 },
+      "statePressedOpacity": { "$value": 0.10 },
+      "disabledOpacity": { "$value": 0.38 },
       "scaleMenuClosed": { "$value": 0.8 },
       "scaleButtonPressed": { "$value": 0.98 },
       "scaleClosePressed": { "$value": 0.9 },
