@@ -32,10 +32,13 @@ type ShadowValue = { color: unknown; offsetX: unknown; offsetY: unknown; blur: u
 type TypographyValue = { fontFamily: unknown; fontSize: unknown; fontWeight: unknown; letterSpacing: unknown; lineHeight: unknown };
 
 const root = process.cwd();
-const sourcePath = resolve(root, 'tokens/design.tokens.json');
+const sourcePaths = [
+  resolve(root, 'tokens/design.tokens.json'),
+  resolve(root, 'tokens/component.tokens.json'),
+] as const;
 const cssPath = resolve(root, 'override/core/tokens.generated.css');
 const tsPath = resolve(root, 'override/core/tokens.generated.ts');
-const document = JSON.parse(await readFile(sourcePath, 'utf8')) as TokenDocument;
+const documents = await Promise.all(sourcePaths.map(async (path) => JSON.parse(await readFile(path, 'utf8')) as TokenDocument));
 const tokens = new Map<string, FlatToken>();
 const typeSet = new Set<string>(DTCG_TYPES);
 
@@ -54,6 +57,7 @@ function visit(node: unknown, path: string[], inheritedType?: DtcgType): void {
   if ('$value' in object) {
     if (!type) throw new Error(`Token sin $type resoluble: ${path.join('.')}`);
     const tokenPath = path.join('.');
+    if (tokens.has(tokenPath)) throw new Error(`Token duplicado entre documentos: ${tokenPath}`);
     tokens.set(tokenPath, { path: tokenPath, type, value: object.$value });
     return;
   }
@@ -63,7 +67,7 @@ function visit(node: unknown, path: string[], inheritedType?: DtcgType): void {
   }
 }
 
-visit(document, []);
+for (const document of documents) visit(document, []);
 
 function aliasPath(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -193,6 +197,12 @@ function durationMs(path: string): number {
   return value.unit === 's' ? value.value * 1000 : value.value;
 }
 
+function dimensionPx(path: string): number {
+  const value = resolved(path) as DimensionValue;
+  if (value.unit !== 'px') throw new Error(`Token ${path} usa ${value.unit}; no se puede exponer como dimensionPx sin conversión contextual.`);
+  return value.value;
+}
+
 const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 const tokenCssName = (path: string): string => `--sc-token-${path.split('.').map(cssName).join('-')}`;
 
@@ -226,7 +236,7 @@ const canonicalCss = [...tokens.keys()]
   .map((path) => `  ${tokenCssName(path)}: ${cssValue(path)};`)
   .join('\n');
 const typographyCss = typographyNames.flatMap((name) => typographyVars(`typography.${name}`, cssName(name))).join('\n');
-const css = `/* GENERATED from tokens/design.tokens.json. DTCG 2025.10 source of truth. Do not edit. */
+const css = `/* GENERATED from DTCG 2025.10 documents in tokens/*.tokens.json. Do not edit. */
 :root {
 ${canonicalCss}
 }
@@ -297,7 +307,13 @@ ${themeBlock('dark', '    ')}
 const durationObject = Object.fromEntries(durationNames.map((name) => [name, durationMs(`motion.duration.${name}`) / 1000]));
 const easingObject = Object.fromEntries(['standard','accelerate','decelerate','linear'].map((name) => [name, cssValue(`motion.easing.${name}`)]));
 const spring = (path: string) => ({ stiffness: numberValue(`${path}.stiffness`), damping: numberValue(`${path}.damping`) });
-const ts = `/* GENERATED from tokens/design.tokens.json. DTCG 2025.10 source of truth. Do not edit. */
+const runtimeDurations = Object.fromEntries([...tokens.values()].filter((entry) => entry.type === 'duration').map((entry) => [entry.path, durationMs(entry.path)]));
+const runtimeDimensions = Object.fromEntries([...tokens.values()].filter((entry) => entry.type === 'dimension').map((entry) => [entry.path, dimensionPx(entry.path)]));
+const runtimeNumbers = Object.fromEntries([...tokens.values()].filter((entry) => entry.type === 'number' || entry.type === 'fontWeight').map((entry) => [entry.path, numberValue(entry.path)]));
+const runtimeColors = Object.fromEntries([...tokens.values()].filter((entry) => entry.type === 'color').map((entry) => [entry.path, cssValue(entry.path)]));
+const runtimeEasings = Object.fromEntries([...tokens.values()].filter((entry) => entry.type === 'cubicBezier').map((entry) => [entry.path, cssValue(entry.path)]));
+
+const ts = `/* GENERATED from DTCG 2025.10 documents in tokens/*.tokens.json. Do not edit. */
 export const tokenMedia = Object.freeze({
   phone: '(max-width: ${cssValue('dimension.breakpointPhone')})',
   mobile: '(max-width: ${cssValue('dimension.breakpointMobile')})',
@@ -329,6 +345,14 @@ export const tokenMotion = Object.freeze({
   }),
 } as const);
 
+export const tokenRuntime = Object.freeze({
+  durationMs: Object.freeze(${JSON.stringify(runtimeDurations, null, 2)}),
+  dimensionPx: Object.freeze(${JSON.stringify(runtimeDimensions, null, 2)}),
+  number: Object.freeze(${JSON.stringify(runtimeNumbers, null, 2)}),
+  color: Object.freeze(${JSON.stringify(runtimeColors, null, 2)}),
+  easing: Object.freeze(${JSON.stringify(runtimeEasings, null, 2)}),
+} as const);
+
 export const tokenTypes = Object.freeze(${JSON.stringify(DTCG_TYPES)} as const);
 `;
 
@@ -336,4 +360,4 @@ await Promise.all([writeFile(cssPath, css), writeFile(tsPath, ts)]);
 const usedTypes = [...new Set([...tokens.values()].map((entry) => entry.type))].sort();
 const missingTypes = DTCG_TYPES.filter((type) => !usedTypes.includes(type));
 if (missingTypes.length) throw new Error(`Tipos DTCG no representados: ${missingTypes.join(', ')}`);
-console.log(`[design-tokens] ${tokens.size} tokens; DTCG types ${usedTypes.length}/${DTCG_TYPES.length} -> CSS + TypeScript`);
+console.log(`[design-tokens] ${tokens.size} tokens across ${sourcePaths.length} DTCG documents; DTCG types ${usedTypes.length}/${DTCG_TYPES.length} -> CSS + TypeScript`);
