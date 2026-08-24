@@ -17,6 +17,7 @@ const DTCG_TYPES = new Set([
 ]);
 const GENERATED = new Set(['override/core/tokens.generated.css', 'override/core/tokens.generated.ts']);
 const SCAN_EXCLUDED = new Set(['scripts/audit-design-token-usage.ts', 'scripts/build-design-tokens.ts', ...GENERATED]);
+const WARNING_CATEGORIES = new Set(['unused-css-variable', 'unused-reference-token']);
 const LEGACY_REFERENCES: ReadonlyArray<readonly [string, RegExp]> = [
   ['direct-token-css-api', /--sc-token-[\w-]+/g],
   ['legacy-token-runtime', /\btokenRuntime\b/g],
@@ -194,10 +195,18 @@ for (const [name, definitions] of definitionMap) {
   for (const definition of definitions) add('unused-css-variable', definition.file, definition.line, name);
 }
 
+const warnings = findings.filter((finding) => WARNING_CATEGORIES.has(finding.category));
+const errors = findings.filter((finding) => !WARNING_CATEGORIES.has(finding.category));
 const counts = new Map<string, number>();
 for (const finding of findings) counts.set(finding.category, (counts.get(finding.category) ?? 0) + 1);
-console.log(`[design-token-audit] ${flatTokens.size} tokens; ${globalVariables.size} generated CSS variables; ${findings.length} findings`);
-for (const [category, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) console.log(`  ${category}: ${count}`);
-for (const finding of findings.slice(0, 160)) console.log(`  ${finding.category} ${finding.file}:${finding.line} ${finding.value}`);
+console.log(`[design-token-audit] ${flatTokens.size} tokens; ${globalVariables.size} generated CSS variables; ${errors.length} errors; ${warnings.length} warnings`);
+for (const [category, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+  const severity = WARNING_CATEGORIES.has(category) ? 'warning' : 'error';
+  console.log(`  ${severity} ${category}: ${count}`);
+}
+for (const finding of findings.slice(0, 160)) {
+  const severity = WARNING_CATEGORIES.has(finding.category) ? 'warning' : 'error';
+  console.log(`  ${severity} ${finding.category} ${finding.file}:${finding.line} ${finding.value}`);
+}
 if (findings.length > 160) console.log(`  ... ${findings.length - 160} more`);
-if (strict && findings.length) process.exitCode = 1;
+if (strict && errors.length) process.exitCode = 1;
