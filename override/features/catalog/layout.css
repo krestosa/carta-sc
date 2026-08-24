@@ -3,6 +3,7 @@ body.sushiShop {
   --sc-catalog-base-columns: 4;
   --sc-catalog-grid-row-gap: var(--sc-space-double-extra-large);
   --sc-catalog-section-bottom: var(--sc-space-quad-extra-large);
+  --sc-catalog-first-section-offset: var(--sc-space-quad-extra-large);
 }
 
 body.sushiShop .topShop.bottomShop,
@@ -22,10 +23,10 @@ body.sushiShop .listadoShop {
   align-items: stretch;
 }
 
-/* La primera grilla normal comparte el mismo arranque vertical que la búsqueda usando el ritmo
-   estructural de la vista activa: 64px desktop, 48px tablet y 32px mobile. */
+/* La primera grilla normal comparte el mismo arranque vertical que la búsqueda usando un
+   offset propio del feature: 64px desktop, 48px tablet y 32px mobile. */
 body.sushiShop:not(.sc-catalog-searching) .listadoShop.sc-first-catalog-section {
-  margin-top: calc(-1 * var(--sc-compact-section-bottom)) !important;
+  margin-top: calc(-1 * var(--sc-catalog-first-section-offset)) !important;
 }
 
 body.sushiShop .listadoShop:empty {
@@ -54,6 +55,7 @@ body.sushiShop .listadoShop > br {
     --sc-catalog-base-columns: 3;
     --sc-catalog-grid-row-gap: var(--sc-space-double-extra-large);
     --sc-catalog-section-bottom: var(--sc-space-quad-extra-large);
+    --sc-catalog-first-section-offset: var(--sc-space-triple-extra-large);
     --sc-catalog-container-inline-space: var(--sc-space-double-extra-large);
   }
 
@@ -67,6 +69,7 @@ body.sushiShop .listadoShop > br {
     --sc-catalog-base-columns: 2;
     --sc-catalog-grid-row-gap: var(--sc-space-extra-large);
     --sc-catalog-section-bottom: var(--sc-space-triple-extra-large);
+    --sc-catalog-first-section-offset: var(--sc-space-double-extra-large);
     --sc-catalog-container-inline-space: var(--sc-space-double-extra-large);
   }
 
