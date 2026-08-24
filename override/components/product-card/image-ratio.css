@@ -1,8 +1,4 @@
-/* Shared product-media geometry owned by product card/modal presentation, not by global design tokens. */
-body.sushiShop {
-  --sc-product-image-ratio: 286 / 200;
-}
-
+/* Presentación de imagen de producto; el ratio compartido proviene del sistema DTCG global. */
 body.sushiShop .listadoShop .productoShop .imgShop {
   box-sizing: border-box;
   width: 100% !important;
@@ -17,7 +13,7 @@ body.sushiShop .listadoShop .productoShop .imgShop {
   background-color: transparent !important;
   background-image: none !important;
   line-height: 0 !important;
-  aspect-ratio: var(--sc-product-image-ratio);
+  aspect-ratio: var(--sc-media-product-aspect-ratio);
 }
 
 body.sushiShop .listadoShop .productoShop .imgShop > img {
@@ -47,5 +43,3 @@ body.sushiShop .listadoShop .productoShop .imgShop > img {
     transform: none !important;
   }
 }
-
-/* Marca: native-product-image-v3-shared. */
