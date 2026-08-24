@@ -35,7 +35,7 @@
     width: 100% !important;
     height: var(--sc-category-height) !important;
     margin: 0 !important;
-    padding: 15px var(--sc-category-mobile-padding-inline) var(--sc-category-toolbar-margin-bottom) !important;
+    padding: var(--sc-space-large) var(--sc-category-mobile-padding-inline) var(--sc-category-toolbar-margin-bottom) !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     background: var(--sc-color-surface) !important;
@@ -148,7 +148,7 @@
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     display: block !important;
-    bottom: -12px !important;
+    bottom: calc(-1 * var(--sc-space-medium)) !important;
     height: var(--sc-category-indicator-height) !important;
     margin-left: 0 !important;
     background: var(--sc-color-ink) !important;
