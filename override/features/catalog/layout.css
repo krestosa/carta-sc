@@ -1,8 +1,8 @@
 /* Layout de grilla y contenedor del catálogo. */
 body.sushiShop {
   --sc-catalog-base-columns: 4;
-  --sc-catalog-grid-row-gap: 36px;
-  --sc-catalog-section-bottom: 74px;
+  --sc-catalog-grid-row-gap: var(--sc-space-double-extra-large);
+  --sc-catalog-section-bottom: var(--sc-space-quad-extra-large);
 }
 
 body.sushiShop .topShop.bottomShop,
@@ -46,9 +46,9 @@ body.sushiShop .listadoShop > br {
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
     --sc-catalog-base-columns: 3;
-    --sc-catalog-grid-row-gap: 34px;
-    --sc-catalog-section-bottom: 64px;
-    --sc-catalog-container-inline-space: 40px;
+    --sc-catalog-grid-row-gap: var(--sc-space-double-extra-large);
+    --sc-catalog-section-bottom: var(--sc-space-quad-extra-large);
+    --sc-catalog-container-inline-space: var(--sc-space-double-extra-large);
   }
 
   body.sushiShop .containerShop {
@@ -59,9 +59,9 @@ body.sushiShop .listadoShop > br {
 @media (max-width: 640px) {
   body.sushiShop {
     --sc-catalog-base-columns: 2;
-    --sc-catalog-grid-row-gap: 28px;
-    --sc-catalog-section-bottom: 44px;
-    --sc-catalog-container-inline-space: 32px;
+    --sc-catalog-grid-row-gap: var(--sc-space-extra-large);
+    --sc-catalog-section-bottom: var(--sc-space-triple-extra-large);
+    --sc-catalog-container-inline-space: var(--sc-space-double-extra-large);
   }
 
   body.sushiShop .containerShop {
