@@ -19,7 +19,6 @@
     },
     "dimension": {
       "$type": "dimension",
-      "fontTenThreeQuarter": { "$value": { "value": 10.75, "unit": "px" } },
       "themeMenuWidth": { "$value": { "value": 176, "unit": "px" } },
       "themeMenuWidthMobile": { "$value": { "value": 182, "unit": "px" } },
       "themeOptionHeight": { "$value": { "value": 36, "unit": "px" } },
