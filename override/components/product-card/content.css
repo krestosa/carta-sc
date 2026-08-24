@@ -19,7 +19,6 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
   opacity: 1 !important;
 }
 
-/* Trata cada SVG de rasgo como un glifo tipográfico. */
 body.sushiShop .sc-trait-icon {
   transform: translateY(-.8px) !important;
   transform-origin: 50% 50% !important;
@@ -44,7 +43,6 @@ body.sushiShop .referencias_picor .imgRef .sc-trait-icon {
   vertical-align: middle !important;
 }
 
-/* Agrupa iconos múltiples sin alterar su baseline. */
 body.sushiShop .sc-trait-icon-set {
   box-sizing: border-box !important;
   display: inline-flex !important;
@@ -68,7 +66,6 @@ body.sushiShop .sc-trait-reference-legacy-spacer {
   display: none !important;
 }
 
-/* Fila horizontal de referencias y filtros de rasgos. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
   box-sizing: border-box !important;
   display: flex !important;
@@ -152,7 +149,6 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   white-space: nowrap !important;
 }
 
-/* Layout base del texto de card. */
 body.sushiShop .listadoShop .productoShop .title-shop1 {
   display: -webkit-box !important;
   position: static !important;
@@ -166,16 +162,15 @@ body.sushiShop .listadoShop .productoShop .title-shop1 {
   padding: var(--sc-card-title-padding-top) 0 0 !important;
   overflow: hidden;
   color: var(--sc-color-heading) !important;
-  font-family: var(--sc-font-primary) !important;
-  font-size: var(--sc-card-title-size) !important;
-  line-height: var(--sc-card-title-line-height) !important;
-  font-weight: var(--sc-font-weight-semibold) !important;
-  letter-spacing: var(--sc-card-title-tracking) !important;
+  font-family: var(--sc-typography-heading-4-font-family) !important;
+  font-size: var(--sc-typography-heading-4-font-size) !important;
+  line-height: var(--sc-typography-heading-4-line-height) !important;
+  font-weight: var(--sc-typography-heading-4-font-weight) !important;
+  letter-spacing: var(--sc-typography-heading-4-letter-spacing) !important;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
-/* La descripción reserva dos líneas y su divisor. */
 body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box;
   display: -webkit-box !important;
@@ -189,29 +184,28 @@ body.sushiShop .listadoShop .productoShop .descrip {
   border-top: var(--sc-border-hairline) solid var(--sc-card-subrule) !important;
   overflow: hidden !important;
   color: var(--sc-color-copy) !important;
-  font-family: var(--sc-font-primary) !important;
-  font-size: var(--sc-card-description-size) !important;
-  line-height: var(--sc-card-description-line-height) !important;
-  font-weight: var(--sc-font-weight-regular) !important;
-  letter-spacing: 0 !important;
+  font-family: var(--sc-typography-body-small-font-family) !important;
+  font-size: var(--sc-typography-body-small-font-size) !important;
+  line-height: var(--sc-typography-body-small-line-height) !important;
+  font-weight: var(--sc-typography-body-small-font-weight) !important;
+  letter-spacing: var(--sc-typography-body-small-letter-spacing) !important;
   -webkit-box-orient: vertical !important;
   -webkit-line-clamp: var(--sc-card-description-lines) !important;
 }
 
-/* Añade “Ver detalle” cuando el texto se recorta. */
 body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::after {
   content: 'Ver detalle';
   display: block;
   position: absolute;
   right: 0;
   bottom: 0;
-  height: var(--sc-card-description-line-height);
+  height: var(--sc-card-description-line-box);
   padding: 0 0 0 22px;
   background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%);
   color: var(--sc-color-copy);
   font-family: var(--sc-font-primary);
   font-size: 10.5px;
-  line-height: var(--sc-card-description-line-height);
+  line-height: var(--sc-card-description-line-box);
   font-weight: var(--sc-font-weight-semibold);
   letter-spacing: 0;
   white-space: nowrap;
@@ -220,7 +214,6 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::aft
   transition: none !important;
 }
 
-/* La grilla reserva siempre dos líneas completas de descripción. */
 html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   min-height: var(--sc-card-description-height) !important;
@@ -234,7 +227,6 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
   }
 }
 
-/* Ajustes de rasgos en móvil. */
 @media (max-width: 640px) {
   body.sushiShop {
     --sc-card-description-height: 43px;
