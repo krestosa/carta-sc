@@ -1,13 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  LAB,
   ROOT,
   SITE,
   assert,
-  copyFile,
   copyTree,
   ensureDir,
   nodeCheck,
@@ -72,28 +69,8 @@ interface RuntimeSyntaxTarget {
 
 type ValidationStage = 'pre' | 'final';
 
-function resolveBuildSha(): string {
-  try {
-    const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim().toLowerCase();
-    if (/^[0-9a-f]{40}$/i.test(gitSha)) return gitSha;
-  } catch {
-    // Standalone handoff source intentionally has no .git directory.
-  }
-
-  const embeddedSha = (process.env.GITHUB_SHA ?? '').trim().toLowerCase();
-  return /^[0-9a-f]{40}$/i.test(embeddedSha) ? embeddedSha : '';
-}
-
 class PagesBuildPipeline {
-  readonly #sha = resolveBuildSha();
-
   run = async (): Promise<void> => {
-    assert(/^[0-9a-f]{40}$/i.test(this.#sha), 'Could not resolve build commit for Pages artifact');
-    process.env.GITHUB_SHA = this.#sha;
     validateSnapshotIntegration();
     this.stageRuntime();
     await this.prepareBaseArtifact();
@@ -116,7 +93,6 @@ class PagesBuildPipeline {
       'Optimized production runtime is missing; run verify before building Pages',
     );
     copyTree(productionOverride, path.join(SITE, 'override'));
-    copyFile(path.join(LAB, '.nojekyll'), path.join(SITE, '.nojekyll'));
   }
 
   private shouldStageSource(relative: string, absolute: string): boolean {
@@ -192,7 +168,7 @@ class PagesBuildPipeline {
   }
 
   private reportSuccess(): void {
-    process.stdout.write(`Pages lab artifact built at .pages-site for ${this.#sha}\n`);
+    process.stdout.write('Pages lab artifact built at .pages-site\n');
   }
 }
 
