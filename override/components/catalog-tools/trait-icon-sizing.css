@@ -1,3 +1,28 @@
+/* Alinea ópticamente iconos y texto dentro de una misma caja vertical de 16px. */
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 16px !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .imgRef {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  height: 16px !important;
+  line-height: 0 !important;
+  transform: translateY(1px) !important;
+}
+
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .ref_label {
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: center !important;
+  min-height: 16px !important;
+  line-height: 16px !important;
+}
+
 /* Iguala el alto óptico de cada llama en los tres niveles de picante. El ancho queda libre
    para conservar la cantidad y proporción original de llamas sin deformar ningún SVG. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox[data-sc-filter='poco picante'] .sc-trait-icon,
@@ -7,4 +32,10 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   height: 10.667px !important;
   min-height: 10.667px !important;
   max-height: 10.667px !important;
+}
+
+/* La hoja conserva su apoyo relativo sobre la misma base óptica que los fuegos. */
+body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon[data-sc-trait='vegetariano'] {
+  transform: translateY(1px) !important;
+  transform-origin: 50% 100% !important;
 }
