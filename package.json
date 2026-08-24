@@ -17,9 +17,7 @@
     "build:pages": "npm run verify && node .build/tooling/lab/pages/build.js",
     "build:handoff": "npm run build:pages && node .build/tooling/lab/handoff/build-handoff.js && node .build/tooling/scripts/validate-handoff.js handoff",
     "validate:handoff": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff.js handoff",
-    "validate:handoff:browser": "npm run compile:tooling && node .build/tooling/scripts/validate-handoff-browser.js handoff/compiled",
-    "build": "npm run verify && node .build/tooling/lab/pages/build.js && node .build/tooling/lab/handoff/build-handoff.js && node .build/tooling/scripts/validate-handoff.js handoff",
-    "ci": "npm run build"
+    "build": "npm run verify && node .build/tooling/lab/pages/build.js && node .build/tooling/lab/handoff/build-handoff.js && node .build/tooling/scripts/validate-handoff.js handoff"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
