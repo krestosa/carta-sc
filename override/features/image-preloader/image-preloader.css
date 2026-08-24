@@ -1,24 +1,24 @@
 html.sc-image-preloader-active {
-  --sc-image-preloader-base: #e3e3e2;
-  --sc-image-preloader-cycle: 1500ms;
+  --sc-image-preloader-base: var(--sc-token-component-color-image-preloader-light);
+  --sc-image-preloader-cycle: var(--sc-token-component-duration-image-preloader-cycle);
   --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
 }
 
 html.sc-image-preloader-active[data-sc-theme-resolved='dark'] {
-  --sc-image-preloader-base: #292926;
+  --sc-image-preloader-base: var(--sc-token-component-color-image-preloader-dark);
   --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
 }
 
 @media (prefers-color-scheme: light) {
   html.sc-image-preloader-active[data-sc-theme='system'] {
-    --sc-image-preloader-base: #e3e3e2;
+    --sc-image-preloader-base: var(--sc-token-component-color-image-preloader-light);
     --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
   }
 }
 
 @media (prefers-color-scheme: dark) {
   html.sc-image-preloader-active[data-sc-theme='system'] {
-    --sc-image-preloader-base: #292926;
+    --sc-image-preloader-base: var(--sc-token-component-color-image-preloader-dark);
     --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-ink) 10%, var(--sc-color-surface-raised));
   }
 }
@@ -58,7 +58,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiq
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: var(--sc-token-component-number-z-overlay);
   pointer-events: none;
   opacity: 0;
   background: var(--sc-image-preloader-base);
@@ -74,7 +74,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgSho
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop .imgLiquidNoFillShop > img {
   display: block !important;
   position: relative !important;
-  z-index: 1;
+  z-index: var(--sc-z-raised);
   box-sizing: border-box !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -127,13 +127,13 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
 ) > a.fancyboxModalAddProd::after {
   content: '';
   display: block;
-  z-index: 4;
+  z-index: var(--sc-token-component-number-z-skeleton);
   justify-self: stretch;
   align-self: start;
   pointer-events: none;
   opacity: var(--sc-image-preloader-cover-alpha, 1);
   background: var(--sc-image-preloader-base);
-  border-radius: 999px;
+  border-radius: var(--sc-token-component-dimension-pill-radius);
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
@@ -143,7 +143,7 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
   grid-column: 1 / -1;
   grid-row: 2;
   width: 100%;
-  height: 12px;
+  height: var(--sc-token-dimension-twelve);
   margin-top: var(--sc-card-title-padding-top);
 }
 
@@ -154,8 +154,8 @@ html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
   grid-column: 1 / -1;
   grid-row: 3;
   width: 86%;
-  height: 8px;
-  margin-top: calc(var(--sc-card-description-offset) + 1px);
+  height: var(--sc-token-dimension-eight);
+  margin-top: calc(var(--sc-card-description-offset) + var(--sc-token-dimension-one));
 }
 
 html.sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(
