@@ -15,7 +15,7 @@ body.sushiShop .sc-product-modal__price-row {
   flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  column-gap: var(--sc-token-dimension-six) !important;
+  column-gap: 6px !important;
   row-gap: 0 !important;
   white-space: nowrap !important;
 }
@@ -27,7 +27,7 @@ body.sushiShop .sc-product-modal__secondary-meta {
   align-items: center !important;
   align-self: center !important;
   justify-content: flex-start !important;
-  gap: var(--sc-token-dimension-five) !important;
+  gap: 5px !important;
   width: max-content !important;
   min-width: max-content !important;
   margin: 0 !important;
@@ -46,10 +46,10 @@ body.sushiShop .sc-product-modal__traits {
   flex: 0 0 auto !important;
   align-items: flex-end !important;
   align-self: center !important;
-  gap: var(--sc-token-dimension-five) !important;
-  height: var(--sc-token-dimension-thirteen) !important;
-  min-height: var(--sc-token-dimension-thirteen) !important;
-  max-height: var(--sc-token-dimension-thirteen) !important;
+  gap: 5px !important;
+  height: 13px !important;
+  min-height: 13px !important;
+  max-height: 13px !important;
   margin: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
@@ -66,8 +66,8 @@ body.sushiShop .sc-product-modal__traits .sc-trait-icon {
   display: block !important;
   flex: 0 0 auto !important;
   align-self: flex-end !important;
-  max-width: var(--sc-token-dimension-sixteen) !important;
-  max-height: var(--sc-token-dimension-thirteen) !important;
+  max-width: 16px !important;
+  max-height: 13px !important;
   margin: 0 !important;
   overflow: visible !important;
   transform: none !important;
@@ -75,12 +75,12 @@ body.sushiShop .sc-product-modal__traits .sc-trait-icon {
 
 body.sushiShop .sc-product-modal__traits .sc-trait-icon[data-sc-trait='vegetariano'] {
   align-self: flex-end !important;
-  transform: translateY(var(--sc-token-dimension-one)) !important;
+  transform: translateY(1px) !important;
   transform-origin: 50% 100% !important;
 }
 
 body.sushiShop .sc-product-modal__description {
-  margin: var(--sc-token-dimension-ten) 0 0 !important;
+  margin: 10px 0 0 !important;
   color: var(--sc-color-copy) !important;
   font-family: var(--sc-type-modal-body-font-family) !important;
   font-size: var(--sc-type-modal-body-font-size) !important;
@@ -113,10 +113,10 @@ body.sushiShop .sc-product-modal__price-row .ofertaPrice {
   margin: 0 !important;
   color: var(--sc-color-muted) !important;
   font-family: var(--sc-token-font-family-primary) !important;
-  font-size: var(--sc-token-dimension-font-twelve) !important;
+  font-size: 12px !important;
   line-height: var(--sc-token-number-line-height-modal-title) !important;
   font-weight: var(--sc-token-font-weight-regular) !important;
-  letter-spacing: var(--sc-token-dimension-tracking-zero) !important;
+  letter-spacing: 0 !important;
   text-decoration: line-through !important;
   white-space: nowrap !important;
 }
