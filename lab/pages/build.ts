@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -71,8 +72,24 @@ interface RuntimeSyntaxTarget {
 
 type ValidationStage = 'pre' | 'final';
 
+function currentCommitSha(): string {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim().toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
 class PagesBuildPipeline {
+  readonly #sha = currentCommitSha();
+
   run = async (): Promise<void> => {
+    assert(/^[0-9a-f]{40}$/i.test(this.#sha), 'Could not resolve current Git commit for Pages build');
+    process.env.GITHUB_SHA = this.#sha;
     validateSnapshotIntegration();
     this.stageRuntime();
     await this.prepareBaseArtifact();
@@ -92,7 +109,7 @@ class PagesBuildPipeline {
     assert(
       fs.existsSync(path.join(productionOverride, 'main.js'))
       && fs.existsSync(path.join(productionOverride, 'main.css')),
-      'Optimized production runtime is missing; run build:runtime first',
+      'Optimized production runtime is missing; run verify before building Pages',
     );
     copyTree(productionOverride, path.join(SITE, 'override'));
     copyFile(path.join(LAB, '.nojekyll'), path.join(SITE, '.nojekyll'));
@@ -171,7 +188,7 @@ class PagesBuildPipeline {
   }
 
   private reportSuccess(): void {
-    process.stdout.write(`Pages lab artifact built at .pages-site for ${process.env.GITHUB_SHA ?? 'unknown'}\n`);
+    process.stdout.write(`Pages lab artifact built at .pages-site for ${this.#sha}\n`);
   }
 }
 
