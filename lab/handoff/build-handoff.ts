@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ROOT, SITE, assert, buildId, copyFile, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
+import { ROOT, SITE, assert, copyFile, copyTree, ensureDir, githubSha, readJson, remove, write, writeJson } from '../pages/lib/core.js';
 import { staticizeCompiled } from './staticize.js';
 
 interface HandoffPaths {
@@ -109,7 +109,7 @@ try {
 }
 
 class HandoffBuildPipeline {
-  readonly #buildId = buildId();
+  readonly #version = githubSha();
 
   run(): void {
     this.#validateInputs();
@@ -119,7 +119,7 @@ class HandoffBuildPipeline {
     staticizeCompiled(SITE, PATHS.compiled);
     this.#writeRootPackage();
     this.#writeNodeEntrypoints();
-    process.stdout.write(`Handoff built from source ${this.#buildId}\n`);
+    process.stdout.write(`Handoff built from source ${this.#version}\n`);
   }
 
   #validateInputs(): void {
@@ -129,8 +129,8 @@ class HandoffBuildPipeline {
     assert(fs.existsSync(stagedIndex), 'Handoff staging artifact is missing');
     const html = fs.readFileSync(stagedIndex, 'utf8');
     assert(
-      html.includes(`const VERSION = '${this.#buildId}';`),
-      `Handoff staging artifact does not belong to current source ${this.#buildId}`,
+      html.includes(`const VERSION = '${this.#version}';`),
+      `Handoff staging artifact does not belong to current source ${this.#version}`,
     );
   }
 
@@ -142,6 +142,21 @@ class HandoffBuildPipeline {
 
   #copySource(): void {
     copyTree(ROOT, PATHS.source, (relative, absolute) => this.#shouldCopySource(relative, absolute));
+    this.#makeSourceStandalone();
+  }
+
+  #makeSourceStandalone(): void {
+    const coreFile = path.join(PATHS.source, 'lab', 'pages', 'lib', 'core.ts');
+    const source = fs.readFileSync(coreFile, 'utf8');
+    const pattern = /export function githubSha\(\): string \{\n[\s\S]*?\n\}/;
+    assert(pattern.test(source), 'Could not localize handoff build identity');
+    write(
+      coreFile,
+      source.replace(
+        pattern,
+        `export function githubSha(): string {\n  return buildId().slice(0, 40);\n}`,
+      ),
+    );
   }
 
   #shouldCopySource(relative: string, absolute: string): boolean {
