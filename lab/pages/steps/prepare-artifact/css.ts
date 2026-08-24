@@ -29,11 +29,15 @@ export function bundleOverrideCss(): void {
     .map((match) => match.groups?.path)
     .filter((value): value is string => Boolean(value));
 
-  assert(imports.length > 0, 'No CSS imports were found to bundle');
+  if (imports.length === 0) {
+    assert(!/@import\b/i.test(manifest), 'Unsupported CSS imports remain in prebundled production stylesheet');
+    return;
+  }
+
   assert(new Set(imports).size === imports.length, 'Duplicate CSS imports found while bundling');
   assert(
     manifest.replace(CSS_IMPORT, '').trim() === '',
-    'override/main.css contains non-import content; refusing unsafe bundle',
+    'override/main.css contains non-import content alongside source imports; refusing unsafe bundle',
   );
 
   const chunks = imports.map((importPath) => {
