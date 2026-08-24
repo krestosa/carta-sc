@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { SITE, assert, escapeRegExp, githubSha, read, write } from '../lib/core.js';
+import { SITE, assert, buildId, escapeRegExp, read, write } from '../lib/core.js';
 import { transpileBrowserRuntime } from '../lib/browser-runtime.js';
 
 const PREPAINT_RUNTIME_SOURCE = 'lab/pages/steps/prepaint-runtime.ts';
@@ -68,7 +68,7 @@ function assertGeneratedContract(html: string, bundle: BootstrapAssets): void {
 }
 
 export function flattenBootstrap(): void {
-  const sha = githubSha();
+  const sha = buildId();
   const file = path.join(SITE, 'index.html');
   const bundle = assets(sha);
   let html = read(file);
