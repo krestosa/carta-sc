@@ -83,7 +83,8 @@ body.sushiShop .listadoShop .productoShop .sc-product-secondary-meta {
   white-space: nowrap !important;
 }
 
-/* 1/2/3 fuegos y hoja usan su geometría SVG original y comparten base. */
+/* 1/2/3 fuegos y hoja usan su geometría SVG original. El grupo baja 1px para
+   compartir el centro óptico de la caja tipográfica del precio. */
 body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   box-sizing: border-box !important;
   display: inline-flex !important;
@@ -102,6 +103,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-price-traits {
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
   overflow: visible !important;
+  transform: translateY(1px) !important;
 }
 
 body.sushiShop .listadoShop .productoShop .sc-product-price-traits img {
