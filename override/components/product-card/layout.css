@@ -3,11 +3,11 @@ body.sushiShop {
   --sc-card-rule: var(--sc-color-ink);
   --sc-card-subrule: var(--sc-color-border-strong);
   --sc-card-meta-row-height: 24px;
-  --sc-card-content-gap: 18px;
+  --sc-card-content-gap: var(--sc-space-large);
   --sc-card-title-height: 54px;
-  --sc-card-title-padding-top: 13px;
+  --sc-card-title-padding-top: var(--sc-space-medium);
   --sc-card-description-height: 59px;
-  --sc-card-description-offset: 10px;
+  --sc-card-description-offset: var(--sc-space-small);
   --sc-card-description-line-box: 16px;
   --sc-card-price-width: 76px;
   --sc-card-price-size: 15.5px;
@@ -74,10 +74,10 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   grid-row: 4 !important;
   align-items: flex-end !important;
   align-self: start !important;
-  gap: 7px !important;
+  gap: var(--sc-space-small) !important;
   width: 100% !important;
   height: 20px !important;
-  margin: 4px 0 0 !important;
+  margin: var(--sc-space-extra-small) 0 0 !important;
   padding: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
@@ -93,7 +93,7 @@ html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop 
 
 body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
   outline: var(--sc-focus-ring-width-subtle) solid var(--sc-card-rule);
-  outline-offset: 6px;
+  outline-offset: var(--sc-space-extra-small);
 }
 
 @supports (content-visibility: auto) {
