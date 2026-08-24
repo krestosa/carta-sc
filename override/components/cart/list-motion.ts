@@ -1,11 +1,11 @@
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
-import { motionTokens } from '../../core/variables.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
 const LIST_MOTION = {
   offsetY: 4,
-  stagger: motionTokens.durations.short1 / 2,
-  reducedStagger: motionTokens.durations.short1 / 2,
+  stagger: motionConfig.durations.short1 / 2,
+  reducedStagger: motionConfig.durations.short1 / 2,
   refreshDelay: 80,
 } as const;
 
@@ -48,12 +48,12 @@ export function setupCartList(engine: MotionEngine, reduced: boolean): () => voi
     row.style.visibility = 'visible';
     if (!reduced) row.style.transform = `translate3d(0,${LIST_MOTION.offsetY}px,0)`;
 
-    const fadeDuration = reduced ? motionTokens.durations.short2 : motionTokens.durations.short4;
+    const fadeDuration = reduced ? motionConfig.durations.short2 : motionConfig.durations.short4;
     const handles: MotionHandle[] = [
       engine.opacity(row, 1, {
         duration: fadeDuration,
         delay,
-        ease: motionTokens.easings.decelerate,
+        ease: motionConfig.easings.decelerate,
       }),
     ];
     if (reduced) {
@@ -62,7 +62,7 @@ export function setupCartList(engine: MotionEngine, reduced: boolean): () => voi
         clear(row);
       }));
     } else {
-      handles.push(engine.springTransform(row, { y: 0 }, motionTokens.springs.spatial.default, {
+      handles.push(engine.springTransform(row, { y: 0 }, motionConfig.springs.spatial.default, {
         delay,
         clear: true,
         onComplete: () => {
