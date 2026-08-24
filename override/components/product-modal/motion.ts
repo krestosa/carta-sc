@@ -1,25 +1,26 @@
+import { tokenRuntime } from '../../core/tokens.generated.js';
 import { motion } from '../../motion/main.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';
 
 const TIMING = {
-  open: 220,
-  close: 150,
+  open: tokenRuntime.durationMs['component.duration.modalOpen'],
+  close: tokenRuntime.durationMs['component.duration.modalClose'],
 } as const;
 
 const OFFSET = {
-  open: 20,
-  close: -10,
+  open: tokenRuntime.dimensionPx['component.dimension.modalOpenOffset'],
+  close: tokenRuntime.dimensionPx['component.dimension.modalCloseOffset'],
 } as const;
 
 const EASING = {
-  open: 'cubic-bezier(0.2,0,0,1)',
-  close: 'cubic-bezier(0.3,0,1,1)',
-  linear: 'linear',
+  open: tokenRuntime.easing['motion.easing.standard'],
+  close: tokenRuntime.easing['motion.easing.accelerate'],
+  linear: tokenRuntime.easing['motion.easing.linear'],
 } as const;
 
 const BACKDROP = {
-  clear: 'rgba(0,0,0,0)',
-  dimmed: 'rgba(0,0,0,.32)',
+  clear: tokenRuntime.color['color.palette.blackTransparent'],
+  dimmed: tokenRuntime.color['color.palette.black32'],
 } as const;
 
 interface CancelableMotion {
