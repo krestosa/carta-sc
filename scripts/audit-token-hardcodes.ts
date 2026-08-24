@@ -121,7 +121,7 @@ for (const { absolute, file } of cssFiles) {
     const property = (declaration[2] ?? '').toLowerCase();
     const value = declaration[3] ?? '';
     const declarationIndex = (declaration.index ?? 0) + (declaration[1]?.length ?? 0);
-    if (!property || !value || value.includes('var(--sc-')) continue;
+    if (!property || !value) continue;
 
     if (isSpacingProperty(property)) {
       for (const literal of value.matchAll(/-?(?:\d*\.)?\d+px\b/g)) {
