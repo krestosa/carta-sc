@@ -1,14 +1,14 @@
 /* Ajustes del modal para pantallas chicas. */
 @media (max-width: 640px) {
   body.sushiShop .sc-product-modal {
-    padding: 8px !important;
+    padding: var(--sc-space-small) !important;
   }
   body.sushiShop .sc-product-modal__dialog {
     width: 100% !important;
     max-height: calc(100dvh - var(--sc-modal-phone-dialog-inline-space)) !important;
   }
   body.sushiShop .sc-product-modal__content {
-    padding: 18px 18px 20px !important;
+    padding: var(--sc-space-large) !important;
   }
   body.sushiShop .sc-product-modal__title {
     font-size: 19px !important;
@@ -18,7 +18,7 @@
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 8px !important;
+    gap: var(--sc-space-small) !important;
   }
   body.sushiShop .sc-product-modal__price-slot {
     flex: 1 1 auto !important;
@@ -37,7 +37,7 @@
   body.sushiShop .sc-product-modal__cart-button {
     width: auto !important;
     min-width: 0 !important;
-    padding-inline: 14px !important;
+    padding-inline: var(--sc-space-large) !important;
     white-space: nowrap !important;
   }
 }
