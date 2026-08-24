@@ -1,8 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ROOT, SITE, assert, copyFile, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
+import { ROOT, SITE, assert, buildId, copyFile, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
 import { staticizeCompiled } from './staticize.js';
 
 interface HandoffPaths {
@@ -51,27 +50,7 @@ const EXCLUDED_SOURCE_EXTENSIONS = new Set([
   '.sh',
 ]);
 
-const REQUIRED_HIDDEN_SOURCE_FILES = new Set([
-  'lab/pages/.nojekyll',
-]);
-
-function currentCommitSha(): string {
-  try {
-    return execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim().toLowerCase();
-  } catch {
-    return '';
-  }
-}
-
-function isCommitSha(value: string): boolean {
-  return /^[0-9a-f]{40}$/i.test(value);
-}
-
-function nodeBuildRunner(sha: string): string {
+function nodeBuildRunner(): string {
   return `import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -82,7 +61,7 @@ const source = path.join(root, 'source');
 const staging = path.join(source, '.generated', 'handoff-site');
 const node = process.execPath;
 const npmExecPath = process.env.npm_execpath?.trim() || '';
-const env = { ...process.env, GITHUB_SHA: '${sha}', SC_SITE_DIR: staging };
+const env = { ...process.env, SC_SITE_DIR: staging };
 
 function run(command, args) {
   const result = spawnSync(command, args, { cwd: source, stdio: 'inherit', env, shell: false });
@@ -130,30 +109,28 @@ try {
 }
 
 class HandoffBuildPipeline {
-  readonly #sha = currentCommitSha();
+  readonly #buildId = buildId();
 
   run(): void {
     this.#validateInputs();
-    process.env.GITHUB_SHA = this.#sha;
     this.#prepareOutput();
     this.#copySource();
     this.#writeSourcePackage();
     staticizeCompiled(SITE, PATHS.compiled);
     this.#writeRootPackage();
     this.#writeNodeEntrypoints();
-    process.stdout.write(`Handoff built from ${this.#sha}\n`);
+    process.stdout.write(`Handoff built from source ${this.#buildId}\n`);
   }
 
   #validateInputs(): void {
-    assert(isCommitSha(this.#sha), 'Could not resolve the current Git commit for the handoff');
     assert(fs.existsSync(path.join(ROOT, 'package-lock.json')), 'package-lock.json is required for reproducible handoff builds');
 
     const stagedIndex = path.join(SITE, 'index.html');
     assert(fs.existsSync(stagedIndex), 'Handoff staging artifact is missing');
     const html = fs.readFileSync(stagedIndex, 'utf8');
     assert(
-      html.includes(`const VERSION = '${this.#sha}';`),
-      `Handoff staging artifact does not belong to current commit ${this.#sha}`,
+      html.includes(`const VERSION = '${this.#buildId}';`),
+      `Handoff staging artifact does not belong to current source ${this.#buildId}`,
     );
   }
 
@@ -165,12 +142,6 @@ class HandoffBuildPipeline {
 
   #copySource(): void {
     copyTree(ROOT, PATHS.source, (relative, absolute) => this.#shouldCopySource(relative, absolute));
-    for (const relative of REQUIRED_HIDDEN_SOURCE_FILES) {
-      assert(
-        fs.existsSync(path.join(PATHS.source, ...relative.split('/'))),
-        `Required handoff source file is missing: ${relative}`,
-      );
-    }
   }
 
   #shouldCopySource(relative: string, absolute: string): boolean {
@@ -178,7 +149,7 @@ class HandoffBuildPipeline {
     const segments = normalized.split('/');
     const topLevel = segments[0] ?? normalized;
     if (!SOURCE_TOP_LEVEL.has(topLevel)) return false;
-    if (segments.some((segment) => segment.startsWith('.')) && !REQUIRED_HIDDEN_SOURCE_FILES.has(normalized)) return false;
+    if (segments.some((segment) => segment.startsWith('.'))) return false;
 
     const isDirectory = fs.statSync(absolute).isDirectory();
     if (!isDirectory && EXCLUDED_SOURCE_EXTENSIONS.has(path.extname(normalized).toLowerCase())) return false;
@@ -236,7 +207,7 @@ class HandoffBuildPipeline {
     const compiledServer = path.join(ROOT, '.build', 'tooling', 'lab', 'handoff', 'static-server.js');
     assert(fs.existsSync(compiledServer), 'compiled handoff server is missing');
     copyFile(compiledServer, path.join(PATHS.root, 'server.mjs'));
-    write(path.join(PATHS.root, 'build.mjs'), nodeBuildRunner(this.#sha));
+    write(path.join(PATHS.root, 'build.mjs'), nodeBuildRunner());
   }
 }
 
