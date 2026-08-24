@@ -68,15 +68,17 @@ function isCommitSha(value: string): boolean {
 }
 
 function nodeBuildRunner(sha: string): string {
-  return `import { spawnSync } from 'node:child_process';
+  return `import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const source = path.join(root, 'source');
+const staging = path.join(source, '.generated', 'handoff-site');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const node = process.execPath;
-const env = { ...process.env, GITHUB_SHA: '${sha}' };
+const env = { ...process.env, GITHUB_SHA: '${sha}', SC_SITE_DIR: staging };
 
 function run(command, args) {
   const result = spawnSync(command, args, { cwd: source, stdio: 'inherit', env, shell: false });
@@ -84,13 +86,27 @@ function run(command, args) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-run(npm, ['ci']);
-run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.tooling.json']);
-run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.browser.json']);
-run(node, ['.build/tooling/scripts/sync-runtime.js']);
-run(node, ['.build/tooling/scripts/optimize-runtime.js']);
-run(node, ['.build/tooling/lab/pages/build.js']);
-run(node, ['.build/tooling/lab/handoff/staticize.js', '.pages-site', '../compiled']);
+function cleanStaging() {
+  fs.rmSync(staging, {
+    recursive: true,
+    force: true,
+    maxRetries: process.platform === 'win32' ? 20 : 3,
+    retryDelay: process.platform === 'win32' ? 150 : 100,
+  });
+}
+
+cleanStaging();
+try {
+  run(npm, ['ci']);
+  run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.tooling.json']);
+  run(npm, ['exec', '--', 'tsc', '-p', 'tsconfig.browser.json']);
+  run(node, ['.build/tooling/scripts/sync-runtime.js']);
+  run(node, ['.build/tooling/scripts/optimize-runtime.js']);
+  run(node, ['.build/tooling/lab/pages/build.js']);
+  run(node, ['.build/tooling/lab/handoff/staticize.js', staging, '../compiled']);
+} finally {
+  cleanStaging();
+}
 `;
 }
 
@@ -113,12 +129,12 @@ class HandoffBuildPipeline {
     assert(isCommitSha(this.#sha), 'Could not resolve the current Git commit for the handoff');
     assert(fs.existsSync(path.join(ROOT, 'package-lock.json')), 'package-lock.json is required for reproducible handoff builds');
 
-    const pagesIndex = path.join(SITE, 'index.html');
-    assert(fs.existsSync(pagesIndex), 'Pages artifact is missing; run the unified build before packaging the handoff');
-    const html = fs.readFileSync(pagesIndex, 'utf8');
+    const stagedIndex = path.join(SITE, 'index.html');
+    assert(fs.existsSync(stagedIndex), 'Handoff staging artifact is missing');
+    const html = fs.readFileSync(stagedIndex, 'utf8');
     assert(
       html.includes(`const VERSION = '${this.#sha}';`),
-      `Pages artifact does not belong to current commit ${this.#sha}`,
+      `Handoff staging artifact does not belong to current commit ${this.#sha}`,
     );
   }
 
