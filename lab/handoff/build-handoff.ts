@@ -2,7 +2,6 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buildPages } from '../pages/build.js';
 import { ROOT, SITE, assert, copyFile, copyTree, ensureDir, readJson, remove, write, writeJson } from '../pages/lib/core.js';
 import { staticizeCompiled } from './staticize.js';
 
@@ -114,49 +113,48 @@ node server.mjs compiled 4173
   },
 ];
 
+function currentCommitSha(): string {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim().toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
 function isCommitSha(value: string): boolean {
   return /^[0-9a-f]{40}$/i.test(value);
 }
 
-function resolveHandoffSha(): string {
-  const environmentSha = (process.env.GITHUB_SHA ?? '').trim();
-  if (isCommitSha(environmentSha)) return environmentSha.toLowerCase();
-
-  try {
-    const repositorySha = execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-    if (isCommitSha(repositorySha)) return repositorySha.toLowerCase();
-  } catch {
-    // Validation below reports a single actionable error when no revision can be resolved.
-  }
-
-  return '';
-}
-
 class HandoffBuildPipeline {
-  readonly #sha = resolveHandoffSha();
+  readonly #sha = currentCommitSha();
 
-  async run(): Promise<void> {
+  run(): void {
     this.#validateInputs();
     process.env.GITHUB_SHA = this.#sha;
-    await buildPages();
     this.#prepareOutput();
     this.#copySource();
     this.#writeSourcePackage();
     staticizeCompiled(SITE, PATHS.compiled);
     this.#writeServer();
     this.#writeLaunchers();
+    process.stdout.write(`Handoff built from ${this.#sha}\n`);
   }
 
   #validateInputs(): void {
-    assert(
-      isCommitSha(this.#sha),
-      'Could not resolve a commit SHA for the handoff. Run from a Git checkout or provide GITHUB_SHA explicitly.',
-    );
+    assert(isCommitSha(this.#sha), 'Could not resolve the current Git commit for the handoff');
     assert(fs.existsSync(path.join(ROOT, 'package-lock.json')), 'package-lock.json is required for reproducible handoff builds');
+
+    const pagesIndex = path.join(SITE, 'index.html');
+    assert(fs.existsSync(pagesIndex), 'Pages artifact is missing; run the unified build before packaging the handoff');
+    const html = fs.readFileSync(pagesIndex, 'utf8');
+    assert(
+      html.includes(`const VERSION = '${this.#sha}';`),
+      `Pages artifact does not belong to current commit ${this.#sha}`,
+    );
   }
 
   #prepareOutput(): void {
@@ -229,8 +227,8 @@ class HandoffBuildPipeline {
   }
 }
 
-export function buildHandoff(): Promise<void> {
-  return new HandoffBuildPipeline().run();
+export function buildHandoff(): void {
+  new HandoffBuildPipeline().run();
 }
 
 function isDirectExecution(): boolean {
@@ -239,8 +237,10 @@ function isDirectExecution(): boolean {
 }
 
 if (isDirectExecution()) {
-  buildHandoff().catch((error: unknown) => {
+  try {
+    buildHandoff();
+  } catch (error: unknown) {
     console.error(error instanceof Error ? error.stack ?? error.message : error);
     process.exitCode = 1;
-  });
+  }
 }
