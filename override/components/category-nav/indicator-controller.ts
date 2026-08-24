@@ -1,5 +1,6 @@
-import { motionTokens, queries } from '../../core/variables.js';
+import { queries } from '../../core/variables.js';
 import { visible } from '../../core/utils.js';
+import { motionConfig } from '../../motion/config.js';
 import type { MotionSpringSpec } from '../../motion/types.js';
 import { cloneTemplate } from '../../templates/registry.js';
 import { anchorForHref, categoryLinks, CATEGORY_SELECTORS } from './core.js';
@@ -251,8 +252,8 @@ export class CategoryIndicatorController {
       state: { x: 0, width: 1 },
       targetStart: 0,
       targetEnd: 1,
-      startSpec: motionTokens.springs.indicator.firm,
-      endSpec: motionTokens.springs.indicator.firm,
+      startSpec: motionConfig.springs.indicator.firm,
+      endSpec: motionConfig.springs.indicator.firm,
       startDeadline: 0,
       endDeadline: 0,
       initialized: false,
@@ -356,8 +357,8 @@ export class CategoryIndicatorController {
 
     if (entry.targetEnd !== newEnd) {
       entry.endSpec = entry.targetEnd < newEnd
-        ? motionTokens.springs.indicator.firm
-        : motionTokens.springs.indicator.soft;
+        ? motionConfig.springs.indicator.firm
+        : motionConfig.springs.indicator.soft;
       entry.targetEnd = newEnd;
       entry.endDeadline = now + criticalSpringDurationMs(
         entry.state.x + entry.state.width,
@@ -369,8 +370,8 @@ export class CategoryIndicatorController {
 
     if (entry.targetStart !== newStart) {
       entry.startSpec = entry.targetStart < newStart
-        ? motionTokens.springs.indicator.soft
-        : motionTokens.springs.indicator.firm;
+        ? motionConfig.springs.indicator.soft
+        : motionConfig.springs.indicator.firm;
       entry.targetStart = newStart;
       entry.startDeadline = now + criticalSpringDurationMs(
         entry.state.x,
