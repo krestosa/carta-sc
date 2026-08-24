@@ -332,7 +332,7 @@ html body.sushiShop .sc-catalog-tools > .sc-catalog-search-results { grid-column
   html body.sushiShop .sc-catalog-tools > .sc-catalog-actions { grid-column: 5 / 7; }
   html body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip { grid-column: 1 / 7; padding-top: var(--sc-token-dimension-one) !important; }
   html body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox { gap: var(--sc-token-dimension-four) !important; }
-  html body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .ref_label { font-size: 10.75px !important; }
+  html body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .ref_label { font-size: var(--sc-token-component-dimension-font-ten-three-quarter) !important; }
 }
 
 @keyframes scCatalogSearchResultsReveal {
@@ -341,7 +341,7 @@ html body.sushiShop .sc-catalog-tools > .sc-catalog-search-results { grid-column
 }
 @media (max-width: 992px) and (prefers-reduced-motion: no-preference) {
   body.sushiShop.sc-catalog-searching .sc-catalog-search-results:not([hidden]) {
-    animation: scCatalogSearchResultsReveal 220ms var(--sc-motion-ease-out) both;
+    animation: scCatalogSearchResultsReveal var(--sc-token-component-duration-search-reveal) var(--sc-motion-ease-out) both;
   }
 }
 @media (prefers-reduced-motion: reduce) {
