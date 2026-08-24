@@ -1,24 +1,24 @@
 /* Estructura y estado activo del riel en desktop. */
 /* Tokens locales del componente. */
 body.sushiShop {
-  --sc-z-category-indicator: 9;
-  --sc-z-category-overflow: 50;
-  --sc-z-category-controls: 70;
-  --sc-z-category-sticky: 120;
-  --sc-category-height: 46px;
-  --sc-category-gap: 25px;
-  --sc-category-gap-compact: 18px;
-  --sc-category-link-line-height: 1.2;
+  --sc-z-category-indicator: var(--sc-token-component-number-z-category-indicator);
+  --sc-z-category-overflow: var(--sc-token-component-number-z-category-overflow);
+  --sc-z-category-controls: var(--sc-token-component-number-z-category-controls);
+  --sc-z-category-sticky: var(--sc-token-component-number-z-category-sticky);
+  --sc-category-height: var(--sc-token-component-dimension-forty-six);
+  --sc-category-gap: var(--sc-token-component-dimension-twenty-five);
+  --sc-category-gap-compact: var(--sc-token-dimension-eighteen);
+  --sc-category-link-line-height: var(--sc-token-component-number-category-link-line-height);
   --sc-category-link-tracking: -.005em;
-  --sc-category-link-padding-bottom: 2px;
-  --sc-category-indicator-height: 2px;
-  --sc-category-rule-offset: -14px;
+  --sc-category-link-padding-bottom: var(--sc-token-dimension-two);
+  --sc-category-indicator-height: var(--sc-token-dimension-two);
+  --sc-category-rule-offset: calc(-1 * var(--sc-token-dimension-fourteen));
   --sc-category-overflow-stop: 18%;
-  --sc-category-control-width: 24px;
-  --sc-category-mobile-padding-inline: 14px;
-  --sc-category-toolbar-margin-top: 16px;
-  --sc-category-toolbar-margin-bottom: 14px;
-  --sc-category-dropdown-offset-y: -6px;
+  --sc-category-control-width: var(--sc-token-dimension-twenty-four);
+  --sc-category-mobile-padding-inline: var(--sc-token-dimension-fourteen);
+  --sc-category-toolbar-margin-top: var(--sc-token-dimension-sixteen);
+  --sc-category-toolbar-margin-bottom: var(--sc-token-dimension-fourteen);
+  --sc-category-dropdown-offset-y: calc(-1 * var(--sc-token-dimension-six));
 }
 
 /* Fija el riel y habilita scroll horizontal sin scrollbar. */
@@ -99,7 +99,7 @@ body.sushiShop {
     color: var(--sc-color-copy) !important;
     box-shadow: none !important;
     font-family: var(--sc-font-primary) !important;
-    font-size: 12px !important;
+    font-size: var(--sc-token-dimension-font-twelve) !important;
     line-height: var(--sc-category-link-line-height) !important;
     font-weight: var(--sc-font-weight-regular) !important;
     letter-spacing: var(--sc-category-link-tracking) !important;
