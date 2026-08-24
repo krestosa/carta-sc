@@ -151,9 +151,9 @@ export const systemTokens = Object.freeze({
   },
   "shape": {
     "none": "0px",
-    "extraSmall": "1px",
-    "menu": "2px",
-    "control": "4px",
+    "extraSmall": "4px",
+    "menu": "4px",
+    "control": "8px",
     "card": "16px",
     "dialog": "28px",
     "button": "9999px",
@@ -169,12 +169,31 @@ export const systemTokens = Object.freeze({
     "tripleExtraLarge": "48px",
     "quadExtraLarge": "64px"
   },
+  "size": {
+    "touchTarget": "48px",
+    "icon": "24px"
+  },
   "state": {
     "opacity": {
       "disabled": 0.38,
       "muted": 0.78,
-      "placeholder": 0.88
+      "placeholder": 0.88,
+      "hover": 0.08,
+      "focus": 0.12,
+      "pressed": 0.12,
+      "dragged": 0.16
     }
+  },
+  "elevation": {
+    "level0": "0px 0px 0px 0px rgb(0 0 0 / 0.08)",
+    "level1": "0px 1px 3px 0px rgb(0 0 0 / 0.08)",
+    "level2": "0px 3px 6px 0px rgb(0 0 0 / 0.08)",
+    "level3": "0px 6px 12px 0px rgb(0 0 0 / 0.09)",
+    "level4": "0px 8px 20px 0px rgb(0 0 0 / 0.09)",
+    "level5": "0px 12px 32px 0px rgb(0 0 0 / 0.22)",
+    "menu": "0px 3px 6px 0px rgb(0 0 0 / 0.08)",
+    "popover": "0px 6px 12px 0px rgb(0 0 0 / 0.09)",
+    "dialog": "0px 12px 32px 0px rgb(0 0 0 / 0.22)"
   },
   "layer": {
     "raised": 1,
