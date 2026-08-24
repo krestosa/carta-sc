@@ -4,14 +4,14 @@ body.sushiShop {
   --sc-state-hover-opacity: var(--sc-token-component-number-state-hover-opacity);
   --sc-state-focus-opacity: var(--sc-token-component-number-state-focus-opacity);
   --sc-state-pressed-opacity: var(--sc-token-component-number-state-pressed-opacity);
-  --sc-filter-radius: var(--sc-token-dimension-eight);
-  --sc-filter-height: var(--sc-token-dimension-thirty-two);
-  --sc-filter-padding-inline: var(--sc-token-dimension-eight);
-  --sc-filter-content-gap: var(--sc-token-dimension-eight);
-  --sc-filter-group-gap: var(--sc-token-dimension-eight);
-  --sc-filter-icon-size: var(--sc-token-dimension-eighteen);
-  --sc-control-target-size: var(--sc-token-dimension-forty-eight);
-  --sc-control-visual-inset: var(--sc-token-dimension-four);
+  --sc-filter-radius: 8px;
+  --sc-filter-height: 32px;
+  --sc-filter-padding-inline: 8px;
+  --sc-filter-content-gap: 8px;
+  --sc-filter-group-gap: 8px;
+  --sc-filter-icon-size: 18px;
+  --sc-control-target-size: 48px;
+  --sc-control-visual-inset: 4px;
 
   --sc-view-toggle-size: var(--sc-control-target-size);
   --sc-tools-primary-height: var(--sc-control-target-size);
@@ -184,7 +184,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   margin: 0 !important;
   padding: 0 !important;
   color: currentColor !important;
-  line-height: var(--sc-token-dimension-sixteen) !important;
+  line-height: 16px !important;
   white-space: nowrap !important;
 }
 
