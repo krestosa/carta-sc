@@ -46,14 +46,25 @@ body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
   border-top: 0 !important;
 }
 
-/* La búsqueda reordena secciones. La caja del título no puede heredar el tratamiento especial
-   de la sección que era primera en el catálogo original, porque eso movería el resultado. */
+/* La búsqueda reordena secciones. Todas mantienen su geometría normal salvo la primera visible,
+   que en desktop replica exactamente el tratamiento de la primera sección del catálogo. */
 body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) {
   margin: var(--sc-section-title-margin) !important;
 }
 
 body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div {
   padding: var(--sc-section-title-padding) !important;
+}
+
+@media (min-width: 993px) {
+  body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source.sc-search-first-visible > .titleShopSeccion:not([hidden]) {
+    margin-top: 0 !important;
+  }
+
+  body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source.sc-search-first-visible > .titleShopSeccion:not([hidden]) > div {
+    padding-top: 2px !important;
+    border-top: 0 !important;
+  }
 }
 
 body.sushiShop .listadoShop .subTitleShopSeccion {
