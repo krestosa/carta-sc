@@ -12,7 +12,7 @@
     "typecheck": "npm run typecheck:browser && npm run typecheck:tooling",
     "compile:tooling": "tsc -p tsconfig.tooling.json",
     "compile:browser": "tsc -p tsconfig.browser.json",
-    "tokens:validate": "npx --yes --package @terrazzo/cli@2.5.0 tz check tokens/design.tokens.json",
+    "tokens:validate": "npx --yes --package @terrazzo/cli@2.5.0 tz check tokens/design.tokens.json && npx --yes --package @terrazzo/cli@2.5.0 tz check tokens/component.tokens.json",
     "tokens:build": "npm run compile:tooling && node .build/tooling/scripts/build-design-tokens.js",
     "tokens:audit": "npm run compile:tooling && node .build/tooling/scripts/audit-design-token-usage.js",
     "tokens:audit:strict": "npm run compile:tooling && node .build/tooling/scripts/audit-design-token-usage.js --strict",
