@@ -1,10 +1,10 @@
 import { queries } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
+import { IMAGE_WAVE_ROW_TOLERANCE_PX } from './config.js';
 
 const PULSE_CYCLE_MS = 1500;
 const WAVE_ROW_DELAY_MS = motionConfig.durationMs.short4;
 const WAVE_COLUMN_DELAY_MS = motionConfig.durationMs.short2;
-const ROW_TOLERANCE_PX = 4;
 const REVEAL_DURATION_MS = motionConfig.durationMs.medium2;
 const RESET_OUTGOING_MS = motionConfig.durationMs.short3;
 const RESET_INCOMING_MS = motionConfig.durationMs.medium1;
@@ -121,12 +121,19 @@ function visibleWaveEntries(stages: readonly HTMLElement[]): WaveEntry[] {
     const card = cardFor(stage);
     if (!card || card.hidden || !stage.classList.contains('sc-image-active')) continue;
     const rect = card.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) continue;
+    if (
+      rect.width <= 0
+      || rect.height <= 0
+      || rect.bottom <= 0
+      || rect.top >= window.innerHeight
+      || rect.right <= 0
+      || rect.left >= window.innerWidth
+    ) continue;
     entries.push({ stage, top: rect.top, left: rect.left });
   }
-  return entries.sort((a, b) => Math.abs(a.top - b.top) > ROW_TOLERANCE_PX
+  return entries.sort((a, b) => Math.abs(a.top - b.top) > IMAGE_WAVE_ROW_TOLERANCE_PX
     ? a.top - b.top
-    : a.left - b.left);
+    : b.left - a.left);
 }
 
 function applyWaveLayout(stages: readonly HTMLElement[]): void {
@@ -136,7 +143,7 @@ function applyWaveLayout(stages: readonly HTMLElement[]): void {
   let column = 0;
 
   for (const entry of entries) {
-    if (row < 0 || Math.abs(entry.top - rowTop) > ROW_TOLERANCE_PX) {
+    if (row < 0 || Math.abs(entry.top - rowTop) > IMAGE_WAVE_ROW_TOLERANCE_PX) {
       row += 1;
       rowTop = entry.top;
       column = 0;
