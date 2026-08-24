@@ -1,9 +1,10 @@
+import { systemTokens } from '../../core/tokens.generated.js';
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 
 const LIST_MOTION = {
-  offsetY: 4,
+  offsetY: Number.parseFloat(systemTokens.spacing.extraSmall),
   stagger: motionConfig.durations.short1 / 2,
   reducedStagger: motionConfig.durations.short1 / 2,
   refreshDelay: 80,
