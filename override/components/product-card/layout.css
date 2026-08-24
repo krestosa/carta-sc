@@ -2,25 +2,25 @@
 body.sushiShop {
   --sc-card-rule: var(--sc-color-ink);
   --sc-card-subrule: var(--sc-color-border-strong);
-  --sc-card-meta-row-height: 24px;
-  --sc-card-content-gap: 18px;
-  --sc-card-title-height: 54px;
-  --sc-card-title-padding-top: 13px;
-  --sc-card-title-size: 15.5px;
+  --sc-card-meta-row-height: var(--sc-token-dimension-twenty-four);
+  --sc-card-content-gap: var(--sc-token-dimension-eighteen);
+  --sc-card-title-height: var(--sc-token-component-dimension-fifty-four);
+  --sc-card-title-padding-top: var(--sc-token-dimension-thirteen);
+  --sc-card-title-size: var(--sc-token-dimension-font-fifteen-half);
   --sc-card-title-line-height: 1.26;
   --sc-card-title-tracking: -.015em;
-  --sc-card-description-height: 59px;
-  --sc-card-description-offset: 10px;
-  --sc-card-description-size: 12.5px;
-  --sc-card-description-line-height: 16px;
-  --sc-card-price-width: 76px;
-  --sc-card-price-gap: 1px;
-  --sc-card-price-size: 15.5px;
-  --sc-card-price-line-height: 18px;
+  --sc-card-description-height: var(--sc-token-component-dimension-fifty-nine);
+  --sc-card-description-offset: var(--sc-token-dimension-ten);
+  --sc-card-description-size: var(--sc-token-dimension-font-twelve-half);
+  --sc-card-description-line-height: var(--sc-token-dimension-sixteen);
+  --sc-card-price-width: var(--sc-token-component-dimension-seventy-six);
+  --sc-card-price-gap: var(--sc-token-dimension-one);
+  --sc-card-price-size: var(--sc-token-dimension-font-fifteen-half);
+  --sc-card-price-line-height: var(--sc-token-dimension-eighteen);
   --sc-card-price-tracking: -.018em;
-  --sc-card-offer-size: 11.5px;
-  --sc-card-offer-line-height: 14px;
-  --sc-card-flavors-size: 18px;
+  --sc-card-offer-size: var(--sc-token-dimension-font-eleven-half);
+  --sc-card-offer-line-height: var(--sc-token-dimension-fourteen);
+  --sc-card-flavors-size: var(--sc-token-dimension-eighteen);
   --sc-card-action-active-scale: .97;
 }
 
@@ -81,10 +81,10 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   grid-row: 4 !important;
   align-items: flex-end !important;
   align-self: start !important;
-  gap: 7px !important;
+  gap: var(--sc-token-dimension-seven) !important;
   width: 100% !important;
-  height: 20px !important;
-  margin: 4px 0 0 !important;
+  height: var(--sc-token-dimension-twenty) !important;
+  margin: var(--sc-token-dimension-four) 0 0 !important;
   padding: 0 !important;
   color: var(--sc-color-trait) !important;
   line-height: 0 !important;
@@ -100,18 +100,18 @@ html.sc-catalog-skeleton.sc-catalog-content-loading body.sushiShop .listadoShop 
 
 body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible {
   outline: var(--sc-focus-ring-width-subtle) solid var(--sc-card-rule);
-  outline-offset: 6px;
+  outline-offset: var(--sc-token-dimension-six);
 }
 
 /* Evita renderizar cards fuera de pantalla y reserva su alto. */
 @supports (content-visibility: auto) {
   body.sushiShop .listadoShop .productoShop {
     content-visibility: auto;
-    contain-intrinsic-block-size: auto 360px;
+    contain-intrinsic-block-size: auto var(--sc-token-component-dimension-three-sixty);
   }
 
   html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
-    contain-intrinsic-block-size: auto 150px;
+    contain-intrinsic-block-size: auto var(--sc-token-component-dimension-one-fifty);
   }
 
   body.sushiShop .listadoShop .productoShop:focus-within {
@@ -123,11 +123,11 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
 @media (min-width: 641px) and (max-width: 992px) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop {
-      contain-intrinsic-block-size: auto 360px;
+      contain-intrinsic-block-size: auto var(--sc-token-component-dimension-three-sixty);
     }
 
     html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
-      contain-intrinsic-block-size: auto 120px;
+      contain-intrinsic-block-size: auto var(--sc-token-component-dimension-one-twenty);
     }
   }
 }
@@ -136,11 +136,11 @@ body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd:focus-visible
 @media (max-width: 640px) {
   @supports (content-visibility: auto) {
     body.sushiShop .listadoShop .productoShop {
-      contain-intrinsic-block-size: auto 270px;
+      contain-intrinsic-block-size: auto var(--sc-token-component-dimension-two-seventy);
     }
 
     html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop {
-      contain-intrinsic-block-size: auto 112px;
+      contain-intrinsic-block-size: auto var(--sc-token-component-dimension-one-twelve);
     }
   }
 }
