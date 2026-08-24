@@ -71,6 +71,9 @@ const ALLOWED_BUILD_SCRIPTS = new Set([
   'scripts/optimize-runtime.ts',
 ]);
 
+const TEXT_SOURCE_EXTENSIONS = new Set(['.css', '.html', '.js', '.json', '.ts']);
+const REPOSITORY_METADATA = /GITHUB_SHA|git\s+rev-parse|execFileSync\(\s*['"]git['"]/i;
+
 class HandoffValidator {
   constructor(private readonly inputs: ValidationInputs) {}
 
@@ -119,14 +122,23 @@ class HandoffValidator {
     if (manifest.scripts?.serve !== 'node server.mjs compiled 4173') throw new Error('Handoff serve must run through npm -> Node');
 
     const buildRunner = fs.readFileSync(path.join(this.inputs.handoffRoot, 'build.mjs'), 'utf8');
-    if (!buildRunner.includes("process.platform === 'win32' ? 'npm.cmd' : 'npm'")) {
-      throw new Error('Handoff build runner is not cross-platform npm aware');
+    if (!buildRunner.includes('npmExecPath') || !buildRunner.includes('runNpm')) {
+      throw new Error('Handoff build runner must resolve npm without repository tooling');
+    }
+    if (!buildRunner.includes("process.platform === 'win32'") || !buildRunner.includes("process.env.ComSpec || 'cmd.exe'")) {
+      throw new Error('Handoff build runner is missing its Windows npm fallback');
+    }
+    if (!buildRunner.includes("run('npm', args)")) {
+      throw new Error('Handoff build runner is missing its POSIX npm path');
     }
     if (!buildRunner.includes('shell: false')) {
-      throw new Error('Handoff build runner must not invoke a shell');
+      throw new Error('Handoff build runner must not invoke child processes through shell mode');
     }
     if (/\.ps1\b|\.sh\b|powershell|pwsh|bash/i.test(buildRunner)) {
       throw new Error('Platform-specific shell logic leaked into Node handoff runner');
+    }
+    if (REPOSITORY_METADATA.test(buildRunner)) {
+      throw new Error('Repository metadata dependency leaked into handoff build runner');
     }
   }
 
@@ -161,6 +173,9 @@ class HandoffValidator {
       }
       if (extension === '.js' && relativePath.startsWith('override/')) {
         throw new Error(`Generated owned JavaScript leaked into handoff source: ${relativePath}`);
+      }
+      if (TEXT_SOURCE_EXTENSIONS.has(extension) && REPOSITORY_METADATA.test(fs.readFileSync(file, 'utf8'))) {
+        throw new Error(`Repository metadata dependency leaked into handoff source: ${relativePath}`);
       }
     }
   }
