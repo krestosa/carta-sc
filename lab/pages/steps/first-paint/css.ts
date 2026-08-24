@@ -24,7 +24,7 @@ const LEGACY_CRITICAL = new Set([
 ]);
 
 const OVERRIDE_CRITICAL = new Set([
-  './core/variables.css',
+  './core/tokens.generated.css',
   './core/theme.css',
   './core/a11y.css',
   './features/catalog/catalog.css',
