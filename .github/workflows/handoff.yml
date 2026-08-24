@@ -16,9 +16,9 @@ concurrency:
 
 jobs:
   linux:
-    name: linux
+    name: linux-node-24
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout commit
         uses: actions/checkout@v6
@@ -26,10 +26,10 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
-      - name: Set up Node 22
+      - name: Set up Node 24
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       - name: Install dependencies
@@ -38,6 +38,11 @@ jobs:
 
       - name: Build Pages and Handoff
         timeout-minutes: 15
+        run: npm run build
+
+      - name: Rebuild generated Handoff
+        timeout-minutes: 10
+        working-directory: handoff
         run: npm run build
 
       - name: Configure Pages
@@ -51,7 +56,7 @@ jobs:
       - name: Upload Linux Handoff
         uses: actions/upload-artifact@v7
         with:
-          name: handoff-linux-${{ github.sha }}
+          name: handoff-linux-node-24-${{ github.sha }}
           path: handoff
           if-no-files-found: error
           include-hidden-files: true
