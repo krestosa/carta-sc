@@ -1,5 +1,5 @@
 import { scrollState } from '../../core/state.js';
-import { motionTokens } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';
 import { CATEGORY_SCROLL } from './config.js';
@@ -97,7 +97,7 @@ export class ProgrammaticCategoryScroll {
   #animate(target: HTMLElement, token: number, destination: number): void {
     const startY = currentPageY();
     this.#move = motion.engine.tween(
-      motionTokens.durations.medium1,
+      motionConfig.durations.medium1,
       'quad.inout',
       (progress) => {
         if (token !== this.#token) return;
