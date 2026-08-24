@@ -8,12 +8,12 @@ interface RuntimeAssets {
   readonly overrideModule: string;
 }
 
-function runtimeAssets(sha: string): RuntimeAssets {
+function runtimeAssets(version: string): RuntimeAssets {
   return {
-    bootstrap: `_js_dev/main.js?v=${sha}`,
-    legacyRuntime: `_js_dev/main-legacy.js?v=${sha}`,
-    overrideStyle: `override/main.css?v=${sha}`,
-    overrideModule: `override/main.js?v=${sha}`,
+    bootstrap: `_js_dev/main.js?v=${version}`,
+    legacyRuntime: `_js_dev/main-legacy.js?v=${version}`,
+    overrideStyle: `override/main.css?v=${version}`,
+    overrideModule: `override/main.js?v=${version}`,
   };
 }
 
@@ -84,8 +84,8 @@ function enableNativeProductLazyLoading(html: string): string {
   return result;
 }
 
-export function prepareDocument(html: string, sha: string): string {
-  const assets = runtimeAssets(sha);
+export function prepareDocument(html: string, version: string): string {
+  const assets = runtimeAssets(version);
   let result = stampBootstrapReference(html, assets);
   result = addFontCrossorigin(result);
   result = prioritizeCatalogueBanner(result);
@@ -93,8 +93,8 @@ export function prepareDocument(html: string, sha: string): string {
   return pruneUnusedMaps(result);
 }
 
-export function verifyPreparedDocument(html: string, sha: string): void {
-  const assets = runtimeAssets(sha);
+export function verifyPreparedDocument(html: string, version: string): void {
+  const assets = runtimeAssets(version);
   assert(html.includes(assets.bootstrap), 'Stamped main.js entrypoint is missing');
   assert(html.includes(assets.legacyRuntime), 'Legacy runtime preload is missing');
   assert(html.includes(assets.overrideStyle), 'Override stylesheet preload is missing');
