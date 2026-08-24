@@ -41,12 +41,6 @@ import {
 } from './validators.js';
 
 const ROOT_EXCLUDES = new Set([
-  '.git',
-  '.github',
-  '.pages-site',
-  '.build',
-  '.generated',
-  '.migration',
   'node_modules',
   'handoff',
   'lab',
@@ -98,6 +92,7 @@ class PagesBuildPipeline {
   private shouldStageSource(relative: string, absolute: string): boolean {
     const normalized = relative.replaceAll(path.sep, '/');
     const topLevel = normalized.split('/', 1)[0] ?? normalized;
+    if (topLevel.startsWith('.')) return false;
     if (ROOT_EXCLUDES.has(topLevel)) return false;
     if (absolute === SITE || absolute.startsWith(`${SITE}${path.sep}`)) return false;
     if (normalized.startsWith('override/') && normalized.endsWith('.css')) return false;
