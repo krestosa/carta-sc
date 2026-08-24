@@ -151,9 +151,9 @@ html[data-sc-theme-resolved='dark'] {
   --sc-color-copy: rgb(200 200 194);
   --sc-color-muted: rgb(156 156 149);
   --sc-color-trait: rgb(111 111 111);
-  --sc-color-surface: rgb(10 10 10);
-  --sc-color-surface-transparent: rgb(10 10 10 / 0);
-  --sc-color-surface-raised: rgb(18 18 16);
+  --sc-color-surface: rgb(0 0 0);
+  --sc-color-surface-transparent: rgb(0 0 0 / 0);
+  --sc-color-surface-raised: rgb(10 10 10);
   --sc-color-border: rgb(45 45 41);
   --sc-color-border-strong: rgb(68 68 62);
   --sc-focus-ring-color: rgb(243 243 240);
@@ -188,9 +188,9 @@ html[data-sc-theme-resolved='dark'] {
     --sc-color-copy: rgb(200 200 194);
     --sc-color-muted: rgb(156 156 149);
     --sc-color-trait: rgb(111 111 111);
-    --sc-color-surface: rgb(10 10 10);
-    --sc-color-surface-transparent: rgb(10 10 10 / 0);
-    --sc-color-surface-raised: rgb(18 18 16);
+    --sc-color-surface: rgb(0 0 0);
+    --sc-color-surface-transparent: rgb(0 0 0 / 0);
+    --sc-color-surface-raised: rgb(10 10 10);
     --sc-color-border: rgb(45 45 41);
     --sc-color-border-strong: rgb(68 68 62);
     --sc-focus-ring-color: rgb(243 243 240);
