@@ -51,5 +51,6 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 }
 
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox .sc-trait-icon[data-sc-trait='vegetariano'] {
+  transform: none !important;
   translate: 0 1px !important;
 }
