@@ -1,5 +1,5 @@
 import type { Cleanup } from '../core/types.js';
-import { motionTokens } from '../core/variables.js';
+import { motionConfig } from './config.js';
 import { motion } from './main.js';
 import type { MotionHandle } from './types.js';
 
@@ -28,9 +28,7 @@ class GlobalUiMotionController {
   }
 
   #clear(menu: HTMLElement): void {
-    for (const property of ['transform', 'opacity', 'visibility', 'will-change']) {
-      menu.style.removeProperty(property);
-    }
+    for (const property of ['transform', 'opacity', 'visibility', 'will-change']) menu.style.removeProperty(property);
   }
 
   #onShown = (event: Event): void => {
@@ -46,14 +44,14 @@ class GlobalUiMotionController {
 
     const handles: MotionHandle[] = [
       motion.engine.opacity(node, 1, {
-        duration: reduced ? motionTokens.durations.short2 : motionTokens.durations.short3,
-        ease: motionTokens.easings.decelerate,
+        duration: reduced ? motionConfig.durations.short2 : motionConfig.durations.short3,
+        ease: motionConfig.easings.decelerate,
         clear: true,
       }),
     ];
 
     if (!reduced) {
-      handles.push(motion.engine.springTransform(node, { y: 0 }, motionTokens.springs.spatial.fast, {
+      handles.push(motion.engine.springTransform(node, { y: 0 }, motionConfig.springs.spatial.fast, {
         clear: true,
         onComplete: () => {
           this.#active.delete(node);
@@ -61,7 +59,7 @@ class GlobalUiMotionController {
         },
       }));
     } else {
-      handles.push(motion.engine.delay(motionTokens.durations.short2, () => {
+      handles.push(motion.engine.delay(motionConfig.durations.short2, () => {
         this.#active.delete(node);
         this.#clear(node);
       }));
@@ -71,11 +69,5 @@ class GlobalUiMotionController {
 }
 
 const globalUiMotion = new GlobalUiMotionController();
-
-export function initializeGlobalUiMotion(): Cleanup {
-  return globalUiMotion.initialize();
-}
-
-export function destroyGlobalUiMotion(): void {
-  globalUiMotion.destroy();
-}
+export function initializeGlobalUiMotion(): Cleanup { return globalUiMotion.initialize(); }
+export function destroyGlobalUiMotion(): void { globalUiMotion.destroy(); }
