@@ -34,7 +34,7 @@ body.sushiShop {
     top: 50% !important;
     left: 50% !important;
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100% - (2 * var(--sc-space-double-extra-large))) !important;
+    max-width: calc(100% - var(--sc-space-quad-extra-large)) !important;
     height: var(--sc-mobile-header-height) !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -202,7 +202,7 @@ body.sushiShop {
 @media (max-width: 640px) {
   body.sushiShop .brandOnlyMobile > a {
     width: var(--sc-mobile-logo-width) !important;
-    max-width: calc(100% - (2 * var(--sc-space-double-extra-large))) !important;
+    max-width: calc(100% - var(--sc-space-quad-extra-large)) !important;
   }
 
   body.sushiShop .brandOnlyMobile img {
