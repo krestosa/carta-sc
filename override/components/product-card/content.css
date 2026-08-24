@@ -1,6 +1,6 @@
 /* Título, descripción y rasgos de las cards. */
 body.sushiShop {
-  --sc-card-description-height: var(--sc-token-component-dimension-forty-three);
+  --sc-card-description-height: 43px;
   --sc-card-description-lines: 2;
 }
 
@@ -21,12 +21,12 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors .sc-trait-icon {
 
 /* Trata cada SVG de rasgo como un glifo tipográfico. */
 body.sushiShop .sc-trait-icon {
-  transform: translateY(calc(-1 * var(--sc-token-component-dimension-point-eight))) !important;
+  transform: translateY(-.8px) !important;
   transform-origin: 50% 50% !important;
 }
 
 body.sushiShop .sc-trait-icon[width='11'][height='11'] {
-  transform: translateY(calc(-1 * var(--sc-token-component-dimension-point-one))) !important;
+  transform: translateY(-.1px) !important;
   transform-origin: 50% 100% !important;
 }
 
@@ -51,7 +51,7 @@ body.sushiShop .sc-trait-icon-set {
   flex: 0 0 auto !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: var(--sc-token-dimension-two) !important;
+  gap: 2px !important;
   margin: 0 !important;
   padding: 0 !important;
   color: inherit !important;
@@ -77,10 +77,10 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
   flex-flow: row nowrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: var(--sc-token-dimension-twenty) !important;
+  gap: 20px !important;
   width: 100% !important;
   min-width: 0 !important;
-  margin: calc(-1 * var(--sc-token-dimension-twelve)) 0 0 !important;
+  margin: -12px 0 0 !important;
   padding: 0 !important;
   border: 0 !important;
   overflow-x: auto !important;
@@ -101,11 +101,11 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   flex: 0 0 auto !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: var(--sc-token-dimension-six) !important;
+  gap: 6px !important;
   width: auto !important;
   min-width: max-content !important;
   height: auto !important;
-  min-height: var(--sc-token-dimension-eighteen) !important;
+  min-height: 18px !important;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
@@ -119,10 +119,10 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   flex: 0 0 auto !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: var(--sc-token-dimension-two) !important;
+  gap: 2px !important;
   width: auto !important;
-  min-width: var(--sc-token-dimension-font-eleven) !important;
-  height: var(--sc-token-dimension-sixteen) !important;
+  min-width: 11px !important;
+  height: 16px !important;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 0 !important;
@@ -144,8 +144,8 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   padding: 0 !important;
   color: var(--sc-color-heading) !important;
   font-family: var(--sc-font-primary) !important;
-  font-size: var(--sc-token-dimension-font-eleven-half) !important;
-  line-height: var(--sc-token-dimension-sixteen) !important;
+  font-size: 11.5px !important;
+  line-height: 16px !important;
   font-weight: var(--sc-font-weight-regular) !important;
   letter-spacing: -.005em !important;
   text-transform: none !important;
@@ -206,11 +206,11 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated::aft
   right: 0;
   bottom: 0;
   height: var(--sc-card-description-line-height);
-  padding: 0 0 0 var(--sc-token-dimension-twenty-two);
+  padding: 0 0 0 22px;
   background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%);
   color: var(--sc-color-copy);
   font-family: var(--sc-font-primary);
-  font-size: var(--sc-token-component-dimension-font-ten-half);
+  font-size: 10.5px;
   line-height: var(--sc-card-description-line-height);
   font-weight: var(--sc-font-weight-semibold);
   letter-spacing: 0;
@@ -229,7 +229,7 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
 
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
-    --sc-card-description-height: var(--sc-token-component-dimension-forty-three);
+    --sc-card-description-height: 43px;
     --sc-card-description-lines: 2;
   }
 }
@@ -237,21 +237,21 @@ html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .d
 /* Ajustes de rasgos en móvil. */
 @media (max-width: 640px) {
   body.sushiShop {
-    --sc-card-description-height: var(--sc-token-component-dimension-forty-three);
+    --sc-card-description-height: 43px;
     --sc-card-description-lines: 2;
   }
 
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {
-    gap: var(--sc-token-dimension-sixteen) !important;
-    margin-top: calc(-1 * var(--sc-token-dimension-eight)) !important;
-    padding-right: var(--sc-token-dimension-two) !important;
+    gap: 16px !important;
+    margin-top: -8px !important;
+    padding-right: 2px !important;
   }
 
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .refBox {
-    gap: var(--sc-token-dimension-five) !important;
+    gap: 5px !important;
   }
 
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .ref_label {
-    font-size: var(--sc-token-dimension-font-eleven) !important;
+    font-size: 11px !important;
   }
 }

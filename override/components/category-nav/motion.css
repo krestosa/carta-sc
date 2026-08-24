@@ -29,7 +29,7 @@ body.sushiShop {
 .sushiShop .sc-category-motion-root {position: relative !important;}
 .sushiShop .sc-category-indicator {
   display: block;position: absolute;left: 0;bottom: 0;width: var(--sc-border-hairline);height: var(--sc-border-hairline);margin: 0;padding: 0;border: 0;border-radius: 0;
-  background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: var(--sc-token-component-number-z-skeleton);
+  background: var(--sc-color-surface);box-shadow: none;pointer-events: none;opacity: 0;z-index: 4;
   -webkit-transform: translate3d(0,0,0) scaleX(1);transform: translate3d(0,0,0) scaleX(1);
   -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;will-change: transform;
 }

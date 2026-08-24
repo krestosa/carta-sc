@@ -11,7 +11,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .produc
 
 /* Conserva el espacio antes de la primera sección visible. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
-  margin-top: var(--sc-token-dimension-eighteen) !important;
+  margin-top: 18px !important;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) ~ .listadoShop.sc-search-source:not([hidden]) {
   margin-top: 0 !important;
@@ -75,7 +75,7 @@ body.sushiShop .sc-catalog-search-clear {
   place-items: center;
   width: var(--sc-touch-target);
   height: var(--sc-touch-target);
-  margin: 0 calc(-1 * var(--sc-token-dimension-ten)) 0 0;
+  margin: 0 -10px 0 0;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -89,8 +89,8 @@ body.sushiShop .sc-catalog-search-clear {
 body.sushiShop .sc-catalog-search-clear[hidden] { display: none !important; }
 body.sushiShop .sc-catalog-search-clear svg {
   display: block;
-  width: var(--sc-token-dimension-fifteen);
-  height: var(--sc-token-dimension-fifteen);
+  width: 15px;
+  height: 15px;
   fill: currentColor;
   pointer-events: none;
   transform-origin: 50% 50%;
@@ -100,7 +100,7 @@ body.sushiShop .sc-catalog-search-clear:hover,
 body.sushiShop .sc-catalog-search-clear:focus-visible { color: var(--sc-color-ink); }
 body.sushiShop .sc-catalog-search-clear:focus-visible {
   outline: var(--sc-focus-ring-width-subtle) solid var(--sc-focus-ring-color);
-  outline-offset: calc(-1 * var(--sc-token-dimension-five));
+  outline-offset: -5px;
 }
 body.sushiShop .sc-catalog-search-clear:active svg { transform: scale(.86); }
 
@@ -112,24 +112,24 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   flex: 0 0 auto !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: var(--sc-token-dimension-five) !important;
+  gap: 5px !important;
   width: auto !important;
   min-width: max-content !important;
-  min-height: var(--sc-token-dimension-twenty) !important;
+  min-height: 20px !important;
   margin: 0 !important;
-  padding: 0 0 var(--sc-token-dimension-four) !important;
+  padding: 0 0 4px !important;
   border: 0 !important;
   border-radius: 0 !important;
   outline: 0 !important;
   background: transparent !important;
   color: var(--sc-color-copy) !important;
   font-family: var(--sc-font-primary) !important;
-  font-size: var(--sc-token-dimension-font-eleven-quarter) !important;
-  line-height: var(--sc-token-dimension-sixteen) !important;
+  font-size: 11.25px !important;
+  line-height: 16px !important;
   font-weight: var(--sc-font-weight-regular) !important;
   white-space: nowrap !important;
   cursor: pointer !important;
-  opacity: var(--sc-token-component-number-reference-opacity) !important;
+  opacity: .78 !important;
   transition: color var(--sc-motion-fast) var(--sc-motion-ease-standard),opacity var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
   -webkit-tap-highlight-color: transparent !important;
 }
@@ -139,7 +139,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
   right: 0 !important;
   bottom: 0 !important;
   left: 0 !important;
-  height: var(--sc-token-dimension-one) !important;
+  height: 1px !important;
   background: currentColor !important;
   transform: scaleX(0) !important;
   transform-origin: 0 50% !important;
@@ -153,7 +153,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 }
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip:focus-visible {
   outline: var(--sc-focus-ring-width-subtle) solid var(--sc-focus-ring-color) !important;
-  outline-offset: var(--sc-token-dimension-three) !important;
+  outline-offset: 3px !important;
 }
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip.is-active::after {
   transform: scaleX(1) !important;
@@ -161,8 +161,8 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 
 @media (max-width: 640px) {
   body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip {
-    gap: var(--sc-token-dimension-four) !important;
-    font-size: var(--sc-token-component-dimension-font-ten-three-quarter) !important;
+    gap: 4px !important;
+    font-size: 10.75px !important;
   }
 }
 

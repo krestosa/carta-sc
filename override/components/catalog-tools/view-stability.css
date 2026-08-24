@@ -1,33 +1,33 @@
 /* Geometría base de la vista lista; los breakpoints solo ajustan tokens. */
 body.sushiShop {
   --sc-view-list-columns: 2;
-  --sc-view-list-image-width: var(--sc-token-component-dimension-two-ten);
-  --sc-view-list-column-gap: var(--sc-token-dimension-eighteen);
-  --sc-view-list-title-price-gap: var(--sc-token-dimension-six);
-  --sc-view-list-price-height: var(--sc-token-dimension-eighteen);
+  --sc-view-list-image-width: 210px;
+  --sc-view-list-column-gap: 18px;
+  --sc-view-list-title-price-gap: 6px;
+  --sc-view-list-price-height: 18px;
   --sc-view-list-price-track: calc(var(--sc-view-list-title-price-gap) + var(--sc-view-list-price-height));
-  --sc-view-list-description-gap: var(--sc-token-dimension-six);
-  --sc-view-list-description-max-height: var(--sc-token-dimension-thirty-eight);
-  --sc-view-list-description-padding-top: var(--sc-token-dimension-five);
+  --sc-view-list-description-gap: 6px;
+  --sc-view-list-description-max-height: 38px;
+  --sc-view-list-description-padding-top: 5px;
 }
 
 @media (min-width: 641px) and (max-width: 992px) {
   body.sushiShop {
     --sc-view-list-columns: 1;
-    --sc-view-list-image-width: var(--sc-token-component-dimension-one-sixty);
-    --sc-view-list-column-gap: var(--sc-token-dimension-fourteen);
-    --sc-view-list-description-max-height: var(--sc-token-component-dimension-thirty-seven);
-    --sc-view-list-description-padding-top: var(--sc-token-dimension-four);
+    --sc-view-list-image-width: 160px;
+    --sc-view-list-column-gap: 14px;
+    --sc-view-list-description-max-height: 37px;
+    --sc-view-list-description-padding-top: 4px;
   }
 }
 
 @media (max-width: 640px) {
   body.sushiShop {
     --sc-view-list-columns: 1;
-    --sc-view-list-image-width: var(--sc-token-component-dimension-one-fifty);
-    --sc-view-list-column-gap: var(--sc-token-dimension-twelve);
-    --sc-view-list-description-max-height: var(--sc-token-component-dimension-thirty-seven);
-    --sc-view-list-description-padding-top: var(--sc-token-dimension-four);
+    --sc-view-list-image-width: 150px;
+    --sc-view-list-column-gap: 12px;
+    --sc-view-list-description-max-height: 37px;
+    --sc-view-list-description-padding-top: 4px;
   }
 }
 
@@ -86,7 +86,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .tit
   min-width: 0 !important;
   min-height: 0 !important;
   height: auto !important;
-  max-height: calc(2.52em + var(--sc-token-dimension-two)) !important;
+  max-height: calc(2.52em + 2px) !important;
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
@@ -159,9 +159,9 @@ html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .
 html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
   box-sizing: border-box !important;
   display: block !important;
-  min-height: var(--sc-token-component-dimension-forty-three) !important;
-  height: var(--sc-token-component-dimension-forty-three) !important;
-  max-height: var(--sc-token-component-dimension-forty-three) !important;
+  min-height: 43px !important;
+  height: 43px !important;
+  max-height: 43px !important;
   overflow: hidden !important;
   contain: paint;
   -webkit-box-orient: initial !important;
@@ -175,13 +175,13 @@ body.sushiShop .listadoShop .productoShop .descrip > .sc-description-copy {
   width: 100% !important;
   min-width: 0 !important;
   min-height: 0 !important;
-  height: var(--sc-token-dimension-thirty-two) !important;
-  max-height: var(--sc-token-dimension-thirty-two) !important;
+  height: 32px !important;
+  max-height: 32px !important;
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
   white-space: normal !important;
-  line-height: var(--sc-token-dimension-sixteen) !important;
+  line-height: 16px !important;
 }
 
 @supports (height: 2lh) {
@@ -203,13 +203,13 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated > .s
   position: absolute !important;
   right: 0 !important;
   bottom: 0 !important;
-  height: var(--sc-token-dimension-sixteen) !important;
-  padding: 0 0 0 var(--sc-token-dimension-twenty-two) !important;
+  height: 16px !important;
+  padding: 0 0 0 22px !important;
   background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%) !important;
   color: var(--sc-color-copy) !important;
   font-family: inherit !important;
   font-size: inherit !important;
-  line-height: var(--sc-token-dimension-sixteen) !important;
+  line-height: 16px !important;
   font-weight: var(--sc-font-weight-semibold) !important;
   letter-spacing: inherit !important;
   white-space: nowrap !important;
