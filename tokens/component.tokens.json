@@ -13,7 +13,9 @@
       "white98": { "$value": { "colorSpace": "srgb", "components": [1, 1, 1], "alpha": 0.98, "hex": "#ffffff" } },
       "darkAction": { "$value": { "colorSpace": "srgb", "components": [0.8471, 0.8471, 0.8275], "hex": "#d8d8d3" } },
       "darkClose": { "$value": { "colorSpace": "srgb", "components": [0.0392, 0.0392, 0.0392], "alpha": 0.88, "hex": "#0a0a0a" } },
-      "darkCloseHover": { "$value": { "colorSpace": "srgb", "components": [0.0784, 0.0784, 0.0784], "alpha": 0.98, "hex": "#141414" } }
+      "darkCloseHover": { "$value": { "colorSpace": "srgb", "components": [0.0784, 0.0784, 0.0784], "alpha": 0.98, "hex": "#141414" } },
+      "imagePreloaderLight": { "$value": { "colorSpace": "srgb", "components": [0.8902, 0.8902, 0.8863], "hex": "#e3e3e2" } },
+      "imagePreloaderDark": { "$value": { "colorSpace": "srgb", "components": [0.1608, 0.1608, 0.1490], "hex": "#292926" } }
     },
     "dimension": {
       "$type": "dimension",
