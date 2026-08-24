@@ -69,6 +69,7 @@
       "scaleMenuClosed": { "$value": 0.8 },
       "scaleButtonPressed": { "$value": 0.98 },
       "scaleClosePressed": { "$value": 0.9 },
+      "scaleMobileMenuPressed": { "$value": 0.94 },
       "scaleMarkIdle": { "$value": 0.78 },
       "scaleMoon": { "$value": 1.3 },
       "strokeThemeRing": { "$value": 1.55 },
@@ -80,6 +81,9 @@
       "zCategoryOverflow": { "$value": 50 },
       "zCategoryControls": { "$value": 70 },
       "zCategorySticky": { "$value": 120 },
+      "zMobileHeader": { "$value": 20 },
+      "zMobileMenu": { "$value": 1000 },
+      "zMobilePanel": { "$value": 1001 },
       "zOverlay": { "$value": 2 },
       "zControl": { "$value": 3 },
       "zSkeleton": { "$value": 4 }
