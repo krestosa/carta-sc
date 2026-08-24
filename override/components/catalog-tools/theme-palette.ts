@@ -1,5 +1,5 @@
-import { tokenRuntime } from '../../core/tokens.generated.js';
-import { motionTokens, queries } from '../../core/variables.js';
+import { queries } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 
 export interface PaletteSnapshot {
   readonly [property: string]: string;
@@ -45,8 +45,8 @@ class ThemePaletteTransitionController {
     this.cancel();
     const token = this.#transitionToken;
     const duration = queries.reducedMotion.matches
-      ? motionTokens.durations.short4
-      : motionTokens.durations.long3;
+      ? motionConfig.durations.short4
+      : motionConfig.durations.long3;
     const half = duration / 2;
     const context: PaletteTransitionContext = { from, to: from, duration, token, fade: true };
 
@@ -55,7 +55,8 @@ class ThemePaletteTransitionController {
       return context;
     }
 
-    node.style.backgroundColor = from['--sc-color-surface'] || tokenRuntime.color['color.palette.ink'];
+    const rootBackground = getComputedStyle(root).backgroundColor;
+    node.style.backgroundColor = from['--sc-color-surface'] || rootBackground || 'transparent';
     node.style.opacity = '0';
     node.style.willChange = 'opacity';
     prepared?.(context);
@@ -137,7 +138,7 @@ class ThemePaletteTransitionController {
     if (typeof node.animate !== 'function') return false;
     const animation = node.animate([{ opacity: from }, { opacity: to }], {
       duration: durationMs,
-      easing: motionTokens.cssEasings.standard,
+      easing: motionConfig.cssEasings.standard,
       fill: 'forwards',
     });
     this.#activeAnimations.push(animation);
