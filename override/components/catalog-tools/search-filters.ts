@@ -66,6 +66,10 @@ export function prepareFilterControls(root: HTMLElement, filters: ReadonlySet<st
   strip.querySelectorAll('[data-sc-filter="discount"],.sc-filter-chip--discount').forEach((node) => node.remove());
   for (const box of strip.querySelectorAll<HTMLElement>('.refBox')) {
     const key = filterKey(box);
+    if (key === 'nada picante') {
+      box.remove();
+      continue;
+    }
     if (!SPICE_FILTERS.has(key) && key !== 'vegetariano') continue;
 
     const label = FILTER_LABELS[key] ?? key;
