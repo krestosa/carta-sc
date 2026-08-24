@@ -1,21 +1,21 @@
 import path from 'node:path';
-import { SITE, githubSha, read, write } from '../lib/core.js';
+import { SITE, buildId, read, write } from '../lib/core.js';
 import { bundleOverrideCss, verifyBundledCss } from './prepare-artifact/css.js';
 import { prepareDocument, verifyPreparedDocument } from './prepare-artifact/html.js';
 import { stampLegacyBootstrap, verifyLegacyBootstrap } from './prepare-artifact/legacy.js';
 import { stampModuleGraph, verifyModuleGraph } from './prepare-artifact/modules.js';
 
 export function prepareArtifact(): void {
-  const sha = githubSha();
+  const version = buildId();
   const index = path.join(SITE, 'index.html');
 
-  write(index, prepareDocument(read(index), sha));
-  stampLegacyBootstrap(sha);
+  write(index, prepareDocument(read(index), version));
+  stampLegacyBootstrap(version);
   bundleOverrideCss();
-  stampModuleGraph(sha);
+  stampModuleGraph(version);
 
-  verifyPreparedDocument(read(index), sha);
-  verifyLegacyBootstrap(sha);
+  verifyPreparedDocument(read(index), version);
+  verifyLegacyBootstrap(version);
   verifyBundledCss();
-  verifyModuleGraph(sha);
+  verifyModuleGraph(version);
 }
