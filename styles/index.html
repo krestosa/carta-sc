@@ -1,203 +1,188 @@
 <!doctype html>
-<html lang="es" data-styles-theme="system">
+<html lang="es" data-sc-theme="system" data-sc-theme-resolved="light" data-sc-catalog-view="compact">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="color-scheme" content="light dark">
   <title>SushiClub — Styles</title>
+  <link rel="stylesheet" href="../_css_dev/bootstrap.min.css">
+  <link rel="stylesheet" href="../_css_dev/styles.css">
+  <link rel="stylesheet" href="../_css_dev/styles_newver17.css">
+  <link rel="stylesheet" href="../css/styles_shop__q_a48cd660.css">
   <link rel="stylesheet" href="../override/main.css">
   <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
-  <header class="styles-topbar">
-    <div class="styles-brand">
-      <span class="styles-brand__mark">SUSHICLUB</span>
-      <span class="styles-brand__divider" aria-hidden="true"></span>
-      <span class="styles-brand__label">Design System</span>
-    </div>
-    <div class="styles-topbar__actions">
-      <div class="styles-segmented" aria-label="Tema">
-        <button type="button" data-theme-option="system" aria-pressed="true">Sistema</button>
-        <button type="button" data-theme-option="light" aria-pressed="false">Claro</button>
-        <button type="button" data-theme-option="dark" aria-pressed="false">Oscuro</button>
+<body class="sushiShop conSabores styles-page">
+  <header class="styles-doc-header">
+    <div class="styles-doc-header__inner">
+      <div>
+        <span class="styles-doc-eyebrow">SUSHICLUB / LIVE DESIGN SYSTEM</span>
+        <strong>Styles</strong>
       </div>
-      <button class="styles-icon-button" id="replay-motion" type="button" title="Reproducir motion" aria-label="Reproducir todas las animaciones">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.2 3.75l-2.2.04L7 5.4l.05 3.39-1.36.02A6 6 0 1 0 12 6V5Z"/></svg>
-      </button>
+      <nav class="styles-doc-nav" aria-label="Navegación de documentación">
+        <a href="#live-system">Componentes</a>
+        <a href="#grid">Retícula</a>
+        <a href="#color">Color</a>
+        <a href="#type">Tipografía</a>
+        <a href="#motion">Motion</a>
+        <a href="#tokens">Tokens</a>
+      </nav>
     </div>
   </header>
 
-  <div class="styles-shell">
-    <aside class="styles-sidebar" aria-label="Secciones">
-      <div class="styles-sidebar__eyebrow">SYSTEM</div>
-      <nav>
-        <a href="#overview">Overview</a>
-        <a href="#grid">Retícula</a>
-        <a href="#colors">Colores</a>
-        <a href="#typography">Tipografía</a>
-        <a href="#spacing">Spacing</a>
-        <a href="#shape">Shape</a>
-        <a href="#elevation">Elevación</a>
-        <a href="#states">Estados</a>
-        <a href="#motion">Motion</a>
-        <a href="#sizes">Tamaños y strokes</a>
-        <a href="#breakpoints">Breakpoints</a>
-        <a href="#primitives">Primitivas</a>
-        <a href="#css-api">CSS API</a>
-        <a href="#tokens">Todos los tokens</a>
-      </nav>
-    </aside>
+  <main class="styles-doc-main">
+    <section class="styles-hero" id="overview">
+      <div class="styles-hero__copy">
+        <span class="styles-doc-eyebrow">SYSTEM SOURCE OF TRUTH</span>
+        <h1>Styles</h1>
+        <p>Showcase vivo del sistema de SushiClub. Los componentes de esta página usan el mismo markup, CSS, controladores, iconografía, estados y motion que la carta productiva.</p>
+      </div>
+      <div class="styles-status" id="system-status" aria-live="polite"></div>
+    </section>
 
-    <main class="styles-main">
-      <section class="styles-hero" id="overview">
-        <div>
-          <p class="styles-kicker">SUSHICLUB / SYSTEM SHOWCASE</p>
-          <h1>Styles</h1>
-          <p class="styles-lead">Fuente viva del lenguaje visual: tokens, retícula, color, tipografía, estados y motion. Esta página lee el DTCG real del repositorio.</p>
-        </div>
-        <div class="styles-status" id="system-status" aria-live="polite"></div>
-      </section>
+    <section class="styles-doc-section styles-live-section" id="live-system">
+      <div class="styles-section-heading">
+        <div><span class="styles-doc-eyebrow">LIVE COMPONENTS</span><h2>Componentes reales</h2></div>
+        <p>El rail, la búsqueda, filtros, selector de tema, cambio de vista, cards y modal son los componentes productivos. Probá búsqueda, filtros, tema, vista y abrir una card.</p>
+      </div>
 
-      <section class="styles-section" id="grid">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">LAYOUT</p><h2>Retícula responsive</h2></div>
-          <p>12 columnas en desktop, 8 en tablet y 4 en mobile. El gutter visible usa el token activo del sistema.</p>
-        </div>
-        <div class="styles-grid-meta" id="grid-meta"></div>
-        <div class="styles-grid-demo" aria-label="Retícula responsive">
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-        </div>
-      </section>
-
-      <section class="styles-section" id="colors">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">FOUNDATION</p><h2>Color</h2></div>
-          <p>Roles semánticos claros y oscuros, incluidos surface, ink, copy, trait, borders, focus y scrim.</p>
-        </div>
-        <div id="color-groups"></div>
-      </section>
-
-      <section class="styles-section" id="typography">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">TYPE</p><h2>Tipografía</h2></div>
-          <p>Todos los roles tipográficos públicos, con variantes responsive cuando existen.</p>
-        </div>
-        <div class="styles-stack" id="typography-list"></div>
-      </section>
-
-      <section class="styles-section" id="spacing">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">LAYOUT</p><h2>Spacing</h2></div>
-          <p>Escala global de separación. Las barras representan el valor real en píxeles.</p>
-        </div>
-        <div class="styles-token-visual-list" id="spacing-list"></div>
-      </section>
-
-      <section class="styles-section" id="shape">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">SURFACES</p><h2>Shape</h2></div>
-          <p>Radios públicos para superficies, controles, cards, diálogos y pills.</p>
-        </div>
-        <div class="styles-card-grid" id="shape-list"></div>
-      </section>
-
-      <section class="styles-section" id="elevation">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">SURFACES</p><h2>Elevación</h2></div>
-          <p>Niveles de sombra y roles semánticos de menú, popover y diálogo.</p>
-        </div>
-        <div class="styles-card-grid" id="elevation-list"></div>
-      </section>
-
-      <section class="styles-section" id="states">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">INTERACTION</p><h2>State layers</h2></div>
-          <p>Opacidades de interacción y estados de contenido usados por controles y superficies.</p>
-        </div>
-        <div class="styles-state-grid" id="state-list"></div>
-      </section>
-
-      <section class="styles-section" id="motion">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">MOTION</p><h2>Duraciones, easing y springs</h2></div>
-          <p>Cada muestra se ejecuta con el valor resuelto del token. Click en una pista para repetirla.</p>
-        </div>
-        <h3 class="styles-subheading">Duraciones</h3>
-        <div class="styles-motion-list" id="duration-list"></div>
-        <h3 class="styles-subheading">Easing</h3>
-        <div class="styles-motion-list" id="easing-list"></div>
-        <h3 class="styles-subheading">Springs</h3>
-        <div class="styles-motion-list" id="spring-list"></div>
-      </section>
-
-      <section class="styles-section" id="sizes">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">FOUNDATION</p><h2>Tamaños y strokes</h2></div>
-          <p>Touch target, iconografía y espesores de foco/borde del sistema.</p>
-        </div>
-        <div class="styles-card-grid" id="size-list"></div>
-      </section>
-
-      <section class="styles-section" id="breakpoints">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">RESPONSIVE</p><h2>Breakpoints y gutters</h2></div>
-          <p>Valores canónicos de layout. El breakpoint activo se recalcula al redimensionar.</p>
-        </div>
-        <div class="styles-card-grid" id="breakpoint-list"></div>
-      </section>
-
-      <section class="styles-section" id="primitives">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">UI</p><h2>Primitivas</h2></div>
-          <p>Muestras compactas de superficies y controles construidas exclusivamente con roles del sistema.</p>
-        </div>
-        <div class="styles-primitives-grid">
-          <article class="styles-demo-panel">
-            <span class="styles-demo-label">Search surface</span>
-            <div class="styles-demo-search"><span class="styles-search-icon"></span><span>Buscar en la carta</span></div>
-          </article>
-          <article class="styles-demo-panel">
-            <span class="styles-demo-label">Filter chips</span>
-            <div class="styles-demo-chips">
-              <button type="button">Poco Picante</button><button type="button">Picante</button><button type="button">Vegetariano</button>
+      <div class="styles-live-frame">
+        <div class="fixedTopShop wtopShopMenuMobile styles-category-source">
+          <div class="topShopMenuMobile">
+            <div class="topShopMenuMobileScroller">
+              <div class="topShopMenuMobileWrapp">
+                <span class="wrapp-nav-tabsTopShop" style="margin-left:0">
+                  <ul class="nav nav-tabs nav-tabsTopShop">
+                    <li class="nav-top-li"><a href="#anchorCOMPONENTES" class="anchorLink">COMPONENTES</a></li>
+                    <li class="nav-top-li"><a href="#anchorGRID" class="anchorLink">RETÍCULA</a></li>
+                    <li class="nav-top-li"><a href="#anchorCOLOR" class="anchorLink">COLOR</a></li>
+                    <li class="nav-top-li"><a href="#anchorTYPE" class="anchorLink">TIPOGRAFÍA</a></li>
+                    <li class="nav-top-li"><a href="#anchorMOTION" class="anchorLink">MOTION</a></li>
+                    <li class="nav-top-li"><a href="#anchorTOKENS" class="anchorLink">TOKENS</a></li>
+                  </ul>
+                </span>
+              </div>
             </div>
-          </article>
-          <article class="styles-demo-panel">
-            <span class="styles-demo-label">Category rail</span>
-            <div class="styles-demo-tabs"><button class="is-active" type="button">Combinados</button><button type="button">Sushi</button><button type="button">Entradas</button></div>
-          </article>
-          <article class="styles-demo-panel">
-            <span class="styles-demo-label">Dialog surface</span>
-            <div class="styles-demo-dialog"><strong>Producto</strong><span>Surface + dialog shape + elevation.</span><button type="button">Acción</button></div>
-          </article>
+            <div class="scrollArrowL"></div>
+            <div class="scrollArrowR"></div>
+          </div>
         </div>
-      </section>
 
-      <section class="styles-section" id="css-api">
-        <div class="styles-section__header">
-          <div><p class="styles-kicker">RUNTIME</p><h2>CSS custom properties</h2></div>
-          <p>Variables <code>--sc-*</code> presentes en el CSS runtime cargado por esta página y su valor computado actual.</p>
+        <div class="container containerShop destacadp noMargMobileTop withSearch styles-live-container">
+          <div class="styles-live-caption"><span>CATALOG SYSTEM</span><span id="live-component-state">runtime</span></div>
+
+          <div><br><br></div>
+          <div class="referencias_picor">
+            <div class="refBox"><span class="imgRef"><img src="../gfx/sabor_pic_0.png" alt="" data-original-title="Nada picante"></span><span class="ref_label">Nada Picante</span></div>
+            <div class="refBox"><span class="imgRef"><img src="../gfx/sabor_pic_1.png" alt="" data-original-title="Poco picante"></span><span class="ref_label">Poco Picante</span></div>
+            <div class="refBox"><span class="imgRef"><img src="../gfx/sabor_pic_2.png" alt="" data-original-title="Algo picante"></span><span class="ref_label">Algo Picante</span></div>
+            <div class="refBox"><span class="imgRef"><img src="../gfx/sabor_pic_3.png" alt="" data-original-title="Muy picante"></span><span class="ref_label">Muy Picante</span></div>
+            <div class="refBox"><span class="imgRef"><img src="../gfx/sabor_vegano.png" alt="" data-original-title="Vegetariano"></span><span class="ref_label">Vegetariano</span></div>
+          </div>
+
+          <div class="listadoShop" id="styles-product-grid">
+            <a name="anchorCOMPONENTES" id="anchorCOMPONENTES"></a>
+            <h2 class="dashed titleShopSeccion noMargMobile"><div>PRODUCT CARDS — COMPONENTE REAL</div></h2>
+
+            <div class="productoShop ConCarr noMargMobile noDescMobile productoShopSpace">
+              <a href="#styles-product-2644" class="fancyboxModalAddProd">
+                <div class="imgLiquidNoFillShop imgLiquid imgShop imgLiquid_bgSize imgLiquid_ready" style="background-image:url('../uploads_shop/productos/2644/imagenes/4_lista.png');background-size:contain;background-position:center;background-repeat:no-repeat"><img src="../uploads_shop/productos/2644/imagenes/4_lista.png" alt="" style="display:none"></div>
+                <h4 class="title-shop1"><span class="sabores"><img src="../gfx/sabor_pic_1.png" alt="" data-original-title="Poco picante"></span>Lomo Anticuchero Back LIMITED EDITION</h4>
+                <p class="descrip">Medallones de lomo con salsa anticucho, criolla de tomate y risotto verde.</p>
+                <div class="priceRow"><div class="ofertaPrice">$69.800</div><div class="price priceHijass">$41.880<input type="hidden" class="producto-id" value="2644"><span class="sumar">+</span></div></div>
+              </a>
+            </div>
+
+            <div class="productoShop ConCarr noMargMobile noDescMobile productoShopSpace">
+              <a href="#styles-product-2645" class="fancyboxModalAddProd">
+                <div class="imgLiquidNoFillShop imgLiquid imgShop imgLiquid_bgSize imgLiquid_ready" style="background-image:url('../uploads_shop/productos/2645/imagenes/4_lista.png');background-size:contain;background-position:center;background-repeat:no-repeat"><img src="../uploads_shop/productos/2645/imagenes/4_lista.png" alt="" style="display:none"></div>
+                <h4 class="title-shop1"><span class="sabores"><img src="../gfx/sabor_pic_1.png" alt="" data-original-title="Poco picante"></span>Chaufa Pollo Back LIMITED EDITION</h4>
+                <p class="descrip">Pollo aderezado con salsa thai a base de maní, salsa huancaína y arroz con vegetales y huevo.</p>
+                <div class="priceRow"><div class="ofertaPrice">$43.100</div><div class="price priceHijass">$25.860<input type="hidden" class="producto-id" value="2645"><span class="sumar">+</span></div></div>
+              </a>
+            </div>
+
+            <div class="productoShop ConCarr noMargMobile noDescMobile productoShopSpace">
+              <a href="#styles-product-2646" class="fancyboxModalAddProd">
+                <div class="imgLiquidNoFillShop imgLiquid imgShop imgLiquid_bgSize imgLiquid_ready" style="background-image:url('../uploads_shop/productos/2646/imagenes/5_lista.png');background-size:contain;background-position:center;background-repeat:no-repeat"><img src="../uploads_shop/productos/2646/imagenes/5_lista.png" alt="" style="display:none"></div>
+                <h4 class="title-shop1"><span class="sabores"><img src="../gfx/sabor_pic_2.png" alt="" data-original-title="Picante"></span>Lomo Saltado Huancaína Back LIMITED EDITION</h4>
+                <p class="descrip">Salteado de lomo con salsa de ostras, soja y vegetales sobre fettuccini a la huancaína.</p>
+                <div class="priceRow"><div class="ofertaPrice">$60.800</div><div class="price priceHijass">$36.480<input type="hidden" class="producto-id" value="2646"><span class="sumar">+</span></div></div>
+              </a>
+            </div>
+
+            <div class="productoShop ConCarr noMargMobile noDescMobile productoShopSpace">
+              <a href="#styles-product-2647" class="fancyboxModalAddProd">
+                <div class="imgLiquidNoFillShop imgLiquid imgShop imgLiquid_bgSize imgLiquid_ready" style="background-image:url('../uploads_shop/productos/2647/imagenes/3_lista.png');background-size:contain;background-position:center;background-repeat:no-repeat"><img src="../uploads_shop/productos/2647/imagenes/3_lista.png" alt="" style="display:none"></div>
+                <h4 class="title-shop1"><span class="sabores"><img src="../gfx/sabor_pic_1.png" alt="" data-original-title="Poco picante"><img src="../gfx/sabor_vegano.png" alt="" data-original-title="Vegetariano"></span>Sorrentinos Back LIMITED EDITION</h4>
+                <p class="descrip">Sorrentinos de calabaza con salsa putanesca y queso parmesano gratinado. Opcional sin picante.</p>
+                <div class="priceRow"><div class="ofertaPrice">$42.400</div><div class="price priceHijass">$25.440<input type="hidden" class="producto-id" value="2647"><span class="sumar">+</span></div></div>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="styles-table-wrap"><table class="styles-table"><thead><tr><th>Variable</th><th>Valor actual</th></tr></thead><tbody id="css-variable-table"></tbody></table></div>
-      </section>
+      </div>
 
-      <section class="styles-section" id="tokens">
-        <div class="styles-section__header styles-section__header--tokens">
-          <div><p class="styles-kicker">DTCG</p><h2>Todos los tokens</h2></div>
-          <label class="styles-token-search"><span>Filtrar</span><input id="token-filter" type="search" placeholder="color, motion, spacing…" autocomplete="off"></label>
-        </div>
-        <div class="styles-table-wrap"><table class="styles-table styles-table--tokens"><thead><tr><th>Path</th><th>Tipo</th><th>Valor resuelto</th><th>Alias / fuente</th></tr></thead><tbody id="token-table"></tbody></table></div>
-      </section>
+      <div class="styles-component-inventory" id="component-inventory"></div>
+    </section>
 
-      <footer class="styles-footer">
-        <span>SushiClub Design System</span>
-        <span id="styles-build-note">tokens/design.tokens.json</span>
-      </footer>
-    </main>
-  </div>
+    <section class="styles-doc-section" id="grid">
+      <a id="anchorGRID" class="styles-anchor"></a>
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">LAYOUT</span><h2>Retícula y responsive</h2></div><p>Retícula del sistema, gutters activos, ancho máximo y breakpoints canónicos. La visualización cambia con el viewport real.</p></div>
+      <div class="styles-grid-meta" id="grid-meta"></div>
+      <div class="styles-grid-demo" id="grid-demo" aria-label="Retícula responsive"></div>
+      <div class="styles-card-grid" id="breakpoint-list"></div>
+    </section>
 
+    <section class="styles-doc-section" id="color">
+      <a id="anchorCOLOR" class="styles-anchor"></a>
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">FOUNDATION</span><h2>Color</h2></div><p>Roles semánticos light y dark del DTCG, más los valores computados actuales del runtime.</p></div>
+      <div id="color-groups"></div>
+    </section>
+
+    <section class="styles-doc-section" id="type">
+      <a id="anchorTYPE" class="styles-anchor"></a>
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">TYPE</span><h2>Tipografía</h2></div><p>Roles tipográficos productivos, incluidas sus variantes responsive.</p></div>
+      <div class="styles-stack" id="typography-list"></div>
+    </section>
+
+    <section class="styles-doc-section" id="spacing">
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">FOUNDATION</span><h2>Spacing, shape y tamaños</h2></div><p>Escalas de separación, radios, touch targets, iconografía y strokes del mismo sistema que consume la carta.</p></div>
+      <h3 class="styles-subheading">Spacing</h3><div class="styles-token-visual-list" id="spacing-list"></div>
+      <h3 class="styles-subheading">Shape</h3><div class="styles-card-grid" id="shape-list"></div>
+      <h3 class="styles-subheading">Sizes & strokes</h3><div class="styles-card-grid" id="size-list"></div>
+    </section>
+
+    <section class="styles-doc-section" id="elevation">
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">SURFACES</span><h2>Elevación y estados</h2></div><p>Niveles de elevación y state layers reales usados por menús, popovers, diálogos y controles.</p></div>
+      <h3 class="styles-subheading">Elevation</h3><div class="styles-card-grid" id="elevation-list"></div>
+      <h3 class="styles-subheading">State opacity</h3><div class="styles-state-grid" id="state-list"></div>
+    </section>
+
+    <section class="styles-doc-section" id="motion">
+      <a id="anchorMOTION" class="styles-anchor"></a>
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">MOTION</span><h2>Motion system</h2></div><p>Duraciones, easing y springs. Los componentes reales de arriba ejecutan sus animaciones productivas; estas pistas sirven para inspeccionar los tokens de motion.</p></div>
+      <h3 class="styles-subheading">Durations</h3><div class="styles-motion-list" id="duration-list"></div>
+      <h3 class="styles-subheading">Easing</h3><div class="styles-motion-list" id="easing-list"></div>
+      <h3 class="styles-subheading">Springs</h3><div class="styles-motion-list" id="spring-list"></div>
+    </section>
+
+    <section class="styles-doc-section" id="css-api">
+      <div class="styles-section-heading"><div><span class="styles-doc-eyebrow">RUNTIME</span><h2>CSS API</h2></div><p>Todas las custom properties <code>--sc-*</code> cargadas por la misma hoja productiva, con su valor computado para el tema y breakpoint actuales.</p></div>
+      <div class="styles-table-wrap"><table class="styles-table"><thead><tr><th>Variable</th><th>Valor actual</th></tr></thead><tbody id="css-variable-table"></tbody></table></div>
+    </section>
+
+    <section class="styles-doc-section" id="tokens">
+      <a id="anchorTOKENS" class="styles-anchor"></a>
+      <div class="styles-section-heading styles-section-heading--tokens"><div><span class="styles-doc-eyebrow">DTCG</span><h2>Todos los tokens</h2></div><label class="styles-token-search"><span>Filtrar</span><input id="token-filter" type="search" placeholder="color, motion, spacing…" autocomplete="off"></label></div>
+      <div class="styles-table-wrap"><table class="styles-table styles-table--tokens"><thead><tr><th>Path</th><th>Tipo</th><th>Valor resuelto</th><th>Alias / fuente</th></tr></thead><tbody id="token-table"></tbody></table></div>
+    </section>
+
+    <footer class="styles-footer"><span>SushiClub Design System</span><span id="styles-build-note">tokens/design.tokens.json + override runtime</span></footer>
+  </main>
+
+  <script type="module" src="../override/main.js"></script>
   <script type="module" src="./styles.js"></script>
 </body>
 </html>
