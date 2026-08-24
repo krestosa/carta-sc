@@ -66,6 +66,13 @@ export class CatalogSearchController {
         this.clear(true);
         return;
       }
+
+      const searchSurface = target?.closest<HTMLElement>('.sc-catalog-search');
+      if (searchSurface && root.contains(searchSurface)) {
+        if (document.activeElement !== input) input.focus({ preventScroll: true });
+        return;
+      }
+
       if (this.#toggleFilter(event.target)) event.preventDefault();
     };
     const onRootKeyDown = (event: KeyboardEvent): void => {
