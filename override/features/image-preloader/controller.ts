@@ -28,15 +28,20 @@ function stageImage(stage: HTMLElement): HTMLImageElement | null {
   return stage.querySelector<HTMLImageElement>('img[src],img[srcset],img[data-sc-src]');
 }
 
+function positionedStage(stage: HTMLElement): StagePosition | null {
+  if (!stage.isConnected) return null;
+  const card = stage.closest<HTMLElement>('.productoShop');
+  if (!card || card.hidden) return null;
+  const rect = card.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  return { stage, top: rect.top, left: rect.left };
+}
+
 function orderedStages(stages: Iterable<HTMLElement>): HTMLElement[] {
   const positioned: StagePosition[] = [];
   for (const stage of stages) {
-    if (!stage.isConnected) continue;
-    const card = stage.closest<HTMLElement>('.productoShop');
-    if (!card || card.hidden) continue;
-    const rect = card.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) continue;
-    positioned.push({ stage, top: rect.top, left: rect.left });
+    const entry = positionedStage(stage);
+    if (entry) positioned.push(entry);
   }
 
   return positioned
@@ -278,6 +283,24 @@ export class ImagePreloaderController {
     this.#activateDeferredSource(image);
   }
 
+  #currentPrefetchRow(): HTMLElement[] {
+    const positioned: StagePosition[] = [];
+    for (const stage of this.#prefetchStages) {
+      if (this.#visibleStages.has(stage)) continue;
+      const entry = positionedStage(stage);
+      if (!entry || entry.top < window.innerHeight) continue;
+      positioned.push(entry);
+    }
+    if (!positioned.length) return [];
+
+    positioned.sort((left, right) => left.top - right.top || right.left - left.left);
+    const rowTop = positioned[0]?.top ?? Number.POSITIVE_INFINITY;
+    return positioned
+      .filter((entry) => Math.abs(entry.top - rowTop) <= ROW_TOLERANCE_PX)
+      .sort((left, right) => right.left - left.left)
+      .map((entry) => entry.stage);
+  }
+
   #measurePrefetchMargin(): number {
     const stage = [...this.#stages].find((candidate) => candidate.isConnected);
     const card = stage?.closest<HTMLElement>('.productoShop') ?? null;
@@ -328,21 +351,15 @@ export class ImagePreloaderController {
 
     const margin = this.#measurePrefetchMargin();
     this.#prefetchObserver = new IntersectionObserver((entries) => {
-      const entering: HTMLElement[] = [];
-
       for (const entry of entries) {
         if (!(entry.target instanceof HTMLElement)) continue;
         const stage = entry.target;
-        if (entry.isIntersecting) {
-          this.#prefetchStages.add(stage);
-          entering.push(stage);
-        } else {
-          this.#prefetchStages.delete(stage);
-        }
+        if (entry.isIntersecting) this.#prefetchStages.add(stage);
+        else this.#prefetchStages.delete(stage);
       }
 
       if (!this.#scrolling) {
-        orderedStages(entering).forEach((stage) => this.#prefetchStage(stage));
+        this.#currentPrefetchRow().forEach((stage) => this.#prefetchStage(stage));
       }
     }, {
       root: null,
@@ -408,7 +425,7 @@ export class ImagePreloaderController {
     if (!this.#started) return;
     this.#scrolling = false;
     orderedStages(this.#visibleStages).forEach((stage) => this.#activateVisibleStage(stage));
-    orderedStages(this.#prefetchStages).forEach((stage) => this.#prefetchStage(stage));
+    this.#currentPrefetchRow().forEach((stage) => this.#prefetchStage(stage));
     this.#scheduleWaveSync();
   };
 
