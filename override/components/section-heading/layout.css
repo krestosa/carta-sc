@@ -1,16 +1,11 @@
-/* Geometría base de títulos y subtítulos de sección. */
+/* Geometría local de títulos y subtítulos de sección. La tipografía proviene del sistema DTCG global. */
 body.sushiShop {
   --sc-section-rule-scale: 1;
   --sc-section-title-margin: 6px 0 -3px;
-  --sc-section-title-line-height: 1.08;
   --sc-section-title-padding: 18px 0 12px;
   --sc-section-subtitle-margin: 8px 0 -3px;
-  --sc-section-subtitle-size: 18.5px;
-  --sc-section-subtitle-line-height: 1.15;
-  --sc-section-subtitle-tracking: -.025em;
 }
 
-/* Título principal de cada grupo. */
 body.sushiShop .listadoShop .titleShopSeccion {
   position: static !important;
   top: auto !important;
@@ -20,16 +15,15 @@ body.sushiShop .listadoShop .titleShopSeccion {
   padding: 0 !important;
   background: transparent !important;
   color: var(--sc-color-ink) !important;
-  font-family: var(--sc-font-primary) !important;
-  font-size: 28px !important;
-  line-height: var(--sc-section-title-line-height) !important;
-  font-weight: var(--sc-font-weight-semibold) !important;
-  letter-spacing: -.04em !important;
+  font-family: var(--sc-typography-heading-1-font-family) !important;
+  font-size: var(--sc-typography-heading-1-font-size) !important;
+  line-height: var(--sc-typography-heading-1-line-height) !important;
+  font-weight: var(--sc-typography-heading-1-font-weight) !important;
+  letter-spacing: var(--sc-typography-heading-1-letter-spacing) !important;
   text-transform: none !important;
-  z-index: var(--sc-z-raised);
+  z-index: var(--sc-layer-raised);
 }
 
-/* El wrapper dibuja el divisor inferior. */
 body.sushiShop .listadoShop .titleShopSeccion > div {
   box-sizing: border-box;
   width: 100% !important;
@@ -39,7 +33,10 @@ body.sushiShop .listadoShop .titleShopSeccion > div {
   background: transparent !important;
 }
 
-/* La primera sección elimina espacio superior extra. */
+body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) > div {
+  --sc-section-rule-scale: 1;
+}
+
 body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion {
   margin-top: 0 !important;
 }
@@ -49,17 +46,16 @@ body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
   border-top: 0 !important;
 }
 
-/* Subtítulo dentro del grupo. */
 body.sushiShop .listadoShop .subTitleShopSeccion {
   box-sizing: border-box;
   width: 100% !important;
   margin: var(--sc-section-subtitle-margin) !important;
   padding: 0 !important;
   color: var(--sc-color-heading) !important;
-  font-family: var(--sc-font-primary) !important;
-  font-size: var(--sc-section-subtitle-size) !important;
-  line-height: var(--sc-section-subtitle-line-height) !important;
-  font-weight: var(--sc-font-weight-semibold) !important;
-  letter-spacing: var(--sc-section-subtitle-tracking) !important;
+  font-family: var(--sc-typography-heading-3-font-family) !important;
+  font-size: var(--sc-typography-heading-3-font-size) !important;
+  line-height: var(--sc-typography-heading-3-line-height) !important;
+  font-weight: var(--sc-typography-heading-3-font-weight) !important;
+  letter-spacing: var(--sc-typography-heading-3-letter-spacing) !important;
   text-transform: none !important;
 }
