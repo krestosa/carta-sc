@@ -1,12 +1,13 @@
 import { queries } from '../../core/variables.js';
+import { motionConfig } from '../../motion/config.js';
 
 const PULSE_CYCLE_MS = 1500;
-const WAVE_ROW_DELAY_MS = 200;
-const WAVE_COLUMN_DELAY_MS = 100;
+const WAVE_ROW_DELAY_MS = motionConfig.durationMs.short4;
+const WAVE_COLUMN_DELAY_MS = motionConfig.durationMs.short2;
 const ROW_TOLERANCE_PX = 4;
-const REVEAL_DURATION_MS = 300;
-const RESET_OUTGOING_MS = 150;
-const RESET_INCOMING_MS = 250;
+const REVEAL_DURATION_MS = motionConfig.durationMs.medium2;
+const RESET_OUTGOING_MS = motionConfig.durationMs.short3;
+const RESET_INCOMING_MS = motionConfig.durationMs.medium1;
 const RESET_DURATION_MS = RESET_OUTGOING_MS + RESET_INCOMING_MS;
 
 const COVER_ALPHA_PROPERTY = '--sc-image-preloader-cover-alpha';
@@ -36,8 +37,13 @@ interface WaveEntry {
   readonly left: number;
 }
 
-const STANDARD: CubicBezier = Object.freeze({ x1: 0.2, y1: 0, x2: 0, y2: 1 });
-const ACCELERATE: CubicBezier = Object.freeze({ x1: 0.3, y1: 0, x2: 1, y2: 1 });
+function bezier(values: readonly number[]): CubicBezier {
+  const [x1 = 0, y1 = 0, x2 = 1, y2 = 1] = values;
+  return Object.freeze({ x1, y1, x2, y2 });
+}
+
+const STANDARD = bezier(motionConfig.curves.standard);
+const ACCELERATE = bezier(motionConfig.curves.accelerate);
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, value));
