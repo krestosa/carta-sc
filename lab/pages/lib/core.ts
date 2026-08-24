@@ -5,7 +5,8 @@ import { spawnSync } from 'node:child_process';
 export type JavaScriptSyntaxMode = 'classic' | 'module';
 
 export const ROOT = process.cwd();
-export const SITE = path.join(ROOT, '.pages-site');
+const configuredSite = (process.env.SC_SITE_DIR ?? '').trim();
+export const SITE = configuredSite ? path.resolve(ROOT, configuredSite) : path.join(ROOT, '.pages-site');
 export const LAB = path.join(ROOT, 'lab', 'pages');
 export const PAGE_ASSETS = path.join(LAB, 'assets');
 
