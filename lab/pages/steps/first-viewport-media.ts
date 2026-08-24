@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { SITE, githubSha, read, write } from '../lib/core.js';
+import { SITE, buildId, read, write } from '../lib/core.js';
 import type { DesktopMediaStats } from './first-viewport-media/config.js';
 import { optimizeDesktopStability } from './first-viewport-media/desktop.js';
 import { summarizeChrome, verifyDesktopAssets } from './first-viewport-media/desktop-verify.js';
@@ -10,7 +10,7 @@ interface MediaOptimizationResult {
 }
 
 class FirstViewportMediaOptimizer {
-  readonly #sha = githubSha();
+  readonly #sha = buildId();
   readonly #indexFile = path.join(SITE, 'index.html');
 
   async run(): Promise<void> {
