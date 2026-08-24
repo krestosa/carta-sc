@@ -30,7 +30,7 @@ body.sushiShop .listadoShop .titleShopSeccion > div {
   padding-bottom: 0 !important;
 }
 
-/* Divisor de 1px, a 12px del título padre. */
+/* Divisor de 1px, a un spacing medium del título padre. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div::after,
 body.sushiShop .listadoShop .titleShopSeccion > div::after {
   content: '' !important;
@@ -39,7 +39,7 @@ body.sushiShop .listadoShop .titleShopSeccion > div::after {
   inset: auto !important;
   width: 100% !important;
   height: var(--sc-border-hairline) !important;
-  margin: 12px 0 0 !important;
+  margin: var(--sc-space-medium) 0 0 !important;
   padding: 0 !important;
   border: 0 !important;
   background: var(--sc-color-border) !important;
