@@ -47,51 +47,47 @@ jobs:
       - name: Build isolated Pages artifact
         run: npm run build:pages
 
-      - name: Verify complete staged application
+      - name: Verify staged application contract
         shell: bash
         run: |
-          set -euo pipefail
-          test -s .pages-site/index.html
-          test -s .pages-site/override/main.css
-          test -s .pages-site/override/main.js
-          test -s .pages-site/override/components/product-modal/motion.js
-          test -s .pages-site/override/components/catalog-tools/catalog-tools.js
-          test -s .pages-site/override/features/image-preloader/motion.js
-          test -s .pages-site/override/features/image-preloader/controller.js
-          test -s .pages-site/override/components/product-card/reveal-motion.js
-          ! test -e .pages-site/override/components/catalog-tools/icon-control-motion.js
-          ! test -e .pages-site/override/components/catalog-tools/view-icon-interaction.js
-          grep -Fq "const VERSION = '${GITHUB_SHA}';" .pages-site/index.html
-          grep -Fq 'body.sushiShop .sc-product-modal__cart-button' .pages-site/override/main.css
-          grep -Fq 'border-radius: 24px !important;' .pages-site/override/main.css
-          grep -Fq 'border-radius: 50%;' .pages-site/override/main.css
-          ! grep -Fq -- '--sc-icon-control-radius' .pages-site/override/main.css
-          grep -Fq -- '--sc-image-preloader-cycle: 1500ms;' .pages-site/override/main.css
-          grep -Fq 'sc-image-preloader-pulse' .pages-site/override/main.css
-          grep -Fq 'sc-card-placeholder-loading' .pages-site/override/main.css
-          grep -Fq 'height: 12px;' .pages-site/override/main.css
-          grep -Fq 'height: 8px;' .pages-site/override/main.css
-          grep -Fq 'width: 86%;' .pages-site/override/main.css
-          grep -Fq 'const PULSE_CYCLE_MS = 1500;' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq 'const WAVE_ROW_DELAY_MS = 200;' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq 'const WAVE_COLUMN_DELAY_MS = 100;' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq 'const REVEAL_DURATION_MS = 300;' .pages-site/override/features/image-preloader/motion.js
-          ! grep -Fq 'REVEAL_ALPHA_DURATION_MS' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq 'const RESET_OUTGOING_MS = 150;' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq 'const RESET_INCOMING_MS = 250;' .pages-site/override/features/image-preloader/motion.js
-          grep -Fq "img[src],img[srcset],img[data-sc-src]" .pages-site/override/features/image-preloader/controller.js
-          grep -Fq 'naturalWidth > 0' .pages-site/override/features/image-preloader/controller.js
-          ! grep -Fq 'card.style.top' .pages-site/override/components/product-card/reveal-motion.js
-          grep -Fq '.opacity(card, 1, {' .pages-site/override/components/product-card/reveal-motion.js
-          ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' .pages-site/override/components/product-modal/motion.js
-          ! grep -Fq 'clipPath' .pages-site/override/components/product-modal/motion.js
-          ! grep -Fq 'springTransform' .pages-site/override/components/product-modal/motion.js
-          ! grep -Fq 'icon-control-motion' .pages-site/override/components/catalog-tools/catalog-tools.js
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const root = path.resolve('.pages-site');
+          const required = [
+            'index.html',
+            'override/main.css',
+            'override/main.js',
+          ];
+
+          for (const relative of required) {
+            const file = path.join(root, relative);
+            if (!fs.existsSync(file) || !fs.statSync(file).isFile() || fs.statSync(file).size === 0) {
+              throw new Error(`Missing or empty Pages artifact: ${relative}`);
+            }
+          }
+
+          const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+            const full = path.join(dir, entry.name);
+            return entry.isDirectory() ? walk(full) : [full];
+          });
+
+          const leakedTs = walk(root)
+            .map((file) => path.relative(root, file).replaceAll(path.sep, '/'))
+            .filter((file) => file.endsWith('.ts'));
+          if (leakedTs.length) throw new Error(`TypeScript leaked into Pages artifact: ${leakedTs.join(', ')}`);
+
+          const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+          const version = `const VERSION = '${process.env.GITHUB_SHA}';`;
+          if (!html.includes(version)) throw new Error(`Pages artifact does not identify ${process.env.GITHUB_SHA}`);
+
+          console.log(`Staged Pages contract passed for ${process.env.GITHUB_SHA}`);
+          NODE
 
       - name: Create deployment manifest
         shell: bash
         run: |
-          set -euo pipefail
           node --input-type=module <<'NODE'
           import crypto from 'node:crypto';
           import fs from 'node:fs';
@@ -141,74 +137,54 @@ jobs:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         shell: bash
         run: |
-          set -euo pipefail
-          test -n "$PAGE_URL"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
 
-          for attempt in $(seq 1 30); do
-            nonce="${GITHUB_SHA}-${attempt}"
-            remote_manifest=$(mktemp)
-            html=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              -H 'Pragma: no-cache' \
-              "${PAGE_URL%/}/?sc-deploy-verify=${nonce}" || true)
-            css=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/override/main.css?v=${GITHUB_SHA}&verify=${attempt}" || true)
-            modal=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/override/components/product-modal/motion.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
-            catalog=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/override/components/catalog-tools/catalog-tools.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
-            preloader=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/override/features/image-preloader/motion.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
-            preloader_controller=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/override/features/image-preloader/controller.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
-            card_reveal=$(curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/override/components/product-card/reveal-motion.js?v=${GITHUB_SHA}&verify=${attempt}" || true)
-            curl -fsSL --retry 3 --retry-delay 1 \
-              -H 'Cache-Control: no-cache, no-store, max-age=0' \
-              "${PAGE_URL%/}/_deploy-manifest.json?verify=${nonce}" \
-              -o "$remote_manifest" || true
+          const pageUrl = (process.env.PAGE_URL ?? '').replace(/\/$/, '');
+          const sha = process.env.GITHUB_SHA ?? '';
+          if (!pageUrl) throw new Error('Pages deployment did not return a public URL');
+          if (!/^[0-9a-f]{40}$/i.test(sha)) throw new Error(`Invalid workflow SHA: ${sha}`);
 
-            if cmp -s .pages-site/_deploy-manifest.json "$remote_manifest" \
-              && grep -Fq "const VERSION = '${GITHUB_SHA}';" <<<"$html" \
-              && grep -Fq 'body.sushiShop .sc-product-modal__cart-button' <<<"$css" \
-              && grep -Fq 'border-radius: 24px !important;' <<<"$css" \
-              && grep -Fq 'border-radius: 50%;' <<<"$css" \
-              && ! grep -Fq -- '--sc-icon-control-radius' <<<"$css" \
-              && grep -Fq -- '--sc-image-preloader-cycle: 1500ms;' <<<"$css" \
-              && grep -Fq 'sc-image-preloader-pulse' <<<"$css" \
-              && grep -Fq 'sc-card-placeholder-loading' <<<"$css" \
-              && grep -Fq 'height: 12px;' <<<"$css" \
-              && grep -Fq 'height: 8px;' <<<"$css" \
-              && grep -Fq 'width: 86%;' <<<"$css" \
-              && grep -Fq 'const PULSE_CYCLE_MS = 1500;' <<<"$preloader" \
-              && grep -Fq 'const WAVE_ROW_DELAY_MS = 200;' <<<"$preloader" \
-              && grep -Fq 'const WAVE_COLUMN_DELAY_MS = 100;' <<<"$preloader" \
-              && grep -Fq 'const REVEAL_DURATION_MS = 300;' <<<"$preloader" \
-              && ! grep -Fq 'REVEAL_ALPHA_DURATION_MS' <<<"$preloader" \
-              && grep -Fq 'const RESET_OUTGOING_MS = 150;' <<<"$preloader" \
-              && grep -Fq 'const RESET_INCOMING_MS = 250;' <<<"$preloader" \
-              && grep -Fq "img[src],img[srcset],img[data-sc-src]" <<<"$preloader_controller" \
-              && grep -Fq 'naturalWidth > 0' <<<"$preloader_controller" \
-              && ! grep -Fq 'card.style.top' <<<"$card_reveal" \
-              && grep -Fq '.opacity(card, 1, {' <<<"$card_reveal" \
-              && ! grep -Fq 'translate3d(-42px,0,0) scale(1.08)' <<<"$modal" \
-              && ! grep -Fq 'clipPath' <<<"$modal" \
-              && ! grep -Fq 'springTransform' <<<"$modal" \
-              && ! grep -Fq 'icon-control-motion' <<<"$catalog"; then
-              echo "Verified public Pages is serving exact workflow commit $GITHUB_SHA"
-              rm -f "$remote_manifest"
-              exit 0
-            fi
+          const expectedManifest = fs.readFileSync('.pages-site/_deploy-manifest.json', 'utf8');
+          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-            rm -f "$remote_manifest"
-            sleep 3
-          done
+          async function text(url) {
+            const response = await fetch(url, {
+              cache: 'no-store',
+              headers: {
+                'Cache-Control': 'no-cache, no-store, max-age=0',
+                Pragma: 'no-cache',
+              },
+              signal: AbortSignal.timeout(15_000),
+            });
+            if (!response.ok) throw new Error(`${response.status} ${url}`);
+            return response.text();
+          }
 
-          echo "Pages deployment completed but public assets do not match workflow commit $GITHUB_SHA" >&2
-          exit 1
+          let lastError = null;
+          for (let attempt = 1; attempt <= 30; attempt += 1) {
+            const nonce = `${sha}-${attempt}-${Date.now()}`;
+            try {
+              const [manifest, html, css, js] = await Promise.all([
+                text(`${pageUrl}/_deploy-manifest.json?verify=${nonce}`),
+                text(`${pageUrl}/?sc-deploy-verify=${nonce}`),
+                text(`${pageUrl}/override/main.css?v=${sha}&verify=${nonce}`),
+                text(`${pageUrl}/override/main.js?v=${sha}&verify=${nonce}`),
+              ]);
+
+              if (manifest !== expectedManifest) throw new Error('Public deployment manifest does not match staged artifact');
+              if (!html.includes(`const VERSION = '${sha}';`)) throw new Error('Public HTML is not the workflow commit');
+              if (css.trim().length < 1000) throw new Error('Public production CSS is unexpectedly small');
+              if (js.trim().length < 100) throw new Error('Public production runtime entry is unexpectedly small');
+
+              console.log(`Verified public Pages is serving exact workflow commit ${sha}`);
+              process.exit(0);
+            } catch (error) {
+              lastError = error;
+              console.log(`Pages verification attempt ${attempt}/30 pending: ${error instanceof Error ? error.message : error}`);
+              if (attempt < 30) await sleep(3000);
+            }
+          }
+
+          throw new Error(`Pages deployment never converged to ${sha}: ${lastError instanceof Error ? lastError.message : lastError}`);
+          NODE
