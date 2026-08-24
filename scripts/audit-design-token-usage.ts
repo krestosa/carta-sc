@@ -31,7 +31,7 @@ const LEGACY_REFERENCES: ReadonlyArray<readonly [string, RegExp]> = [
   ['legacy-layout-alias', /--sc-(?:catalog-gutter|product-image-ratio)\b/g],
   ['legacy-variables-css', /(?:core\/variables\.css|variables\.css\?v=)/g],
 ];
-const GLOBAL_COLOR_LITERALS = /#(?:0a0a0a|303030|5f5f5f|767676|989898|f5f5f5|fbfbfa|e3e3de|d1d1cb|ffffff|f3f3f0|c8c8c2|9c9c95|6f6f6f|121210|2d2d29|44443e)\b/gi;
+const GLOBAL_COLOR_LITERALS = /(?:#(?:000000|0a0a0a|303030|5f5f5f|767676|989898|f5f5f5|fbfbfa|e3e3de|d1d1cb|ffffff|f3f3f0|c8c8c2|9c9c95|6f6f6f|121210|2d2d29|44443e)\b|rgb\(\s*(?:0\s+0\s+0|10\s+10\s+10|48\s+48\s+48|95\s+95\s+95|118\s+118\s+118|152\s+152\s+152|245\s+245\s+245|251\s+251\s+250|227\s+227\s+222|209\s+209\s+203|255\s+255\s+255|243\s+243\s+240|200\s+200\s+194|156\s+156\s+149|111\s+111\s+111|18\s+18\s+16|45\s+45\s+41|68\s+68\s+62)\s*\))/gi;
 const GLOBAL_EASING_LITERALS = /(?:cubic-bezier\(\s*0\.2\s*,\s*0\s*,\s*0\s*,\s*1\s*\)|cubic-bezier\(\s*0\.3\s*,\s*0\s*,\s*1\s*,\s*1\s*\)|\[\s*0\.2\s*,\s*0\s*,\s*0\s*,\s*1\s*\]|\[\s*0\.3\s*,\s*0\s*,\s*1\s*,\s*1\s*\])/gi;
 const GLOBAL_SHADOW_LITERALS = /0\s+12px\s+28px\s+(?:0\s+)?rgb\(0\s+0\s+0\s*\/\s*\.?0?(?:8|9)\)|0\s+18px\s+55px\s+(?:0\s+)?rgb\(0\s+0\s+0\s*\/\s*\.?0?22\)/gi;
 
