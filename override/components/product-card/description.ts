@@ -152,7 +152,7 @@ class DescriptionMeasureScheduler {
   #applyState(card: HTMLElement, clamped: boolean): void {
     const description = card.querySelector<HTMLElement>(selectors.productDescription);
     if (!description) return;
-    description.classList.toggle('sc-description-clamped', clamped);
+    description.classList.toggle('sc-description-truncated', clamped);
     card.classList.toggle('sc-description-is-clamped', clamped);
   }
 
