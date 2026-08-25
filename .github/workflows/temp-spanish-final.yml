@@ -1,0 +1,172 @@
+name: Finalizar comentarios en español
+
+on:
+  push:
+    branches:
+      - temp-spanish-comments
+    paths:
+      - .github/workflows/temp-spanish-final.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Traducir y revisar comentarios
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import ts from 'typescript';
+
+          const roots = ['override', 'lab', 'scripts', 'types'];
+          const extensions = new Set(['.ts', '.css', '.html']);
+          function walk(directory) {
+            if (!fs.existsSync(directory)) return [];
+            return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+              const target = path.join(directory, entry.name);
+              return entry.isDirectory() ? walk(target) : [target];
+            });
+          }
+          const files = roots.flatMap(walk).map((file) => file.replaceAll(path.sep, '/')).filter((file) => extensions.has(path.extname(file)));
+
+          const categoryHeaders = new Map([
+            ['override/components/category-nav/active-state.ts', '// Determina y sincroniza cuál categoría está activa según la navegación y la posición de la página.'],
+            ['override/components/category-nav/category-nav.ts', '// Orquesta la navegación por categorías y conecta estado activo, desplazamiento, riel e indicador.'],
+            ['override/components/category-nav/config.ts', '// Centraliza la configuración local de la navegación por categorías sin duplicar decisiones globales del sistema.'],
+            ['override/components/category-nav/core.ts', '// Agrupa selectores, utilidades y cálculos compartidos por la navegación de categorías.'],
+            ['override/components/category-nav/indicator.ts', '// Mueve el indicador de categoría activa sin modificar la geometría de los elementos del riel.'],
+            ['override/components/category-nav/layout.ts', '// Sincroniza la semántica y la distribución de la barra de categorías con la estructura disponible.'],
+            ['override/components/category-nav/programmatic-scroll.ts', '// Gestiona el desplazamiento programático hacia una categoría y coordina temporalmente la observación automática.'],
+            ['override/components/category-nav/rail-controls.ts', '// Controla las flechas laterales del riel según el desborde disponible y la posición actual.'],
+            ['override/components/category-nav/rail-motion.ts', '// Define el movimiento del riel con aceleración y desaceleración suaves, respetando movimiento reducido.'],
+            ['override/components/category-nav/rail-position.ts', '// Calcula la posición de centrado del riel y limita el desplazamiento para evitar sobrepasar sus extremos.'],
+            ['override/components/category-nav/rail.ts', '// Coordina posición, controles y movimiento del riel horizontal de categorías.'],
+            ['override/components/category-nav/scroll-geometry.ts', '// Calcula la geometría necesaria para alinear categorías y secciones durante el desplazamiento.'],
+            ['override/components/category-nav/scroll-spy.ts', '// Observa las secciones visibles y actualiza la categoría activa sin competir con desplazamientos iniciados por el usuario.'],
+            ['override/components/category-nav/sticky-state.ts', '// Sincroniza el estado fijo de la navegación de categorías con la posición del documento.'],
+            ['override/components/category-nav/submenu.ts', '// Gestiona los submenús de categorías y mantiene sus estados accesibles sincronizados.'],
+          ]);
+
+          const exact = new Map([
+            ['A short trailing debounce collapses key-repeat and rapid deletion into one catalogue pass.', 'Un breve retardo posterior agrupa la repetición de teclas y el borrado rápido en una sola pasada por el catálogo.'],
+            ['Estado visual mínimo para el desplazamiento reactivo del carrito. El motor local escribe el transform durante el scroll y esta capa solo prepara origen y reduced motion.', 'Estado visual mínimo para el desplazamiento reactivo del carrito. El motor local escribe la transformación durante el desplazamiento y esta capa solo prepara el origen y el movimiento reducido.'],
+            ['La primera grilla normal comparte el mismo arranque vertical que la búsqueda usando un offset propio del feature: 64px desktop, 48px tablet y 32px mobile.', 'La primera retícula normal comparte el mismo arranque vertical que la búsqueda mediante un desplazamiento propio de la función: 64px en ancho amplio, 48px en ancho intermedio y 32px en ancho estrecho.'],
+            ['Reglas globales de estabilidad durante motion y cambios de vista. El scroll suave se controla desde JS para que navegación y relayout no compitan con el navegador.', 'Reglas globales de estabilidad durante el movimiento y los cambios de vista. El desplazamiento suave se controla desde JavaScript para que la navegación y la recomposición no compitan con el navegador.'],
+            ['Al cambiar densidad se reescribe geometría dentro y arriba del viewport. Se desactiva el scroll anchoring solo durante ese relayout para evitar una compensación doble.', 'Al cambiar la densidad se reescribe la geometría dentro y por encima del área visible. Se desactiva el anclaje de desplazamiento solo durante esa recomposición para evitar una compensación doble.'],
+          ]);
+          const pairs = [
+            ['reduced motion','movimiento reducido'],['scroll anchoring','anclaje de desplazamiento'],['state layer','capa de estado'],['scroll-spy','observador de desplazamiento'],
+            ['breakpoints','puntos de quiebre'],['breakpoint','punto de quiebre'],['placeholders','marcadores de posición'],['placeholder','marcador de posición'],
+            ['templates','plantillas'],['template','plantilla'],['runtime','entorno de ejecución'],['overflow','desborde'],['markup','marcado'],['disabled','deshabilitado'],
+            ['cards','tarjetas'],['card','tarjeta'],['footer','pie'],['header','encabezado'],['snapshot','captura'],['legacy','heredado'],['mobile','móvil'],
+            ['desktop','ancho amplio'],['tablet','ancho intermedio'],['relayout','recomposición'],['layout','distribución'],['viewport','área visible'],['scroll','desplazamiento'],
+            ['sticky','fijo'],['pressed','presionado'],['hover','paso del puntero'],['loading','carga'],['feature','función'],['offset','desplazamiento'],['target','objetivo'],
+            ['build','compilación'],['shell','estructura inicial'],['toolbar','barra de herramientas'],['staging','preparación'],['pipeline','canalización'],['caching','uso de caché'],
+            ['cache','caché'],['fallback','alternativa'],['browser','navegador'],['source','fuente'],['host','anfitrión'],['controller','controlador'],['component','componente'],
+            ['generated','generado'],['motion','movimiento'],['indicator','indicador'],['frame','fotograma'],['media','recurso visual'],['width','ancho'],['height','alto'],
+            ['hint','indicación'],['render','renderizado'],['geometry','geometría'],['registry','registro'],['shared','compartido'],
+          ];
+
+          function translate(comment) {
+            const protectedParts = [];
+            let text = comment.replace(/(?:[\w./-]+\.(?:js|ts|css|html)|`[^`]+`|--sc-[\w-]+|data-sc-[\w-]+|aria-[\w-]+|\.active\b|LCP\b|SlickNav\b|Bootstrap\b|Pages\b|Handoff\b|JavaScript\b|TypeScript\b|CSS\b|HTML\b|DOM\b|ARIA\b|DTCG\b)/g, (value) => {
+              const token = `§§${protectedParts.length}§§`;
+              protectedParts.push(value);
+              return token;
+            });
+            for (const [from, to] of exact) text = text.replaceAll(from, to);
+            for (const [from, to] of pairs) text = text.replace(new RegExp(`\\b${from.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\b`, 'gi'), to);
+            return text.replace(/§§(\d+)§§/g, (_, index) => protectedParts[Number(index)] ?? '');
+          }
+
+          function transformTs(source) {
+            const ranges = new Map();
+            const parsed = ts.createSourceFile('fuente.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+            const collect = (position) => {
+              ts.forEachLeadingCommentRange(source, position, (pos, end) => ranges.set(`${pos}:${end}`, { pos, end }));
+              ts.forEachTrailingCommentRange(source, position, (pos, end) => ranges.set(`${pos}:${end}`, { pos, end }));
+            };
+            collect(0);
+            const visit = (node) => { collect(node.pos); collect(node.end); ts.forEachChild(node, visit); };
+            visit(parsed);
+            let output = source;
+            for (const { pos, end } of [...ranges.values()].sort((a, b) => b.pos - a.pos)) output = output.slice(0, pos) + translate(output.slice(pos, end)) + output.slice(end);
+            return output;
+          }
+
+          function normalizeHeader(file, source) {
+            if (categoryHeaders.has(file)) {
+              const lines = source.split('\n');
+              lines[0] = categoryHeaders.get(file);
+              return lines.join('\n');
+            }
+            if (file.endsWith('.ts')) return source.replace(/^\/\/ Documenta la .*\n/, '// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.\n');
+            if (file.endsWith('.css')) return source.replace(/^\/\* Documenta la .*? \*\/\n/, '/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */\n');
+            return source.replace(/^<!-- Documenta la .*? -->\n/, '<!-- Explica la responsabilidad de esta plantilla dentro de su componente propietario. -->\n');
+          }
+
+          for (const file of files) {
+            let source = normalizeHeader(file, fs.readFileSync(file, 'utf8'));
+            if (file.endsWith('.ts')) source = transformTs(source);
+            else if (file.endsWith('.css')) source = source.replace(/\/\*[\s\S]*?\*\//g, translate);
+            else source = source.replace(/<!--[\s\S]*?-->/g, translate);
+            fs.writeFileSync(file, source);
+          }
+
+          function tsComments(source) {
+            const found = new Map();
+            const parsed = ts.createSourceFile('fuente.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+            const collect = (position) => {
+              ts.forEachLeadingCommentRange(source, position, (pos, end) => found.set(`${pos}:${end}`, source.slice(pos, end)));
+              ts.forEachTrailingCommentRange(source, position, (pos, end) => found.set(`${pos}:${end}`, source.slice(pos, end)));
+            };
+            collect(0);
+            const visit = (node) => { collect(node.pos); collect(node.end); ts.forEachChild(node, visit); };
+            visit(parsed);
+            return [...found.values()];
+          }
+          function comments(file, source) {
+            if (file.endsWith('.ts')) return tsComments(source);
+            if (file.endsWith('.css')) return source.match(/\/\*[\s\S]*?\*\//g) ?? [];
+            return source.match(/<!--[\s\S]*?-->/g) ?? [];
+          }
+          const english = /\b(?:the|and|with|without|from|when|where|while|must|should|keep|reusable|runtime|overflow|markup|disabled|generated|browser|page|layout|feature|controller|fallback|source|staging|host|scroll|sticky|hover|pressed|selected|loading|template|templates|indicator|current|native|caching|pipeline|optional|available|expected|missing|specific|geometry|decisions|shared|registry|sealed|component|behavior|belongs|remains|cards|card|placeholder|placeholders|frame|media|width|height|hint|legacy|header|snapshot|mobile|breakpoint|breakpoints|build|shell|toolbar|desktop|tablet|offset|target|layer|reduced|relayout|viewport|anchoring)\b/i;
+          const stripTechnical = /(?:[\w./-]+\.(?:js|ts|css|html)|`[^`]+`|--sc-[\w-]+|data-sc-[\w-]+|aria-[\w-]+|\.active\b|LCP\b|SlickNav\b|Bootstrap\b|Pages\b|Handoff\b|JavaScript\b|TypeScript\b|CSS\b|HTML\b|DOM\b|ARIA\b|DTCG\b)/g;
+          const failures = [];
+          for (const file of files) {
+            const found = comments(file, fs.readFileSync(file, 'utf8'));
+            if (!found.length) failures.push(`${file}: sin comentario`);
+            for (const comment of found) {
+              const match = comment.replace(stripTechnical, '').match(english);
+              if (match) failures.push(`${file}: “${match[0]}” en ${comment.replace(/\s+/g, ' ').slice(0, 200)}`);
+            }
+          }
+          if (failures.length) {
+            console.error(failures.join('\n'));
+            process.exit(1);
+          }
+          console.log(`Revisión puntual terminada sobre ${files.length} archivos propios.`);
+          NODE
+      - name: Verificar proyecto
+        run: npm run verify
+      - name: Guardar resultado limpio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temp-spanish-comments.yml .github/workflows/temp-spanish-fix.yml .github/workflows/temp-spanish-final.yml
+          git add override lab scripts types tokens
+          git commit -m "Completar comentarios en español"
+          git push origin HEAD:temp-spanish-comments
