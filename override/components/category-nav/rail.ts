@@ -19,12 +19,14 @@ export interface CategoryRailCallbacks {
 }
 
 const STICKY_TOLERANCE = 0.5;
+const MOBILE_OVERFLOW_SYNC_MS = 96;
 
 export class CategoryRailController {
   readonly #callbacks: CategoryRailCallbacks;
   #railFrame = 0;
   #measureFrame = 0;
   #measureFrame2 = 0;
+  #overflowTimer = 0;
   #overflowDirty = true;
   #stickyDirty = true;
   #mobileInitialized = false;
@@ -45,7 +47,15 @@ export class CategoryRailController {
 
   scheduleOverflow = (): void => {
     this.#overflowDirty = true;
-    this.#scheduleFrame();
+    if (desktopCategories.matches) {
+      this.#scheduleFrame();
+      return;
+    }
+    if (this.#overflowTimer) return;
+    this.#overflowTimer = window.setTimeout(() => {
+      this.#overflowTimer = 0;
+      this.#scheduleFrame();
+    }, MOBILE_OVERFLOW_SYNC_MS);
   };
 
   scheduleSticky = (): void => this.#scheduleFrame();
@@ -68,9 +78,11 @@ export class CategoryRailController {
     if (this.#railFrame) cancelAnimationFrame(this.#railFrame);
     if (this.#measureFrame) cancelAnimationFrame(this.#measureFrame);
     if (this.#measureFrame2) cancelAnimationFrame(this.#measureFrame2);
+    if (this.#overflowTimer) clearTimeout(this.#overflowTimer);
     this.#railFrame = 0;
     this.#measureFrame = 0;
     this.#measureFrame2 = 0;
+    this.#overflowTimer = 0;
     this.#nodeCache = null;
     this.#desktopTop = null;
     this.#mobileTop = null;

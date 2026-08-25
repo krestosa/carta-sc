@@ -1,4 +1,4 @@
-// Define el movimiento del riel con aceleración y desaceleración suaves, respetando movimiento reducido.
+// Desplaza el riel con el motor nativo en móvil para evitar trabajo por fotograma y conserva la curva controlada en anchos amplios.
 import { queries } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
@@ -23,6 +23,12 @@ export function moveRailTo(scroller: HTMLElement, value: number, onComplete?: ()
 
   if (queries.reducedMotion.matches || Math.abs(target - start) < 1) {
     scroller.scrollLeft = target;
+    onComplete?.();
+    return;
+  }
+
+  if (queries.layoutBelowWide.matches) {
+    scroller.scrollTo({ left: target, behavior: 'smooth' });
     onComplete?.();
     return;
   }
