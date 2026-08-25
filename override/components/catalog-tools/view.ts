@@ -8,6 +8,11 @@ import {
   syncCatalogViewControl,
 } from './view-icon.js';
 import {
+  animateCatalogViewLayoutChange,
+  cancelCatalogViewLayoutTransition,
+  isCatalogViewLayoutTransitionActive,
+} from './view-layout-motion.js';
+import {
   loadCatalogView,
   normalizeCatalogViewMode,
   saveCatalogView,
@@ -47,13 +52,19 @@ class CatalogViewController {
 
   apply(root: HTMLElement, requested: string, persist = false): void {
     const mode = normalizeCatalogViewMode(requested) ?? 'compact';
+    const current = selectedCatalogView();
+
+    if (persist && mode !== current) {
+      rootElement.classList.add('sc-catalog-view-switching');
+      const started = animateCatalogViewLayoutChange(() => this.#commit(root, mode, persist, false));
+      if (started) {
+        syncCatalogViewControl(root, mode, true);
+        return;
+      }
+    }
+
     if (persist) rootElement.classList.add('sc-catalog-view-switching');
-    rootElement.setAttribute('data-sc-catalog-view', mode);
-    document.body.setAttribute('data-sc-catalog-view', mode);
-    root.setAttribute('data-sc-view', mode);
-    syncCatalogViewControl(root, mode, persist);
-    if (persist) saveCatalogView(mode);
-    this.refreshLayout(persist);
+    this.#commit(root, mode, persist, persist);
   }
 
   install(root: HTMLElement): Cleanup {
@@ -64,11 +75,14 @@ class CatalogViewController {
 
     ensureCatalogViewIconPresentation(host);
     this.apply(root, loadCatalogView());
-    const onClick = (): void => this.apply(
-      root,
-      selectedCatalogView() === 'compact' ? 'list' : 'compact',
-      true,
-    );
+    const onClick = (): void => {
+      if (isCatalogViewLayoutTransitionActive()) return;
+      this.apply(
+        root,
+        selectedCatalogView() === 'compact' ? 'list' : 'compact',
+        true,
+      );
+    };
     const onBreakpoint = (): void => this.refreshLayout();
 
     button.addEventListener('click', onClick);
@@ -90,12 +104,22 @@ class CatalogViewController {
   destroy(): void {
     const host = document.querySelector<SVGElement>('.sc-catalog-view-toggle [data-sc-view-icon]');
     if (host) stopCatalogViewIconMotion(host);
+    cancelCatalogViewLayoutTransition();
     this.#cancelLayoutWork();
     rootElement.classList.remove('sc-catalog-view-switching');
 
     const cleanup = this.#installationCleanup;
     this.#installationCleanup = null;
     cleanup?.();
+  }
+
+  #commit(root: HTMLElement, mode: 'compact' | 'list', persist: boolean, syncControl: boolean): void {
+    rootElement.setAttribute('data-sc-catalog-view', mode);
+    document.body.setAttribute('data-sc-catalog-view', mode);
+    root.setAttribute('data-sc-view', mode);
+    if (syncControl) syncCatalogViewControl(root, mode, persist);
+    if (persist) saveCatalogView(mode);
+    this.refreshLayout(persist);
   }
 
   #cancelLayoutWork(): void {
