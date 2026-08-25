@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de responsive dentro del componente product modal y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Ajustes del modal para pantallas chicas. */
 @media (max-width: 640px) {
   body.sushiShop .sc-product-modal {

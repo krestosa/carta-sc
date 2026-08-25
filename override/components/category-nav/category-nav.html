@@ -1,13 +1,13 @@
 <!-- Define las plantillas del riel de categorías, sus controles de desborde y el indicador activo. -->
-<!-- Templates del riel de categorías. Se clonan en runtime para montar la barra,
-     los controles de overflow y el indicador sin duplicar markup en JavaScript. -->
+<!-- plantillas del riel de categorías. Se clonan en entorno de ejecución para montar la barra,
+     los controles de desborde y el indicador sin duplicar marcado en JavaScript. -->
 <template data-sc-template="category-toolbar">
   <nav class="sc-catalog-toolbar" aria-label="Categorías de la carta">
     <div class="sc-catalog-categories"></div>
   </nav>
 </template>
 
-<!-- Flecha izquierda; el runtime controla visibilidad, disabled y desplazamiento. -->
+<!-- Flecha izquierda; el entorno de ejecución controla visibilidad, deshabilitado y desplazamiento. -->
 <template data-sc-template="category-arrow-left">
   <button class="sc-rail-arrow sc-rail-arrow--left" type="button" aria-label="Ver categorías anteriores">
     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#666" aria-hidden="true">

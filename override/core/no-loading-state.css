@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de no loading state dentro de los fundamentos compartidos de la interfaz propia. */
-/* Mantiene contenido real visible desde el primer layout. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Mantiene contenido real visible desde el primer distribución. */
 html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion,
 html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion > div,
 html.sc-no-loading-state body.sushiShop .listadoShop .subTitleShopSeccion,
@@ -11,7 +11,7 @@ html.sc-no-loading-state body.sushiShop .listadoShop .productoShop .sc-product-f
   visibility: visible !important;
 }
 
-/* Las secciones del primer viewport no esperan reveal. */
+/* Las secciones del primer área visible no esperan reveal. */
 html.sc-no-loading-state body.sushiShop .sc-static-initial-section,
 html.sc-no-loading-state body.sushiShop .sc-static-initial-section > div {
   opacity: 1 !important;

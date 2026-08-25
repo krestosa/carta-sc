@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de mobile header dentro del componente mobile header y mantiene esa lógica en su propietario. */
-/* Presentación del header móvil y su menú. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Presentación del encabezado móvil y su menú. */
 body.sushiShop {
   --sc-mobile-header-height: 100px;
   --sc-mobile-logo-width: 333px;

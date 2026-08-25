@@ -1,6 +1,6 @@
-/* Documenta la etapa prepaint de la canalización de Pages, separada de la fuente de producción. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Resguardo geométrico previo al primer pintado de SushiClub.
-   Las cards visibles pueden mostrar placeholder desde el primer frame mientras su media
+   Las tarjetas visibles pueden mostrar marcador de posición desde el primer fotograma mientras su recurso visual
    real todavía no está disponible; el resto conserva únicamente la geometría final. */
 
 html {
@@ -12,8 +12,8 @@ html.sc-catalog-prepaint body.sushiShop {
 }
 
 /* El banner debe conservar la proporción original 1500:157 también después de la hidratación.
-   Los atributos width y height reservan el espacio intrínseco antes de que llegue la imagen;
-   mantener height:auto evita que el hint legacy de 157px la estire al quitar prepaint. */
+   Los atributos ancho y alto reservan el espacio intrínseco antes de que llegue la imagen;
+   mantener alto:auto evita que el indicación heredado de 157px la estire al quitar prepaint. */
 body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
@@ -29,8 +29,8 @@ body.sushiShop .bannerShop .imgBannerShop {
   object-fit: contain !important;
 }
 
-/* Logo móvil: conserva la geometría del padre/header sin ocultar el candidato LCP real
-   mientras todavía están cargando los módulos del runtime. */
+/* Logo móvil: conserva la geometría del padre/encabezado sin ocultar el candidato LCP real
+   mientras todavía están cargando los módulos del entorno de ejecución. */
 @media (max-width: 992px) {
   html.sc-catalog-prepaint body.sushiShop .brandOnlyMobile > a {
     background: transparent !important;
@@ -43,8 +43,8 @@ body.sushiShop .bannerShop .imgBannerShop {
   }
 
   /* Mantiene el banner en su geometría natural 1500:157 antes y después de la hidratación.
-     El snapshot legacy, de otro modo, vuelve a una altura fija de 157px en mobile,
-     estira la imagen y desplaza el catálogo más de 100px cuando se estabiliza el runtime. */
+     El captura heredado, de otro modo, vuelve a una altura fija de 157px en móvil,
+     estira la imagen y desplaza el catálogo más de 100px cuando se estabiliza el entorno de ejecución. */
   body.sushiShop .bannerShop .BanContShop,
   body.sushiShop .bannerShop .imgBannerShop {
     width: 100% !important;
@@ -64,9 +64,9 @@ body.sushiShop .bannerShop .imgBannerShop {
     object-fit: contain !important;
   }
 
-  /* El código legacy crea SlickNav antes de marcar la instancia canónica. Las copias
+  /* El código heredado crea SlickNav antes de marcar la instancia canónica. Las copias
      provisorias quedan completamente fuera del flujo para que no expandan ni contraigan
-     el documento mientras se inicializa el header. */
+     el documento mientras se inicializa el encabezado. */
   html.sc-catalog-prepaint body.sushiShop > .slicknav_menu:not(.sc-mobile-main-menu) {
     position: absolute !important;
     top: 0 !important;
@@ -82,8 +82,8 @@ body.sushiShop .bannerShop .imgBannerShop {
 }
 
 /* La geometría del banner es determinista desde el primer pintado. Se conserva la proporción
-   intrínseca 1500:157 en todos los breakpoints para que los cambios de ancho del contenedor
-   Bootstrap no conviertan el atributo height legacy en una altura fija. */
+   intrínseca 1500:157 en todos los puntos de quiebre para que los cambios de ancho del contenedor
+   Bootstrap no conviertan el atributo alto heredado en una altura fija. */
 html.sc-catalog-prepaint body.sushiShop .bannerShop .BanContShop {
   position: relative !important;
   overflow: hidden !important;
@@ -153,9 +153,9 @@ html.sc-catalog-prepaint body.sushiShop .listadoShop .titleShopSeccion > div {
   background-color: transparent !important;
 }
 
-/* El build de Pages inyecta el shell de catalog-tools antes del primer pintado. El placeholder
+/* El compilación de Pages inyecta el estructura inicial de catalog-tools antes del primer pintado. El marcador de posición
    ocupa la futura fila de referencias para que la hidratación pueda mover la tira real a la
-   toolbar sin modificar su altura exterior. */
+   barra de herramientas sin modificar su altura exterior. */
 body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
   display: block;
   grid-column: 1 / -1;
@@ -176,7 +176,7 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     z-index: auto !important;
   }
 
-  /* Evita el flash de la superficie negra de categorías legacy. El riel real se monta
+  /* Evita el flash de la superficie negra de categorías heredado. El riel real se monta
      después en el espacio reservado sin desplazar el catálogo. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .fixedTopShop.wtopShopMenuMobile > .topShop,
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .topShop.bottomShop,
@@ -208,7 +208,7 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     padding-left: 0 !important;
   }
 
-  /* Misma geometría exterior que el riel desktop ya montado. */
+  /* Misma geometría exterior que el riel ancho amplio ya montado. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .containerShop::before {
     content: '';
     display: block;
@@ -223,7 +223,7 @@ body.sushiShop .sc-catalog-tools > .sc-trait-reference-placeholder {
     animation: none;
   }
 
-  /* Alta densidad es el primer render por defecto. Las preferencias guardadas explícitas
+  /* Alta densidad es el primer renderizado por defecto. Las preferencias guardadas explícitas
      lo reemplazan antes de que terminen de montarse los módulos del catálogo. */
   html.sc-catalog-prepaint body.sushiShop:not(.sc-catalog-layout-ready) .listadoShop {
     display: grid !important;

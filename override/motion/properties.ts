@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de properties dentro del sistema propio de movimiento.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { spring, tween } from './scheduler.js';
 import type {
   MotionHandle,

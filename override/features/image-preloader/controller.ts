@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de controller dentro de la función image preloader de la interfaz propia.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import {
   IMAGE_STAGE_SELECTOR,
   MOBILE_LOGO_URL,

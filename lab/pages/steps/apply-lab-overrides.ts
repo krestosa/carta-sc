@@ -1,4 +1,4 @@
-// Documenta la etapa apply lab overrides de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import path from 'node:path';
 import { PAGE_ASSETS, ROOT, SITE, assert, isDir, isFile, read, write } from '../lib/core.js';
 

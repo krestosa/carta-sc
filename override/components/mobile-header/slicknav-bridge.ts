@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de slicknav bridge dentro del componente mobile header y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { MobileMenuIconController } from './state-icon.js';
 
 interface SlicknavPlugin {

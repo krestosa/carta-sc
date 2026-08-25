@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de layout dentro de la función catalog de la interfaz propia. */
-/* Layout de grilla y contenedor del catálogo. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* distribución de grilla y contenedor del catálogo. */
 body.sushiShop {
   --sc-catalog-base-columns: 4;
   --sc-catalog-grid-row-gap: var(--sc-space-double-extra-large);
@@ -25,7 +25,7 @@ body.sushiShop .listadoShop {
 }
 
 /* La primera grilla normal comparte el mismo arranque vertical que la búsqueda usando un
-   offset propio del feature: 64px desktop, 48px tablet y 32px mobile. */
+   desplazamiento propio del función: 64px ancho amplio, 48px ancho intermedio y 32px móvil. */
 body.sushiShop:not(.sc-catalog-searching) .listadoShop.sc-first-catalog-section {
   margin-top: calc(-1 * var(--sc-catalog-first-section-offset)) !important;
 }

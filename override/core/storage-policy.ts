@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de storage policy dentro de los fundamentos compartidos de la interfaz propia.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import type { Cleanup } from './types.js';
 
 const VIEW_KEY = 'sc:catalog:view';

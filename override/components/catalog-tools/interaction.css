@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de interaction dentro del componente catalog tools y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* La geometría de interacción pertenece a las herramientas del catálogo; los estados, formas, colores y movimientos reutilizables provienen de DTCG. */
 body.sushiShop .sc-catalog-tools {
   --sc-filter-height: 32px;
@@ -59,7 +59,7 @@ body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .imgRef{
   display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:0!important;height:var(--sc-filter-icon-size)!important;margin:0!important;padding:0!important;color:currentColor!important;line-height:0!important;
 }
-/* En filtros todos los traits se centran por su caja SVG; los offsets de precio/card no aplican aquí. */
+/* En filtros todos los traits se centran por su caja SVG; los offsets de precio/tarjeta no aplican aquí. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip .sc-filter-chip .imgRef .sc-trait-icon{
   display:block!important;flex:0 0 auto!important;align-self:center!important;width:auto!important;height:auto!important;max-width:none!important;max-height:var(--sc-filter-icon-size)!important;margin:0!important;transform:none!important;transform-origin:50% 50%!important;
 }

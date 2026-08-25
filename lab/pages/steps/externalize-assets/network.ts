@@ -1,4 +1,4 @@
-// Documenta la etapa network de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { assert } from '../../lib/core.js';
 import {
   ORIGIN,

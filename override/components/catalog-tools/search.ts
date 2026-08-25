@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de search dentro del componente catalog tools y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { classes } from '../../core/variables.js';
 import {
   activeFilterMask,
@@ -182,7 +182,7 @@ export class CatalogSearchController {
     this.#pendingInputValue = value;
     if (this.#inputTask) clearTimeout(this.#inputTask);
 
-    // A short trailing debounce collapses key-repeat and rapid deletion into one catalogue pass.
+    // Un breve retardo posterior agrupa la repetición de teclas y el borrado rápido en una sola pasada por el catálogo.
     // This avoids repeatedly ranking and mutating hundreds of cards while keeping input latency low.
     this.#inputTask = window.setTimeout(() => {
       this.#inputTask = 0;

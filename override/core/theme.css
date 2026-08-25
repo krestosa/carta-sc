@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de theme dentro de los fundamentos compartidos de la interfaz propia. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Contrato global de tema. Los valores visuales provienen de tokens.generated.css. */
 :root,
 html[data-sc-theme-resolved='light'] {

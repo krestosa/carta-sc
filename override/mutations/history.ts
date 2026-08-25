@@ -1,4 +1,4 @@
-// Documenta la normalización history aplicada en el límite con el documento anfitrión.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 export function restoreNativeHistory(): void {
   try {
     const prototype = window.History?.prototype;

@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de image preloader dentro de la función image preloader de la interfaz propia.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import type { Cleanup } from '../../core/types.js';
 import { IMAGE_STAGE_SELECTOR, imagePreloaderPolicy } from './config.js';
 import { ImagePreloaderController } from './controller.js';

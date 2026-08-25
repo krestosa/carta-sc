@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de section heading dentro del componente section heading y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { SectionHeadingController } from './controller.js';
 
 const controller = new SectionHeadingController();

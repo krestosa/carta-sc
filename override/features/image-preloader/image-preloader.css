@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de image preloader dentro de la función image preloader de la interfaz propia. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Los valores de implementación de la precarga de imágenes pertenecen a esta función. */
 html.sc-image-preloader-active {
   --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-text-primary) 10%, var(--sc-color-surface-raised));

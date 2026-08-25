@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de content dentro del componente product card y mantiene esa lógica en su propietario. */
-/* Título, descripción y rasgos de las cards. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Título, descripción y rasgos de las tarjetas. */
 body.sushiShop {
   --sc-card-description-height: 43px;
   --sc-card-description-lines: 2;

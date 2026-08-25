@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de utils dentro de los fundamentos compartidos de la interfaz propia.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { motion } from '../motion/main.js';
 
 export const text = (node: Node | null | undefined): string =>

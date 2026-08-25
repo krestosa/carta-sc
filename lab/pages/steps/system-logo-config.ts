@@ -1,4 +1,4 @@
-// Documenta la etapa system logo config de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 export const SYSTEM_LOGO_FILE = '_critical-media/sushiclub-logo.svg';
 export const SYSTEM_LOGO_STYLE_ID = 'sc-system-brand-css';
 export const SYSTEM_LOGO_SIZE = Object.freeze({ width: 312, height: 45 });

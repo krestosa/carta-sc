@@ -1,5 +1,5 @@
 /* Adapta la navegación por categorías a anchos reducidos conservando desplazamiento horizontal y legibilidad. */
-/* Estructura y estado activo del riel en tablet/móvil. */
+/* Estructura y estado activo del riel en ancho intermedio/móvil. */
 @media (max-width: 992px) {
   body.sushiShop .fixedTopShop.wtopShopMenuMobile {
     position: sticky !important;

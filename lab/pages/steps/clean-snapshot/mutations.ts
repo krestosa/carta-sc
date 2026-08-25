@@ -1,4 +1,4 @@
-// Documenta la etapa mutations de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { assert } from '../../lib/core.js';
 import type { AriaRule, MutationResult } from './config.js';
 

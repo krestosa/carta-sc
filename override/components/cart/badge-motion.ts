@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de badge motion dentro del componente cart y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { motionConfig } from '../../motion/config.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 

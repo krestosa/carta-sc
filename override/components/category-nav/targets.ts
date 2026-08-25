@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de targets dentro del componente category nav y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { selectors } from '../../core/variables.js';
 
 export function anchorForHref(href: string | null): HTMLElement | null {

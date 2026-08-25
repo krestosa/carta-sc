@@ -1,4 +1,4 @@
-// Documenta la tarea validation utilizada por la compilación, auditoría o comprobación del proyecto.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 export interface ValidationReporter {
   readonly errors: readonly string[];
   fail(message: string): void;

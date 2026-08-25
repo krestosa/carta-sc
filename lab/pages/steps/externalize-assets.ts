@@ -1,4 +1,4 @@
-// Documenta la etapa externalize assets de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import fs from 'node:fs';
 import { SITE, assert } from '../lib/core.js';
 import { ORIGIN } from './externalize-assets/config.js';

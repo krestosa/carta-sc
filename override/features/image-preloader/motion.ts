@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de motion dentro de la función image preloader de la interfaz propia.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { queries } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
 import { IMAGE_WAVE_ROW_TOLERANCE_PX } from './config.js';

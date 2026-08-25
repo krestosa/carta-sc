@@ -1,4 +1,4 @@
-// Documenta la etapa config de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 export type FontSuffix = '.woff2' | '.woff' | '.ttf' | '.otf';
 export type FontMime = 'font/woff2' | 'font/woff' | 'font/ttf' | 'font/otf';
 

@@ -1,13 +1,13 @@
-/* Documenta la responsabilidad de main dentro del sistema propio de movimiento. */
-/* Reglas globales de estabilidad durante motion y cambios de vista. El scroll suave se
-   controla desde JS para que navegación y relayout no compitan con el navegador. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Reglas globales de estabilidad durante movimiento y cambios de vista. El desplazamiento suave se
+   controla desde JS para que navegación y recomposición no compitan con el navegador. */
 html,
 body {
   scroll-behavior: auto !important;
 }
 
 /* Diagnóstico de reveal: desactiva cualquier virtualización/containment heredado sobre las
-   unidades del catálogo para que los observadores de viewport midan geometría real. */
+   unidades del catálogo para que los observadores de área visible midan geometría real. */
 body.sushiShop .listadoShop,
 body.sushiShop .listadoShop .titleShopSeccion,
 body.sushiShop .listadoShop .titleShopSeccion > div,
@@ -19,7 +19,7 @@ body.sushiShop .listadoShop .productoShop {
 }
 
 /* El estado temprano ya existe cuando entra este CSS. Se libera cuando el motor local terminó de
-   preparar títulos y cards, evitando el flash visible previo al reveal. */
+   preparar títulos y tarjetas, evitando el flash visible previo al reveal. */
 @media (prefers-reduced-motion: no-preference) {
   html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .titleShopSeccion > div,
   html.sc-no-loading-state:not([data-sc-catalog-reveal-ready='true']) body.sushiShop .listadoShop .subTitleShopSeccion,
@@ -32,8 +32,8 @@ body.sushiShop .listadoShop .productoShop {
   }
 }
 
-/* Al cambiar densidad se reescribe geometría dentro y arriba del viewport. Se desactiva
-   el scroll anchoring solo durante ese relayout para evitar una compensación doble. */
+/* Al cambiar densidad se reescribe geometría dentro y arriba del área visible. Se desactiva
+   el anclaje de desplazamiento solo durante ese recomposición para evitar una compensación doble. */
 html.sc-catalog-view-switching,
 html.sc-catalog-view-switching body,
 html.sc-catalog-view-switching body.sushiShop .containerShop {

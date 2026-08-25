@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de content normalizer dentro de la función content normalizer de la interfaz propia. */
-/* Normaliza el contenido dinámico igual en todos los breakpoints. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Normaliza el contenido dinámico igual en todos los puntos de quiebre. */
 body.sushiShop .listadoShop .titleShopSeccion,
 body.sushiShop .listadoShop .subTitleShopSeccion {
   text-transform: uppercase !important;

@@ -45,7 +45,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
   background: linear-gradient(270deg,var(--sc-color-surface-canvas) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
 }
 
-/* Evita que el estado .active del documento anfitrión suplante el estado real del scroll-spy. */
+/* Evita que el estado .active del documento anfitrión suplante el estado real del observador de desplazamiento. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']),
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']) {
   color: var(--sc-color-text-muted) !important;
@@ -63,7 +63,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   box-shadow: none !important;
 }
 
-/* Muestra el indicador solo cuando el riel está sticky. */
+/* Muestra el indicador solo cuando el riel está fijo. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
     opacity: 0 !important;

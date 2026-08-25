@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de search ranking dentro del componente catalog tools y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import type { SearchItem } from './search-domain.js';
 
 export function normalizeSearchText(value: unknown): string {

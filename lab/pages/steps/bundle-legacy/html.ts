@@ -1,4 +1,4 @@
-// Documenta la etapa html de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { assert, escapeRegExp } from '../../lib/core.js';
 import type { AssetKind, TagPosition } from './config.js';
 

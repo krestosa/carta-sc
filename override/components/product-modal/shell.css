@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de shell dentro del componente product modal y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* La geometría exclusiva del detalle de producto permanece local; las decisiones visuales reutilizables provienen de la API global de tokens. */
 body.sushiShop .sc-product-modal {
   --sc-modal-dialog-block-space: var(--sc-space-large);
