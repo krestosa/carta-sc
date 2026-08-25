@@ -5,7 +5,7 @@ import { transpileBrowserRuntime } from '../lib/browser-runtime.js';
 const PREPAINT_RUNTIME_SOURCE = 'lab/pages/steps/prepaint-runtime.ts';
 
 interface BootstrapAssets {
-  readonly legacyRuntime: string;
+  readonly hostRuntime: string;
   readonly overrideStyle: string;
   readonly overrideModule: string;
 }
@@ -17,7 +17,7 @@ function countMatches(source: string, pattern: RegExp): number {
 
 function assets(sha: string): BootstrapAssets {
   return {
-    legacyRuntime: `_js_dev/main-legacy.js?v=${sha}`,
+    hostRuntime: `_js_dev/main-legacy.js?v=${sha}`,
     overrideStyle: `override/main.css?v=${sha}`,
     overrideModule: `override/main.js?v=${sha}`,
   };
@@ -30,7 +30,7 @@ function prepaintScript(): string {
 function replacementFor(bundle: BootstrapAssets): string {
   return [
     `<script>${prepaintScript()}</script>`,
-    `<script src="${bundle.legacyRuntime}"></script>`,
+    `<script src="${bundle.hostRuntime}"></script>`,
     `<link rel="stylesheet" href="${bundle.overrideStyle}">`,
     `<script type="module" src="${bundle.overrideModule}"></script>`,
   ].join('\n');
@@ -38,19 +38,17 @@ function replacementFor(bundle: BootstrapAssets): string {
 
 function assertGeneratedContract(html: string, bundle: BootstrapAssets): void {
   assert(
-    html.includes('data-sc-catalog-view')
-      && html.includes('scCatalogView:v3')
-      && html.includes('scCatalogView:v2:'),
-    'Remembered catalogue view prepaint bootstrap is missing',
+    html.includes('data-sc-catalog-view') && html.includes('sc:catalog:view'),
+    'Canonical catalogue view prepaint bootstrap is missing',
   );
   assert(
-    html.includes('data-sc-theme-resolved') && html.includes('scTheme:v1'),
-    'Remembered color theme prepaint bootstrap is missing',
+    html.includes('data-sc-theme-resolved') && html.includes('sc:theme'),
+    'Canonical color theme prepaint bootstrap is missing',
   );
-  assert(!html.includes('__scCatalogAssetVersion'), 'Legacy asset-version global remains in Pages bootstrap');
+  assert(!html.includes('__scCatalogAssetVersion'), 'Superseded asset-version global remains in Pages bootstrap');
 
-  const legacyRuntime = new RegExp(
-    `<script\\b[^>]*\\bsrc=["']${escapeRegExp(bundle.legacyRuntime)}["'][^>]*>\\s*<\\/script>`,
+  const hostRuntime = new RegExp(
+    `<script\\b[^>]*\\bsrc=["']${escapeRegExp(bundle.hostRuntime)}["'][^>]*>\\s*<\\/script>`,
     'gi',
   );
   const overrideStyle = new RegExp(
@@ -62,7 +60,7 @@ function assertGeneratedContract(html: string, bundle: BootstrapAssets): void {
     'gi',
   );
 
-  assert(countMatches(html, legacyRuntime) === 1, 'Direct main-legacy script must appear exactly once');
+  assert(countMatches(html, hostRuntime) === 1, 'Host runtime script must appear exactly once');
   assert(countMatches(html, overrideStyle) === 2, 'Override CSS must appear once as preload and once as stylesheet');
   assert(countMatches(html, overrideModule) === 1, 'Direct override module entry must appear exactly once');
 }
