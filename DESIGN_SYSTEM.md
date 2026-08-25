@@ -49,11 +49,15 @@ Component variables may alias typography tokens, but must not duplicate the same
 
 ## 4. Spacing and shape
 
-Shared spacing scale:
+Reusable spacing follows a 4px rhythm. The private `reference.spacing` layer contains numeric 4px-aligned primitives only when a semantic system decision needs them; application code never consumes that layer directly.
+
+The public component-spacing scale stays deliberately compact:
 
 `4 / 8 / 12 / 16 / 24 / 32 / 48 / 64`
 
-Shared shapes cover none, menu, control, card, dialog and full/pill. Do not fill numerical gaps merely because a literal appears once. Optical offsets of a few pixels can remain local.
+Do not publish every multiple of 4 as a system token. Values such as 20px or 28px belong to semantic layout roles when they describe page gutters or grid gaps, rather than becoming generic component spacing. Large editorial whitespace belongs to section rhythm. Optical corrections and breakpoint-specific tuning that are not shared decisions can remain local.
+
+Shared shapes cover none, menu, control, card, dialog and full/pill. Do not fill numerical gaps merely because a literal appears once.
 
 ## 5. Layout
 
@@ -62,14 +66,16 @@ Global layout decisions are separate from component geometry:
 - container widths: wide, content, narrow and text;
 - page gutter: outer page inset;
 - grid gap: spacing between grid tracks/items;
-- section gap: compact, default and spacious.
+- section gap: compact (32px), default (48px), spacious (64px), expanded (80px) and immersive (96px).
 
 Use `--sc-layout-page-gutter` for the page edge and `--sc-layout-grid-gap` for grid item separation. They are independent decisions even when a breakpoint currently gives them the same value.
+
+The wider section rhythm is intentional for editorial, promotional and campaign compositions that rely on negative space. Responsive pages may interpolate between semantic endpoints with `clamp()`, but should not create a new global spacing token for each intermediate breakpoint value.
 
 Reusable layout classes live in `override/core/layout-primitives.css`:
 
 - `.sc-container`
-- `.sc-section`
+- `.sc-section` with `--compact`, `--spacious`, `--expanded` and `--immersive` rhythm modifiers
 - `.sc-stack`
 - `.sc-cluster`
 - `.sc-grid`

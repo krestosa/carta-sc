@@ -171,6 +171,7 @@ const easingNames = ['standard','accelerate','decelerate','linear'] as const;
 const transitionNames = ['fast','standard','icon','theme'] as const;
 const shapeNames = ['none','extraSmall','menu','control','card','dialog','button','full'] as const;
 const spacingNames = ['extraSmall','small','medium','large','extraLarge','doubleExtraLarge','tripleExtraLarge','quadExtraLarge'] as const;
+const sectionGapNames = ['compact','default','spacious','expanded','immersive'] as const;
 const stateOpacityNames = ['disabled','muted','placeholder','hover','focus','pressed','dragged'] as const;
 const elevationNames = ['level0','level1','level2','level3','level4','level5','menu','popover','dialog'] as const;
 const layerNames = ['base','raised','sticky','dropdown','popover','drawer','toast','modal','tooltip'] as const;
@@ -233,9 +234,7 @@ const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. 
   --sc-layout-container-text: ${cssValue('system.layout.container.text')};
   --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.wide')};
   --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.wide')};
-  --sc-layout-section-gap-compact: ${cssValue('system.layout.sectionGap.compact')};
-  --sc-layout-section-gap-default: ${cssValue('system.layout.sectionGap.default')};
-  --sc-layout-section-gap-spacious: ${cssValue('system.layout.sectionGap.spacious')};
+${sectionGapNames.map((name) => `  --sc-layout-section-gap-${cssName(name)}: ${cssValue(`system.layout.sectionGap.${name}`)};`).join('\n')}
   --sc-media-product-aspect-ratio: ${cssValue('system.media.aspectRatio.product')};
 ${layerNames.map((name) => `  --sc-layer-${cssName(name)}: ${cssValue(`system.layer.${name}`)};`).join('\n')}
 ${stateOpacityNames.map((name) => `  --sc-state-opacity-${cssName(name)}: ${cssValue(`system.state.opacity.${name}`)};`).join('\n')}
@@ -360,7 +359,7 @@ const systemTokenObject = {
     container: Object.fromEntries(['wide','content','narrow','text'].map((name) => [name, cssValue(`system.layout.container.${name}`)])),
     pageGutter: Object.fromEntries(['wide','contentNarrow','medium','narrow'].map((name) => [name, cssValue(`system.layout.pageGutter.${name}`)])),
     gridGap: Object.fromEntries(['wide','contentNarrow','medium','narrow'].map((name) => [name, cssValue(`system.layout.gridGap.${name}`)])),
-    sectionGap: Object.fromEntries(['compact','default','spacious'].map((name) => [name, cssValue(`system.layout.sectionGap.${name}`)])),
+    sectionGap: Object.fromEntries(sectionGapNames.map((name) => [name, cssValue(`system.layout.sectionGap.${name}`)])),
   },
   size: {
     touchTarget: cssValue('system.size.touchTarget'),

@@ -25,6 +25,8 @@
   --sc-layout-section-gap-compact: 32px;
   --sc-layout-section-gap-default: 48px;
   --sc-layout-section-gap-spacious: 64px;
+  --sc-layout-section-gap-expanded: 80px;
+  --sc-layout-section-gap-immersive: 96px;
   --sc-media-product-aspect-ratio: 1.43;
   --sc-layer-base: 0;
   --sc-layer-raised: 1;

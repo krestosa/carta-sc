@@ -305,7 +305,9 @@ export const systemTokens = Object.freeze({
     "sectionGap": {
       "compact": "32px",
       "default": "48px",
-      "spacious": "64px"
+      "spacious": "64px",
+      "expanded": "80px",
+      "immersive": "96px"
     }
   },
   "size": {

@@ -16,6 +16,8 @@
 
 .sc-section--compact { padding-block: var(--sc-layout-section-gap-compact); }
 .sc-section--spacious { padding-block: var(--sc-layout-section-gap-spacious); }
+.sc-section--expanded { padding-block: var(--sc-layout-section-gap-expanded); }
+.sc-section--immersive { padding-block: var(--sc-layout-section-gap-immersive); }
 
 .sc-stack {
   display: flex;

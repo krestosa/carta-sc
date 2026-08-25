@@ -34,6 +34,17 @@ Only standard DTCG `$type` names are used. Project concepts such as `shape`, `sp
 
 Do not create a token merely because a literal exists. A one-off optical offset remains a literal; a component-specific value that needs local overrides remains a custom property owned by that component. Tokens represent reusable decisions, not a catalog of numbers.
 
+## Spacing contract
+
+Reusable spacing follows a 4px rhythm without exposing every multiple of 4 as public API.
+
+- `reference.spacing` is private and numeric; it contains only 4px-aligned primitives needed by semantic decisions.
+- `system.spacing` is the curated component scale: 4, 8, 12, 16, 24, 32, 48 and 64px.
+- page gutters, grid gaps and major section rhythm live under `system.layout` instead of expanding the generic component scale.
+- one-off optical corrections or responsive interpolation values remain local when they are not shared design decisions.
+
+The system therefore preserves a predictable grid while avoiding a token for every observed CSS literal.
+
 ## Semantic color contract
 
 New components consume semantic intent rather than palette names:
@@ -54,7 +65,7 @@ Page edge spacing and grid spacing are separate decisions:
 
 - `layout.pageGutter` controls the page/container inset;
 - `layout.gridGap` controls spacing between grid tracks/items;
-- `layout.sectionGap` controls major vertical rhythm;
+- `layout.sectionGap` controls major vertical rhythm with compact, default, spacious, expanded and immersive levels;
 - `layout.container` defines wide, content, narrow and text widths.
 
 

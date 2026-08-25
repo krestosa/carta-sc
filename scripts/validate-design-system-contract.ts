@@ -43,6 +43,33 @@ async function walk(directory: string): Promise<string[]> {
   }))).flat();
 }
 
+const referenceSpacingValues = [4, 8, 12, 16, 20, 24, 28, 32, 48, 64, 80, 96] as const;
+const systemSpacingNames = [
+  'extraSmall', 'small', 'medium', 'large', 'extraLarge',
+  'doubleExtraLarge', 'tripleExtraLarge', 'quadExtraLarge',
+] as const;
+const sectionGapNames = ['compact', 'default', 'spacious', 'expanded', 'immersive'] as const;
+
+for (const value of referenceSpacingValues) requireToken(`reference.spacing.space${value}`);
+for (const name of systemSpacingNames) requireToken(`system.spacing.${name}`);
+for (const name of sectionGapNames) requireToken(`system.layout.sectionGap.${name}`);
+
+const referenceSpacing = tokenNode('reference.spacing');
+if (referenceSpacing) {
+  const actualNames = Object.keys(referenceSpacing).filter((name) => !name.startsWith('$')).sort();
+  const expectedNames = referenceSpacingValues.map((value) => `space${value}`).sort();
+  if (actualNames.join('|') !== expectedNames.join('|')) {
+    errors.push(`reference.spacing must contain only the curated 4px primitives: ${expectedNames.join(', ')}`);
+  }
+  for (const value of referenceSpacingValues) {
+    const node = referenceSpacing[`space${value}`] as TokenNode | undefined;
+    const dimension = node?.$value as { readonly value?: unknown; readonly unit?: unknown } | undefined;
+    if (!dimension || dimension.value !== value || dimension.unit !== 'px' || value % 4 !== 0) {
+      errors.push(`reference.spacing.space${value} must be the ${value}px 4px-grid primitive`);
+    }
+  }
+}
+
 for (const mode of ['light', 'dark']) {
   for (const path of [
     'brand.primary', 'brand.onPrimary',
@@ -80,12 +107,19 @@ const tokenSource = await readFile(tokenPath, 'utf8');
 for (const forbidden of ['"compat"', 'gridGutter', 'contentMaxWidth', 'breakpointPhone', 'breakpointMobile', 'breakpointTablet', 'breakpointDesktop']) {
   if (tokenSource.includes(forbidden)) errors.push(`token source contains superseded API ${forbidden}`);
 }
+for (const oldReference of [
+  'reference.spacing.extraSmall', 'reference.spacing.small', 'reference.spacing.medium', 'reference.spacing.large',
+  'reference.spacing.extraLarge', 'reference.spacing.doubleExtraLarge', 'reference.spacing.tripleExtraLarge', 'reference.spacing.quadExtraLarge',
+]) {
+  if (tokenSource.includes(oldReference)) errors.push(`token source contains superseded reference spacing path ${oldReference}`);
+}
 
 const generatedCss = await readFile(generatedCssPath, 'utf8');
 for (const variable of [
   '--sc-color-text-primary', '--sc-color-text-heading', '--sc-color-icon-subtle', '--sc-color-surface-canvas',
   '--sc-color-action-primary', '--sc-color-feedback-error', '--sc-layout-page-gutter', '--sc-layout-grid-gap',
-  '--sc-layout-container-text', '--sc-icon-size-small', '--sc-control-size-large', '--sc-layer-tooltip',
+  '--sc-layout-container-text', '--sc-layout-section-gap-expanded', '--sc-layout-section-gap-immersive',
+  '--sc-icon-size-small', '--sc-control-size-large', '--sc-layer-tooltip',
 ]) if (!generatedCss.includes(`${variable}:`)) errors.push(`generated CSS missing ${variable}`);
 
 const supersededCssVariables = [
@@ -101,6 +135,9 @@ for (const variable of supersededCssVariables) {
 const generatedTs = await readFile(generatedTsPath, 'utf8');
 for (const media of ['layoutNarrow', 'layoutCompact', 'layoutMedium', 'layoutIntermediate', 'layoutBelowWide', 'layoutWide']) {
   if (!generatedTs.includes(`${media}:`)) errors.push(`generated TypeScript missing tokenMedia.${media}`);
+}
+for (const gap of sectionGapNames) {
+  if (!generatedTs.includes(`\"${gap}\":`)) errors.push(`generated TypeScript missing systemTokens.layout.sectionGap.${gap}`);
 }
 for (const media of ['phone:', 'mobile:', 'tablet:', 'compact:', 'compactWide:', 'desktop:']) {
   if (generatedTs.includes(`  ${media}`)) errors.push(`generated TypeScript exposes superseded media key ${media.slice(0, -1)}`);
