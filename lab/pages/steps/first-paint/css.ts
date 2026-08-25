@@ -47,7 +47,7 @@ const OVERRIDE_CRITICAL = new Set([
   './components/section-heading/responsive.css',
   './components/mobile-header/mobile-header.css',
   './components/mobile-header/state-icon.css',
-  './components/category-nav/compatibility.css',
+  './components/category-nav/host-integration.css',
   './features/image-preloader/image-preloader.css',
 ]);
 

@@ -72,7 +72,7 @@ export const positionTraitReferences = (): void => {
   strip.classList.add('sc-trait-reference-strip');
   const spacer = strip.previousElementSibling;
   if (spacer && !spacer.textContent?.trim() && spacer.querySelector('br')) {
-    spacer.classList.add('sc-trait-reference-legacy-spacer');
+    spacer.classList.add('sc-trait-reference-spacer');
   }
 
   if (!tools) return;

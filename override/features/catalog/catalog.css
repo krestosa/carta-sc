@@ -28,7 +28,7 @@ body.sushiShop #busquedaJSBoxResults {
 body.sushiShop .containerShop {
   box-sizing: border-box;
   width: calc(100% - var(--sc-catalog-container-inline-space)) !important;
-  max-width: var(--sc-content-max-width) !important;
+  max-width: var(--sc-layout-container-wide) !important;
   margin-right: auto !important;
   margin-left: auto !important;
   padding-right: 0 !important;

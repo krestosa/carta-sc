@@ -53,7 +53,7 @@ function visualBounds(link: HTMLElement): DOMRect {
     const bounds = range.getBoundingClientRect();
     if (bounds.width > 1 && bounds.height > 0) return bounds;
   } catch {
-    // Algunos nodos legacy no admiten Range; el rect del enlace es suficiente.
+    // Algunos nodos del documento anfitrión no admiten Range; el rect del enlace es suficiente.
   }
   return fallback;
 }

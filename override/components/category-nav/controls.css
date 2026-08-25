@@ -1,6 +1,6 @@
 /* Category-nav-specific geometry stays local; reusable design decisions come from the global token API. */
 body.sushiShop .sc-catalog-toolbar,body.sushiShop .wtopShopMenuMobile{
-  --sc-category-control-width:var(--sc-icon-size);
+  --sc-category-control-width:var(--sc-icon-size-large);
   --sc-category-control-pressed-scale:.88;
   --sc-category-sticky-shadow-stops:rgb(0 0 0 / .10) 0%,rgb(0 0 0 / 0) 100%;
   --sc-category-sticky-opacity-desktop:.42;
@@ -10,12 +10,12 @@ body.sushiShop > .sc-category-submenu{
   --sc-category-caret-opacity:.72;
   --sc-category-link-tracking:var(--sc-typography-label-letter-spacing);
 }
-body.sushiShop .sc-rail-arrow{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;position:absolute!important;top:50%!important;bottom:auto!important;width:var(--sc-category-control-width)!important;height:32px!important;margin:0!important;padding:0!important;border:0!important;border-radius:var(--sc-shape-full)!important;background:var(--sc-color-surface)!important;box-shadow:none!important;color:var(--sc-color-copy)!important;cursor:pointer!important;transform:translateY(-50%)!important;transition:none!important;z-index:var(--sc-layer-category-controls)!important;touch-action:manipulation;}
+body.sushiShop .sc-rail-arrow{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;position:absolute!important;top:50%!important;bottom:auto!important;width:var(--sc-category-control-width)!important;height:32px!important;margin:0!important;padding:0!important;border:0!important;border-radius:var(--sc-shape-full)!important;background:var(--sc-color-surface-canvas)!important;box-shadow:none!important;color:var(--sc-color-text-secondary)!important;cursor:pointer!important;transform:translateY(-50%)!important;transition:none!important;z-index:var(--sc-layer-category-controls)!important;touch-action:manipulation;}
 body.sushiShop .sc-rail-arrow::before{content:'';position:absolute;inset:-6px 0;border-radius:var(--sc-shape-full);background:currentColor;opacity:0;pointer-events:auto;transition:opacity var(--sc-transition-fast);}
-body.sushiShop .sc-rail-arrow svg{display:block!important;position:relative!important;width:var(--sc-category-control-width)!important;height:var(--sc-icon-size)!important;color:inherit!important;fill:currentColor!important;transition:transform var(--sc-transition-icon)!important;pointer-events:none!important;}
+body.sushiShop .sc-rail-arrow svg{display:block!important;position:relative!important;width:var(--sc-category-control-width)!important;height:var(--sc-icon-size-large)!important;color:inherit!important;fill:currentColor!important;transition:transform var(--sc-transition-icon)!important;pointer-events:none!important;}
 body.sushiShop .sc-rail-arrow svg path{fill:currentColor!important;transition:none!important;}
 body.sushiShop .sc-rail-arrow--left svg{transform:rotate(180deg)!important;}
-body.sushiShop .sc-rail-arrow:hover,body.sushiShop .sc-rail-arrow:focus-visible{color:var(--sc-color-ink)!important;}
+body.sushiShop .sc-rail-arrow:hover,body.sushiShop .sc-rail-arrow:focus-visible{color:var(--sc-color-text-primary)!important;}
 body.sushiShop .sc-rail-arrow:hover::before{opacity:var(--sc-state-opacity-hover);}
 body.sushiShop .sc-rail-arrow:focus-visible::before{opacity:var(--sc-state-opacity-focus);}
 body.sushiShop .sc-rail-arrow:active::before{opacity:var(--sc-state-opacity-pressed);}
@@ -26,9 +26,9 @@ body.sushiShop .sc-rail-arrow:focus-visible{outline:var(--sc-focus-ring-width-su
 body.sushiShop > .sc-category-submenu{box-sizing:border-box;position:fixed;z-index:calc(var(--sc-layer-sticky) + 24);min-width:190px;max-width:min(320px,calc(100% - var(--sc-space-extra-large)));padding:var(--sc-space-small) 0;border:var(--sc-border-default);border-radius:var(--sc-shape-menu);overflow:hidden;background:var(--sc-color-surface-raised);box-shadow:var(--sc-elevation-menu);opacity:0;visibility:hidden;pointer-events:none;transform:scale(.8);transform-origin:var(--sc-submenu-origin-x,var(--sc-space-extra-large)) var(--sc-submenu-origin-y,0px);transition:none;}
 body.sushiShop > .sc-category-submenu.sc-category-submenu-open{opacity:1;visibility:visible;pointer-events:auto;transform:scale(1);}
 body.sushiShop > .sc-category-submenu .sc-category-submenu-list{display:flex;flex-direction:column;width:100%;margin:0;padding:0;}
-body.sushiShop > .sc-category-submenu .sc-category-submenu-link{box-sizing:border-box;display:flex;position:relative;isolation:isolate;align-items:center;width:100%;min-height:36px;margin:0;padding:var(--sc-space-small) var(--sc-space-medium);border:0;border-radius:var(--sc-shape-extra-small);overflow:hidden;background:transparent;color:var(--sc-color-muted);font-family:var(--sc-typography-label-font-family);font-size:var(--sc-typography-label-font-size);line-height:var(--sc-typography-label-line-height);font-weight:var(--sc-typography-label-font-weight);letter-spacing:var(--sc-category-link-tracking);text-align:left;text-decoration:none;white-space:normal;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--sc-transition-standard);}
+body.sushiShop > .sc-category-submenu .sc-category-submenu-link{box-sizing:border-box;display:flex;position:relative;isolation:isolate;align-items:center;width:100%;min-height:36px;margin:0;padding:var(--sc-space-small) var(--sc-space-medium);border:0;border-radius:var(--sc-shape-extra-small);overflow:hidden;background:transparent;color:var(--sc-color-text-muted);font-family:var(--sc-typography-label-font-family);font-size:var(--sc-typography-label-font-size);line-height:var(--sc-typography-label-line-height);font-weight:var(--sc-typography-label-font-weight);letter-spacing:var(--sc-category-link-tracking);text-align:left;text-decoration:none;white-space:normal;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--sc-transition-standard);}
 body.sushiShop > .sc-category-submenu .sc-category-submenu-link::before{content:'';position:absolute;inset:0;border-radius:inherit;background:currentColor;opacity:0;pointer-events:none;transition:opacity var(--sc-transition-fast);}
-body.sushiShop > .sc-category-submenu .sc-category-submenu-link:hover,body.sushiShop > .sc-category-submenu .sc-category-submenu-link:focus-visible{outline:0;color:var(--sc-color-ink);}
+body.sushiShop > .sc-category-submenu .sc-category-submenu-link:hover,body.sushiShop > .sc-category-submenu .sc-category-submenu-link:focus-visible{outline:0;color:var(--sc-color-text-primary);}
 body.sushiShop > .sc-category-submenu .sc-category-submenu-link:hover::before{opacity:var(--sc-state-opacity-hover);}
 body.sushiShop > .sc-category-submenu .sc-category-submenu-link:focus-visible::before{opacity:var(--sc-state-opacity-focus);}
 body.sushiShop > .sc-category-submenu .sc-category-submenu-link:active::before{opacity:var(--sc-state-opacity-pressed);}
@@ -39,8 +39,8 @@ body.sushiShop .nav-top-li.sc-submenu-open > a.anchorLink .sc-category-submenu-c
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop::before{content:none!important;display:none!important;}
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator,body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink.sc-motion-current)::after,body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child:has(> a.anchorLink[aria-current='location'])::after,body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop > .nav-top-li:first-child.active::after{bottom:-15px!important;}
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after{content:none!important;display:none!important;}
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow--left{left:calc(-1 * var(--sc-layout-grid-gutter))!important;right:auto!important;}
-  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow--right{right:calc(-1 * var(--sc-layout-grid-gutter))!important;left:auto!important;}
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow--left{left:calc(-1 * var(--sc-layout-grid-gap))!important;right:auto!important;}
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-rail-arrow--right{right:calc(-1 * var(--sc-layout-grid-gap))!important;left:auto!important;}
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-is-stuck::after{content:''!important;display:block!important;position:absolute!important;right:0!important;bottom:-9px!important;left:0!important;height:9px!important;background:linear-gradient(to bottom,var(--sc-category-sticky-shadow-stops))!important;opacity:var(--sc-category-sticky-opacity-desktop)!important;pointer-events:none!important;}
 }
 @media(max-width:992px){

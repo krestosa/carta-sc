@@ -2,7 +2,7 @@ import { selectors } from '../core/variables.js';
 import { type Cleanup } from '../core/types.js';
 import { each, matches } from '../core/utils.js';
 
-const LEGACY_TARGETS = [
+const HOST_TARGETS = [
   'a[name^="anchor"]',
   '#busquedaJSBox',
   '#busquedaJSBoxResults',
@@ -55,7 +55,7 @@ function enhanceSocialLink(link: HTMLAnchorElement): void {
   link.querySelectorAll<HTMLImageElement>('img').forEach((image) => image.setAttribute('alt', ''));
 }
 
-function repairLegacyNode(node: Element): void {
+function repairHostNode(node: Element): void {
   if (matches(node, 'a[name^="anchor"]')) repairCategoryAnchor(node);
   if (matches(node, '#busquedaJSBox,#busquedaJSBoxResults')) {
     node.remove();
@@ -70,10 +70,10 @@ function repairLegacyNode(node: Element): void {
   if (node instanceof HTMLAnchorElement && SOCIAL_LINKS.some(([selector]) => matches(node, selector))) enhanceSocialLink(node);
 }
 
-export function scanLegacyDom(root: Node): void {
-  if (root instanceof Element && matches(root, LEGACY_TARGETS)) repairLegacyNode(root);
+export function scanHostDom(root: Node): void {
+  if (root instanceof Element && matches(root, HOST_TARGETS)) repairHostNode(root);
   if (root instanceof Document || root instanceof DocumentFragment || root instanceof Element) {
-    each(root.querySelectorAll<Element>(LEGACY_TARGETS), repairLegacyNode);
+    each(root.querySelectorAll<Element>(HOST_TARGETS), repairHostNode);
   }
 }
 
@@ -89,11 +89,11 @@ export function initializeDomNormalization(): Cleanup {
 
   const start = (): void => {
     normalizeDocumentSemantics();
-    scanLegacyDom(document);
+    scanHostDom(document);
     if (!document.body) return;
     observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) scanLegacyDom(node);
+        for (const node of mutation.addedNodes) scanHostDom(node);
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });

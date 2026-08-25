@@ -1,6 +1,6 @@
 /* Estructura base de las cards; cada vista ajusta su geometría. */
 body.sushiShop {
-  --sc-card-rule: var(--sc-color-ink);
+  --sc-card-rule: var(--sc-color-text-primary);
   --sc-card-subrule: var(--sc-color-border-strong);
   --sc-card-meta-row-height: 24px;
   --sc-card-content-gap: var(--sc-space-large);
@@ -79,7 +79,7 @@ body.sushiShop .listadoShop .productoShop .sc-product-flavors {
   height: 20px !important;
   margin: var(--sc-space-extra-small) 0 0 !important;
   padding: 0 !important;
-  color: var(--sc-color-trait) !important;
+  color: var(--sc-color-icon-subtle) !important;
   line-height: 0 !important;
 }
 

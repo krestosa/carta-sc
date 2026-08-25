@@ -12,19 +12,19 @@ class MobileHeaderController {
     if (this.#initialized) return this.destroy;
     this.#initialized = true;
     this.#bridge.setActive(true);
-    queries.desktop.addEventListener('change', this.scheduleRepair);
+    queries.layoutWide.addEventListener('change', this.scheduleRepair);
     this.scheduleRepair();
     return this.destroy;
   }
 
   repair(finalAttempt = false): boolean {
-    if (queries.desktop.matches) return true;
+    if (queries.layoutWide.matches) return true;
     return this.#bridge.repair(finalAttempt);
   }
 
   scheduleRepair = (): void => {
     this.#clearRetry();
-    if (!this.#initialized || queries.desktop.matches) return;
+    if (!this.#initialized || queries.layoutWide.matches) return;
 
     let index = 0;
     const attempt = (): void => {
@@ -40,7 +40,7 @@ class MobileHeaderController {
   };
 
   destroy = (): void => {
-    if (this.#initialized) queries.desktop.removeEventListener('change', this.scheduleRepair);
+    if (this.#initialized) queries.layoutWide.removeEventListener('change', this.scheduleRepair);
     this.#initialized = false;
     this.#clearRetry();
     this.#bridge.destroy();

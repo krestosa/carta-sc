@@ -48,7 +48,7 @@ class CategoryLayoutController {
     const scroller = this.#toolbar.querySelector<HTMLElement>(CATEGORY_SELECTORS.scroller);
     if (!scroller) return;
     if (this.#navigation.parentNode !== scroller) scroller.append(this.#navigation);
-    this.#normalizeLegacyStyles(this.#navigation);
+    this.#normalizeHostStyles(this.#navigation);
     document.body.classList.add(classes.catalogLayoutReady);
   }
 
@@ -97,7 +97,7 @@ class CategoryLayoutController {
     return Boolean(candidate);
   }
 
-  #normalizeLegacyStyles(root: ParentNode): void {
+  #normalizeHostStyles(root: ParentNode): void {
     for (const link of root.querySelectorAll<HTMLElement>('.nav-top-li > a.anchorLink')) {
       if (!this.#originalStyles.has(link)) this.#originalStyles.set(link, link.getAttribute('style'));
       link.style.removeProperty('font-size');

@@ -14,19 +14,19 @@ import { initializeContentNormalizer } from './features/content-normalizer/conte
 import { initializeImagePreloader } from './features/image-preloader/image-preloader.js';
 import { initializeDomNormalization } from './mutations/dom-normalization.js';
 import { initializeHistoryNormalization } from './mutations/history.js';
-import { initializeLegacyCategoryHover } from './mutations/legacy-category-hover.js';
+import { initializeHostCategoryHover } from './mutations/host-category-hover.js';
 import { initializeGlobalUiMotion } from './motion/global-ui.js';
 import { motion } from './motion/main.js';
 import { templatesReady } from './templates/registry.js';
 
-const VIEW_STORAGE_KEY = 'scCatalogView:v3';
+const VIEW_STORAGE_KEY = 'sc:catalog:view';
 const DEFAULT_VIEW: CatalogViewMode = 'compact';
 
 function rememberedCatalogView(): CatalogViewMode {
   try {
     const stored = localStorage.getItem(VIEW_STORAGE_KEY);
     if (stored === 'list') return 'list';
-    if (stored === 'compact' || stored === 'normal') return 'compact';
+    if (stored === 'compact') return 'compact';
   } catch {
     // El almacenamiento puede estar bloqueado; el catálogo conserva su vista predeterminada.
   }
@@ -58,7 +58,7 @@ class ApplicationRuntime {
     this.#use(initializeImagePreloader());
     this.#use(initializeDomNormalization());
     this.#use(initializeHistoryNormalization());
-    this.#use(initializeLegacyCategoryHover());
+    this.#use(initializeHostCategoryHover());
 
     await templatesReady;
     await whenDomReady();

@@ -53,7 +53,7 @@ export const appendTraitVisual = (
     return icon;
   }
 
-  const legacyImage = [...source.querySelectorAll<HTMLImageElement>('img')].find((image) => {
+  const sourceImage = [...source.querySelectorAll<HTMLImageElement>('img')].find((image) => {
     const imageLabel = (
       image.getAttribute('data-original-title')
       ?? image.getAttribute('title')
@@ -62,9 +62,9 @@ export const appendTraitVisual = (
     ).trim();
     return text(image) === label || imageLabel === label;
   });
-  if (!legacyImage) return null;
+  if (!sourceImage) return null;
 
-  const clone = legacyImage.cloneNode(true) as HTMLImageElement;
+  const clone = sourceImage.cloneNode(true) as HTMLImageElement;
   clone.removeAttribute('id');
   target.appendChild(clone);
   return clone;

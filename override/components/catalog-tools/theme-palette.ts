@@ -25,8 +25,8 @@ class ThemePaletteTransitionController {
   capture(): PaletteSnapshot {
     const style = getComputedStyle(root);
     return {
-      '--sc-color-ink': style.getPropertyValue('--sc-color-ink').trim(),
-      '--sc-color-surface': style.getPropertyValue('--sc-color-surface').trim(),
+      '--sc-color-text-primary': style.getPropertyValue('--sc-color-text-primary').trim(),
+      '--sc-color-surface-canvas': style.getPropertyValue('--sc-color-surface-canvas').trim(),
     };
   }
 
@@ -56,7 +56,7 @@ class ThemePaletteTransitionController {
     }
 
     const rootBackground = getComputedStyle(root).backgroundColor;
-    node.style.backgroundColor = from['--sc-color-surface'] || rootBackground || 'transparent';
+    node.style.backgroundColor = from['--sc-color-surface-canvas'] || rootBackground || 'transparent';
     node.style.opacity = '0';
     node.style.willChange = 'opacity';
     prepared?.(context);

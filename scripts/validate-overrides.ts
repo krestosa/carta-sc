@@ -117,12 +117,16 @@ class OverrideValidator {
     const runtime = readProjectFile('override/runtime-main.ts');
     const stability = readProjectFile('override/components/catalog-tools/view-stability.css');
     this.#validation.check(
-      /if\s*\(value\s*===\s*['"]normal['"]\)\s*return\s*['"]compact['"]/.test(viewState),
-      'Catalog view migration must normalize the legacy normal value to compact',
+      viewState.includes("const STORAGE_KEY = 'sc:catalog:view'"),
+      'Catalog view state must use only the canonical storage key sc:catalog:view',
     );
     this.#validation.check(
-      runtime.includes("stored === 'compact' || stored === 'normal'"),
-      'Runtime bootstrap must preserve legacy normal-to-compact migration',
+      !/\bnormal\b|scCatalogView:v\d|scCatalogView:(?:desktop|mobile)/.test(viewState),
+      'Catalog view state must not retain superseded view modes or storage migrations',
+    );
+    this.#validation.check(
+      !/\bnormal\b|scCatalogView:v\d|scCatalogView:(?:desktop|mobile)/.test(runtime),
+      'Runtime bootstrap must not retain superseded catalog-view paths',
     );
     this.#validation.check(
       hasDynamicImportTarget(parseProjectSource('override/main.ts'), './runtime-main.js'),

@@ -1,6 +1,5 @@
 type PrepaintThemeMode = 'system' | 'light' | 'dark';
 type PrepaintViewMode = 'compact' | 'list';
-type PrepaintViewContext = 'phone' | 'tablet' | 'desktop';
 
 const prepaintThemeModes: readonly PrepaintThemeMode[] = ['system', 'light', 'dark'];
 const prepaintViewModes: readonly PrepaintViewMode[] = ['compact', 'list'];
@@ -22,20 +21,8 @@ function storedPrepaintValue(key: string): string {
   }
 }
 
-function prepaintContext(): PrepaintViewContext {
-  const width = window.innerWidth || prepaintRoot.clientWidth || 0;
-  if (width <= 640) return 'phone';
-  if (width <= 992) return 'tablet';
-  return 'desktop';
-}
-
-function normalizeLegacyPrepaintView(value: string): PrepaintViewMode | '' {
-  if (value === 'list') return 'list';
-  return value ? 'compact' : '';
-}
-
 function resolvePrepaintTheme(): { readonly mode: PrepaintThemeMode; readonly resolved: 'light' | 'dark' } {
-  const stored = storedPrepaintValue('scTheme:v1');
+  const stored = storedPrepaintValue('sc:theme');
   const mode: PrepaintThemeMode = isPrepaintThemeMode(stored) ? stored : 'system';
   const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   const resolved = mode === 'system' ? (systemDark ? 'dark' : 'light') : mode;
@@ -43,22 +30,8 @@ function resolvePrepaintTheme(): { readonly mode: PrepaintThemeMode; readonly re
 }
 
 function resolvePrepaintView(): PrepaintViewMode {
-  const current = storedPrepaintValue('scCatalogView:v3');
-  if (current === 'normal') return 'compact';
-  if (isPrepaintViewMode(current)) return current;
-
-  const context = prepaintContext();
-  const legacy = storedPrepaintValue(`scCatalogView:v2:${context}`)
-    || storedPrepaintValue(context === 'desktop' ? 'scCatalogView:desktop' : 'scCatalogView:mobile');
-  const migrated = normalizeLegacyPrepaintView(legacy);
-  if (!migrated) return 'compact';
-
-  try {
-    localStorage.setItem('scCatalogView:v3', migrated);
-  } catch {
-    // El almacenamiento puede estar bloqueado; la vista resuelta sigue siendo válida para esta carga.
-  }
-  return migrated;
+  const stored = storedPrepaintValue('sc:catalog:view');
+  return isPrepaintViewMode(stored) ? stored : 'compact';
 }
 
 const prepaintTheme = resolvePrepaintTheme();

@@ -12,7 +12,7 @@ export const queries = Object.freeze(
   Object.fromEntries(mediaEntries.map(([name, query]) => [name, window.matchMedia(query)])),
 ) as MediaQueries;
 
-// Catalog compatibility contracts. New components keep selectors and state classes with their owner
+// Current catalog host selectors. New components keep selectors and state classes with their owner
 // instead of extending this object into a site-wide registry.
 export const selectors = Object.freeze({
   container: '.containerShop',
@@ -26,8 +26,8 @@ export const selectors = Object.freeze({
   sectionTitle: '.titleShopSeccion',
   sectionSubtitle: '.subTitleShopSeccion',
   categoryToolbar: '.sc-catalog-toolbar',
-  legacyPullDownOpen: '.topPullDown.open',
-  legacyMobileOpen: '.topShopMenuMobile._open',
+  hostPullDownOpen: '.topPullDown.open',
+  hostMobileOpen: '.topShopMenuMobile._open',
 });
 
 export const classes = Object.freeze({

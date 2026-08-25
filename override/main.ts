@@ -3,7 +3,7 @@ import { moduleAssetVersion } from './core/module-version.js';
 type BootstrapTheme = 'system' | 'light' | 'dark';
 
 const THEME_MODES = ['system', 'light', 'dark'] as const satisfies readonly BootstrapTheme[];
-const THEME_STORAGE_KEY = 'scTheme:v1';
+const THEME_STORAGE_KEY = 'sc:theme';
 const root = document.documentElement;
 
 function isBootstrapTheme(value: string | null): value is BootstrapTheme {

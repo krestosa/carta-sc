@@ -1,4 +1,4 @@
-/* Compatibilidad del riel con el menú legacy. */
+/* Integración del riel con el menú del documento anfitrión. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
   overscroll-behavior: auto !important;
@@ -36,21 +36,21 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before {
   left: 0 !important;
-  background: linear-gradient(90deg,var(--sc-color-surface) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
+  background: linear-gradient(90deg,var(--sc-color-surface-canvas) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
 }
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
   right: 0 !important;
-  background: linear-gradient(270deg,var(--sc-color-surface) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
+  background: linear-gradient(270deg,var(--sc-color-surface-canvas) var(--sc-category-overflow-stop),var(--sc-color-surface-transparent)) !important;
 }
 
-/* Evita que .active legacy suplante el estado real del scroll-spy. */
+/* Evita que el estado .active del documento anfitrión suplante el estado real del scroll-spy. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']),
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li.active > a.anchorLink:not(.sc-motion-current):not([aria-current='location']) {
-  color: var(--sc-color-muted) !important;
+  color: var(--sc-color-text-muted) !important;
 }
 
-/* Desactiva subrayados legacy; el indicador propio es el único activo. */
+/* Desactiva subrayados del documento anfitrión; el indicador propio es el único activo. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li::after,
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-top-li > a.anchorLink::after,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li::after,

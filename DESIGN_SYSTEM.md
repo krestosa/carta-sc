@@ -30,7 +30,7 @@ New components use semantic groups, not palette names:
 - `action`: primary, on-primary, selected and disabled.
 - `feedback`: error, success, warning and info; each has default, surface, border and on-color.
 
-The existing catalog variables (`--sc-color-ink`, `--sc-color-copy`, `--sc-color-surface`, and related names) remain compatibility aliases. New components should prefer the semantic variables such as `--sc-color-text-primary`, `--sc-color-surface-canvas` and `--sc-color-action-primary`.
+All owned CSS consumes the semantic variables directly, including `--sc-color-text-primary`, `--sc-color-text-heading`, `--sc-color-surface-canvas` and `--sc-color-action-primary`. The generated API exposes one canonical name per design decision.
 
 Do not add page-specific campaign palettes to the global system unless the same decision is intended to be reused across SushiClub.
 
@@ -64,7 +64,7 @@ Global layout decisions are separate from component geometry:
 - grid gap: spacing between grid tracks/items;
 - section gap: compact, default and spacious.
 
-`--sc-layout-grid-gutter` remains a compatibility alias for existing catalog CSS. New page work should use `--sc-layout-page-gutter` for the page edge and `--sc-layout-grid-gap` for grid item separation.
+Use `--sc-layout-page-gutter` for the page edge and `--sc-layout-grid-gap` for grid item separation. They are independent decisions even when a breakpoint currently gives them the same value.
 
 Reusable layout classes live in `override/core/layout-primitives.css`:
 
@@ -78,22 +78,16 @@ These are layout primitives, not page components. Page-specific composition stay
 
 ## 6. Responsive contract
 
-Existing media names remain compatible:
+TypeScript consumes one layout-oriented media vocabulary:
 
-- `phone`
-- `mobile`
-- `tablet`
-- `compact`
-- `compactWide`
-- `desktop`
+- `layoutNarrow`: up to 640px;
+- `layoutCompact`: up to 767px;
+- `layoutMedium`: 768–992px;
+- `layoutIntermediate`: 641–992px;
+- `layoutBelowWide`: up to 992px;
+- `layoutWide`: 993px and above.
 
-New TypeScript should prefer intent aliases where possible:
-
-- `layoutNarrow`
-- `layoutCompact`
-- `layoutWide`
-
-This avoids treating device categories as design requirements. Existing names are not removed because legacy and catalog code still depend on them.
+Names describe layout ranges rather than device categories.
 
 CSS media queries must use the same breakpoint values represented by the token source. A new breakpoint requires a demonstrated layout need, not a device model.
 
@@ -146,7 +140,7 @@ A private property must not be consumed by another owner. If two independent com
 
 ## 11. TypeScript variables and selectors
 
-`override/core/variables.ts` contains global media-query access plus current catalog compatibility selectors/classes.
+`override/core/variables.ts` contains global media-query access plus the selectors/classes required by the current catalog host document.
 
 Rules for new work:
 
@@ -154,7 +148,7 @@ Rules for new work:
 - shared visual values come from `systemTokens`;
 - global responsive state comes from generated `tokenMedia`/`queries`;
 - selectors and state classes specific to a component belong with that component, not in a growing global selector registry;
-- legacy selectors are compatibility contracts, not naming examples for new components.
+- host-document selectors are integration boundaries, not naming examples for new components.
 
 ## 12. Class and state naming
 
@@ -228,7 +222,7 @@ Global accessibility primitives include:
 - forced colors;
 - reduced motion.
 
-New component CSS owns its component-specific accessibility states. `core/a11y.css` can retain compatibility fixes for existing legacy surfaces, but new feature-specific fixes should not accumulate there.
+New component CSS owns its component-specific accessibility states. `core/a11y.css` contains global accessibility rules; feature-specific fixes remain with their owning component.
 
 ## 16. Creating a token
 
@@ -260,9 +254,3 @@ Before adding a component:
 `npm run verify` regenerates token outputs and audits design-token usage. The design-system contract validator additionally checks that required semantic foundations and base visual files remain present.
 
 Warnings about a tokenizable literal should be resolved when the literal is a shared decision. Do not silence the audit by creating meaningless tokens.
-
-## 19. Compatibility
-
-The current catalog API is not removed while the design system expands. Existing names remain aliases where needed so visual foundations can grow without destabilizing the live catalog.
-
-New pages should consume the semantic API first. Legacy compatibility should remain at the boundary of the legacy surface being adapted.

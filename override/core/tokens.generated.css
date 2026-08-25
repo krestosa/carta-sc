@@ -10,21 +10,18 @@
   --sc-focus-ring-offset: 3px;
   --sc-focus-ring-offset-tight: 2px;
   --sc-touch-target: 48px;
-  --sc-icon-size: 24px;
   --sc-icon-size-small: 16px;
   --sc-icon-size-medium: 20px;
   --sc-icon-size-large: 24px;
   --sc-control-size-small: 40px;
   --sc-control-size-medium: 48px;
   --sc-control-size-large: 56px;
-  --sc-content-max-width: 1240px;
   --sc-layout-container-wide: 1240px;
   --sc-layout-container-content: 1200px;
   --sc-layout-container-narrow: 900px;
   --sc-layout-container-text: 620px;
   --sc-layout-page-gutter: 28px;
-  --sc-layout-grid-gutter: 28px;
-  --sc-layout-grid-gap: 24px;
+  --sc-layout-grid-gap: 28px;
   --sc-layout-section-gap-compact: 32px;
   --sc-layout-section-gap-default: 48px;
   --sc-layout-section-gap-spacious: 64px;
@@ -35,8 +32,6 @@
   --sc-layer-dropdown: 160;
   --sc-layer-popover: 240;
   --sc-layer-drawer: 1000;
-  --sc-layer-mobile-menu: 1000;
-  --sc-layer-mobile-panel: 1001;
   --sc-layer-toast: 8000;
   --sc-layer-modal: 9000;
   --sc-layer-tooltip: 10000;
@@ -96,10 +91,6 @@
   --sc-transition-standard: 150ms cubic-bezier(0.2, 0, 0, 1) 0ms;
   --sc-transition-icon: 200ms cubic-bezier(0, 0, 0, 1) 0ms;
   --sc-transition-theme: 550ms cubic-bezier(0.2, 0, 0, 1) 0ms;
-  --sc-motion-fast: var(--sc-motion-short3);
-  --sc-motion-icon: var(--sc-motion-short4);
-  --sc-motion-theme: var(--sc-motion-long3);
-  --sc-motion-ease-out: var(--sc-motion-ease-decelerate);
   --sc-typography-heading-1-font-family: 'SC Acumin', Arial, sans-serif;
   --sc-typography-heading-1-font-size: 28px;
   --sc-typography-heading-1-font-weight: 600;
@@ -159,35 +150,31 @@
 
 :root,
 html[data-sc-theme-resolved='light'] {
-  --sc-color-ink: rgb(10 10 10);
-  --sc-color-heading: rgb(48 48 48);
-  --sc-color-copy: rgb(95 95 95);
-  --sc-color-muted: rgb(118 118 118);
-  --sc-color-trait: rgb(152 152 152);
-  --sc-color-surface: rgb(245 245 245);
-  --sc-color-surface-transparent: rgb(245 245 245 / 0);
-  --sc-color-surface-raised: rgb(251 251 250);
-  --sc-color-border: rgb(227 227 222);
-  --sc-color-border-strong: rgb(209 209 203);
   --sc-color-brand-primary: rgb(13 102 238);
   --sc-color-brand-primary-pressed: rgb(10 84 199);
   --sc-color-brand-on-primary: rgb(255 255 255);
   --sc-color-text-primary: rgb(10 10 10);
+  --sc-color-text-heading: rgb(48 48 48);
   --sc-color-text-secondary: rgb(95 95 95);
   --sc-color-text-muted: rgb(118 118 118);
+  --sc-color-text-subtle: rgb(152 152 152);
   --sc-color-text-disabled: rgb(183 183 178);
   --sc-color-text-inverse: rgb(255 255 255);
   --sc-color-text-link: rgb(13 102 238);
   --sc-color-icon-primary: rgb(10 10 10);
   --sc-color-icon-secondary: rgb(95 95 95);
   --sc-color-icon-muted: rgb(118 118 118);
+  --sc-color-icon-subtle: rgb(152 152 152);
   --sc-color-icon-inverse: rgb(255 255 255);
   --sc-color-surface-canvas: rgb(245 245 245);
   --sc-color-surface-subtle: rgb(239 239 236);
+  --sc-color-surface-raised: rgb(251 251 250);
   --sc-color-surface-overlay: rgb(251 251 250);
   --sc-color-surface-inverse: rgb(10 10 10);
+  --sc-color-surface-transparent: rgb(245 245 245 / 0);
   --sc-color-border-subtle: rgb(227 227 222);
   --sc-color-border-default: rgb(227 227 222);
+  --sc-color-border-strong: rgb(209 209 203);
   --sc-color-border-focus: rgb(10 10 10);
   --sc-color-action-primary: rgb(13 102 238);
   --sc-color-action-on-primary: rgb(255 255 255);
@@ -216,35 +203,31 @@ html[data-sc-theme-resolved='light'] {
 }
 
 html[data-sc-theme-resolved='dark'] {
-  --sc-color-ink: rgb(243 243 240);
-  --sc-color-heading: rgb(255 255 255);
-  --sc-color-copy: rgb(200 200 194);
-  --sc-color-muted: rgb(156 156 149);
-  --sc-color-trait: rgb(111 111 111);
-  --sc-color-surface: rgb(0 0 0);
-  --sc-color-surface-transparent: rgb(0 0 0 / 0);
-  --sc-color-surface-raised: rgb(10 10 10);
-  --sc-color-border: rgb(45 45 41);
-  --sc-color-border-strong: rgb(68 68 62);
   --sc-color-brand-primary: rgb(13 102 238);
   --sc-color-brand-primary-pressed: rgb(10 84 199);
   --sc-color-brand-on-primary: rgb(255 255 255);
   --sc-color-text-primary: rgb(243 243 240);
+  --sc-color-text-heading: rgb(255 255 255);
   --sc-color-text-secondary: rgb(200 200 194);
   --sc-color-text-muted: rgb(156 156 149);
+  --sc-color-text-subtle: rgb(111 111 111);
   --sc-color-text-disabled: rgb(92 92 87);
   --sc-color-text-inverse: rgb(10 10 10);
   --sc-color-text-link: rgb(91 155 255);
   --sc-color-icon-primary: rgb(243 243 240);
   --sc-color-icon-secondary: rgb(200 200 194);
   --sc-color-icon-muted: rgb(156 156 149);
+  --sc-color-icon-subtle: rgb(111 111 111);
   --sc-color-icon-inverse: rgb(10 10 10);
   --sc-color-surface-canvas: rgb(0 0 0);
   --sc-color-surface-subtle: rgb(10 10 10);
+  --sc-color-surface-raised: rgb(10 10 10);
   --sc-color-surface-overlay: rgb(10 10 10);
   --sc-color-surface-inverse: rgb(255 255 255);
+  --sc-color-surface-transparent: rgb(0 0 0 / 0);
   --sc-color-border-subtle: rgb(45 45 41);
   --sc-color-border-default: rgb(45 45 41);
+  --sc-color-border-strong: rgb(68 68 62);
   --sc-color-border-focus: rgb(243 243 240);
   --sc-color-action-primary: rgb(13 102 238);
   --sc-color-action-on-primary: rgb(255 255 255);
@@ -274,35 +257,31 @@ html[data-sc-theme-resolved='dark'] {
 
 @media (prefers-color-scheme: light) {
   html[data-sc-theme='system'] {
-    --sc-color-ink: rgb(10 10 10);
-    --sc-color-heading: rgb(48 48 48);
-    --sc-color-copy: rgb(95 95 95);
-    --sc-color-muted: rgb(118 118 118);
-    --sc-color-trait: rgb(152 152 152);
-    --sc-color-surface: rgb(245 245 245);
-    --sc-color-surface-transparent: rgb(245 245 245 / 0);
-    --sc-color-surface-raised: rgb(251 251 250);
-    --sc-color-border: rgb(227 227 222);
-    --sc-color-border-strong: rgb(209 209 203);
     --sc-color-brand-primary: rgb(13 102 238);
     --sc-color-brand-primary-pressed: rgb(10 84 199);
     --sc-color-brand-on-primary: rgb(255 255 255);
     --sc-color-text-primary: rgb(10 10 10);
+    --sc-color-text-heading: rgb(48 48 48);
     --sc-color-text-secondary: rgb(95 95 95);
     --sc-color-text-muted: rgb(118 118 118);
+    --sc-color-text-subtle: rgb(152 152 152);
     --sc-color-text-disabled: rgb(183 183 178);
     --sc-color-text-inverse: rgb(255 255 255);
     --sc-color-text-link: rgb(13 102 238);
     --sc-color-icon-primary: rgb(10 10 10);
     --sc-color-icon-secondary: rgb(95 95 95);
     --sc-color-icon-muted: rgb(118 118 118);
+    --sc-color-icon-subtle: rgb(152 152 152);
     --sc-color-icon-inverse: rgb(255 255 255);
     --sc-color-surface-canvas: rgb(245 245 245);
     --sc-color-surface-subtle: rgb(239 239 236);
+    --sc-color-surface-raised: rgb(251 251 250);
     --sc-color-surface-overlay: rgb(251 251 250);
     --sc-color-surface-inverse: rgb(10 10 10);
+    --sc-color-surface-transparent: rgb(245 245 245 / 0);
     --sc-color-border-subtle: rgb(227 227 222);
     --sc-color-border-default: rgb(227 227 222);
+    --sc-color-border-strong: rgb(209 209 203);
     --sc-color-border-focus: rgb(10 10 10);
     --sc-color-action-primary: rgb(13 102 238);
     --sc-color-action-on-primary: rgb(255 255 255);
@@ -333,35 +312,31 @@ html[data-sc-theme-resolved='dark'] {
 
 @media (prefers-color-scheme: dark) {
   html[data-sc-theme='system'] {
-    --sc-color-ink: rgb(243 243 240);
-    --sc-color-heading: rgb(255 255 255);
-    --sc-color-copy: rgb(200 200 194);
-    --sc-color-muted: rgb(156 156 149);
-    --sc-color-trait: rgb(111 111 111);
-    --sc-color-surface: rgb(0 0 0);
-    --sc-color-surface-transparent: rgb(0 0 0 / 0);
-    --sc-color-surface-raised: rgb(10 10 10);
-    --sc-color-border: rgb(45 45 41);
-    --sc-color-border-strong: rgb(68 68 62);
     --sc-color-brand-primary: rgb(13 102 238);
     --sc-color-brand-primary-pressed: rgb(10 84 199);
     --sc-color-brand-on-primary: rgb(255 255 255);
     --sc-color-text-primary: rgb(243 243 240);
+    --sc-color-text-heading: rgb(255 255 255);
     --sc-color-text-secondary: rgb(200 200 194);
     --sc-color-text-muted: rgb(156 156 149);
+    --sc-color-text-subtle: rgb(111 111 111);
     --sc-color-text-disabled: rgb(92 92 87);
     --sc-color-text-inverse: rgb(10 10 10);
     --sc-color-text-link: rgb(91 155 255);
     --sc-color-icon-primary: rgb(243 243 240);
     --sc-color-icon-secondary: rgb(200 200 194);
     --sc-color-icon-muted: rgb(156 156 149);
+    --sc-color-icon-subtle: rgb(111 111 111);
     --sc-color-icon-inverse: rgb(10 10 10);
     --sc-color-surface-canvas: rgb(0 0 0);
     --sc-color-surface-subtle: rgb(10 10 10);
+    --sc-color-surface-raised: rgb(10 10 10);
     --sc-color-surface-overlay: rgb(10 10 10);
     --sc-color-surface-inverse: rgb(255 255 255);
+    --sc-color-surface-transparent: rgb(0 0 0 / 0);
     --sc-color-border-subtle: rgb(45 45 41);
     --sc-color-border-default: rgb(45 45 41);
+    --sc-color-border-strong: rgb(68 68 62);
     --sc-color-border-focus: rgb(243 243 240);
     --sc-color-action-primary: rgb(13 102 238);
     --sc-color-action-on-primary: rgb(255 255 255);
@@ -393,15 +368,14 @@ html[data-sc-theme-resolved='dark'] {
 @media (min-width: 993px) and (max-width: 1120px) {
   :root {
     --sc-layout-page-gutter: 24px;
-    --sc-layout-grid-gutter: 24px;
+    --sc-layout-grid-gap: 24px;
   }
 }
 
 @media (min-width: 641px) and (max-width: 992px) {
   :root {
     --sc-layout-page-gutter: 24px;
-    --sc-layout-grid-gutter: 24px;
-    --sc-layout-grid-gap: 16px;
+    --sc-layout-grid-gap: 24px;
     --sc-typography-heading-1-font-family: 'SC Acumin', Arial, sans-serif;
     --sc-typography-heading-1-font-size: 22px;
     --sc-typography-heading-1-font-weight: 600;
@@ -418,8 +392,7 @@ html[data-sc-theme-resolved='dark'] {
 @media (max-width: 640px) {
   :root {
     --sc-layout-page-gutter: 20px;
-    --sc-layout-grid-gutter: 20px;
-    --sc-layout-grid-gap: 16px;
+    --sc-layout-grid-gap: 20px;
     --sc-typography-heading-1-font-family: 'SC Acumin', Arial, sans-serif;
     --sc-typography-heading-1-font-size: 20px;
     --sc-typography-heading-1-font-weight: 600;

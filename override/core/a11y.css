@@ -49,8 +49,8 @@ body.sushiShop .logosHome .logos > a img {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    min-width: var(--sc-icon-size);
-    min-height: var(--sc-icon-size);
+    min-width: var(--sc-icon-size-large);
+    min-height: var(--sc-icon-size-large);
     margin-inline: 2px;
     vertical-align: middle;
   }
@@ -65,8 +65,8 @@ body.sushiShop .logosHome .logos > a img {
 /* Refuerza bordes y foco cuando el sistema solicita mayor contraste. */
 @media (prefers-contrast: more) {
   body.sushiShop {
-    --sc-color-border: var(--sc-color-ink);
-    --sc-color-border-strong: var(--sc-color-ink);
+    --sc-color-border-default: var(--sc-color-text-primary);
+    --sc-color-border-strong: var(--sc-color-text-primary);
     --sc-focus-ring-width-subtle: var(--sc-focus-ring-width);
   }
 
@@ -74,7 +74,7 @@ body.sushiShop .logosHome .logos > a img {
   body.sushiShop .sc-catalog-toolbar,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
   body.sushiShop .sc-product-modal__footer {
-    border-color: var(--sc-color-ink) !important;
+    border-color: var(--sc-color-text-primary) !important;
   }
 }
 

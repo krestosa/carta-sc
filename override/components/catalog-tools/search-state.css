@@ -10,7 +10,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .produc
 }
 
 /* Conserva el espacio entre secciones, pero la primera visible ocupa exactamente el origen
-   vertical de la primera sección del catálogo normal. */
+   vertical de la primera sección del catálogo base. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {
   margin-top: var(--sc-space-large) !important;
 }
@@ -21,15 +21,14 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source.sc-search
   margin-top: 0 !important;
 }
 
-/* Los resultados visibles no esperan el reveal normal ni conservan offsets viejos. */
+/* Los resultados visibles no esperan el reveal base ni conservan offsets viejos. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
   opacity: 1 !important;
   visibility: visible !important;
   translate: 0 0 !important;
   transition: none !important;
 }
-html[data-sc-catalog-view='compact'] body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]),
-html[data-sc-catalog-view='normal'] body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]) {
+html[data-sc-catalog-view='compact'] body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .productoShop:not([hidden]){
   align-self: stretch !important;
 }
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]),
@@ -96,7 +95,7 @@ body.sushiShop .sc-catalog-search-clear {
   border-radius: var(--sc-shape-full);
   outline: 0;
   background: transparent;
-  color: var(--sc-color-muted);
+  color: var(--sc-color-text-muted);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -125,7 +124,7 @@ body.sushiShop .sc-catalog-search-clear svg {
   transition: transform var(--sc-motion-short2) var(--sc-motion-ease-decelerate),color var(--sc-motion-short2) var(--sc-motion-ease-standard);
 }
 body.sushiShop .sc-catalog-search-clear:hover,
-body.sushiShop .sc-catalog-search-clear:focus-visible { color: var(--sc-color-ink); }
+body.sushiShop .sc-catalog-search-clear:focus-visible { color: var(--sc-color-text-primary); }
 body.sushiShop .sc-catalog-search-clear:hover::before { opacity: var(--sc-state-opacity-hover); }
 body.sushiShop .sc-catalog-search-clear:focus-visible::before { opacity: var(--sc-state-opacity-focus); }
 body.sushiShop .sc-catalog-search-clear:active::before { opacity: var(--sc-state-opacity-pressed); }

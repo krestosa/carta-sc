@@ -3,17 +3,16 @@ import type { CatalogViewMode, ViewportContext } from '../../core/types.js';
 
 export type ViewIconKey = 'grid' | 'list';
 
-const STORAGE_KEY = 'scCatalogView:v3';
+const STORAGE_KEY = 'sc:catalog:view';
 const rootElement = document.documentElement;
 
 export function viewportContext(): ViewportContext {
-  if (queries.phone.matches) return 'phone';
-  if (queries.compactWide.matches) return 'tablet';
+  if (queries.layoutNarrow.matches) return 'phone';
+  if (queries.layoutIntermediate.matches) return 'tablet';
   return 'desktop';
 }
 
 export function normalizeCatalogViewMode(value: string | null): CatalogViewMode | null {
-  if (value === 'normal') return 'compact';
   return value === 'compact' || value === 'list' ? value : null;
 }
 
@@ -21,38 +20,21 @@ export function selectedCatalogView(): CatalogViewMode {
   return normalizeCatalogViewMode(rootElement.getAttribute('data-sc-catalog-view')) ?? 'compact';
 }
 
-function legacyMode(value: string | null): CatalogViewMode | null {
-  if (value === 'list') return 'list';
-  return value ? 'compact' : null;
-}
-
 export function loadCatalogView(): CatalogViewMode {
   const current = normalizeCatalogViewMode(rootElement.getAttribute('data-sc-catalog-view'));
   if (current) return current;
-
-  const context = viewportContext();
   try {
-    const stored = normalizeCatalogViewMode(localStorage.getItem(STORAGE_KEY));
-    if (stored) return stored;
-
-    const legacy = localStorage.getItem(`scCatalogView:v2:${context}`)
-      ?? localStorage.getItem(context === 'desktop' ? 'scCatalogView:desktop' : 'scCatalogView:mobile');
-    const migrated = legacyMode(legacy);
-    if (migrated) {
-      localStorage.setItem(STORAGE_KEY, migrated);
-      return migrated;
-    }
+    return normalizeCatalogViewMode(localStorage.getItem(STORAGE_KEY)) ?? 'compact';
   } catch {
-    // El modo por defecto sigue siendo utilizable sin Storage.
+    return 'compact';
   }
-  return 'compact';
 }
 
 export function saveCatalogView(mode: CatalogViewMode): void {
   try {
     localStorage.setItem(STORAGE_KEY, mode);
   } catch {
-    // Persistir la preferencia es opcional.
+    // Persisting the preference is optional when Storage is unavailable.
   }
 }
 

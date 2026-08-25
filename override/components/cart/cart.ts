@@ -11,7 +11,7 @@ const PROFILES = {
   desktop: { maxLag: 14, velocityScale: 0.0032 },
 } as const satisfies Record<'mobile' | 'tablet' | 'desktop', CartScrollProfile>;
 
-const MEDIA_QUERIES = [queries.mobile, queries.tablet, queries.desktop, queries.reducedMotion] as const;
+const MEDIA_QUERIES = [queries.layoutCompact, queries.layoutMedium, queries.layoutWide, queries.reducedMotion] as const;
 
 class CartMotionController {
   #cleanup: Cleanup | null = null;
@@ -34,8 +34,8 @@ class CartMotionController {
   };
 
   #profile(): CartScrollProfile {
-    if (queries.desktop.matches) return PROFILES.desktop;
-    if (queries.tablet.matches) return PROFILES.tablet;
+    if (queries.layoutWide.matches) return PROFILES.desktop;
+    if (queries.layoutMedium.matches) return PROFILES.tablet;
     return PROFILES.mobile;
   }
 

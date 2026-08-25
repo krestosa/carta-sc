@@ -26,7 +26,7 @@
 @import "./components/section-heading/responsive.css?v=unversioned";
 @import "./components/mobile-header/mobile-header.css?v=unversioned";
 @import "./components/mobile-header/state-icon.css?v=unversioned";
-@import "./components/category-nav/compatibility.css?v=unversioned";
+@import "./components/category-nav/host-integration.css?v=unversioned";
 @import "./components/product-modal/shell.css?v=unversioned";
 @import "./components/product-modal/content.css?v=unversioned";
 @import "./components/product-modal/controls.css?v=unversioned";

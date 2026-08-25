@@ -15,7 +15,7 @@ const TRAIT_BITS: Readonly<Record<string, number>> = {
   vegetariano: 8,
 };
 
-function normalizeLegacyTrait(label: unknown): string {
+function normalizeTraitReferenceLabel(label: unknown): string {
   const key = normalizeSearchText(label);
   return key === 'algo picante' ? 'picante' : key;
 }
@@ -25,7 +25,7 @@ function cardTraits(card: HTMLElement): string[] {
     .map((node) => normalizeSearchText(node.getAttribute('data-sc-trait')))
     .filter(Boolean);
   if (explicit.length > 0) return [...new Set(explicit)];
-  return [...new Set(traitLabels(card).map(normalizeLegacyTrait).filter(Boolean))];
+  return [...new Set(traitLabels(card).map(normalizeTraitReferenceLabel).filter(Boolean))];
 }
 
 export function traitMaskForCard(card: HTMLElement): number {
@@ -47,7 +47,7 @@ export function filterMaskPasses(traitMask: number, mask: number): boolean {
 function filterKey(box: HTMLElement): string {
   const explicit = box.querySelector<HTMLElement>('[data-sc-trait]')?.getAttribute('data-sc-trait');
   if (explicit) return normalizeSearchText(explicit);
-  return normalizeLegacyTrait(box.querySelector<HTMLElement>('.ref_label')?.textContent);
+  return normalizeTraitReferenceLabel(box.querySelector<HTMLElement>('.ref_label')?.textContent);
 }
 
 export function syncFilterButtons(root: HTMLElement, filters: ReadonlySet<string>): void {
