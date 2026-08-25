@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de view state dentro del componente catalog tools y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { queries } from '../../core/variables.js';
 import type { CatalogViewMode } from '../../core/types.js';
 

@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de search state dentro del componente catalog tools y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* La búsqueda filtra el catálogo sin cambiar la vista activa. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source {
   display: grid !important;
@@ -44,7 +44,7 @@ html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source .sc-secti
 }
 
 /* La primera entrada conserva reveal; las actualizaciones de letras posteriores no vuelven a
-   animar decenas de cards/headings, evitando trabajo de compositor innecesario en mobile. */
+   animar decenas de tarjetas/headings, evitando trabajo de compositor innecesario en móvil. */
 @keyframes sc-search-card-reveal {
   from { opacity: 0; }
   to { opacity: 1; }

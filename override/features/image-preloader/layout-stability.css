@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de layout stability dentro de la función image preloader de la interfaz propia. */
-/* Los placeholders de lista son overlays: no participan en el sizing del grid ni desplazan precio/contenido al desaparecer. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Los marcadores de posición de lista son overlays: no participan en el sizing del grid ni desplazan precio/contenido al desaparecer. */
 html[data-sc-catalog-view='list'].sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(.sc-card-placeholder-active.sc-card-placeholder-loading,.sc-card-placeholder-revealing) > a.fancyboxModalAddProd::before,
 html[data-sc-catalog-view='list'].sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(.sc-card-placeholder-active.sc-card-placeholder-loading,.sc-card-placeholder-revealing) > a.fancyboxModalAddProd::after {
   position: absolute !important;

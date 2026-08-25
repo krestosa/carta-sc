@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de motion dentro del componente product card y mantiene esa lógica en su propietario. */
-/* La card conserva geometría estable; el reveal mueve top y no transforma imágenes. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* La tarjeta conserva geometría estable; el reveal mueve top y no transforma imágenes. */
 .sushiShop .listadoShop .productoShop {
   position: relative;
   top: 0;

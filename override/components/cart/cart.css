@@ -1,6 +1,6 @@
-/* Documenta la responsabilidad de cart dentro del componente cart y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Estado visual mínimo para el desplazamiento reactivo del carrito. El motor local escribe
-   el transform durante el scroll y esta capa solo prepara origen y reduced motion. */
+   el transform durante el desplazamiento y esta capa solo prepara origen y movimiento reducido. */
 .sushiShop .sc-cart-scroll-motion {
   -webkit-transform-origin: 50% 0%;transform-origin: 50% 0%;will-change: transform;
 }

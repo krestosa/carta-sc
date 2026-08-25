@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de rules dentro de la función content normalizer de la interfaz propia.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 export interface EditorialState {
   sentenceStart: boolean;
   words: number;

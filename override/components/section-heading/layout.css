@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de layout dentro del componente section heading y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Geometría local de títulos y subtítulos de sección. La tipografía proviene del sistema DTCG global. */
 body.sushiShop {
   --sc-section-rule-scale: 1;
@@ -48,7 +48,7 @@ body.sushiShop .listadoShop.sc-first-catalog-section .titleShopSeccion > div {
 }
 
 /* La búsqueda reordena secciones. Todas mantienen su geometría base salvo la primera visible,
-   que replica el tratamiento de la primera sección del catálogo en todos los breakpoints. */
+   que replica el tratamiento de la primera sección del catálogo en todos los puntos de quiebre. */
 body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source > .titleShopSeccion:not([hidden]) {
   margin: var(--sc-section-title-margin) !important;
 }

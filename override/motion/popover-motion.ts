@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de popover motion dentro del sistema propio de movimiento.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { queries } from '../core/variables.js';
 import { motionConfig } from './config.js';
 import { motion } from './main.js';

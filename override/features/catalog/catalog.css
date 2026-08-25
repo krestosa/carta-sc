@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de catalog dentro de la función catalog de la interfaz propia. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Base del catálogo y contenedor principal. */
 body.sushiShop {
   --sc-catalog-container-inline-space: var(--sc-space-quad-extra-large);

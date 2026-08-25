@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de catalog tools dentro del componente catalog tools y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* La geometría específica del catálogo permanece local; las decisiones visuales y de interacción reutilizables provienen de la API global de tokens. */
 body.sushiShop {
   --sc-search-icon-size:20px;

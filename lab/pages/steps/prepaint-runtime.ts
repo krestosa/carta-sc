@@ -1,4 +1,4 @@
-// Documenta la etapa prepaint runtime de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 type PrepaintThemeMode = 'system' | 'light' | 'dark';
 type PrepaintViewMode = 'compact' | 'list';
 

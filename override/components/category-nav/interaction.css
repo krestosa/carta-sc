@@ -1,12 +1,12 @@
 /* Define estados visuales e interacción de las categorías utilizando las decisiones compartidas del sistema. */
-/* Interacción del riel: conserva la línea activa y normaliza target/state layer. */
+/* Interacción del riel: conserva la línea activa y normaliza objetivo/capa de estado. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink {
   isolation: isolate;
   touch-action: manipulation;
 }
 
-/* El pseudo amplía el target a ~48px y mantiene state layer solo para foco/pressed. */
+/* El pseudo amplía el objetivo a ~48px y mantiene capa de estado solo para foco/presionado. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink::before,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink::before {
   content: '';

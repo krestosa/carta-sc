@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de micro interaction dentro del sistema propio de movimiento.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import type { Cleanup } from '../core/types.js';
 import { motionConfig } from './config.js';
 import type { MicroInteractionOptions, MotionEngine, MotionHandle } from './types.js';

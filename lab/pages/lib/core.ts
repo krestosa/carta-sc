@@ -1,4 +1,4 @@
-// Documenta la etapa core de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';

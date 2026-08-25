@@ -1,4 +1,4 @@
-// Documenta la normalización dom normalization aplicada en el límite con el documento anfitrión.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { selectors } from '../core/variables.js';
 import { type Cleanup } from '../core/types.js';
 import { each, matches } from '../core/utils.js';

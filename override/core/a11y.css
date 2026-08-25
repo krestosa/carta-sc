@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de a11y dentro de los fundamentos compartidos de la interfaz propia. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Ajustes globales de accesibilidad. Amplían áreas interactivas y respetan preferencias
    del sistema sin modificar la composición, escala ni jerarquía visual del diseño. */
 .sc-sr-only {
@@ -19,7 +19,7 @@
   margin: 0 -23px -23px 0;
 }
 
-/* Los logos enlazados consumen el target y spacing globales. */
+/* Los logos enlazados consumen el objetivo y spacing globales. */
 body.sushiShop .logosHome .logos > a {
   box-sizing: border-box !important;
   display: inline-flex !important;
@@ -44,7 +44,7 @@ body.sushiShop .logosHome .logos > a img {
   flex: 0 0 auto !important;
 }
 
-/* Agranda el target de las banderas en desktop y normaliza el icono social más chico. */
+/* Agranda el objetivo de las banderas en ancho amplio y normaliza el icono social más chico. */
 @media (min-width: 993px) {
   body.sushiShop .newVer17topBar .top-paises > span > a {
     display: inline-flex !important;

@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de main dentro de la capa propia de la interfaz. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 @import "./core/tokens.generated.css?v=unversioned";
 @import "./core/theme.css?v=unversioned";
 @import "./core/a11y.css?v=unversioned";

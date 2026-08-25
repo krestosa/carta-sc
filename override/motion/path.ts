@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de path dentro del sistema propio de movimiento.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { delay, spring, tween } from './scheduler.js';
 import type {
   MotionHandle,

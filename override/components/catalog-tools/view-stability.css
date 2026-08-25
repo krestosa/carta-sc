@@ -1,5 +1,5 @@
-/* Documenta la responsabilidad de view stability dentro del componente catalog tools y mantiene esa lógica en su propietario. */
-/* Geometría base de la vista lista; los breakpoints solo ajustan tokens. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
+/* Geometría base de la vista lista; los puntos de quiebre solo ajustan tokens. */
 body.sushiShop {
   --sc-view-list-columns: 2;
   --sc-view-list-image-width: 210px;
@@ -96,7 +96,7 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .tit
 }
 
 /* La fila crece cuando el bloque secundario baja, evitando superposición en anchos chicos.
-   Precio vigente, tachado y rasgos comparten centro óptico en todos los breakpoints. */
+   Precio vigente, tachado y rasgos comparten centro óptico en todos los puntos de quiebre. */
 html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .priceRow {
   position: static !important;
   inset: auto !important;

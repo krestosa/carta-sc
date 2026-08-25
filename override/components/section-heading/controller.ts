@@ -1,4 +1,4 @@
-// Documenta la responsabilidad de controller dentro del componente section heading y mantiene esa lógica en su propietario.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 import { revealGate, scrollState } from '../../core/state.js';
 import { selectors } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';

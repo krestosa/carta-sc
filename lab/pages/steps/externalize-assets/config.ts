@@ -1,4 +1,4 @@
-// Documenta la etapa config de la canalización de Pages, separada de la fuente de producción.
+// Explica la responsabilidad de este archivo dentro del código propio y mantiene su lógica en el ámbito que le corresponde.
 export const ORIGIN = 'https://www.sushiclub.com.ar/';
 export const ASSET_ROOTS = ['uploads_shop', 'uploads', 'gfx', 'fonts', 'fuentes', 'iconos'] as const;
 export const TEXT_SUFFIXES = new Set(['.html', '.css', '.js']);

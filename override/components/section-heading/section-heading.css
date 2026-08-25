@@ -1,4 +1,4 @@
-/* Documenta la responsabilidad de section heading dentro del componente section heading y mantiene esa lógica en su propietario. */
+/* Explica la responsabilidad de esta hoja de estilos dentro de su componente o función propietaria. */
 /* Títulos de sección con reveal; solo la categoría padre dibuja divisor. */
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion,
 body.sushiShop.sc-catalog-layout-ready .listadoShop .titleShopSeccion > div,
