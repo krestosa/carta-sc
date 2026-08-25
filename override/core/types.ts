@@ -3,7 +3,6 @@ export type Cleanup = () => void;
 export type ThemeMode = 'system' | 'light' | 'dark';
 export type ResolvedTheme = Exclude<ThemeMode, 'system'>;
 export type CatalogViewMode = 'compact' | 'list';
-export type ViewportContext = 'phone' | 'tablet' | 'desktop';
 
 export interface ScrollState {
   programmatic: boolean;

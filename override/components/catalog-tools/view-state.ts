@@ -1,16 +1,10 @@
 import { queries } from '../../core/variables.js';
-import type { CatalogViewMode, ViewportContext } from '../../core/types.js';
+import type { CatalogViewMode } from '../../core/types.js';
 
 export type ViewIconKey = 'grid' | 'list';
 
 const STORAGE_KEY = 'sc:catalog:view';
 const rootElement = document.documentElement;
-
-export function viewportContext(): ViewportContext {
-  if (queries.layoutNarrow.matches) return 'phone';
-  if (queries.layoutIntermediate.matches) return 'tablet';
-  return 'desktop';
-}
 
 export function normalizeCatalogViewMode(value: string | null): CatalogViewMode | null {
   return value === 'compact' || value === 'list' ? value : null;
@@ -39,9 +33,8 @@ export function saveCatalogView(mode: CatalogViewMode): void {
 }
 
 function columnCount(): number {
-  const context = viewportContext();
-  if (context === 'phone') return 2;
-  if (context === 'tablet') return 3;
+  if (queries.layoutNarrow.matches) return 2;
+  if (queries.layoutIntermediate.matches) return 3;
   return 4;
 }
 
