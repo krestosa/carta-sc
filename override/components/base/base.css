@@ -310,7 +310,7 @@ textarea.sc-field__control {
   height: var(--sc-border-hairline);
   margin: 0;
   border: 0;
-  background: var(--sc-color-border);
+  background: var(--sc-color-border-default);
 }
 
 .sc-popover,

@@ -1,5 +1,5 @@
-import { readFile, stat } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readdir, readFile, stat } from 'node:fs/promises';
+import { extname, join, relative, resolve } from 'node:path';
 
 interface TokenNode { readonly $value?: unknown; readonly [key: string]: unknown }
 
@@ -11,6 +11,8 @@ const variablesPath = resolve(root, 'override/core/variables.ts');
 const baseCssPath = resolve(root, 'override/components/base/base.css');
 const layoutCssPath = resolve(root, 'override/core/layout-primitives.css');
 const guidePath = resolve(root, 'DESIGN_SYSTEM.md');
+const tokenGuidePath = resolve(root, 'tokens/README.md');
+const browserTypesPath = resolve(root, 'types/browser.d.ts');
 
 const document = JSON.parse(await readFile(tokenPath, 'utf8')) as TokenNode;
 const errors: string[] = [];
@@ -30,15 +32,23 @@ function requireToken(path: string): void {
 }
 
 async function requireFile(path: string): Promise<void> {
-  try { await stat(path); } catch { errors.push(`missing file ${path.replace(`${root}/`, '')}`); }
+  try { await stat(path); } catch { errors.push(`missing file ${relative(root, path)}`); }
+}
+
+async function walk(directory: string): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  return (await Promise.all(entries.map(async (entry) => {
+    const path = join(directory, entry.name);
+    return entry.isDirectory() ? walk(path) : [path];
+  }))).flat();
 }
 
 for (const mode of ['light', 'dark']) {
   for (const path of [
     'brand.primary', 'brand.onPrimary',
-    'text.primary', 'text.secondary', 'text.muted', 'text.disabled', 'text.inverse', 'text.link',
-    'icon.primary', 'icon.secondary', 'icon.muted', 'icon.inverse',
-    'surface.canvas', 'surface.subtle', 'surface.raised', 'surface.overlay', 'surface.inverse',
+    'text.primary', 'text.heading', 'text.secondary', 'text.muted', 'text.subtle', 'text.disabled', 'text.inverse', 'text.link',
+    'icon.primary', 'icon.secondary', 'icon.muted', 'icon.subtle', 'icon.inverse',
+    'surface.canvas', 'surface.subtle', 'surface.raised', 'surface.overlay', 'surface.inverse', 'surface.transparent',
     'border.subtle', 'border.default', 'border.strong', 'border.focus',
     'action.primary', 'action.onPrimary', 'action.selected', 'action.disabled',
   ]) requireToken(`system.color.${mode}.${path}`);
@@ -49,32 +59,89 @@ for (const mode of ['light', 'dark']) {
 
 for (const path of [
   'system.layout.container.wide', 'system.layout.container.content', 'system.layout.container.narrow', 'system.layout.container.text',
-  'system.layout.pageGutter.desktop', 'system.layout.pageGutter.compact', 'system.layout.pageGutter.mobile',
-  'system.layout.gridGap.desktop', 'system.layout.gridGap.compact', 'system.layout.gridGap.mobile',
+  'system.layout.breakpoint.narrowMax', 'system.layout.breakpoint.compactMax', 'system.layout.breakpoint.mediumMin',
+  'system.layout.breakpoint.mediumMax', 'system.layout.breakpoint.wideMin', 'system.layout.breakpoint.contentNarrowMax',
+  'system.layout.pageGutter.wide', 'system.layout.pageGutter.contentNarrow', 'system.layout.pageGutter.medium', 'system.layout.pageGutter.narrow',
+  'system.layout.gridGap.wide', 'system.layout.gridGap.contentNarrow', 'system.layout.gridGap.medium', 'system.layout.gridGap.narrow',
   'system.layout.sectionGap.compact', 'system.layout.sectionGap.default', 'system.layout.sectionGap.spacious',
-  'system.size.iconScale.small', 'system.size.iconScale.medium', 'system.size.iconScale.large',
+  'system.size.icon.small', 'system.size.icon.medium', 'system.size.icon.large',
   'system.size.control.small', 'system.size.control.medium', 'system.size.control.large',
   'system.layer.base', 'system.layer.sticky', 'system.layer.dropdown', 'system.layer.popover',
   'system.layer.drawer', 'system.layer.toast', 'system.layer.modal', 'system.layer.tooltip',
 ]) requireToken(path);
 
-await Promise.all([requireFile(baseCssPath), requireFile(layoutCssPath), requireFile(guidePath)]);
+await Promise.all([
+  requireFile(baseCssPath), requireFile(layoutCssPath), requireFile(guidePath), requireFile(tokenGuidePath),
+  requireFile(resolve(root, 'override/components/category-nav/host-integration.css')),
+  requireFile(resolve(root, 'override/mutations/host-category-hover.ts')),
+]);
+
+const tokenSource = await readFile(tokenPath, 'utf8');
+for (const forbidden of ['"compat"', 'gridGutter', 'contentMaxWidth', 'breakpointPhone', 'breakpointMobile', 'breakpointTablet', 'breakpointDesktop']) {
+  if (tokenSource.includes(forbidden)) errors.push(`token source contains superseded API ${forbidden}`);
+}
 
 const generatedCss = await readFile(generatedCssPath, 'utf8');
 for (const variable of [
-  '--sc-color-text-primary', '--sc-color-action-primary', '--sc-color-feedback-error',
-  '--sc-layout-page-gutter', '--sc-layout-grid-gap', '--sc-layout-container-text',
-  '--sc-icon-size-small', '--sc-control-size-large', '--sc-layer-tooltip',
+  '--sc-color-text-primary', '--sc-color-text-heading', '--sc-color-icon-subtle', '--sc-color-surface-canvas',
+  '--sc-color-action-primary', '--sc-color-feedback-error', '--sc-layout-page-gutter', '--sc-layout-grid-gap',
+  '--sc-layout-container-text', '--sc-icon-size-small', '--sc-control-size-large', '--sc-layer-tooltip',
 ]) if (!generatedCss.includes(`${variable}:`)) errors.push(`generated CSS missing ${variable}`);
 
+const supersededCssVariables = [
+  '--sc-color-ink', '--sc-color-heading', '--sc-color-copy', '--sc-color-muted', '--sc-color-trait', '--sc-color-surface', '--sc-color-border',
+  '--sc-content-max-width', '--sc-layout-grid-gutter', '--sc-icon-size', '--sc-layer-mobile-menu', '--sc-layer-mobile-panel',
+  '--sc-motion-fast', '--sc-motion-icon', '--sc-motion-theme', '--sc-motion-ease-out',
+];
+for (const variable of supersededCssVariables) {
+  const definition = new RegExp(`${variable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:`);
+  if (definition.test(generatedCss)) errors.push(`generated CSS exposes superseded variable ${variable}`);
+}
+
 const generatedTs = await readFile(generatedTsPath, 'utf8');
-for (const media of ['layoutNarrow', 'layoutCompact', 'layoutWide']) {
+for (const media of ['layoutNarrow', 'layoutCompact', 'layoutMedium', 'layoutIntermediate', 'layoutBelowWide', 'layoutWide']) {
   if (!generatedTs.includes(`${media}:`)) errors.push(`generated TypeScript missing tokenMedia.${media}`);
+}
+for (const media of ['phone:', 'mobile:', 'tablet:', 'compact:', 'compactWide:', 'desktop:']) {
+  if (generatedTs.includes(`  ${media}`)) errors.push(`generated TypeScript exposes superseded media key ${media.slice(0, -1)}`);
+}
+for (const fragment of ['surfaceSemantic', 'borderSemantic', '"ink":', '"trait":', '"mobileMenu":', '"mobilePanel":']) {
+  if (generatedTs.includes(fragment)) errors.push(`generated TypeScript exposes superseded shape ${fragment}`);
 }
 
 const variables = await readFile(variablesPath, 'utf8');
 if (/(?:#[0-9a-f]{3,8}\b|rgb\(|\b\d+(?:\.\d+)?px\b)/i.test(variables)) {
   errors.push('override/core/variables.ts must not define visual color/dimension literals; use systemTokens');
+}
+
+const ownedFiles = (await walk(resolve(root, 'override')))
+  .filter((path) => ['.css', '.ts', '.html'].includes(extname(path)));
+ownedFiles.push(browserTypesPath);
+for (const path of ownedFiles) {
+  const source = await readFile(path, 'utf8');
+  const file = relative(root, path).replaceAll('\\', '/');
+  if (/\blegacy\b|\bCompat\b|\bcompat(?:ibility)?\s+(?:alias|contract|layer|api)\b/i.test(source)) {
+    errors.push(`${file} contains superseded integration terminology`);
+  }
+  if (/scCatalogView:v\d|scCatalogView:(?:desktop|mobile)|scTheme:v\d/.test(source)) errors.push(`${file} contains superseded storage keys`);
+  if (/data-sc-catalog-view=['"]normal['"]/.test(source)) errors.push(`${file} contains removed catalog view state normal`);
+  for (const variable of supersededCssVariables) {
+    if (source.includes(`var(${variable})`) || source.includes(`'${variable}'`) || source.includes(`"${variable}"`)) {
+      errors.push(`${file} consumes superseded variable ${variable}`);
+    }
+  }
+}
+
+for (const path of [guidePath, tokenGuidePath]) {
+  const source = await readFile(path, 'utf8');
+  if (/\blegacy\b|\bcompatibility\b|\bcompat\b/i.test(source)) errors.push(`${relative(root, path)} documents a superseded API`);
+}
+
+for (const removedPath of [
+  'override/components/category-nav/compatibility.css',
+  'override/mutations/legacy-category-hover.ts',
+]) {
+  try { await stat(resolve(root, removedPath)); errors.push(`superseded file still exists: ${removedPath}`); } catch { /* expected */ }
 }
 
 const baseCss = await readFile(baseCssPath, 'utf8');
@@ -84,7 +151,7 @@ for (const className of [
 ]) if (!baseCss.includes(className)) errors.push(`base visual contract missing ${className}`);
 
 for (const forbidden of ['.active', '.open', '.selected', '.disabled']) {
-  const pattern = new RegExp(`(^|[\\s,>+~])\\\\${forbidden}(?:[\\s:{.#[]|$)`, 'm');
+  const pattern = new RegExp(`(^|[\\s,>+~])\\${forbidden}(?:[\\s:{.#[]|$)`, 'm');
   if (pattern.test(baseCss)) errors.push(`base visual contract uses generic state class ${forbidden}`);
 }
 
@@ -93,5 +160,5 @@ if (errors.length) {
   for (const error of errors) console.error(`  ${error}`);
   process.exitCode = 1;
 } else {
-  console.log('[design-system-contract] semantic foundations, responsive aliases and base visual contracts verified');
+  console.log('[design-system-contract] canonical semantic foundations and base visual contracts verified');
 }

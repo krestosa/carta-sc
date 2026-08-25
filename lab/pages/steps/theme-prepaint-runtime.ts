@@ -2,7 +2,7 @@ type ThemePrepaintMode = 'system' | 'light' | 'dark';
 type ThemePrepaintResolved = 'light' | 'dark';
 
 const themePrepaintModes: readonly ThemePrepaintMode[] = ['system', 'light', 'dark'];
-const themePrepaintStorageKey = 'scTheme:v1';
+const themePrepaintStorageKey = 'sc:theme';
 const themePrepaintPaths = {
   sun: 'M12 7.3A4.7 4.7 0 1 1 12 16.7A4.7 4.7 0 1 1 12 7.3Z',
   moon: 'M12 3A9 9 0 1 1 12 21A9 9 0 1 1 12 3Z',

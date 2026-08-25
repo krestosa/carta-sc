@@ -24,8 +24,8 @@
 
 .sushiShop .productoShop .sumar {
   -webkit-transform-origin: 50% 50%;transform-origin: 50% 50%;touch-action: manipulation;
-  -webkit-transition: -webkit-transform var(--sc-motion-fast) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
-  transition: transform var(--sc-motion-fast) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-fast) var(--sc-motion-ease-standard),border-color var(--sc-motion-fast) var(--sc-motion-ease-standard),color var(--sc-motion-fast) var(--sc-motion-ease-standard) !important;
+  -webkit-transition: -webkit-transform var(--sc-motion-short3) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-short3) var(--sc-motion-ease-standard),border-color var(--sc-motion-short3) var(--sc-motion-ease-standard),color var(--sc-motion-short3) var(--sc-motion-ease-standard) !important;
+  transition: transform var(--sc-motion-short3) var(--sc-motion-ease-decelerate),background-color var(--sc-motion-short3) var(--sc-motion-ease-standard),border-color var(--sc-motion-short3) var(--sc-motion-ease-standard),color var(--sc-motion-short3) var(--sc-motion-ease-standard) !important;
 }
 .sushiShop .productoShop .sumar:active {-webkit-transform: scale(var(--sc-card-action-active-scale));transform: scale(var(--sc-card-action-active-scale));}
 .sushiShop .productoShop .sumar:focus-visible {outline: var(--sc-focus-ring-width) solid currentColor;outline-offset: var(--sc-focus-ring-offset);}

@@ -173,70 +173,41 @@ const shapeNames = ['none','extraSmall','menu','control','card','dialog','button
 const spacingNames = ['extraSmall','small','medium','large','extraLarge','doubleExtraLarge','tripleExtraLarge','quadExtraLarge'] as const;
 const stateOpacityNames = ['disabled','muted','placeholder','hover','focus','pressed','dragged'] as const;
 const elevationNames = ['level0','level1','level2','level3','level4','level5','menu','popover','dialog'] as const;
-const layerNames = ['base','raised','sticky','dropdown','popover','drawer','mobileMenu','mobilePanel','toast','modal','tooltip'] as const;
+const layerNames = ['base','raised','sticky','dropdown','popover','drawer','toast','modal','tooltip'] as const;
 const typographyEntries = [
-  ['heading1.desktop','heading-1'],['heading2','heading-2'],['heading3.desktop','heading-3'],['heading4','heading-4'],
+  ['heading1.wide','heading-1'],['heading2','heading-2'],['heading3.wide','heading-3'],['heading4','heading-4'],
   ['bodyLarge','body-large'],['body','body'],['bodySmall','body-small'],['label','label'],['labelStrong','label-strong'],
   ['price','price'],['priceLarge','price-large'],
 ] as const;
 const themeColorEntries = [
   ['brand.primary','brand-primary'],['brand.primaryPressed','brand-primary-pressed'],['brand.onPrimary','brand-on-primary'],
-  ['text.primary','text-primary'],['text.secondary','text-secondary'],['text.muted','text-muted'],['text.disabled','text-disabled'],['text.inverse','text-inverse'],['text.link','text-link'],
-  ['icon.primary','icon-primary'],['icon.secondary','icon-secondary'],['icon.muted','icon-muted'],['icon.inverse','icon-inverse'],
-  ['surface.canvas','surface-canvas'],['surface.subtle','surface-subtle'],['surface.overlay','surface-overlay'],['surface.inverse','surface-inverse'],
-  ['border.subtle','border-subtle'],['border.default','border-default'],['border.focus','border-focus'],
+  ['text.primary','text-primary'],['text.heading','text-heading'],['text.secondary','text-secondary'],['text.muted','text-muted'],['text.subtle','text-subtle'],['text.disabled','text-disabled'],['text.inverse','text-inverse'],['text.link','text-link'],
+  ['icon.primary','icon-primary'],['icon.secondary','icon-secondary'],['icon.muted','icon-muted'],['icon.subtle','icon-subtle'],['icon.inverse','icon-inverse'],
+  ['surface.canvas','surface-canvas'],['surface.subtle','surface-subtle'],['surface.raised','surface-raised'],['surface.overlay','surface-overlay'],['surface.inverse','surface-inverse'],['surface.transparent','surface-transparent'],
+  ['border.subtle','border-subtle'],['border.default','border-default'],['border.strong','border-strong'],['border.focus','border-focus'],
   ['action.primary','action-primary'],['action.onPrimary','action-on-primary'],['action.selected','action-selected'],['action.disabled','action-disabled'],
   ['feedback.error.default','feedback-error'],['feedback.error.surface','feedback-error-surface'],['feedback.error.border','feedback-error-border'],['feedback.error.on','feedback-on-error'],
   ['feedback.success.default','feedback-success'],['feedback.success.surface','feedback-success-surface'],['feedback.success.border','feedback-success-border'],['feedback.success.on','feedback-on-success'],
   ['feedback.warning.default','feedback-warning'],['feedback.warning.surface','feedback-warning-surface'],['feedback.warning.border','feedback-warning-border'],['feedback.warning.on','feedback-on-warning'],
   ['feedback.info.default','feedback-info'],['feedback.info.surface','feedback-info-surface'],['feedback.info.border','feedback-info-border'],['feedback.info.on','feedback-on-info'],
 ] as const;
-const legacyThemeColorEntries = [
-  ['compat.ink','ink'],['compat.heading','heading'],['compat.copy','copy'],['compat.muted','muted'],['compat.trait','trait'],
-  ['compat.surface','surface'],['compat.surfaceTransparent','surface-transparent'],['compat.surfaceRaised','surface-raised'],
-  ['compat.border','border'],['compat.borderStrong','border-strong'],
-] as const;
 
 const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 function themeBlock(mode: 'light' | 'dark', indent = '  '): string {
   return [
-    ...legacyThemeColorEntries.map(([path, name]) => `${indent}--sc-color-${name}: ${cssValue(`system.color.${mode}.${path}`)};`),
     ...themeColorEntries.map(([path, name]) => `${indent}--sc-color-${name}: ${cssValue(`system.color.${mode}.${path}`)};`),
-    `${indent}--sc-focus-ring-color: ${cssValue(`system.color.${mode}.compat.focusRing`)};`,
+    `${indent}--sc-focus-ring-color: ${cssValue(`system.color.${mode}.border.focus`)};`,
     `${indent}--sc-border-default: ${cssValue(`system.border.${mode}.default`)};`,
     `${indent}--sc-border-strong: ${cssValue(`system.border.${mode}.strong`)};`,
     `${indent}--sc-border-focus: ${cssValue(`system.border.${mode}.focus`)};`,
   ].join('\n');
 }
 
-const tabletMax = cssValue('system.layout.breakpointTabletMax');
-const phoneMax = cssValue('system.layout.breakpointPhone');
-const desktopMin = cssValue('system.layout.breakpointDesktop');
-const narrowMax = cssValue('system.layout.breakpointContentNarrow');
-
-const rootLayoutLines = [
-  `  --sc-content-max-width: ${cssValue('system.layout.contentMaxWidth')};`,
-  `  --sc-layout-container-wide: ${cssValue('system.layout.container.wide')};`,
-  `  --sc-layout-container-content: ${cssValue('system.layout.container.content')};`,
-  `  --sc-layout-container-narrow: ${cssValue('system.layout.container.narrow')};`,
-  `  --sc-layout-container-text: ${cssValue('system.layout.container.text')};`,
-  `  --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.desktop')};`,
-  `  --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.desktop')};`,
-  `  --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.desktop')};`,
-  `  --sc-layout-section-gap-compact: ${cssValue('system.layout.sectionGap.compact')};`,
-  `  --sc-layout-section-gap-default: ${cssValue('system.layout.sectionGap.default')};`,
-  `  --sc-layout-section-gap-spacious: ${cssValue('system.layout.sectionGap.spacious')};`,
-].join('\n');
-const sizeLines = [
-  `  --sc-touch-target: ${cssValue('system.size.touchTarget')};`,
-  `  --sc-icon-size: ${cssValue('system.size.icon')};`,
-  `  --sc-icon-size-small: ${cssValue('system.size.iconScale.small')};`,
-  `  --sc-icon-size-medium: ${cssValue('system.size.iconScale.medium')};`,
-  `  --sc-icon-size-large: ${cssValue('system.size.iconScale.large')};`,
-  `  --sc-control-size-small: ${cssValue('system.size.control.small')};`,
-  `  --sc-control-size-medium: ${cssValue('system.size.control.medium')};`,
-  `  --sc-control-size-large: ${cssValue('system.size.control.large')};`,
-].join('\n');
+const narrowMax = cssValue('system.layout.breakpoint.narrowMax');
+const mediumMax = cssValue('system.layout.breakpoint.mediumMax');
+const wideMin = cssValue('system.layout.breakpoint.wideMin');
+const contentNarrowMax = cssValue('system.layout.breakpoint.contentNarrowMax');
+const intermediateMin = dimensionNumber('system.layout.breakpoint.narrowMax') + 1;
 
 const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. */
 :root {
@@ -249,8 +220,22 @@ const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. 
   --sc-focus-ring-width-subtle: ${cssValue('system.stroke.focusSubtle')};
   --sc-focus-ring-offset: ${cssValue('system.stroke.focusOffset')};
   --sc-focus-ring-offset-tight: ${cssValue('system.stroke.focusOffsetTight')};
-${sizeLines}
-${rootLayoutLines}
+  --sc-touch-target: ${cssValue('system.size.touchTarget')};
+  --sc-icon-size-small: ${cssValue('system.size.icon.small')};
+  --sc-icon-size-medium: ${cssValue('system.size.icon.medium')};
+  --sc-icon-size-large: ${cssValue('system.size.icon.large')};
+  --sc-control-size-small: ${cssValue('system.size.control.small')};
+  --sc-control-size-medium: ${cssValue('system.size.control.medium')};
+  --sc-control-size-large: ${cssValue('system.size.control.large')};
+  --sc-layout-container-wide: ${cssValue('system.layout.container.wide')};
+  --sc-layout-container-content: ${cssValue('system.layout.container.content')};
+  --sc-layout-container-narrow: ${cssValue('system.layout.container.narrow')};
+  --sc-layout-container-text: ${cssValue('system.layout.container.text')};
+  --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.wide')};
+  --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.wide')};
+  --sc-layout-section-gap-compact: ${cssValue('system.layout.sectionGap.compact')};
+  --sc-layout-section-gap-default: ${cssValue('system.layout.sectionGap.default')};
+  --sc-layout-section-gap-spacious: ${cssValue('system.layout.sectionGap.spacious')};
   --sc-media-product-aspect-ratio: ${cssValue('system.media.aspectRatio.product')};
 ${layerNames.map((name) => `  --sc-layer-${cssName(name)}: ${cssValue(`system.layer.${name}`)};`).join('\n')}
 ${stateOpacityNames.map((name) => `  --sc-state-opacity-${cssName(name)}: ${cssValue(`system.state.opacity.${name}`)};`).join('\n')}
@@ -260,10 +245,6 @@ ${spacingNames.map((name) => `  --sc-space-${cssName(name)}: ${cssValue(`system.
 ${durationNames.map((name) => `  --sc-motion-${cssName(name)}: ${cssValue(`system.motion.duration.${name}`)};`).join('\n')}
 ${easingNames.map((name) => `  --sc-motion-ease-${cssName(name)}: ${cssValue(`system.motion.easing.${name}`)};`).join('\n')}
 ${transitionNames.map((name) => `  --sc-transition-${cssName(name)}: ${cssValue(`system.motion.transition.${name}`)};`).join('\n')}
-  --sc-motion-fast: var(--sc-motion-short3);
-  --sc-motion-icon: var(--sc-motion-short4);
-  --sc-motion-theme: var(--sc-motion-long3);
-  --sc-motion-ease-out: var(--sc-motion-ease-decelerate);
 ${typographyEntries.map(([path, role]) => typographyBlock(`system.typography.${path}`, role)).join('\n')}
 }
 
@@ -288,35 +269,32 @@ ${themeBlock('dark', '    ')}
   }
 }
 
-@media (min-width: ${desktopMin}) and (max-width: ${narrowMax}) {
+@media (min-width: ${wideMin}) and (max-width: ${contentNarrowMax}) {
+  :root {
+    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.contentNarrow')};
+    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.contentNarrow')};
+  }
+}
+
+@media (min-width: ${intermediateMin}px) and (max-width: ${mediumMax}) {
+  :root {
+    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.medium')};
+    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.medium')};
+${typographyBlock('system.typography.heading1.medium', 'heading-1', '    ')}
+${typographyBlock('system.typography.heading3.medium', 'heading-3', '    ')}
+  }
+}
+
+@media (max-width: ${narrowMax}) {
   :root {
     --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.narrow')};
-    --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.narrow')};
-  }
-}
-
-@media (min-width: ${dimensionNumber('system.layout.breakpointPhone') + 1}px) and (max-width: ${tabletMax}) {
-  :root {
-    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.compact')};
-    --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.compact')};
-    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.compact')};
-${typographyBlock('system.typography.heading1.tablet', 'heading-1', '    ')}
-${typographyBlock('system.typography.heading3.tablet', 'heading-3', '    ')}
-  }
-}
-
-@media (max-width: ${phoneMax}) {
-  :root {
-    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.mobile')};
-    --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.mobile')};
-    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.mobile')};
-${typographyBlock('system.typography.heading1.mobile', 'heading-1', '    ')}
-${typographyBlock('system.typography.heading3.mobile', 'heading-3', '    ')}
+    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.narrow')};
+${typographyBlock('system.typography.heading1.narrow', 'heading-1', '    ')}
+${typographyBlock('system.typography.heading3.narrow', 'heading-3', '    ')}
   }
 }
 `;
 
-const compactWideMin = dimensionNumber('system.layout.breakpointPhone') + 1;
 const durationMs = Object.fromEntries(durationNames.map((name) => [name, durationMilliseconds(`system.motion.duration.${name}`)]));
 const durations = Object.fromEntries(Object.entries(durationMs).map(([name, milliseconds]) => [name, milliseconds / 1000]));
 const curves = Object.fromEntries(easingNames.map((name) => [name, resolved(`system.motion.easing.${name}`)]));
@@ -340,13 +318,13 @@ const springs = {
   focus: { stiffness: numberValue('system.motion.spring.focus.stiffness'), damping: numberValue('system.motion.spring.focus.damping') },
 };
 const typographyObject = Object.fromEntries([
-  ['heading1Desktop', typographyProperties('system.typography.heading1.desktop')],
-  ['heading1Tablet', typographyProperties('system.typography.heading1.tablet')],
-  ['heading1Mobile', typographyProperties('system.typography.heading1.mobile')],
+  ['heading1Wide', typographyProperties('system.typography.heading1.wide')],
+  ['heading1Medium', typographyProperties('system.typography.heading1.medium')],
+  ['heading1Narrow', typographyProperties('system.typography.heading1.narrow')],
   ['heading2', typographyProperties('system.typography.heading2')],
-  ['heading3Desktop', typographyProperties('system.typography.heading3.desktop')],
-  ['heading3Tablet', typographyProperties('system.typography.heading3.tablet')],
-  ['heading3Mobile', typographyProperties('system.typography.heading3.mobile')],
+  ['heading3Wide', typographyProperties('system.typography.heading3.wide')],
+  ['heading3Medium', typographyProperties('system.typography.heading3.medium')],
+  ['heading3Narrow', typographyProperties('system.typography.heading3.narrow')],
   ['heading4', typographyProperties('system.typography.heading4')],
   ['bodyLarge', typographyProperties('system.typography.bodyLarge')],
   ['body', typographyProperties('system.typography.body')],
@@ -360,14 +338,11 @@ const typographyObject = Object.fromEntries([
 function themeObject(mode: 'light' | 'dark'): Record<string, unknown> {
   const entry = (path: string): string => cssValue(`system.color.${mode}.${path}`);
   return {
-    ink: entry('compat.ink'), heading: entry('compat.heading'), copy: entry('compat.copy'), muted: entry('compat.muted'), trait: entry('compat.trait'),
-    surface: entry('compat.surface'), surfaceTransparent: entry('compat.surfaceTransparent'), surfaceRaised: entry('compat.surfaceRaised'),
-    border: entry('compat.border'), borderStrong: entry('compat.borderStrong'), focusRing: entry('compat.focusRing'),
     brand: { primary: entry('brand.primary'), primaryPressed: entry('brand.primaryPressed'), onPrimary: entry('brand.onPrimary') },
-    text: { primary: entry('text.primary'), secondary: entry('text.secondary'), muted: entry('text.muted'), disabled: entry('text.disabled'), inverse: entry('text.inverse'), link: entry('text.link') },
-    icon: { primary: entry('icon.primary'), secondary: entry('icon.secondary'), muted: entry('icon.muted'), inverse: entry('icon.inverse') },
-    surfaceSemantic: { canvas: entry('surface.canvas'), subtle: entry('surface.subtle'), raised: entry('surface.raised'), overlay: entry('surface.overlay'), inverse: entry('surface.inverse'), transparent: entry('surface.transparent') },
-    borderSemantic: { subtle: entry('border.subtle'), default: entry('border.default'), strong: entry('border.strong'), focus: entry('border.focus') },
+    text: { primary: entry('text.primary'), heading: entry('text.heading'), secondary: entry('text.secondary'), muted: entry('text.muted'), subtle: entry('text.subtle'), disabled: entry('text.disabled'), inverse: entry('text.inverse'), link: entry('text.link') },
+    icon: { primary: entry('icon.primary'), secondary: entry('icon.secondary'), muted: entry('icon.muted'), subtle: entry('icon.subtle'), inverse: entry('icon.inverse') },
+    surface: { canvas: entry('surface.canvas'), subtle: entry('surface.subtle'), raised: entry('surface.raised'), overlay: entry('surface.overlay'), inverse: entry('surface.inverse'), transparent: entry('surface.transparent') },
+    border: { subtle: entry('border.subtle'), default: entry('border.default'), strong: entry('border.strong'), focus: entry('border.focus') },
     action: { primary: entry('action.primary'), onPrimary: entry('action.onPrimary'), selected: entry('action.selected'), disabled: entry('action.disabled') },
     feedback: Object.fromEntries(['error','success','warning','info'].map((kind) => [kind, {
       default: entry(`feedback.${kind}.default`), surface: entry(`feedback.${kind}.surface`),
@@ -383,13 +358,13 @@ const systemTokenObject = {
   spacing: Object.fromEntries(spacingNames.map((name) => [name, cssValue(`system.spacing.${name}`)])),
   layout: {
     container: Object.fromEntries(['wide','content','narrow','text'].map((name) => [name, cssValue(`system.layout.container.${name}`)])),
-    pageGutter: Object.fromEntries(['desktop','narrow','compact','mobile'].map((name) => [name, cssValue(`system.layout.pageGutter.${name}`)])),
-    gridGap: Object.fromEntries(['desktop','compact','mobile'].map((name) => [name, cssValue(`system.layout.gridGap.${name}`)])),
+    pageGutter: Object.fromEntries(['wide','contentNarrow','medium','narrow'].map((name) => [name, cssValue(`system.layout.pageGutter.${name}`)])),
+    gridGap: Object.fromEntries(['wide','contentNarrow','medium','narrow'].map((name) => [name, cssValue(`system.layout.gridGap.${name}`)])),
     sectionGap: Object.fromEntries(['compact','default','spacious'].map((name) => [name, cssValue(`system.layout.sectionGap.${name}`)])),
   },
   size: {
-    touchTarget: cssValue('system.size.touchTarget'), icon: cssValue('system.size.icon'),
-    iconScale: Object.fromEntries(['small','medium','large'].map((name) => [name, cssValue(`system.size.iconScale.${name}`)])),
+    touchTarget: cssValue('system.size.touchTarget'),
+    icon: Object.fromEntries(['small','medium','large'].map((name) => [name, cssValue(`system.size.icon.${name}`)])),
     control: Object.fromEntries(['small','medium','large'].map((name) => [name, cssValue(`system.size.control.${name}`)])),
   },
   state: { opacity: Object.fromEntries(stateOpacityNames.map((name) => [name, numberValue(`system.state.opacity.${name}`)])) },
@@ -401,15 +376,12 @@ const systemTokenObject = {
 
 const ts = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. */
 export const tokenMedia = Object.freeze({
-  phone: '(max-width: ${cssValue('system.layout.breakpointPhone')})',
-  mobile: '(max-width: ${cssValue('system.layout.breakpointMobile')})',
-  tablet: '(min-width: ${cssValue('system.layout.breakpointTabletMin')}) and (max-width: ${cssValue('system.layout.breakpointTabletMax')})',
-  compact: '(max-width: ${cssValue('system.layout.breakpointTabletMax')})',
-  compactWide: '(min-width: ${compactWideMin}px) and (max-width: ${cssValue('system.layout.breakpointTabletMax')})',
-  desktop: '(min-width: ${cssValue('system.layout.breakpointDesktop')})',
-  layoutNarrow: '(max-width: ${cssValue('system.layout.breakpointPhone')})',
-  layoutCompact: '(max-width: ${cssValue('system.layout.breakpointTabletMax')})',
-  layoutWide: '(min-width: ${cssValue('system.layout.breakpointDesktop')})',
+  layoutNarrow: '(max-width: ${cssValue('system.layout.breakpoint.narrowMax')})',
+  layoutCompact: '(max-width: ${cssValue('system.layout.breakpoint.compactMax')})',
+  layoutMedium: '(min-width: ${cssValue('system.layout.breakpoint.mediumMin')}) and (max-width: ${cssValue('system.layout.breakpoint.mediumMax')})',
+  layoutIntermediate: '(min-width: ${intermediateMin}px) and (max-width: ${cssValue('system.layout.breakpoint.mediumMax')})',
+  layoutBelowWide: '(max-width: ${cssValue('system.layout.breakpoint.mediumMax')})',
+  layoutWide: '(min-width: ${cssValue('system.layout.breakpoint.wideMin')})',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   reducedTransparency: '(prefers-reduced-transparency: reduce)',
   moreContrast: '(prefers-contrast: more)',

@@ -72,13 +72,13 @@ class CatalogViewController {
     const onBreakpoint = (): void => this.refreshLayout();
 
     button.addEventListener('click', onClick);
-    queries.phone.addEventListener('change', onBreakpoint);
-    queries.compactWide.addEventListener('change', onBreakpoint);
+    queries.layoutNarrow.addEventListener('change', onBreakpoint);
+    queries.layoutIntermediate.addEventListener('change', onBreakpoint);
 
     const cleanup = (): void => {
       button.removeEventListener('click', onClick);
-      queries.phone.removeEventListener('change', onBreakpoint);
-      queries.compactWide.removeEventListener('change', onBreakpoint);
+      queries.layoutNarrow.removeEventListener('change', onBreakpoint);
+      queries.layoutIntermediate.removeEventListener('change', onBreakpoint);
     };
     this.#installationCleanup = cleanup;
 

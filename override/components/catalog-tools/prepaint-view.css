@@ -1,5 +1,5 @@
 /* Igual a la vista compacta mientras el runtime todavía no resolvió la preferencia.
-   Evita que precio y contenido nazcan con la geometría legacy y salten al montar la vista. */
+   Evita que precio y contenido nazcan con la geometría del documento anfitrión y salten al montar la vista. */
 html:not([data-sc-catalog-view]) body.sushiShop .listadoShop {
   grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
   column-gap: var(--sc-compact-column-gap) !important;

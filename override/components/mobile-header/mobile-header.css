@@ -22,7 +22,7 @@ body.sushiShop {
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
-    background: var(--sc-color-surface) !important;
+    background: var(--sc-color-surface-canvas) !important;
     line-height: 0 !important;
     text-align: center !important;
     z-index: var(--sc-layer-mobile-header) !important;
@@ -90,7 +90,7 @@ body.sushiShop {
     background: transparent !important;
     overflow: visible !important;
     pointer-events: none !important;
-    z-index: var(--sc-layer-mobile-menu) !important;
+    z-index: var(--sc-layer-drawer) !important;
   }
 
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_btn {
@@ -122,7 +122,7 @@ body.sushiShop {
     position: absolute !important;
     inset: var(--sc-space-extra-small) !important;
     border-radius: var(--sc-shape-extra-small) !important;
-    background: var(--sc-color-ink) !important;
+    background: var(--sc-color-text-primary) !important;
     transform: scale(1);
     transform-origin: 50% 50%;
     transition: transform var(--sc-motion-short2) var(--sc-motion-ease-decelerate) !important;
@@ -154,7 +154,7 @@ body.sushiShop {
     height: 2px !important;
     margin: 0 !important;
     border-radius: 0 !important;
-    background: var(--sc-color-surface) !important;
+    background: var(--sc-color-surface-canvas) !important;
     box-shadow: none !important;
   }
 
@@ -172,15 +172,15 @@ body.sushiShop {
     padding: var(--sc-space-small) var(--sc-space-large) var(--sc-space-large) !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    background: var(--sc-color-ink) !important;
-    color: var(--sc-color-surface) !important;
+    background: var(--sc-color-text-primary) !important;
+    color: var(--sc-color-surface-canvas) !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
     transform: translate3d(0,calc(-1 * var(--sc-space-small)),0) !important;
     transform-origin: 50% 0 !important;
     transition: opacity var(--sc-motion-short3) var(--sc-motion-ease-decelerate),transform var(--sc-motion-short4) var(--sc-motion-ease-decelerate),visibility 0s linear var(--sc-motion-short4) !important;
-    z-index: var(--sc-layer-mobile-panel) !important;
+    z-index: calc(var(--sc-layer-drawer) + 1) !important;
   }
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav[aria-hidden='false'] {
     opacity: 1 !important;
@@ -194,7 +194,7 @@ body.sushiShop {
   body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
     border-radius: 0 !important;
     background: transparent !important;
-    color: var(--sc-color-surface) !important;
+    color: var(--sc-color-surface-canvas) !important;
     box-shadow: none !important;
   }
 }
@@ -236,21 +236,22 @@ body.sushiShop {
 @media (max-width: 992px) {
   html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     background: var(--sc-color-surface-raised) !important;
-    color: var(--sc-color-ink) !important;
+    color: var(--sc-color-text-primary) !important;
   }
   html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
   html[data-sc-theme-resolved='dark'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
-    color: var(--sc-color-ink) !important;
+    color: var(--sc-color-text-primary) !important;
   }
 }
 
 @media (prefers-color-scheme: dark) and (max-width: 992px) {
   html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav {
     background: var(--sc-color-surface-raised) !important;
-    color: var(--sc-color-ink) !important;
+    color: var(--sc-color-text-primary) !important;
   }
   html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav a,
   html[data-sc-theme='system'] body.sushiShop > .slicknav_menu.sc-mobile-main-menu .slicknav_nav .slicknav_item {
-    color: var(--sc-color-ink) !important;
+    color: var(--sc-color-text-primary) !important;
   }
 }
+

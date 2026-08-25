@@ -36,7 +36,7 @@ class ProductCardController {
     if (this.#initialized) return this.destroy;
     this.#initialized = true;
     ready(this.#startIncrementalEnhancement);
-    queries.desktop.addEventListener('change', this.#onBreakpointChange);
+    queries.layoutWide.addEventListener('change', this.#onBreakpointChange);
     return this.destroy;
   }
 
@@ -55,7 +55,7 @@ class ProductCardController {
     this.#cardFrame = 0;
     this.#cancelInitialWork();
     cancelDescriptionMeasure();
-    queries.desktop.removeEventListener('change', this.#onBreakpointChange);
+    queries.layoutWide.removeEventListener('change', this.#onBreakpointChange);
   };
 
   refresh = (): void => {
@@ -167,7 +167,7 @@ class ProductCardController {
     installTraitReferences();
     this.#initialQueue = [...document.querySelectorAll<HTMLElement>(selectors.productCard)];
 
-    let critical = queries.desktop.matches
+    let critical = queries.layoutWide.matches
       ? INITIAL_WORK.desktopCriticalCards
       : INITIAL_WORK.compactCriticalCards;
     while (this.#initialQueue.length && critical > 0) {

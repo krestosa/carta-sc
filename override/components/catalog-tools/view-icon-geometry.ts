@@ -16,7 +16,7 @@ export class CatalogViewIconController {
         ? 'block'
         : property === 'visibility'
           ? 'visible'
-          : 'var(--sc-color-ink)';
+          : 'var(--sc-color-text-primary)';
       host.style.setProperty(property, value, 'important');
     }
 
@@ -36,7 +36,7 @@ export class CatalogViewIconController {
     for (const shape of this.liveShapes(host)) {
       shape.style.setProperty('display', 'inline', 'important');
       shape.style.setProperty('visibility', 'visible', 'important');
-      shape.style.setProperty('fill', 'var(--sc-color-ink)', 'important');
+      shape.style.setProperty('fill', 'var(--sc-color-text-primary)', 'important');
     }
   }
 
@@ -56,7 +56,7 @@ export class CatalogViewIconController {
       button.setAttribute('aria-label', label);
       button.setAttribute('title', label);
       button.style.setProperty('visibility', 'visible', 'important');
-      button.style.setProperty('color', 'var(--sc-color-ink)', 'important');
+      button.style.setProperty('color', 'var(--sc-color-text-primary)', 'important');
     }
     if (!host) return;
 

@@ -6,7 +6,7 @@ export function anchorForHref(href: string | null): HTMLElement | null {
   try {
     id = decodeURIComponent(id);
   } catch {
-    // El hash puede contener escapes legacy inválidos.
+    // El hash puede contener escapes inválidos del documento anfitrión.
   }
   return document.getElementById(id)
     ?? (document.getElementsByName(id)[0] as HTMLElement | undefined)
@@ -35,10 +35,10 @@ export function subcategoryOwner(link: Element | null): HTMLElement | null {
   return parent ? anchorForHref(parent.getAttribute('href')) : null;
 }
 
-export function closeLegacyCategoryMenus(): void {
-  document.querySelectorAll(selectors.legacyPullDownOpen)
+export function closeHostCategoryMenus(): void {
+  document.querySelectorAll(selectors.hostPullDownOpen)
     .forEach((node) => node.classList.remove('open'));
-  document.querySelectorAll(selectors.legacyMobileOpen)
+  document.querySelectorAll(selectors.hostMobileOpen)
     .forEach((node) => node.classList.remove('_open'));
 }
 

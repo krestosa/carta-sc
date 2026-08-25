@@ -24,8 +24,8 @@ class ThemeContrastController {
   lock(root: HTMLElement | null, context: PaletteTransitionContext): void {
     this.stop();
     const parts = themeIcon.parts(root);
-    const from = context.from['--sc-color-ink'];
-    const to = context.to['--sc-color-ink'];
+    const from = context.from['--sc-color-text-primary'];
+    const to = context.to['--sc-color-text-primary'];
     if (!parts || !from || !to || from === to || context.duration <= 0) return;
 
     const button = parts.button;

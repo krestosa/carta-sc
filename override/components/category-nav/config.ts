@@ -16,4 +16,4 @@ export const CATEGORY_SCROLL = {
   settleTolerance: 0.75,
 } as const;
 
-export const desktopCategories = queries.desktop;
+export const desktopCategories = queries.layoutWide;

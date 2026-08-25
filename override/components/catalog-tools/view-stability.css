@@ -134,20 +134,6 @@ html[data-sc-catalog-view='list'] body.sushiShop .listadoShop .productoShop .des
   -webkit-line-clamp: unset !important;
 }
 
-/* El estado legacy normal se trata como compact hasta migrarlo. */
-html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop {
-  grid-template-columns: repeat(var(--sc-compact-columns), minmax(0, 1fr)) !important;
-  column-gap: var(--sc-compact-column-gap) !important;
-  row-gap: var(--sc-compact-row-gap) !important;
-  margin-bottom: var(--sc-compact-section-bottom) !important;
-}
-
-html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop > a.fancyboxModalAddProd {
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-template-rows: auto auto auto auto var(--sc-compact-meta-height) !important;
-  column-gap: 0 !important;
-}
-
 html.sc-catalog-view-switching,
 html.sc-catalog-view-switching body.sushiShop {
   overflow-anchor: none !important;
@@ -155,8 +141,7 @@ html.sc-catalog-view-switching body.sushiShop {
 }
 
 /* El párrafo conserva espaciado; el texto se recorta en dos líneas. */
-html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip,
-html[data-sc-catalog-view='normal'] body.sushiShop .listadoShop .productoShop .descrip {
+html[data-sc-catalog-view='compact'] body.sushiShop .listadoShop .productoShop .descrip{
   box-sizing: border-box !important;
   display: block !important;
   min-height: 43px !important;
@@ -205,8 +190,8 @@ body.sushiShop .listadoShop .productoShop .descrip.sc-description-truncated > .s
   bottom: 0 !important;
   height: 16px !important;
   padding: 0 0 0 22px !important;
-  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface) 24%, var(--sc-color-surface) 100%) !important;
-  color: var(--sc-color-copy) !important;
+  background: linear-gradient(90deg, var(--sc-color-surface-transparent), var(--sc-color-surface-canvas) 24%, var(--sc-color-surface-canvas) 100%) !important;
+  color: var(--sc-color-text-secondary) !important;
   font-family: inherit !important;
   font-size: inherit !important;
   line-height: 16px !important;

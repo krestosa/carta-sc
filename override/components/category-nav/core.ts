@@ -7,7 +7,7 @@ export {
   anchorForHref,
   categoryLinks,
   cleanCategoryHash,
-  closeLegacyCategoryMenus,
+  closeHostCategoryMenus,
   isParentCategoryLink,
   subcategoryOwner,
 } from './targets.js';

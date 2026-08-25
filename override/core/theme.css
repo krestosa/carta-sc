@@ -9,7 +9,7 @@ html[data-sc-theme-resolved='dark'] {
 }
 
 html[data-sc-theme-resolved] {
-  background-color: var(--sc-color-surface);
+  background-color: var(--sc-color-surface-canvas);
 }
 
 @media (prefers-color-scheme: light) {
@@ -22,17 +22,17 @@ html[data-sc-theme-resolved] {
 
 body.sushiShop,
 body.sushiShop .sepFooter {
-  background-color: var(--sc-color-surface) !important;
-  color: var(--sc-color-ink);
+  background-color: var(--sc-color-surface-canvas) !important;
+  color: var(--sc-color-text-primary);
 }
 
 body.sushiShop input,
 body.sushiShop button,
 body.sushiShop a {
-  caret-color: var(--sc-color-ink);
+  caret-color: var(--sc-color-text-primary);
 }
 
 body.sushiShop ::selection {
-  background: var(--sc-color-ink);
-  color: var(--sc-color-surface);
+  background: var(--sc-color-text-primary);
+  color: var(--sc-color-surface-canvas);
 }

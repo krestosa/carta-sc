@@ -46,7 +46,7 @@ New components consume semantic intent rather than palette names:
 - `system.color.<mode>.action`
 - `system.color.<mode>.feedback`
 
-The existing catalog color API remains available through compatibility aliases generated from `system.color.<mode>.compat`. New work should not add more legacy-style aliases.
+The generated color API contains only semantic intent. Owned catalog CSS and new pages consume the same canonical variables; there is no second alias layer.
 
 ## Layout contract
 
@@ -57,17 +57,19 @@ Page edge spacing and grid spacing are separate decisions:
 - `layout.sectionGap` controls major vertical rhythm;
 - `layout.container` defines wide, content, narrow and text widths.
 
-`layout.gridGutter` and `layout.contentMaxWidth` remain compatibility aliases for current catalog code.
 
 ## Responsive contract
 
-Generated TypeScript keeps the existing media names for compatibility and also exposes intent aliases:
+Generated TypeScript exposes only the layout-oriented media contract:
 
 - `layoutNarrow`
 - `layoutCompact`
+- `layoutMedium`
+- `layoutIntermediate`
+- `layoutBelowWide`
 - `layoutWide`
 
-New TypeScript should prefer intent aliases when there is no legacy compatibility requirement.
+The API does not publish device-category aliases.
 
 ## Component ownership
 
@@ -99,8 +101,8 @@ Generated files are outputs and must not be edited by hand. Reference tokens are
 
 ## Validation
 
-`npm run verify` validates the token document, regenerates platform outputs and runs architecture/design-system audits. The audits reject unsupported token types, broken aliases, legacy token APIs, direct reference-layer consumption, duplicated global palette/easing literals and invalid cross-component custom-property ownership.
+`npm run verify` validates the token document, regenerates platform outputs and runs architecture/design-system audits. The audits reject unsupported token types, broken aliases, superseded token APIs, direct reference-layer consumption, duplicated global palette/easing literals and invalid cross-component custom-property ownership.
 
-`validate-design-system-contract.ts` additionally protects the semantic color, layout, sizing, layering, responsive-alias and base-component contracts required for the wider SushiClub site.
+`validate-design-system-contract.ts` additionally protects the semantic color, layout, sizing, layering, responsive-contract and base-component contracts required for the wider SushiClub site.
 
 See `DESIGN_SYSTEM.md` for the full visual and component rules.

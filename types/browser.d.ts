@@ -1,27 +1,27 @@
-interface JQuerySlicknavCompat {
+interface JQuerySlicknavBridge {
   btn?: ArrayLike<HTMLElement>;
 }
 
-interface JQueryCollectionCompat {
+interface JQueryCollectionBridge {
   [index: number]: Element | undefined;
-  find(selector: string): JQueryCollectionCompat;
-  first(): JQueryCollectionCompat;
+  find(selector: string): JQueryCollectionBridge;
+  first(): JQueryCollectionBridge;
   off(
     events?: string,
     handler?: EventListenerOrEventListenerObject | ((event: Event) => void),
-  ): JQueryCollectionCompat;
+  ): JQueryCollectionBridge;
   on(
     events: string,
     handler: EventListenerOrEventListenerObject | ((event: Event) => void),
-  ): JQueryCollectionCompat;
-  data(key: string): JQuerySlicknavCompat | undefined;
+  ): JQueryCollectionBridge;
+  data(key: string): JQuerySlicknavBridge | undefined;
 }
 
-interface JQueryStaticCompat {
-  (target: string | Element | Document | EventTarget | null): JQueryCollectionCompat;
+interface JQueryStaticBridge {
+  (target: string | Element | Document | EventTarget | null): JQueryCollectionBridge;
 }
 
 interface Window {
-  jQuery?: JQueryStaticCompat;
-  $?: JQueryStaticCompat;
+  jQuery?: JQueryStaticBridge;
+  $?: JQueryStaticBridge;
 }

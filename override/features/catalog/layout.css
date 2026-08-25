@@ -14,7 +14,7 @@ body.sushiShop .productoShop .sumar {
 body.sushiShop .listadoShop {
   display: grid !important;
   grid-template-columns: repeat(var(--sc-catalog-base-columns), minmax(0, 1fr));
-  column-gap: var(--sc-layout-grid-gutter);
+  column-gap: var(--sc-layout-grid-gap);
   row-gap: var(--sc-catalog-grid-row-gap) !important;
   width: 100% !important;
   margin: 0 0 var(--sc-catalog-section-bottom) !important;

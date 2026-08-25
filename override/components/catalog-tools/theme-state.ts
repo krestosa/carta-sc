@@ -6,7 +6,7 @@ export interface ThemeTransitionState {
   readonly after: ResolvedTheme;
 }
 
-const STORAGE_KEY = 'scTheme:v1';
+const STORAGE_KEY = 'sc:theme';
 
 export class ThemeState {
   readonly #root: HTMLElement;

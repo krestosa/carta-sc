@@ -125,7 +125,7 @@ function withTimeout(promise: PromiseLike<unknown>, timeoutMs: number): Promise<
 }
 
 function waitForCatalogLayout(): Promise<void> {
-  if (!queries.desktop.matches) return Promise.resolve();
+  if (!queries.layoutWide.matches) return Promise.resolve();
   return waits.waitFor(
     () => Boolean(document.body?.classList.contains(classes.catalogLayoutReady)),
     STABLE_LAYOUT_TIMEOUT,
@@ -140,7 +140,7 @@ function waitForCatalogTools(): Promise<void> {
 }
 
 function waitForMobileHeader(): Promise<void> {
-  if (queries.desktop.matches) return Promise.resolve();
+  if (queries.layoutWide.matches) return Promise.resolve();
   return waits.waitFor(
     () => Boolean(document.querySelector('body > .slicknav_menu.sc-mobile-main-menu')),
     MOBILE_HEADER_TIMEOUT,
@@ -164,7 +164,7 @@ export const freezeInitialViewport = initialViewport.freeze;
 export async function waitForStableLayout(): Promise<void> {
   await whenDomReady();
   const pending = [waitForCatalogLayout(), waitForCatalogTools(), waitForMobileHeader()];
-  if (queries.desktop.matches) pending.push(waitForFonts());
+  if (queries.layoutWide.matches) pending.push(waitForFonts());
   await Promise.all(pending);
   await afterLayoutFrame();
   window.dispatchEvent(new CustomEvent('sc:layoutstable'));

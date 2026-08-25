@@ -4,7 +4,7 @@ import { motion } from '../../motion/main.js';
 import type { MotionEngine } from '../../motion/types.js';
 import { setupReveal, type RevealProfile } from './reveal-motion.js';
 
-const MEDIA_QUERIES = [queries.phone, queries.tablet, queries.desktop, queries.reducedMotion] as const;
+const MEDIA_QUERIES = [queries.layoutNarrow, queries.layoutMedium, queries.layoutWide, queries.reducedMotion] as const;
 
 class ProductCardMotionController {
   #cleanup: Cleanup | null = null;
@@ -27,8 +27,8 @@ class ProductCardMotionController {
   };
 
   #profile(): RevealProfile {
-    if (queries.desktop.matches) return { initialY: 12, revealY: 16, threshold: 0.04 };
-    if (queries.tablet.matches) return { initialY: 10, revealY: 14, threshold: 0.035 };
+    if (queries.layoutWide.matches) return { initialY: 12, revealY: 16, threshold: 0.04 };
+    if (queries.layoutMedium.matches) return { initialY: 10, revealY: 14, threshold: 0.035 };
     return { initialY: 8, revealY: 12, threshold: 0.025 };
   }
 

@@ -1,16 +1,16 @@
 {
-  interface JQueryDeferredCompat {
+  interface JQueryDeferredBridge {
     promise<T extends object>(target: T): T;
   }
 
-  interface JQueryFunctionCompat {
+  interface JQueryFunctionBridge {
     load?: (...args: unknown[]) => unknown;
   }
 
-  interface JQueryCompat {
-    Deferred?: () => JQueryDeferredCompat;
+  interface JQueryBridge {
+    Deferred?: () => JQueryDeferredBridge;
     ajax?: (...args: unknown[]) => unknown;
-    fn?: JQueryFunctionCompat;
+    fn?: JQueryFunctionBridge;
   }
 
   interface StaticFetchResponse {
@@ -48,8 +48,8 @@
   };
 
   const jqueryValue = Reflect.get(browser, 'jQuery');
-  const jquery: JQueryCompat | null = jqueryValue && typeof jqueryValue === 'function'
-    ? jqueryValue as JQueryCompat
+  const jquery: JQueryBridge | null = jqueryValue && typeof jqueryValue === 'function'
+    ? jqueryValue as JQueryBridge
     : null;
 
   if (jquery?.Deferred && typeof jquery.ajax === 'function') {

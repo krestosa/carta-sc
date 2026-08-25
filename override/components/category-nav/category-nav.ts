@@ -7,7 +7,7 @@ import {
   categoryScrollPlan,
   categoryLinks,
   cleanCategoryHash,
-  closeLegacyCategoryMenus,
+  closeHostCategoryMenus,
   CATEGORY_SELECTORS,
   desktopCategories,
   invalidateCategoryOffset,
@@ -112,7 +112,7 @@ class CategoryNavigationController {
     const compact = !desktopCategories.matches;
     event.preventDefault();
     event.stopImmediatePropagation();
-    closeLegacyCategoryMenus();
+    closeHostCategoryMenus();
     cleanCategoryHash();
     if (submenuLink) { this.#submenu.close(false); this.#activateAndScroll(target, owner ?? target); return; }
     if (hasChildren && compact) { this.#submenu.open(link, true); return; }
@@ -127,7 +127,7 @@ class CategoryNavigationController {
     if (!target) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    closeLegacyCategoryMenus();
+    closeHostCategoryMenus();
     cleanCategoryHash();
     this.#submenu.close(false);
     this.#activateAndScroll(target);

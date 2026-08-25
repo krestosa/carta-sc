@@ -1,13 +1,10 @@
 /* GENERATED from tokens/design.tokens.json. Do not edit manually. */
 export const tokenMedia = Object.freeze({
-  phone: '(max-width: 640px)',
-  mobile: '(max-width: 767px)',
-  tablet: '(min-width: 768px) and (max-width: 992px)',
-  compact: '(max-width: 992px)',
-  compactWide: '(min-width: 641px) and (max-width: 992px)',
-  desktop: '(min-width: 993px)',
   layoutNarrow: '(max-width: 640px)',
-  layoutCompact: '(max-width: 992px)',
+  layoutCompact: '(max-width: 767px)',
+  layoutMedium: '(min-width: 768px) and (max-width: 992px)',
+  layoutIntermediate: '(min-width: 641px) and (max-width: 992px)',
+  layoutBelowWide: '(max-width: 992px)',
   layoutWide: '(min-width: 993px)',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   reducedTransparency: '(prefers-reduced-transparency: reduce)',
@@ -18,17 +15,6 @@ export const tokenMedia = Object.freeze({
 export const systemTokens = Object.freeze({
   "color": {
     "light": {
-      "ink": "rgb(10 10 10)",
-      "heading": "rgb(48 48 48)",
-      "copy": "rgb(95 95 95)",
-      "muted": "rgb(118 118 118)",
-      "trait": "rgb(152 152 152)",
-      "surface": "rgb(245 245 245)",
-      "surfaceTransparent": "rgb(245 245 245 / 0)",
-      "surfaceRaised": "rgb(251 251 250)",
-      "border": "rgb(227 227 222)",
-      "borderStrong": "rgb(209 209 203)",
-      "focusRing": "rgb(10 10 10)",
       "brand": {
         "primary": "rgb(13 102 238)",
         "primaryPressed": "rgb(10 84 199)",
@@ -36,8 +22,10 @@ export const systemTokens = Object.freeze({
       },
       "text": {
         "primary": "rgb(10 10 10)",
+        "heading": "rgb(48 48 48)",
         "secondary": "rgb(95 95 95)",
         "muted": "rgb(118 118 118)",
+        "subtle": "rgb(152 152 152)",
         "disabled": "rgb(183 183 178)",
         "inverse": "rgb(255 255 255)",
         "link": "rgb(13 102 238)"
@@ -46,9 +34,10 @@ export const systemTokens = Object.freeze({
         "primary": "rgb(10 10 10)",
         "secondary": "rgb(95 95 95)",
         "muted": "rgb(118 118 118)",
+        "subtle": "rgb(152 152 152)",
         "inverse": "rgb(255 255 255)"
       },
-      "surfaceSemantic": {
+      "surface": {
         "canvas": "rgb(245 245 245)",
         "subtle": "rgb(239 239 236)",
         "raised": "rgb(251 251 250)",
@@ -56,7 +45,7 @@ export const systemTokens = Object.freeze({
         "inverse": "rgb(10 10 10)",
         "transparent": "rgb(245 245 245 / 0)"
       },
-      "borderSemantic": {
+      "border": {
         "subtle": "rgb(227 227 222)",
         "default": "rgb(227 227 222)",
         "strong": "rgb(209 209 203)",
@@ -96,17 +85,6 @@ export const systemTokens = Object.freeze({
       }
     },
     "dark": {
-      "ink": "rgb(243 243 240)",
-      "heading": "rgb(255 255 255)",
-      "copy": "rgb(200 200 194)",
-      "muted": "rgb(156 156 149)",
-      "trait": "rgb(111 111 111)",
-      "surface": "rgb(0 0 0)",
-      "surfaceTransparent": "rgb(0 0 0 / 0)",
-      "surfaceRaised": "rgb(10 10 10)",
-      "border": "rgb(45 45 41)",
-      "borderStrong": "rgb(68 68 62)",
-      "focusRing": "rgb(243 243 240)",
       "brand": {
         "primary": "rgb(13 102 238)",
         "primaryPressed": "rgb(10 84 199)",
@@ -114,8 +92,10 @@ export const systemTokens = Object.freeze({
       },
       "text": {
         "primary": "rgb(243 243 240)",
+        "heading": "rgb(255 255 255)",
         "secondary": "rgb(200 200 194)",
         "muted": "rgb(156 156 149)",
+        "subtle": "rgb(111 111 111)",
         "disabled": "rgb(92 92 87)",
         "inverse": "rgb(10 10 10)",
         "link": "rgb(91 155 255)"
@@ -124,9 +104,10 @@ export const systemTokens = Object.freeze({
         "primary": "rgb(243 243 240)",
         "secondary": "rgb(200 200 194)",
         "muted": "rgb(156 156 149)",
+        "subtle": "rgb(111 111 111)",
         "inverse": "rgb(10 10 10)"
       },
-      "surfaceSemantic": {
+      "surface": {
         "canvas": "rgb(0 0 0)",
         "subtle": "rgb(10 10 10)",
         "raised": "rgb(10 10 10)",
@@ -134,7 +115,7 @@ export const systemTokens = Object.freeze({
         "inverse": "rgb(255 255 255)",
         "transparent": "rgb(0 0 0 / 0)"
       },
-      "borderSemantic": {
+      "border": {
         "subtle": "rgb(45 45 41)",
         "default": "rgb(45 45 41)",
         "strong": "rgb(68 68 62)",
@@ -176,21 +157,21 @@ export const systemTokens = Object.freeze({
     "scrim": "rgb(0 0 0 / 0.32)"
   },
   "typography": {
-    "heading1Desktop": {
+    "heading1Wide": {
       "fontFamily": "'SC Acumin', Arial, sans-serif",
       "fontSize": "28px",
       "fontWeight": 600,
       "lineHeight": 1.08,
       "letterSpacing": "-1.12px"
     },
-    "heading1Tablet": {
+    "heading1Medium": {
       "fontFamily": "'SC Acumin', Arial, sans-serif",
       "fontSize": "22px",
       "fontWeight": 600,
       "lineHeight": 1.08,
       "letterSpacing": "-0.704px"
     },
-    "heading1Mobile": {
+    "heading1Narrow": {
       "fontFamily": "'SC Acumin', Arial, sans-serif",
       "fontSize": "20px",
       "fontWeight": 600,
@@ -204,21 +185,21 @@ export const systemTokens = Object.freeze({
       "lineHeight": 1.2,
       "letterSpacing": "-0.5px"
     },
-    "heading3Desktop": {
+    "heading3Wide": {
       "fontFamily": "'SC Acumin', Arial, sans-serif",
       "fontSize": "18.5px",
       "fontWeight": 600,
       "lineHeight": 1.15,
       "letterSpacing": "-0.4625px"
     },
-    "heading3Tablet": {
+    "heading3Medium": {
       "fontFamily": "'SC Acumin', Arial, sans-serif",
       "fontSize": "16px",
       "fontWeight": 600,
       "lineHeight": 1.16,
       "letterSpacing": "-0.288px"
     },
-    "heading3Mobile": {
+    "heading3Narrow": {
       "fontFamily": "'SC Acumin', Arial, sans-serif",
       "fontSize": "15.5px",
       "fontWeight": 600,
@@ -310,15 +291,16 @@ export const systemTokens = Object.freeze({
       "text": "620px"
     },
     "pageGutter": {
-      "desktop": "28px",
-      "narrow": "24px",
-      "compact": "24px",
-      "mobile": "20px"
+      "wide": "28px",
+      "contentNarrow": "24px",
+      "medium": "24px",
+      "narrow": "20px"
     },
     "gridGap": {
-      "desktop": "24px",
-      "compact": "16px",
-      "mobile": "16px"
+      "wide": "28px",
+      "contentNarrow": "24px",
+      "medium": "24px",
+      "narrow": "20px"
     },
     "sectionGap": {
       "compact": "32px",
@@ -328,8 +310,7 @@ export const systemTokens = Object.freeze({
   },
   "size": {
     "touchTarget": "48px",
-    "icon": "24px",
-    "iconScale": {
+    "icon": {
       "small": "16px",
       "medium": "20px",
       "large": "24px"
@@ -369,8 +350,6 @@ export const systemTokens = Object.freeze({
     "dropdown": 160,
     "popover": 240,
     "drawer": 1000,
-    "mobileMenu": 1000,
-    "mobilePanel": 1001,
     "toast": 8000,
     "modal": 9000,
     "tooltip": 10000
