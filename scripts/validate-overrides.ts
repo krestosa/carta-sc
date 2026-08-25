@@ -8,6 +8,10 @@ import { createValidationReporter, type ValidationReporter } from './lib/validat
 
 const OVERRIDE_DIR = path.join(ROOT, 'override');
 const GENERATED_DIR = path.join(ROOT, '.generated', 'browser', 'override');
+const DESIGN_SYSTEM_LIBRARY_CSS = new Set([
+  'core/layout-primitives.css',
+  'components/base/base.css',
+]);
 
 interface OverrideInventory {
   readonly typeScriptFiles: readonly string[];
@@ -183,13 +187,14 @@ class OverrideValidator {
     const expected = new Set(
       cssFiles
         .filter((file) => file !== path.join(OVERRIDE_DIR, 'main.css'))
-        .map((file) => this.#relativeOverride(file)),
+        .map((file) => this.#relativeOverride(file))
+        .filter((file) => !DESIGN_SYSTEM_LIBRARY_CSS.has(file)),
     );
     const missing = [...expected].filter((file) => !imported.has(file)).sort();
     const unexpected = [...imported].filter((file) => !expected.has(file)).sort();
     this.#validation.check(
       missing.length === 0 && unexpected.length === 0,
-      `CSS manifest must cover every override stylesheet exactly once; missing=${missing.join(',') || 'none'}, unexpected=${unexpected.join(',') || 'none'}`,
+      `CSS manifest must cover every runtime stylesheet exactly once; missing=${missing.join(',') || 'none'}, unexpected=${unexpected.join(',') || 'none'}`,
     );
   }
 }

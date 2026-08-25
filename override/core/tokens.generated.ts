@@ -6,6 +6,9 @@ export const tokenMedia = Object.freeze({
   compact: '(max-width: 992px)',
   compactWide: '(min-width: 641px) and (max-width: 992px)',
   desktop: '(min-width: 993px)',
+  layoutNarrow: '(max-width: 640px)',
+  layoutCompact: '(max-width: 992px)',
+  layoutWide: '(min-width: 993px)',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   reducedTransparency: '(prefers-reduced-transparency: reduce)',
   moreContrast: '(prefers-contrast: more)',
@@ -25,7 +28,72 @@ export const systemTokens = Object.freeze({
       "surfaceRaised": "rgb(251 251 250)",
       "border": "rgb(227 227 222)",
       "borderStrong": "rgb(209 209 203)",
-      "focusRing": "rgb(10 10 10)"
+      "focusRing": "rgb(10 10 10)",
+      "brand": {
+        "primary": "rgb(13 102 238)",
+        "primaryPressed": "rgb(10 84 199)",
+        "onPrimary": "rgb(255 255 255)"
+      },
+      "text": {
+        "primary": "rgb(10 10 10)",
+        "secondary": "rgb(95 95 95)",
+        "muted": "rgb(118 118 118)",
+        "disabled": "rgb(183 183 178)",
+        "inverse": "rgb(255 255 255)",
+        "link": "rgb(13 102 238)"
+      },
+      "icon": {
+        "primary": "rgb(10 10 10)",
+        "secondary": "rgb(95 95 95)",
+        "muted": "rgb(118 118 118)",
+        "inverse": "rgb(255 255 255)"
+      },
+      "surfaceSemantic": {
+        "canvas": "rgb(245 245 245)",
+        "subtle": "rgb(239 239 236)",
+        "raised": "rgb(251 251 250)",
+        "overlay": "rgb(251 251 250)",
+        "inverse": "rgb(10 10 10)",
+        "transparent": "rgb(245 245 245 / 0)"
+      },
+      "borderSemantic": {
+        "subtle": "rgb(227 227 222)",
+        "default": "rgb(227 227 222)",
+        "strong": "rgb(209 209 203)",
+        "focus": "rgb(10 10 10)"
+      },
+      "action": {
+        "primary": "rgb(13 102 238)",
+        "onPrimary": "rgb(255 255 255)",
+        "selected": "rgb(13 102 238)",
+        "disabled": "rgb(183 183 178)"
+      },
+      "feedback": {
+        "error": {
+          "default": "rgb(180 35 24)",
+          "surface": "rgb(254 243 242)",
+          "border": "rgb(253 162 155)",
+          "on": "rgb(255 255 255)"
+        },
+        "success": {
+          "default": "rgb(6 118 71)",
+          "surface": "rgb(236 253 243)",
+          "border": "rgb(108 233 166)",
+          "on": "rgb(255 255 255)"
+        },
+        "warning": {
+          "default": "rgb(181 71 8)",
+          "surface": "rgb(255 250 235)",
+          "border": "rgb(254 200 75)",
+          "on": "rgb(255 255 255)"
+        },
+        "info": {
+          "default": "rgb(23 92 211)",
+          "surface": "rgb(239 248 255)",
+          "border": "rgb(132 202 255)",
+          "on": "rgb(255 255 255)"
+        }
+      }
     },
     "dark": {
       "ink": "rgb(243 243 240)",
@@ -38,7 +106,72 @@ export const systemTokens = Object.freeze({
       "surfaceRaised": "rgb(10 10 10)",
       "border": "rgb(45 45 41)",
       "borderStrong": "rgb(68 68 62)",
-      "focusRing": "rgb(243 243 240)"
+      "focusRing": "rgb(243 243 240)",
+      "brand": {
+        "primary": "rgb(13 102 238)",
+        "primaryPressed": "rgb(10 84 199)",
+        "onPrimary": "rgb(255 255 255)"
+      },
+      "text": {
+        "primary": "rgb(243 243 240)",
+        "secondary": "rgb(200 200 194)",
+        "muted": "rgb(156 156 149)",
+        "disabled": "rgb(92 92 87)",
+        "inverse": "rgb(10 10 10)",
+        "link": "rgb(91 155 255)"
+      },
+      "icon": {
+        "primary": "rgb(243 243 240)",
+        "secondary": "rgb(200 200 194)",
+        "muted": "rgb(156 156 149)",
+        "inverse": "rgb(10 10 10)"
+      },
+      "surfaceSemantic": {
+        "canvas": "rgb(0 0 0)",
+        "subtle": "rgb(10 10 10)",
+        "raised": "rgb(10 10 10)",
+        "overlay": "rgb(10 10 10)",
+        "inverse": "rgb(255 255 255)",
+        "transparent": "rgb(0 0 0 / 0)"
+      },
+      "borderSemantic": {
+        "subtle": "rgb(45 45 41)",
+        "default": "rgb(45 45 41)",
+        "strong": "rgb(68 68 62)",
+        "focus": "rgb(243 243 240)"
+      },
+      "action": {
+        "primary": "rgb(13 102 238)",
+        "onPrimary": "rgb(255 255 255)",
+        "selected": "rgb(91 155 255)",
+        "disabled": "rgb(92 92 87)"
+      },
+      "feedback": {
+        "error": {
+          "default": "rgb(249 112 102)",
+          "surface": "rgb(45 10 10)",
+          "border": "rgb(240 68 56)",
+          "on": "rgb(10 10 10)"
+        },
+        "success": {
+          "default": "rgb(50 213 131)",
+          "surface": "rgb(5 46 26)",
+          "border": "rgb(18 183 106)",
+          "on": "rgb(10 10 10)"
+        },
+        "warning": {
+          "default": "rgb(253 176 34)",
+          "surface": "rgb(58 36 0)",
+          "border": "rgb(247 144 9)",
+          "on": "rgb(10 10 10)"
+        },
+        "info": {
+          "default": "rgb(83 177 253)",
+          "surface": "rgb(7 29 51)",
+          "border": "rgb(46 144 250)",
+          "on": "rgb(10 10 10)"
+        }
+      }
     },
     "scrim": "rgb(0 0 0 / 0.32)"
   },
@@ -169,9 +302,43 @@ export const systemTokens = Object.freeze({
     "tripleExtraLarge": "48px",
     "quadExtraLarge": "64px"
   },
+  "layout": {
+    "container": {
+      "wide": "1240px",
+      "content": "1200px",
+      "narrow": "900px",
+      "text": "620px"
+    },
+    "pageGutter": {
+      "desktop": "28px",
+      "narrow": "24px",
+      "compact": "24px",
+      "mobile": "20px"
+    },
+    "gridGap": {
+      "desktop": "24px",
+      "compact": "16px",
+      "mobile": "16px"
+    },
+    "sectionGap": {
+      "compact": "32px",
+      "default": "48px",
+      "spacious": "64px"
+    }
+  },
   "size": {
     "touchTarget": "48px",
-    "icon": "24px"
+    "icon": "24px",
+    "iconScale": {
+      "small": "16px",
+      "medium": "20px",
+      "large": "24px"
+    },
+    "control": {
+      "small": "40px",
+      "medium": "48px",
+      "large": "56px"
+    }
   },
   "state": {
     "opacity": {
@@ -196,12 +363,17 @@ export const systemTokens = Object.freeze({
     "dialog": "0px 12px 32px 0px rgb(0 0 0 / 0.22)"
   },
   "layer": {
+    "base": 0,
     "raised": 1,
     "sticky": 120,
-    "popover": 120,
+    "dropdown": 160,
+    "popover": 240,
+    "drawer": 1000,
     "mobileMenu": 1000,
     "mobilePanel": 1001,
-    "modal": 9000
+    "toast": 8000,
+    "modal": 9000,
+    "tooltip": 10000
   },
   "media": {
     "productAspectRatio": 1.43

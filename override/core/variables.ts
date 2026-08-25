@@ -12,6 +12,8 @@ export const queries = Object.freeze(
   Object.fromEntries(mediaEntries.map(([name, query]) => [name, window.matchMedia(query)])),
 ) as MediaQueries;
 
+// Catalog compatibility contracts. New components keep selectors and state classes with their owner
+// instead of extending this object into a site-wide registry.
 export const selectors = Object.freeze({
   container: '.containerShop',
   productList: '.listadoShop',

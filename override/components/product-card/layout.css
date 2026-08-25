@@ -10,9 +10,9 @@ body.sushiShop {
   --sc-card-description-offset: var(--sc-space-small);
   --sc-card-description-line-box: 16px;
   --sc-card-price-width: 76px;
-  --sc-card-price-size: 15.5px;
-  --sc-card-price-line-height: 18px;
-  --sc-card-price-tracking: -.018em;
+  --sc-card-price-size: var(--sc-typography-price-font-size);
+  --sc-card-price-line-height: var(--sc-typography-price-line-height);
+  --sc-card-price-tracking: var(--sc-typography-price-letter-spacing);
   --sc-card-offer-size: 11.5px;
   --sc-card-offer-line-height: 14px;
   --sc-card-flavors-size: 18px;

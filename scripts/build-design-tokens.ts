@@ -11,26 +11,9 @@ interface TokenNode { $type?: string; $value?: unknown; [key: string]: unknown }
 interface FlatToken { readonly path: string; readonly type: DtcgType; readonly value: unknown }
 interface DimensionValue { readonly value: number; readonly unit: 'px' | 'rem' }
 interface DurationValue { readonly value: number; readonly unit: 'ms' | 's' }
-interface ColorValue {
-  readonly colorSpace: string;
-  readonly components: ReadonlyArray<number | string>;
-  readonly alpha?: number;
-}
-interface ShadowValue {
-  readonly color: unknown;
-  readonly offsetX: unknown;
-  readonly offsetY: unknown;
-  readonly blur: unknown;
-  readonly spread: unknown;
-  readonly inset?: boolean;
-}
-interface TypographyValue {
-  readonly fontFamily: unknown;
-  readonly fontSize: unknown;
-  readonly fontWeight: unknown;
-  readonly letterSpacing: unknown;
-  readonly lineHeight: unknown;
-}
+interface ColorValue { readonly colorSpace: string; readonly components: ReadonlyArray<number | string>; readonly alpha?: number }
+interface ShadowValue { readonly color: unknown; readonly offsetX: unknown; readonly offsetY: unknown; readonly blur: unknown; readonly spread: unknown; readonly inset?: boolean }
+interface TypographyValue { readonly fontFamily: unknown; readonly fontSize: unknown; readonly fontWeight: unknown; readonly letterSpacing: unknown; readonly lineHeight: unknown }
 
 const root = process.cwd();
 const sourcePath = resolve(root, 'tokens/design.tokens.json');
@@ -40,18 +23,13 @@ const document = JSON.parse(await readFile(sourcePath, 'utf8')) as Record<string
 const tokens = new Map<string, FlatToken>();
 const typeSet = new Set<string>(DTCG_TYPES);
 
-function isDtcgType(value: string): value is DtcgType {
-  return typeSet.has(value);
-}
-
+function isDtcgType(value: string): value is DtcgType { return typeSet.has(value); }
 function visit(node: unknown, path: string[], inheritedType?: DtcgType): void {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return;
   const object = node as TokenNode;
   let type = inheritedType;
   if (typeof object.$type === 'string') {
-    if (!isDtcgType(object.$type)) {
-      throw new Error(`Unsupported token type: ${object.$type} at ${path.join('.') || '<root>'}`);
-    }
+    if (!isDtcgType(object.$type)) throw new Error(`Unsupported token type: ${object.$type} at ${path.join('.') || '<root>'}`);
     type = object.$type;
   }
   if ('$value' in object) {
@@ -61,9 +39,7 @@ function visit(node: unknown, path: string[], inheritedType?: DtcgType): void {
     tokens.set(tokenPath, { path: tokenPath, type, value: object.$value });
     return;
   }
-  for (const [key, value] of Object.entries(object)) {
-    if (!key.startsWith('$')) visit(value, [...path, key], type);
-  }
+  for (const [key, value] of Object.entries(object)) if (!key.startsWith('$')) visit(value, [...path, key], type);
 }
 visit(document, []);
 
@@ -71,7 +47,6 @@ function aliasPath(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   return /^\{([^}]+)\}$/.exec(value)?.[1] ?? null;
 }
-
 function resolveValue(value: unknown, stack: string[] = []): unknown {
   const reference = aliasPath(value);
   if (reference) {
@@ -86,22 +61,15 @@ function resolveValue(value: unknown, stack: string[] = []): unknown {
   }
   return value;
 }
-
 function token(path: string): FlatToken {
   const found = tokens.get(path);
   if (!found) throw new Error(`Missing token: ${path}`);
   return found;
 }
-
-function resolved(path: string): unknown {
-  return resolveValue(token(path).value, [path]);
-}
-
+function resolved(path: string): unknown { return resolveValue(token(path).value, [path]); }
 function formatColor(value: unknown): string {
   const color = value as ColorValue;
-  if (!color || !Array.isArray(color.components) || color.components.length < 3) {
-    throw new Error(`Invalid color token: ${JSON.stringify(value)}`);
-  }
+  if (!color || !Array.isArray(color.components) || color.components.length < 3) throw new Error(`Invalid color token: ${JSON.stringify(value)}`);
   const alpha = color.alpha ?? 1;
   if (color.colorSpace === 'srgb' && color.components.slice(0, 3).every((component) => typeof component === 'number')) {
     const channels = color.components.slice(0, 3).map((component) => Math.round((component as number) * 255));
@@ -109,53 +77,42 @@ function formatColor(value: unknown): string {
   }
   return `color(${color.colorSpace} ${color.components.join(' ')}${alpha === 1 ? '' : ` / ${alpha}`})`;
 }
-
 function formatDimension(value: unknown): string {
   const dimension = value as DimensionValue;
-  if (!dimension || typeof dimension.value !== 'number' || !['px', 'rem'].includes(dimension.unit)) {
-    throw new Error(`Invalid dimension token: ${JSON.stringify(value)}`);
-  }
+  if (!dimension || typeof dimension.value !== 'number' || !['px', 'rem'].includes(dimension.unit)) throw new Error(`Invalid dimension token: ${JSON.stringify(value)}`);
   return `${dimension.value}${dimension.unit}`;
 }
-
 function formatDuration(value: unknown): string {
   const duration = value as DurationValue;
-  if (!duration || typeof duration.value !== 'number' || !['ms', 's'].includes(duration.unit)) {
-    throw new Error(`Invalid duration token: ${JSON.stringify(value)}`);
-  }
+  if (!duration || typeof duration.value !== 'number' || !['ms', 's'].includes(duration.unit)) throw new Error(`Invalid duration token: ${JSON.stringify(value)}`);
   return `${duration.value}${duration.unit}`;
 }
-
 function durationMilliseconds(path: string): number {
   const duration = resolved(path) as DurationValue;
   return duration.unit === 's' ? duration.value * 1000 : duration.value;
 }
-
 function formatCubicBezier(value: unknown): string {
   const points = value as number[];
   if (!Array.isArray(points) || points.length !== 4) throw new Error(`Invalid cubicBezier token: ${JSON.stringify(value)}`);
   return `cubic-bezier(${points.join(', ')})`;
 }
-
 function formatFontFamily(value: unknown): string {
   const values = Array.isArray(value) ? value as string[] : [String(value)];
   return values.map((part) => /\s/.test(part) ? `'${part.replace(/'/g, "\\'")}'` : part).join(', ');
 }
-
 function formatStrokeStyle(value: unknown): string {
   if (typeof value === 'string') return value;
   return (value as { dashArray?: unknown[] }).dashArray?.length ? 'dashed' : 'solid';
 }
-
 function cssForType(type: DtcgType, value: unknown): string {
   switch (type) {
     case 'color': return formatColor(value);
     case 'dimension': return formatDimension(value);
     case 'fontFamily': return formatFontFamily(value);
-    case 'fontWeight': return String(value);
+    case 'fontWeight':
+    case 'number': return String(value);
     case 'duration': return formatDuration(value);
     case 'cubicBezier': return formatCubicBezier(value);
-    case 'number': return String(value);
     case 'strokeStyle': return formatStrokeStyle(value);
     case 'border': {
       const border = value as { color: unknown; width: unknown; style: unknown };
@@ -168,53 +125,36 @@ function cssForType(type: DtcgType, value: unknown): string {
     case 'shadow': {
       const values = Array.isArray(value) ? value as ShadowValue[] : [value as ShadowValue];
       return values.map((shadow) => [
-        shadow.inset ? 'inset' : '',
-        formatDimension(shadow.offsetX),
-        formatDimension(shadow.offsetY),
-        formatDimension(shadow.blur),
-        formatDimension(shadow.spread),
-        formatColor(shadow.color),
+        shadow.inset ? 'inset' : '', formatDimension(shadow.offsetX), formatDimension(shadow.offsetY),
+        formatDimension(shadow.blur), formatDimension(shadow.spread), formatColor(shadow.color),
       ].filter(Boolean).join(' ')).join(', ');
     }
-    case 'gradient': {
-      return (value as Array<{ color: unknown; position: number }>).map(
-        (stop) => `${formatColor(stop.color)} ${stop.position * 100}%`,
-      ).join(', ');
-    }
+    case 'gradient':
+      return (value as Array<{ color: unknown; position: number }>).map((stop) => `${formatColor(stop.color)} ${stop.position * 100}%`).join(', ');
     case 'typography': {
       const typography = value as TypographyValue;
       return `${String(typography.fontWeight)} ${formatDimension(typography.fontSize)}/${String(typography.lineHeight)} ${formatFontFamily(typography.fontFamily)}`;
     }
   }
 }
-
-function cssValue(path: string): string {
-  return cssForType(token(path).type, resolved(path));
-}
-
+function cssValue(path: string): string { return cssForType(token(path).type, resolved(path)); }
 function numberValue(path: string): number {
   const value = resolved(path);
   if (typeof value !== 'number') throw new Error(`Expected number token at ${path}`);
   return value;
 }
-
 function dimensionNumber(path: string): number {
   const value = resolved(path) as DimensionValue;
   if (value.unit !== 'px') throw new Error(`Expected px dimension at ${path}`);
   return value.value;
 }
-
 function typographyProperties(path: string): Record<string, string | number> {
   const value = resolved(path) as TypographyValue;
   return {
-    fontFamily: formatFontFamily(value.fontFamily),
-    fontSize: formatDimension(value.fontSize),
-    fontWeight: Number(value.fontWeight),
-    lineHeight: Number(value.lineHeight),
-    letterSpacing: formatDimension(value.letterSpacing),
+    fontFamily: formatFontFamily(value.fontFamily), fontSize: formatDimension(value.fontSize),
+    fontWeight: Number(value.fontWeight), lineHeight: Number(value.lineHeight), letterSpacing: formatDimension(value.letterSpacing),
   };
 }
-
 function typographyBlock(path: string, cssRole: string, indent = '  '): string {
   const value = typographyProperties(path);
   return [
@@ -226,34 +166,43 @@ function typographyBlock(path: string, cssRole: string, indent = '  '): string {
   ].join('\n');
 }
 
-const semanticColors = [
-  'ink', 'heading', 'copy', 'muted', 'trait', 'surface',
-  'surfaceTransparent', 'surfaceRaised', 'border', 'borderStrong',
-] as const;
-const durationNames = [
-  'short1', 'short2', 'short3', 'short4', 'medium1', 'medium2', 'medium3', 'medium4',
-  'long1', 'long2', 'long3', 'long4', 'extraLong1', 'extraLong2', 'extraLong3', 'extraLong4',
-] as const;
-const easingNames = ['standard', 'accelerate', 'decelerate', 'linear'] as const;
-const transitionNames = ['fast', 'standard', 'icon', 'theme'] as const;
-const shapeNames = ['none', 'extraSmall', 'menu', 'control', 'card', 'dialog', 'button', 'full'] as const;
-const spacingNames = [
-  'extraSmall', 'small', 'medium', 'large', 'extraLarge', 'doubleExtraLarge', 'tripleExtraLarge', 'quadExtraLarge',
-] as const;
-const stateOpacityNames = ['disabled', 'muted', 'placeholder', 'hover', 'focus', 'pressed', 'dragged'] as const;
-const elevationNames = ['level0', 'level1', 'level2', 'level3', 'level4', 'level5', 'menu', 'popover', 'dialog'] as const;
+const durationNames = ['short1','short2','short3','short4','medium1','medium2','medium3','medium4','long1','long2','long3','long4','extraLong1','extraLong2','extraLong3','extraLong4'] as const;
+const easingNames = ['standard','accelerate','decelerate','linear'] as const;
+const transitionNames = ['fast','standard','icon','theme'] as const;
+const shapeNames = ['none','extraSmall','menu','control','card','dialog','button','full'] as const;
+const spacingNames = ['extraSmall','small','medium','large','extraLarge','doubleExtraLarge','tripleExtraLarge','quadExtraLarge'] as const;
+const stateOpacityNames = ['disabled','muted','placeholder','hover','focus','pressed','dragged'] as const;
+const elevationNames = ['level0','level1','level2','level3','level4','level5','menu','popover','dialog'] as const;
+const layerNames = ['base','raised','sticky','dropdown','popover','drawer','mobileMenu','mobilePanel','toast','modal','tooltip'] as const;
 const typographyEntries = [
-  ['heading1.desktop', 'heading-1'], ['heading2', 'heading-2'], ['heading3.desktop', 'heading-3'],
-  ['heading4', 'heading-4'], ['bodyLarge', 'body-large'], ['body', 'body'], ['bodySmall', 'body-small'],
-  ['label', 'label'], ['labelStrong', 'label-strong'], ['price', 'price'], ['priceLarge', 'price-large'],
+  ['heading1.desktop','heading-1'],['heading2','heading-2'],['heading3.desktop','heading-3'],['heading4','heading-4'],
+  ['bodyLarge','body-large'],['body','body'],['bodySmall','body-small'],['label','label'],['labelStrong','label-strong'],
+  ['price','price'],['priceLarge','price-large'],
+] as const;
+const themeColorEntries = [
+  ['brand.primary','brand-primary'],['brand.primaryPressed','brand-primary-pressed'],['brand.onPrimary','brand-on-primary'],
+  ['text.primary','text-primary'],['text.secondary','text-secondary'],['text.muted','text-muted'],['text.disabled','text-disabled'],['text.inverse','text-inverse'],['text.link','text-link'],
+  ['icon.primary','icon-primary'],['icon.secondary','icon-secondary'],['icon.muted','icon-muted'],['icon.inverse','icon-inverse'],
+  ['surface.canvas','surface-canvas'],['surface.subtle','surface-subtle'],['surface.overlay','surface-overlay'],['surface.inverse','surface-inverse'],
+  ['border.subtle','border-subtle'],['border.default','border-default'],['border.focus','border-focus'],
+  ['action.primary','action-primary'],['action.onPrimary','action-on-primary'],['action.selected','action-selected'],['action.disabled','action-disabled'],
+  ['feedback.error.default','feedback-error'],['feedback.error.surface','feedback-error-surface'],['feedback.error.border','feedback-error-border'],['feedback.error.on','feedback-on-error'],
+  ['feedback.success.default','feedback-success'],['feedback.success.surface','feedback-success-surface'],['feedback.success.border','feedback-success-border'],['feedback.success.on','feedback-on-success'],
+  ['feedback.warning.default','feedback-warning'],['feedback.warning.surface','feedback-warning-surface'],['feedback.warning.border','feedback-warning-border'],['feedback.warning.on','feedback-on-warning'],
+  ['feedback.info.default','feedback-info'],['feedback.info.surface','feedback-info-surface'],['feedback.info.border','feedback-info-border'],['feedback.info.on','feedback-on-info'],
+] as const;
+const legacyThemeColorEntries = [
+  ['compat.ink','ink'],['compat.heading','heading'],['compat.copy','copy'],['compat.muted','muted'],['compat.trait','trait'],
+  ['compat.surface','surface'],['compat.surfaceTransparent','surface-transparent'],['compat.surfaceRaised','surface-raised'],
+  ['compat.border','border'],['compat.borderStrong','border-strong'],
 ] as const;
 
 const cssName = (name: string): string => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-
 function themeBlock(mode: 'light' | 'dark', indent = '  '): string {
   return [
-    ...semanticColors.map((name) => `${indent}--sc-color-${cssName(name)}: ${cssValue(`system.color.${mode}.${name}`)};`),
-    `${indent}--sc-focus-ring-color: ${cssValue(`system.color.${mode}.focusRing`)};`,
+    ...legacyThemeColorEntries.map(([path, name]) => `${indent}--sc-color-${name}: ${cssValue(`system.color.${mode}.${path}`)};`),
+    ...themeColorEntries.map(([path, name]) => `${indent}--sc-color-${name}: ${cssValue(`system.color.${mode}.${path}`)};`),
+    `${indent}--sc-focus-ring-color: ${cssValue(`system.color.${mode}.compat.focusRing`)};`,
     `${indent}--sc-border-default: ${cssValue(`system.border.${mode}.default`)};`,
     `${indent}--sc-border-strong: ${cssValue(`system.border.${mode}.strong`)};`,
     `${indent}--sc-border-focus: ${cssValue(`system.border.${mode}.focus`)};`,
@@ -264,6 +213,30 @@ const tabletMax = cssValue('system.layout.breakpointTabletMax');
 const phoneMax = cssValue('system.layout.breakpointPhone');
 const desktopMin = cssValue('system.layout.breakpointDesktop');
 const narrowMax = cssValue('system.layout.breakpointContentNarrow');
+
+const rootLayoutLines = [
+  `  --sc-content-max-width: ${cssValue('system.layout.contentMaxWidth')};`,
+  `  --sc-layout-container-wide: ${cssValue('system.layout.container.wide')};`,
+  `  --sc-layout-container-content: ${cssValue('system.layout.container.content')};`,
+  `  --sc-layout-container-narrow: ${cssValue('system.layout.container.narrow')};`,
+  `  --sc-layout-container-text: ${cssValue('system.layout.container.text')};`,
+  `  --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.desktop')};`,
+  `  --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.desktop')};`,
+  `  --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.desktop')};`,
+  `  --sc-layout-section-gap-compact: ${cssValue('system.layout.sectionGap.compact')};`,
+  `  --sc-layout-section-gap-default: ${cssValue('system.layout.sectionGap.default')};`,
+  `  --sc-layout-section-gap-spacious: ${cssValue('system.layout.sectionGap.spacious')};`,
+].join('\n');
+const sizeLines = [
+  `  --sc-touch-target: ${cssValue('system.size.touchTarget')};`,
+  `  --sc-icon-size: ${cssValue('system.size.icon')};`,
+  `  --sc-icon-size-small: ${cssValue('system.size.iconScale.small')};`,
+  `  --sc-icon-size-medium: ${cssValue('system.size.iconScale.medium')};`,
+  `  --sc-icon-size-large: ${cssValue('system.size.iconScale.large')};`,
+  `  --sc-control-size-small: ${cssValue('system.size.control.small')};`,
+  `  --sc-control-size-medium: ${cssValue('system.size.control.medium')};`,
+  `  --sc-control-size-large: ${cssValue('system.size.control.large')};`,
+].join('\n');
 
 const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. */
 :root {
@@ -276,17 +249,10 @@ const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. 
   --sc-focus-ring-width-subtle: ${cssValue('system.stroke.focusSubtle')};
   --sc-focus-ring-offset: ${cssValue('system.stroke.focusOffset')};
   --sc-focus-ring-offset-tight: ${cssValue('system.stroke.focusOffsetTight')};
-  --sc-touch-target: ${cssValue('system.size.touchTarget')};
-  --sc-icon-size: ${cssValue('system.size.icon')};
-  --sc-content-max-width: ${cssValue('system.layout.contentMaxWidth')};
-  --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.desktop')};
+${sizeLines}
+${rootLayoutLines}
   --sc-media-product-aspect-ratio: ${cssValue('system.media.aspectRatio.product')};
-  --sc-layer-raised: ${cssValue('system.layer.raised')};
-  --sc-layer-sticky: ${cssValue('system.layer.sticky')};
-  --sc-layer-popover: ${cssValue('system.layer.popover')};
-  --sc-layer-mobile-menu: ${cssValue('system.layer.mobileMenu')};
-  --sc-layer-mobile-panel: ${cssValue('system.layer.mobilePanel')};
-  --sc-layer-modal: ${cssValue('system.layer.modal')};
+${layerNames.map((name) => `  --sc-layer-${cssName(name)}: ${cssValue(`system.layer.${name}`)};`).join('\n')}
 ${stateOpacityNames.map((name) => `  --sc-state-opacity-${cssName(name)}: ${cssValue(`system.state.opacity.${name}`)};`).join('\n')}
 ${elevationNames.map((name) => `  --sc-elevation-${cssName(name)}: ${cssValue(`system.elevation.${name}`)};`).join('\n')}
 ${shapeNames.map((name) => `  --sc-shape-${cssName(name)}: ${cssValue(`system.shape.${name}`)};`).join('\n')}
@@ -323,12 +289,17 @@ ${themeBlock('dark', '    ')}
 }
 
 @media (min-width: ${desktopMin}) and (max-width: ${narrowMax}) {
-  :root { --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.narrow')}; }
+  :root {
+    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.narrow')};
+    --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.narrow')};
+  }
 }
 
 @media (min-width: ${dimensionNumber('system.layout.breakpointPhone') + 1}px) and (max-width: ${tabletMax}) {
   :root {
+    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.compact')};
     --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.compact')};
+    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.compact')};
 ${typographyBlock('system.typography.heading1.tablet', 'heading-1', '    ')}
 ${typographyBlock('system.typography.heading3.tablet', 'heading-3', '    ')}
   }
@@ -336,7 +307,9 @@ ${typographyBlock('system.typography.heading3.tablet', 'heading-3', '    ')}
 
 @media (max-width: ${phoneMax}) {
   :root {
+    --sc-layout-page-gutter: ${cssValue('system.layout.pageGutter.mobile')};
     --sc-layout-grid-gutter: ${cssValue('system.layout.gridGutter.mobile')};
+    --sc-layout-grid-gap: ${cssValue('system.layout.gridGap.mobile')};
 ${typographyBlock('system.typography.heading1.mobile', 'heading-1', '    ')}
 ${typographyBlock('system.typography.heading3.mobile', 'heading-3', '    ')}
   }
@@ -366,7 +339,6 @@ const springs = {
   },
   focus: { stiffness: numberValue('system.motion.spring.focus.stiffness'), damping: numberValue('system.motion.spring.focus.damping') },
 };
-
 const typographyObject = Object.fromEntries([
   ['heading1Desktop', typographyProperties('system.typography.heading1.desktop')],
   ['heading1Tablet', typographyProperties('system.typography.heading1.tablet')],
@@ -385,28 +357,44 @@ const typographyObject = Object.fromEntries([
   ['priceLarge', typographyProperties('system.typography.priceLarge')],
 ]);
 
+function themeObject(mode: 'light' | 'dark'): Record<string, unknown> {
+  const entry = (path: string): string => cssValue(`system.color.${mode}.${path}`);
+  return {
+    ink: entry('compat.ink'), heading: entry('compat.heading'), copy: entry('compat.copy'), muted: entry('compat.muted'), trait: entry('compat.trait'),
+    surface: entry('compat.surface'), surfaceTransparent: entry('compat.surfaceTransparent'), surfaceRaised: entry('compat.surfaceRaised'),
+    border: entry('compat.border'), borderStrong: entry('compat.borderStrong'), focusRing: entry('compat.focusRing'),
+    brand: { primary: entry('brand.primary'), primaryPressed: entry('brand.primaryPressed'), onPrimary: entry('brand.onPrimary') },
+    text: { primary: entry('text.primary'), secondary: entry('text.secondary'), muted: entry('text.muted'), disabled: entry('text.disabled'), inverse: entry('text.inverse'), link: entry('text.link') },
+    icon: { primary: entry('icon.primary'), secondary: entry('icon.secondary'), muted: entry('icon.muted'), inverse: entry('icon.inverse') },
+    surfaceSemantic: { canvas: entry('surface.canvas'), subtle: entry('surface.subtle'), raised: entry('surface.raised'), overlay: entry('surface.overlay'), inverse: entry('surface.inverse'), transparent: entry('surface.transparent') },
+    borderSemantic: { subtle: entry('border.subtle'), default: entry('border.default'), strong: entry('border.strong'), focus: entry('border.focus') },
+    action: { primary: entry('action.primary'), onPrimary: entry('action.onPrimary'), selected: entry('action.selected'), disabled: entry('action.disabled') },
+    feedback: Object.fromEntries(['error','success','warning','info'].map((kind) => [kind, {
+      default: entry(`feedback.${kind}.default`), surface: entry(`feedback.${kind}.surface`),
+      border: entry(`feedback.${kind}.border`), on: entry(`feedback.${kind}.on`),
+    }])),
+  };
+}
+
 const systemTokenObject = {
-  color: {
-    light: Object.fromEntries([...semanticColors, 'focusRing'].map((name) => [name, cssValue(`system.color.light.${name}`)])),
-    dark: Object.fromEntries([...semanticColors, 'focusRing'].map((name) => [name, cssValue(`system.color.dark.${name}`)])),
-    scrim: cssValue('system.color.scrim'),
-  },
+  color: { light: themeObject('light'), dark: themeObject('dark'), scrim: cssValue('system.color.scrim') },
   typography: typographyObject,
   shape: Object.fromEntries(shapeNames.map((name) => [name, cssValue(`system.shape.${name}`)])),
   spacing: Object.fromEntries(spacingNames.map((name) => [name, cssValue(`system.spacing.${name}`)])),
+  layout: {
+    container: Object.fromEntries(['wide','content','narrow','text'].map((name) => [name, cssValue(`system.layout.container.${name}`)])),
+    pageGutter: Object.fromEntries(['desktop','narrow','compact','mobile'].map((name) => [name, cssValue(`system.layout.pageGutter.${name}`)])),
+    gridGap: Object.fromEntries(['desktop','compact','mobile'].map((name) => [name, cssValue(`system.layout.gridGap.${name}`)])),
+    sectionGap: Object.fromEntries(['compact','default','spacious'].map((name) => [name, cssValue(`system.layout.sectionGap.${name}`)])),
+  },
   size: {
-    touchTarget: cssValue('system.size.touchTarget'),
-    icon: cssValue('system.size.icon'),
+    touchTarget: cssValue('system.size.touchTarget'), icon: cssValue('system.size.icon'),
+    iconScale: Object.fromEntries(['small','medium','large'].map((name) => [name, cssValue(`system.size.iconScale.${name}`)])),
+    control: Object.fromEntries(['small','medium','large'].map((name) => [name, cssValue(`system.size.control.${name}`)])),
   },
-  state: {
-    opacity: Object.fromEntries(stateOpacityNames.map((name) => [name, numberValue(`system.state.opacity.${name}`)])),
-  },
+  state: { opacity: Object.fromEntries(stateOpacityNames.map((name) => [name, numberValue(`system.state.opacity.${name}`)])) },
   elevation: Object.fromEntries(elevationNames.map((name) => [name, cssValue(`system.elevation.${name}`)])),
-  layer: {
-    raised: numberValue('system.layer.raised'), sticky: numberValue('system.layer.sticky'),
-    popover: numberValue('system.layer.popover'), mobileMenu: numberValue('system.layer.mobileMenu'),
-    mobilePanel: numberValue('system.layer.mobilePanel'), modal: numberValue('system.layer.modal'),
-  },
+  layer: Object.fromEntries(layerNames.map((name) => [name, numberValue(`system.layer.${name}`)])),
   media: { productAspectRatio: numberValue('system.media.aspectRatio.product') },
   motion: { durationMs, durations, curves, cssEasings, transitions, springs },
 };
@@ -419,6 +407,9 @@ export const tokenMedia = Object.freeze({
   compact: '(max-width: ${cssValue('system.layout.breakpointTabletMax')})',
   compactWide: '(min-width: ${compactWideMin}px) and (max-width: ${cssValue('system.layout.breakpointTabletMax')})',
   desktop: '(min-width: ${cssValue('system.layout.breakpointDesktop')})',
+  layoutNarrow: '(max-width: ${cssValue('system.layout.breakpointPhone')})',
+  layoutCompact: '(max-width: ${cssValue('system.layout.breakpointTabletMax')})',
+  layoutWide: '(min-width: ${cssValue('system.layout.breakpointDesktop')})',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   reducedTransparency: '(prefers-reduced-transparency: reduce)',
   moreContrast: '(prefers-contrast: more)',
