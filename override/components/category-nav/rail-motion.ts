@@ -26,15 +26,20 @@ export function moveRailTo(scroller: HTMLElement, value: number, onComplete?: ()
     return;
   }
 
-  const handle = motion.engine.spring(motionConfig.springs.spatial.default, (progress) => {
-    scroller.scrollLeft = start + (target - start) * progress;
-  }, {
-    onComplete: () => {
-      if (activeMotions.get(scroller) === handle) activeMotions.delete(scroller);
-      scroller.scrollLeft = target;
-      onComplete?.();
+  const handle = motion.engine.tween(
+    motionConfig.durations.medium1,
+    motionConfig.easings.inOut,
+    (progress) => {
+      scroller.scrollLeft = start + (target - start) * progress;
     },
-  });
+    {
+      onComplete: () => {
+        if (activeMotions.get(scroller) === handle) activeMotions.delete(scroller);
+        scroller.scrollLeft = target;
+        onComplete?.();
+      },
+    },
+  );
   activeMotions.set(scroller, handle);
 }
 
