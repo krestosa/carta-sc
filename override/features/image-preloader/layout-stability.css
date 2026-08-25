@@ -1,0 +1,5 @@
+/* Los placeholders de lista son overlays: no participan en el sizing del grid ni desplazan precio/contenido al desaparecer. */
+html[data-sc-catalog-view='list'].sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(.sc-card-placeholder-active.sc-card-placeholder-loading,.sc-card-placeholder-revealing) > a.fancyboxModalAddProd::before,
+html[data-sc-catalog-view='list'].sc-image-preloader-active body.sushiShop .listadoShop .productoShop:is(.sc-card-placeholder-active.sc-card-placeholder-loading,.sc-card-placeholder-revealing) > a.fancyboxModalAddProd::after {
+  position: absolute !important;
+}
