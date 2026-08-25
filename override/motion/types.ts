@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de types dentro del sistema propio de movimiento.
 import type { Cleanup } from '../core/types.js';
 
 export interface MotionHandle {

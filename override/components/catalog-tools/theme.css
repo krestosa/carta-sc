@@ -1,4 +1,5 @@
-/* Theme-control-only geometry stays local; reusable shape, elevation, layer, type, color and motion come from the global token API. */
+/* Documenta la responsabilidad de theme dentro del componente catalog tools y mantiene esa lógica en su propietario. */
+/* La geometría exclusiva del control de tema permanece local; forma, elevación, capas, tipografía, color y movimiento reutilizables provienen de la API global de tokens. */
 body.sushiShop .sc-theme-control {
   --sc-theme-menu-width: 176px;
   --sc-theme-menu-width-mobile: 182px;

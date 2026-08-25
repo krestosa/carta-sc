@@ -1,3 +1,4 @@
+/* Integra la navegación propia con la estructura del documento anfitrión sin crear una API paralela. */
 /* Integración del riel con el menú del documento anfitrión. */
 body.sushiShop.sc-catalog-layout-ready .sc-catalog-categories,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {

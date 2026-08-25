@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de a11y dentro del componente product modal y mantiene esa lógica en su propietario.
 export interface BackgroundLock {
   release(): void;
 }

@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de main dentro del sistema propio de movimiento. */
 /* Reglas globales de estabilidad durante motion y cambios de vista. El scroll suave se
    controla desde JS para que navegación y relayout no compitan con el navegador. */
 html,

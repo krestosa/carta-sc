@@ -1,3 +1,4 @@
+// Documenta la etapa validators de la canalización de Pages, separada de la fuente de producción.
 export { validateSnapshotIntegration } from './validators/snapshot.js';
 export { validateJsSyntax } from './validators/syntax.js';
 export { validateLocalAssets } from './validators/assets.js';

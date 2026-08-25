@@ -1,3 +1,4 @@
+// Determina y sincroniza cuál categoría está activa según la navegación y la posición de la página.
 import { categoryLinks, anchorForHref, CATEGORY_SELECTORS } from './core.js';
 import { moveCategoryIndicator } from './indicator.js';
 

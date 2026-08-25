@@ -1,3 +1,4 @@
+// Documenta la tarea typescript utilizada por la compilación, auditoría o comprobación del proyecto.
 import * as ts from 'typescript';
 import { readProjectFile } from './files.js';
 

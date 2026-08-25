@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de main dentro de la capa propia de la interfaz.
 import { moduleAssetVersion } from './core/module-version.js';
 
 type BootstrapTheme = 'system' | 'light' | 'dark';

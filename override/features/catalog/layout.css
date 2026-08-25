@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de layout dentro de la función catalog de la interfaz propia. */
 /* Layout de grilla y contenedor del catálogo. */
 body.sushiShop {
   --sc-catalog-base-columns: 4;

@@ -1,3 +1,4 @@
+// Documenta la etapa fonts de la canalización de Pages, separada de la fuente de producción.
 import fs from 'node:fs';
 import path from 'node:path';
 import { SITE, assert, write } from '../../lib/core.js';

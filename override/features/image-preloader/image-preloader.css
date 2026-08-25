@@ -1,4 +1,5 @@
-/* Image-preloader implementation values are feature-owned. */
+/* Documenta la responsabilidad de image preloader dentro de la función image preloader de la interfaz propia. */
+/* Los valores de implementación de la precarga de imágenes pertenecen a esta función. */
 html.sc-image-preloader-active {
   --sc-image-preloader-base: color-mix(in srgb, var(--sc-color-text-primary) 10%, var(--sc-color-surface-raised));
   --sc-image-preloader-cycle: 1500ms;

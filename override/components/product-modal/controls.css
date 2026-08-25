@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de controls dentro del componente product modal y mantiene esa lógica en su propietario. */
 /* El modal conserva su composición; los controles consumen estados, shape, type y color globales. */
 body.sushiShop .sc-product-modal {
   --sc-modal-close-stroke: 1.6;

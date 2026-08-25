@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de product modal dentro del componente product modal y mantiene esa lógica en su propietario.
 import { ProductModalController } from './controller.js';
 
 const productModal = new ProductModalController();

@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de catalog tools dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import type { Cleanup } from '../../core/types.js';
 import { selectors } from '../../core/variables.js';
 import { cloneTemplate } from '../../templates/registry.js';

@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de responsive dentro del componente section heading y mantiene esa lógica en su propietario. */
 /* La escala tipográfica responsive proviene de los roles DTCG globales. Aquí solo vive geometría local. */
 @media (max-width: 992px) {
   body.sushiShop .listadoShop .titleShopSeccion,

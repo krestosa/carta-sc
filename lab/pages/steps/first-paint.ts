@@ -1,3 +1,4 @@
+// Documenta la etapa first paint de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { SITE, githubSha, read, write } from '../lib/core.js';
 import { criticalMedia, splitCss } from './first-paint/css.js';

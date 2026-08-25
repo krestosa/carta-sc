@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de image ratio dentro del componente product card y mantiene esa lógica en su propietario. */
 /* Presentación de imagen de producto; el ratio compartido proviene del sistema DTCG global. */
 body.sushiShop .listadoShop .productoShop .imgShop {
   box-sizing: border-box;

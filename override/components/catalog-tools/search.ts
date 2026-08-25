@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de search dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { classes } from '../../core/variables.js';
 import {
   activeFilterMask,

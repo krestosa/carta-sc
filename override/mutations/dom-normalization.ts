@@ -1,3 +1,4 @@
+// Documenta la normalización dom normalization aplicada en el límite con el documento anfitrión.
 import { selectors } from '../core/variables.js';
 import { type Cleanup } from '../core/types.js';
 import { each, matches } from '../core/utils.js';

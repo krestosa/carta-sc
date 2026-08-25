@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de runtime main dentro de la capa propia de la interfaz.
 import { initializeCartMotion } from './components/cart/cart.js';
 import { initializeCatalogTools } from './components/catalog-tools/catalog-tools.js';
 import { initializeCategoryNavigation } from './components/category-nav/category-nav.js';

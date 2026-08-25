@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de dom dentro de la función content normalizer de la interfaz propia.
 import { selectors } from '../../core/variables.js';
 import { applyEditorialCase, cleanTitlePeriods, CONTENT_LOCALE, type EditorialState } from './rules.js';
 

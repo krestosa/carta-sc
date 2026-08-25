@@ -1,3 +1,4 @@
+// Documenta la etapa html de la canalización de Pages, separada de la fuente de producción.
 import { assert, replaceRegexOnce } from '../../lib/core.js';
 import { pruneUnusedMaps } from './maps.js';
 

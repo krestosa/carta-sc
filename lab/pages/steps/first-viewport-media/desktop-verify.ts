@@ -1,3 +1,4 @@
+// Documenta la etapa desktop verify de la canalización de Pages, separada de la fuente de producción.
 import fs from 'node:fs';
 import path from 'node:path';
 import { SITE, assert, escapeRegExp } from '../../lib/core.js';

@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de interactions dentro del componente product modal y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 import { containFocus, trapTab } from './a11y.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';

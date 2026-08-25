@@ -1,3 +1,4 @@
+// Documenta la etapa system logo markup de la canalización de Pages, separada de la fuente de producción.
 import { assert } from '../lib/core.js';
 import { SYSTEM_LOGO_SIZE, SYSTEM_LOGO_STYLE_ID } from './system-logo-config.js';
 

@@ -1,3 +1,4 @@
+// Documenta la etapa browser runtime de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import * as ts from 'typescript';
 import { ROOT, assert, read } from './core.js';

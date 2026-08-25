@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de scheduler dentro del sistema propio de movimiento.
 import { clamp, easeValue } from './easing.js';
 import type {
   MotionHandle,

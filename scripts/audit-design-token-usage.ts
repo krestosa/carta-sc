@@ -1,3 +1,4 @@
+// Documenta la tarea audit design token usage utilizada por la compilación, auditoría o comprobación del proyecto.
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { extname, join, relative, resolve } from 'node:path';
 

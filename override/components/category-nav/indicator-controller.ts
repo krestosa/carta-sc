@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de indicator controller dentro del componente category nav y mantiene esa lógica en su propietario.
 import { queries } from '../../core/variables.js';
 import { visible } from '../../core/utils.js';
 import { motionConfig } from '../../motion/config.js';

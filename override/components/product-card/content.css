@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de content dentro del componente product card y mantiene esa lógica en su propietario. */
 /* Título, descripción y rasgos de las cards. */
 body.sushiShop {
   --sc-card-description-height: 43px;

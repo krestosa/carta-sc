@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de a11y dentro del componente product card y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 import { text } from '../../core/utils.js';
 import { cloneTemplate } from '../../templates/registry.js';

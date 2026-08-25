@@ -1,3 +1,4 @@
+// Documenta la etapa shared de la canalización de Pages, separada de la fuente de producción.
 import { stripQuery } from '../lib/core.js';
 
 export interface HtmlAttributes {

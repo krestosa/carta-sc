@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de view icon dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import type { CatalogViewMode } from '../../core/types.js';
 import { catalogViewIcon } from './view-icon-geometry.js';
 

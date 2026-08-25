@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de layout dentro del componente product card y mantiene esa lógica en su propietario. */
 /* Estructura base de las cards; cada vista ajusta su geometría. */
 body.sushiShop {
   --sc-card-rule: var(--sc-color-text-primary);

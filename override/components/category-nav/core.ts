@@ -1,3 +1,4 @@
+// Agrupa selectores, utilidades y cálculos compartidos por la navegación de categorías.
 export {
   CATEGORY_SCROLL,
   CATEGORY_SELECTORS,

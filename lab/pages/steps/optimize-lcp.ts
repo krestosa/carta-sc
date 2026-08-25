@@ -1,3 +1,4 @@
+// Documenta la etapa optimize lcp de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { SITE, assert, githubSha, read, write } from '../lib/core.js';
 import {

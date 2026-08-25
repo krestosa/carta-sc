@@ -1,3 +1,4 @@
+// Documenta la etapa php guard runtime de la canalización de Pages, separada de la fuente de producción.
 {
   interface JQueryDeferredBridge {
     promise<T extends object>(target: T): T;

@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de theme controller dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import type { ResolvedTheme, ThemeMode } from '../../core/types.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';

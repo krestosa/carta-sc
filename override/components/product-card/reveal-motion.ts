@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de reveal motion dentro del componente product card y mantiene esa lógica en su propietario.
 import { scrollState } from '../../core/state.js';
 import type { Cleanup } from '../../core/types.js';
 import { classes, selectors } from '../../core/variables.js';

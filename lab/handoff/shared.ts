@@ -1,3 +1,4 @@
+// Documenta la tarea shared utilizada para construir o revisar el paquete de entrega reproducible.
 import fs from 'node:fs';
 import path from 'node:path';
 

@@ -1,4 +1,5 @@
-/* Interaction geometry belongs to catalog tools; reusable states, shape, color and motion come from DTCG. */
+/* Documenta la responsabilidad de interaction dentro del componente catalog tools y mantiene esa lógica en su propietario. */
+/* La geometría de interacción pertenece a las herramientas del catálogo; los estados, formas, colores y movimientos reutilizables provienen de DTCG. */
 body.sushiShop .sc-catalog-tools {
   --sc-filter-height: 32px;
   --sc-filter-padding-inline: var(--sc-space-small);

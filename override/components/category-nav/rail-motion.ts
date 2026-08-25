@@ -1,3 +1,4 @@
+// Define el movimiento del riel con aceleración y desaceleración suaves, respetando movimiento reducido.
 import { queries } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';

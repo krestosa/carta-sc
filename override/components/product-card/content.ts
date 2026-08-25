@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de content dentro del componente product card y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 import {
   TRAITS_LABEL_PREFIX,

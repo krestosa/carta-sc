@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de theme state dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import type { ResolvedTheme, ThemeMode } from '../../core/types.js';
 
 export interface ThemeTransitionState {

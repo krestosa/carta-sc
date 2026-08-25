@@ -1,3 +1,4 @@
+// Declara contratos de tipos para APIs del navegador y extensiones utilizadas por la interfaz propia.
 interface JQuerySlicknavBridge {
   btn?: ArrayLike<HTMLElement>;
 }

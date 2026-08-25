@@ -1,3 +1,4 @@
+// Documenta la etapa config de la canalización de Pages, separada de la fuente de producción.
 export type ImageSize = readonly [width: number, height: number];
 
 export interface EncodedImageAsset {

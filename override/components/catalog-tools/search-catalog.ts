@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de search catalog dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 import { traitMaskForCard } from './search-filters.js';
 import {

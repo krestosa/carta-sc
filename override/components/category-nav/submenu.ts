@@ -1,3 +1,4 @@
+// Gestiona los submenús de categorías y mantiene sus estados accesibles sincronizados.
 import { selectors } from '../../core/variables.js';
 import { anchoredPopoverMotion } from '../../motion/popover-motion.js';
 import { anchorForHref, CATEGORY_SELECTORS } from './core.js';

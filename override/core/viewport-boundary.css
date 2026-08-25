@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de viewport boundary dentro de los fundamentos compartidos de la interfaz propia. */
 html,
 body.sushiShop {
   box-sizing: border-box;

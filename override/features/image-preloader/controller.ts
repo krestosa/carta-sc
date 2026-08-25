@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de controller dentro de la función image preloader de la interfaz propia.
 import {
   IMAGE_STAGE_SELECTOR,
   MOBILE_LOGO_URL,
@@ -99,7 +100,7 @@ export class ImagePreloaderController {
   }
 
   warmCache(_image: HTMLImageElement | null): void {
-    // Native image loading owns caching. Deliberately no duplicate fetch pipeline.
+    // La carga nativa de imágenes gestiona la caché. Se evita deliberadamente una segunda canalización de descarga.
   }
 
   scan(root: ParentNode | Node = document): void {
@@ -158,7 +159,7 @@ export class ImagePreloaderController {
     if (logo) {
       logo.loading = 'eager';
       logo.decoding = 'async';
-      try { logo.fetchPriority = 'high'; } catch { /* Browser compatibility. */ }
+      try { logo.fetchPriority = 'high'; } catch { /* Compatibilidad con el navegador. */ }
       if (!logo.hasAttribute('width')) logo.width = 333;
       if (!logo.hasAttribute('height')) logo.height = 100;
     }
@@ -248,7 +249,7 @@ export class ImagePreloaderController {
   #setPriority(image: HTMLImageElement, priority: ImagePriority): void {
     image.decoding = 'async';
     image.loading = priority === 'high' ? 'eager' : 'lazy';
-    try { image.fetchPriority = priority; } catch { /* Browser compatibility. */ }
+    try { image.fetchPriority = priority; } catch { /* Compatibilidad con el navegador. */ }
   }
 
   #activateDeferredSource(image: HTMLImageElement): void {

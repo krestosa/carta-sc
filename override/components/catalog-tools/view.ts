@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de view dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import type { Cleanup } from '../../core/types.js';
 import { queries } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';

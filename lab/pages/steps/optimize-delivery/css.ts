@@ -1,3 +1,4 @@
+// Documenta la etapa css de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { assert, escapeRegExp } from '../../lib/core.js';
 

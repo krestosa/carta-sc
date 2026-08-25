@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de product card dentro del componente product card y mantiene esa lógica en su propietario.
 import type { Cleanup } from '../../core/types.js';
 import { queries, selectors } from '../../core/variables.js';
 import { ready } from '../../core/utils.js';

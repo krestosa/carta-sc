@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de config dentro del sistema propio de movimiento.
 import { systemTokens } from '../core/tokens.generated.js';
 import { motionSprings } from './springs.js';
 

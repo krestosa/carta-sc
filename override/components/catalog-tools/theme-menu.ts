@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de theme menu dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import type { Cleanup } from '../../core/types.js';
 import { anchoredPopoverMotion } from '../../motion/popover-motion.js';
 

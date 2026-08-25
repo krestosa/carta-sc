@@ -1,3 +1,4 @@
+// Coordina posición, controles y movimiento del riel horizontal de categorías.
 import { classes, selectors } from '../../core/variables.js';
 import { CATEGORY_SELECTORS, desktopCategories } from './core.js';
 import { hideRailOverflow, syncRailOverflow } from './rail-controls.js';

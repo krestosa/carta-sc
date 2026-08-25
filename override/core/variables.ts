@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de variables dentro de los fundamentos compartidos de la interfaz propia.
 import { tokenMedia } from './tokens.generated.js';
 
 const MEDIA = tokenMedia;
@@ -12,8 +13,8 @@ export const queries = Object.freeze(
   Object.fromEntries(mediaEntries.map(([name, query]) => [name, window.matchMedia(query)])),
 ) as MediaQueries;
 
-// Current catalog host selectors. New components keep selectors and state classes with their owner
-// instead of extending this object into a site-wide registry.
+// Selectores actuales del documento anfitrión del catálogo. Los componentes nuevos conservan sus selectores y clases de estado con su propietario
+// en lugar de ampliar este objeto hasta convertirlo en un registro global del sitio.
 export const selectors = Object.freeze({
   container: '.containerShop',
   productList: '.listadoShop',

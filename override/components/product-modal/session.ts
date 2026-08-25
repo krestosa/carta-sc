@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de session dentro del componente product modal y mantiene esa lógica en su propietario.
 import { lockBackground, type BackgroundLock } from './a11y.js';
 import { animateModalOpen, animateModalReopen, cancelModalMotion } from './motion.js';
 import { buildProductModal, PRODUCT_MODAL_SELECTORS } from './view.js';

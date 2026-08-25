@@ -1,3 +1,4 @@
+// Documenta la etapa snapshot de la canalización de Pages, separada de la fuente de producción.
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, read, relative } from '../lib/core.js';

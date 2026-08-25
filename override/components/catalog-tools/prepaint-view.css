@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de prepaint view dentro del componente catalog tools y mantiene esa lógica en su propietario. */
 /* Igual a la vista compacta mientras el runtime todavía no resolvió la preferencia.
    Evita que precio y contenido nazcan con la geometría del documento anfitrión y salten al montar la vista. */
 html:not([data-sc-catalog-view]) body.sushiShop .listadoShop {

@@ -1,3 +1,4 @@
+// Documenta la etapa media de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { URL } from 'node:url';
 import { SITE, assert, read, write } from '../../lib/core.js';

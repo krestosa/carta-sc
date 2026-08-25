@@ -1,3 +1,4 @@
+// Documenta la etapa maps de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { SITE, assert, read, walk } from '../../lib/core.js';
 

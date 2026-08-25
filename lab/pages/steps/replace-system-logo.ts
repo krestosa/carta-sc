@@ -1,3 +1,4 @@
+// Documenta la etapa replace system logo de la canalización de Pages, separada de la fuente de producción.
 import fs from 'node:fs';
 import path from 'node:path';
 import { SITE, assert, escapeRegExp, githubSha, read, remove, write } from '../lib/core.js';

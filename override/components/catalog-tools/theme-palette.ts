@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de theme palette dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { queries } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
 

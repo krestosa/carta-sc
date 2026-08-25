@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de data dentro del componente product card y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 import { text } from '../../core/utils.js';
 import { createTraitIcon } from './trait-icons.js';

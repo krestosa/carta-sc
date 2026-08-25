@@ -1,3 +1,4 @@
+/* Define estados visuales e interacción de las categorías utilizando las decisiones compartidas del sistema. */
 /* Interacción del riel: conserva la línea activa y normaliza target/state layer. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink,
 body.sushiShop .wtopShopMenuMobile .nav-top-li > a.anchorLink {

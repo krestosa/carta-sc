@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de mobile header dentro del componente mobile header y mantiene esa lógica en su propietario.
 import { queries } from '../../core/variables.js';
 import { SlicknavBridge } from './slicknav-bridge.js';
 

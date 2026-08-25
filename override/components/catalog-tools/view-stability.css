@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de view stability dentro del componente catalog tools y mantiene esa lógica en su propietario. */
 /* Geometría base de la vista lista; los breakpoints solo ajustan tokens. */
 body.sushiShop {
   --sc-view-list-columns: 2;

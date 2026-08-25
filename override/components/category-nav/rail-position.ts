@@ -1,3 +1,4 @@
+// Calcula la posición de centrado del riel y limita el desplazamiento para evitar sobrepasar sus extremos.
 import { moveRailTo } from './rail-motion.js';
 
 function activeLink(scroller: HTMLElement): HTMLAnchorElement | null {

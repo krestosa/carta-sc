@@ -1,3 +1,4 @@
+// Calcula la geometría necesaria para alinear categorías y secciones durante el desplazamiento.
 import { queries, selectors } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';

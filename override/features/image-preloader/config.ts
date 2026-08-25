@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de config dentro de la función image preloader de la interfaz propia.
 export const imagePreloaderPolicy = Object.freeze({
   loadAllImagesInBatches: false,
   cacheImages: false,

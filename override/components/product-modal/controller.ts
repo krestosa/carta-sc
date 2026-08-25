@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de controller dentro del componente product modal y mantiene esa lógica en su propietario.
 import { animateModalClose } from './motion.js';
 import { ProductModalInteractions } from './interactions.js';
 import {

@@ -1,3 +1,4 @@
+/* Documenta la etapa prepaint de la canalización de Pages, separada de la fuente de producción. */
 /* Resguardo geométrico previo al primer pintado de SushiClub.
    Las cards visibles pueden mostrar placeholder desde el primer frame mientras su media
    real todavía no está disponible; el resto conserva únicamente la geometría final. */

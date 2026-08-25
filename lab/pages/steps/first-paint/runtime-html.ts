@@ -1,3 +1,4 @@
+// Documenta la etapa runtime html de la canalización de Pages, separada de la fuente de producción.
 import { assert, escapeRegExp } from '../../lib/core.js';
 
 const RUNTIME_SCRIPTS = [

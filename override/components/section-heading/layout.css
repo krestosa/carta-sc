@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de layout dentro del componente section heading y mantiene esa lógica en su propietario. */
 /* Geometría local de títulos y subtítulos de sección. La tipografía proviene del sistema DTCG global. */
 body.sushiShop {
   --sc-section-rule-scale: 1;

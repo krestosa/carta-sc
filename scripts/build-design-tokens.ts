@@ -1,3 +1,4 @@
+// Documenta la tarea build design tokens utilizada por la compilación, auditoría o comprobación del proyecto.
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -210,7 +211,7 @@ const wideMin = cssValue('system.layout.breakpoint.wideMin');
 const contentNarrowMax = cssValue('system.layout.breakpoint.contentNarrowMax');
 const intermediateMin = dimensionNumber('system.layout.breakpoint.narrowMax') + 1;
 
-const css = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. */
+const css = `/* GENERADO desde tokens/design.tokens.json. No editar manualmente. */
 :root {
   --sc-font-primary: ${cssValue('system.fontFamily.primary')};
   --sc-font-weight-regular: ${cssValue('system.fontWeight.regular')};
@@ -373,7 +374,7 @@ const systemTokenObject = {
   motion: { durationMs, durations, curves, cssEasings, transitions, springs },
 };
 
-const ts = `/* GENERATED from tokens/design.tokens.json. Do not edit manually. */
+const ts = `/* GENERADO desde tokens/design.tokens.json. No editar manualmente. */
 export const tokenMedia = Object.freeze({
   layoutNarrow: '(max-width: ${cssValue('system.layout.breakpoint.narrowMax')})',
   layoutCompact: '(max-width: ${cssValue('system.layout.breakpoint.compactMax')})',

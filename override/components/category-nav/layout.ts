@@ -1,3 +1,4 @@
+// Sincroniza la semántica y la distribución de la barra de categorías con la estructura disponible.
 import { classes, selectors } from '../../core/variables.js';
 import { cloneTemplate } from '../../templates/registry.js';
 import { CATEGORY_SELECTORS, desktopCategories } from './core.js';

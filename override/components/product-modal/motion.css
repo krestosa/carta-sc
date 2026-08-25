@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de motion dentro del componente product modal y mantiene esa lógica en su propietario. */
 /* CSS define estados; el motor local interpola apertura y cierre. */
 .sushiShop .sc-product-modal {
   visibility: hidden;

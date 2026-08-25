@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de content normalizer dentro de la función content normalizer de la interfaz propia.
 import { type Cleanup } from '../../core/types.js';
 import { normalizeContentHost, CONTENT_HOST_SELECTOR } from './dom.js';
 import { ContentMutationObserver } from './observer.js';

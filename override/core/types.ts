@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de types dentro de los fundamentos compartidos de la interfaz propia.
 export type Cleanup = () => void;
 
 export type ThemeMode = 'system' | 'light' | 'dark';

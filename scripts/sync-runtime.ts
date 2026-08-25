@@ -1,3 +1,4 @@
+// Documenta la tarea sync runtime utilizada por la compilación, auditoría o comprobación del proyecto.
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';

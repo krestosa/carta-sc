@@ -1,3 +1,4 @@
+// Gestiona el desplazamiento programático hacia una categoría y coordina temporalmente la observación automática.
 import { scrollState } from '../../core/state.js';
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';

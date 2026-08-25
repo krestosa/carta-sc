@@ -1,4 +1,4 @@
-/* GENERATED from tokens/design.tokens.json. Do not edit manually. */
+/* GENERADO desde tokens/design.tokens.json. No editar manualmente. */
 export const tokenMedia = Object.freeze({
   layoutNarrow: '(max-width: 640px)',
   layoutCompact: '(max-width: 767px)',

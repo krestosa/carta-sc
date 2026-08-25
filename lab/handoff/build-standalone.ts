@@ -1,3 +1,4 @@
+// Documenta la tarea build standalone utilizada para construir o revisar el paquete de entrega reproducible.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';

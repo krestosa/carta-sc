@@ -1,3 +1,4 @@
+// Orquesta la navegación por categorías y conecta estado activo, desplazamiento, riel e indicador.
 import type { Cleanup } from '../../core/types.js';
 import { selectors } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';

@@ -1,3 +1,4 @@
+// Documenta la tarea validate responsive contract utilizada por la compilación, auditoría o comprobación del proyecto.
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readProjectFile } from './lib/files.js';

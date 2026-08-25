@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de module version dentro de los fundamentos compartidos de la interfaz propia.
 const DEFAULT_MODULE_VERSION = 'unversioned';
 
 export function moduleAssetVersion(metaUrl: string): string {

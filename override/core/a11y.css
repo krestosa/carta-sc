@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de a11y dentro de los fundamentos compartidos de la interfaz propia. */
 /* Ajustes globales de accesibilidad. Amplían áreas interactivas y respetan preferencias
    del sistema sin modificar la composición, escala ni jerarquía visual del diseño. */
 .sc-sr-only {

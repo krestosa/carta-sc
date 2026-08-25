@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de storage policy dentro de los fundamentos compartidos de la interfaz propia.
 import type { Cleanup } from './types.js';
 
 const VIEW_KEY = 'sc:catalog:view';
@@ -50,7 +51,7 @@ class StoragePolicyController {
         value: guardedSetItem,
       });
     } catch {
-      // Some browsers do not allow Storage.prototype to be redefined.
+      // Algunos navegadores no permiten redefinir Storage.prototype.
     }
   }
 
@@ -62,7 +63,7 @@ class StoragePolicyController {
         value: this.#nativeSetItem,
       });
     } catch {
-      // Keep the last valid state if the prototype is sealed.
+      // Se conserva el último estado válido cuando el prototipo está sellado.
     }
   }
 }

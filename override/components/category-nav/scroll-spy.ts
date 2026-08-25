@@ -1,3 +1,4 @@
+// Observa las secciones visibles y actualiza la categoría activa sin competir con desplazamientos iniciados por el usuario.
 import { classes } from '../../core/variables.js';
 import { scrollState } from '../../core/state.js';
 import { categoryLinks, anchorForHref, categoryOffset, CATEGORY_SCROLL } from './core.js';

@@ -1,3 +1,4 @@
+// Documenta la etapa images de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import sharp from 'sharp';
 import { SITE, assert, githubSha, write } from '../../lib/core.js';

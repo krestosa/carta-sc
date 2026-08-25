@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de cart dentro del componente cart y mantiene esa lógica en su propietario.
 import type { Cleanup } from '../../core/types.js';
 import { queries } from '../../core/variables.js';
 import { motion } from '../../motion/main.js';

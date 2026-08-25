@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de view icon dentro del componente catalog tools y mantiene esa lógica en su propietario. */
 /* Icono grilla/lista con interpolación geométrica local de sus rectángulos SVG. */
 body.sushiShop .sc-view-state-icon {
   display:block;

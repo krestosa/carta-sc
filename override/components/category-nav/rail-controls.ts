@@ -1,3 +1,4 @@
+// Controla las flechas laterales del riel según el desborde disponible y la posición actual.
 import { cloneTemplate } from '../../templates/registry.js';
 import { moveRailBy } from './rail-motion.js';
 

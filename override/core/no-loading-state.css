@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de no loading state dentro de los fundamentos compartidos de la interfaz propia. */
 /* Mantiene contenido real visible desde el primer layout. */
 html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion,
 html.sc-no-loading-state body.sushiShop .listadoShop .titleShopSeccion > div,

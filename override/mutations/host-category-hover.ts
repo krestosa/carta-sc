@@ -1,3 +1,4 @@
+// Documenta la normalización host category hover aplicada en el límite con el documento anfitrión.
 import { selectors } from '../core/variables.js';
 import { type Cleanup } from '../core/types.js';
 

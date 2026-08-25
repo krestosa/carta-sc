@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de search layout dentro del componente catalog tools y mantiene esa lógica en su propietario. */
 /* Conserva durante la búsqueda el mismo ritmo vertical del catálogo base. Solo la primera
    sección visible recibe el margen estructural; las siguientes continúan sin espacio duplicado. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source:not([hidden]) {

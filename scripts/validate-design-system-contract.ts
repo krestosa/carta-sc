@@ -1,3 +1,4 @@
+// Documenta la tarea validate design system contract utilizada por la compilación, auditoría o comprobación del proyecto.
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { extname, join, relative, resolve } from 'node:path';
 
@@ -178,7 +179,7 @@ for (const removedPath of [
   'override/components/category-nav/compatibility.css',
   'override/mutations/legacy-category-hover.ts',
 ]) {
-  try { await stat(resolve(root, removedPath)); errors.push(`superseded file still exists: ${removedPath}`); } catch { /* expected */ }
+  try { await stat(resolve(root, removedPath)); errors.push(`superseded file still exists: ${removedPath}`); } catch { /* esperado */ }
 }
 
 const baseCss = await readFile(baseCssPath, 'utf8');

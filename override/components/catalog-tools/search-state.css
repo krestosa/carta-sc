@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de search state dentro del componente catalog tools y mantiene esa lógica en su propietario. */
 /* La búsqueda filtra el catálogo sin cambiar la vista activa. */
 html body.sushiShop.sc-catalog-searching .listadoShop.sc-search-source {
   display: grid !important;

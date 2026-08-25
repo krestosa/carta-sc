@@ -1,3 +1,4 @@
+// Documenta la tarea serve utilizada para construir o revisar el paquete de entrega reproducible.
 import fs from 'node:fs';
 import http, { type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'node:path';

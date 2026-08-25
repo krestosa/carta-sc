@@ -1,3 +1,4 @@
+// Documenta la normalización history aplicada en el límite con el documento anfitrión.
 export function restoreNativeHistory(): void {
   try {
     const prototype = window.History?.prototype;

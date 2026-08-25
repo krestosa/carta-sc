@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de search domain dentro del componente catalog tools y mantiene esa lógica en su propietario.
 export interface SearchSegment {
   readonly heading: HTMLElement | null;
   readonly headingWasHidden: boolean;

@@ -1,3 +1,4 @@
+// Documenta la etapa system logo style de la canalización de Pages, separada de la fuente de producción.
 import { SYSTEM_LOGO_SIZE, SYSTEM_LOGO_STYLE_ID } from './system-logo-config.js';
 
 const rule = (selector: string, declarations: readonly string[]): string =>

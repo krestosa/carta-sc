@@ -1,3 +1,4 @@
+// Documenta la etapa final de la canalización de Pages, separada de la fuente de producción.
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, SITE, assert, githubSha, read, walk } from '../lib/core.js';

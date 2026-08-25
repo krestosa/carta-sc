@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de motion dentro del componente product modal y mantiene esa lógica en su propietario.
 import { motion } from '../../motion/main.js';
 import { motionConfig } from '../../motion/config.js';
 import { PRODUCT_MODAL_SELECTORS } from './view.js';

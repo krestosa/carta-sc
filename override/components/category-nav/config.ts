@@ -1,3 +1,4 @@
+// Centraliza la configuración local de la navegación por categorías sin duplicar decisiones globales del sistema.
 import { systemTokens } from '../../core/tokens.generated.js';
 import { queries } from '../../core/variables.js';
 

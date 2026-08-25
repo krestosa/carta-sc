@@ -1,3 +1,4 @@
+// Documenta la etapa syntax de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { SITE, nodeCheck, walk, type JavaScriptSyntaxMode } from '../lib/core.js';
 

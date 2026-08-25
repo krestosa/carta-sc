@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de scroll motion dentro del componente cart y mantiene esa lógica en su propietario.
 import { motionConfig } from '../../motion/config.js';
 import type { MotionEngine, MotionHandle } from '../../motion/types.js';
 

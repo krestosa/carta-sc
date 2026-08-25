@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de registry dentro de la capa propia de la interfaz.
 import { moduleAssetVersion } from '../core/module-version.js';
 
 const TEMPLATE_SELECTOR = 'template[data-sc-template]';

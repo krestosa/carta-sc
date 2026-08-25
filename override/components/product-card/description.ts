@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de description dentro del componente product card y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 
 interface DescriptionMeasurement {

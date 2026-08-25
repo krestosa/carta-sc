@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de state icon dentro del componente mobile header y mantiene esa lógica en su propietario.
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';
 import type { MotionHandle } from '../../motion/types.js';

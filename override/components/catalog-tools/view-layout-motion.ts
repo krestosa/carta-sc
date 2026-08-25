@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de view layout motion dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 import { motionConfig } from '../../motion/config.js';
 import { motion } from '../../motion/main.js';

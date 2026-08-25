@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de main dentro del sistema propio de movimiento.
 import { media, queries } from '../core/variables.js';
 import { easeValue } from './easing.js';
 import { bindMicroInteraction as bindMicroInteractionBehavior } from './micro-interaction.js';

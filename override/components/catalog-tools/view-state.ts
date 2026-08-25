@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de view state dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { queries } from '../../core/variables.js';
 import type { CatalogViewMode } from '../../core/types.js';
 
@@ -28,7 +29,7 @@ export function saveCatalogView(mode: CatalogViewMode): void {
   try {
     localStorage.setItem(STORAGE_KEY, mode);
   } catch {
-    // Persisting the preference is optional when Storage is unavailable.
+    // La persistencia de la preferencia es opcional cuando la API de almacenamiento no está disponible.
   }
 }
 

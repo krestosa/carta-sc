@@ -1,3 +1,4 @@
+// Documenta la tarea static server utilizada para construir o revisar el paquete de entrega reproducible.
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';

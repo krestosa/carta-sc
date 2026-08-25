@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de search filters dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { traitLabels } from '../product-card/data.js';
 import { normalizeSearchText } from './search-ranking.js';
 

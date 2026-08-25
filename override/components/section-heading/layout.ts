@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de layout dentro del componente section heading y mantiene esa lógica en su propietario.
 import { selectors } from '../../core/variables.js';
 
 interface HeadingLayoutState {

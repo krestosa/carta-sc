@@ -1,3 +1,4 @@
+// Documenta la etapa verify de la canalización de Pages, separada de la fuente de producción.
 import { assert } from '../../lib/core.js';
 
 export function verifySnapshotDimensions(html: string): void {

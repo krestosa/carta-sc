@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de global ui dentro del sistema propio de movimiento.
 import type { Cleanup } from '../core/types.js';
 import { motionConfig } from './config.js';
 import { motion } from './main.js';

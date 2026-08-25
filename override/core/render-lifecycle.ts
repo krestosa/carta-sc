@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de render lifecycle dentro de los fundamentos compartidos de la interfaz propia.
 import { classes, queries, selectors } from './variables.js';
 
 interface Waiter {

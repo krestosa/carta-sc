@@ -1,3 +1,4 @@
+// Mueve el indicador de categoría activa sin modificar la geometría de los elementos del riel.
 import { CategoryIndicatorController } from './indicator-controller.js';
 
 const indicator = new CategoryIndicatorController();

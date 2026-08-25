@@ -1,3 +1,4 @@
+// Documenta la etapa delivery runtime de la canalización de Pages, separada de la fuente de producción.
 interface RuntimeSource {
   readonly src: string;
   readonly kind: 'classic' | 'module';

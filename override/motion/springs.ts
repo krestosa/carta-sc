@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de springs dentro del sistema propio de movimiento.
 import { systemTokens } from '../core/tokens.generated.js';
 import type { MotionSpringSpec } from './types.js';
 

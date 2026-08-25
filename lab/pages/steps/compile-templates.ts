@@ -1,3 +1,4 @@
+// Documenta la etapa compile templates de la canalización de Pages, separada de la fuente de producción.
 import path from 'node:path';
 import { SITE, assert, isDir, isFile, read, write } from '../lib/core.js';
 

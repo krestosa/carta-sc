@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de content dentro del componente product modal y mantiene esa lógica en su propietario. */
 /* El modal conserva su jerarquía y consume los roles tipográficos globales de SushiClub. */
 body.sushiShop .sc-product-modal__title{margin:0!important;color:var(--sc-color-text-primary)!important;font-family:var(--sc-typography-heading-2-font-family)!important;font-size:var(--sc-typography-heading-2-font-size)!important;line-height:var(--sc-typography-heading-2-line-height)!important;font-weight:var(--sc-typography-heading-2-font-weight)!important;letter-spacing:var(--sc-typography-heading-2-letter-spacing)!important;}
 body.sushiShop .sc-product-modal__price-row{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:flex-start!important;column-gap:var(--sc-space-small)!important;row-gap:0!important;white-space:nowrap!important;}

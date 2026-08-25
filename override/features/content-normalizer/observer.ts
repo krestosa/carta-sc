@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de observer dentro de la función content normalizer de la interfaz propia.
 import { selectors } from '../../core/variables.js';
 import { collectContentHosts, CONTENT_HOST_SELECTOR, normalizeContentHost } from './dom.js';
 

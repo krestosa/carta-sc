@@ -1,3 +1,4 @@
+// Documenta la etapa runtime de la canalización de Pages, separada de la fuente de producción.
 export {
   deferInlineRuntimeScripts as deferInlineRuntime,
   removeRuntimeScripts as removeRuntime,

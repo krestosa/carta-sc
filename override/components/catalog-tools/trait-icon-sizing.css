@@ -1,3 +1,4 @@
+/* Documenta la responsabilidad de trait icon sizing dentro del componente catalog tools y mantiene esa lógica en su propietario. */
 /* Alineación óptica de los filtros. La caja y el gap son compartidos; solo el offset vertical
    del SVG se calibra por breakpoint para compensar la rasterización/tipografía de cada densidad. */
 body.sushiShop .sc-catalog-tools > .referencias_picor.sc-trait-reference-strip {

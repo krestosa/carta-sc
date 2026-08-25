@@ -1,4 +1,5 @@
-/* Reusable visual contracts. Page-specific behavior stays with each feature/controller. */
+/* Documenta la responsabilidad de base dentro del componente base y mantiene esa lógica en su propietario. */
+/* Contratos visuales reutilizables. El comportamiento específico de cada página permanece en su función o controlador propietario. */
 
 .sc-button,
 .sc-icon-button,

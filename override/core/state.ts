@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de state dentro de los fundamentos compartidos de la interfaz propia.
 import type { RevealGate, ScrollState } from './types.js';
 
 export const scrollState: ScrollState = {

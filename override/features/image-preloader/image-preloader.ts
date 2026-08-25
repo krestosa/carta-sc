@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de image preloader dentro de la función image preloader de la interfaz propia.
 import type { Cleanup } from '../../core/types.js';
 import { IMAGE_STAGE_SELECTOR, imagePreloaderPolicy } from './config.js';
 import { ImagePreloaderController } from './controller.js';
@@ -60,7 +61,7 @@ function preloadInitialRows(): boolean {
 
     image.decoding = 'async';
     image.loading = 'eager';
-    try { image.fetchPriority = row === 0 ? 'high' : 'low'; } catch { /* Browser compatibility. */ }
+    try { image.fetchPriority = row === 0 ? 'high' : 'low'; } catch { /* Compatibilidad con el navegador. */ }
 
     const deferred = image.getAttribute('data-sc-src')?.trim() ?? '';
     const source = image.getAttribute('src')?.trim() ?? '';

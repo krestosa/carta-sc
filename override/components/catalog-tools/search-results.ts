@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de search results dentro del componente catalog tools y mantiene esa lógica en su propietario.
 import { filterMaskPasses } from './search-filters.js';
 import {
   NO_SEARCH_RANK,

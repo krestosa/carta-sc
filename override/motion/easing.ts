@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de easing dentro del sistema propio de movimiento.
 import { motionConfig } from './config.js';
 
 export function clamp(value: number, min: number, max: number): number {

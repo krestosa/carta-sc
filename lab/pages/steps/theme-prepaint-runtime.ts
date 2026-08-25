@@ -1,3 +1,4 @@
+// Documenta la etapa theme prepaint runtime de la canalización de Pages, separada de la fuente de producción.
 type ThemePrepaintMode = 'system' | 'light' | 'dark';
 type ThemePrepaintResolved = 'light' | 'dark';
 

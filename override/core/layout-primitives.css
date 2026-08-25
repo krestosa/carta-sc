@@ -1,4 +1,5 @@
-/* Reusable page-layout primitives. Geometry comes only from system tokens. */
+/* Documenta la responsabilidad de layout primitives dentro de los fundamentos compartidos de la interfaz propia. */
+/* Primitivas reutilizables de distribución de página. Su geometría proviene únicamente de tokens del sistema. */
 .sc-container {
   box-sizing: border-box;
   width: min(calc(100% - (2 * var(--sc-layout-page-gutter))), var(--sc-layout-container-wide));

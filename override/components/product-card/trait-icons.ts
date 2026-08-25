@@ -1,3 +1,4 @@
+// Documenta la responsabilidad de trait icons dentro del componente product card y mantiene esa lógica en su propietario.
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 interface TraitIconPath {
