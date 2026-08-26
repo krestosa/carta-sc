@@ -12,6 +12,14 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile._open .topShopMenuMobileSc
   overflow-y: hidden !important;
 }
 
+/* Elimina en todos los breakpoints la capa redondeada de las flechas que puede sobresalir por debajo del rail. */
+body.sushiShop .sc-rail-arrow::before {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
 /* Refuerza el foco visible del riel. */
 body.sushiShop .sc-catalog-toolbar .nav-top-li > a.anchorLink:focus-visible,
 body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink:focus-visible {
@@ -63,16 +71,34 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   box-shadow: none !important;
 }
 
-/* Muestra el indicador solo cuando el riel está fijo. */
+/* Breakpoint mayor: la guía gris y el indicador comparten la misma vía del nav, sin borde paralelo en el toolbar. */
 @media (min-width: 993px) {
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
+    border-bottom: 0 !important;
+  }
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop::before {
+    content: '' !important;
+    display: block !important;
+    bottom: -15px !important;
+    height: var(--sc-border-hairline) !important;
+    background: var(--sc-color-border-default) !important;
+  }
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
+    bottom: -15px !important;
+    height: var(--sc-category-indicator-height) !important;
     opacity: 0 !important;
   }
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-is-stuck .sc-category-indicator {
     opacity: 1 !important;
   }
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-left::before,
+  body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar.sc-overflow-right::after {
+    content: none !important;
+    display: none !important;
+  }
 }
 
+/* Breakpoint intermedio y móvil: hereda la limpieza global y mueve guía+indicador al mismo scroller. */
 @media (max-width: 992px) {
   body.sushiShop .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     opacity: 0 !important;
@@ -81,10 +107,20 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
     opacity: 1 !important;
   }
 
-  /* En móvil las flechas ya delimitan el desborde: elimina gradientes y capas redondeadas que generan artefactos. */
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
+    box-shadow: inset 0 calc(-1 * var(--sc-category-indicator-height)) 0 var(--sc-color-border-default) !important;
+  }
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
+    bottom: 0 !important;
+    height: var(--sc-category-indicator-height) !important;
+  }
+
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after,
-  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow::before {
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after {
     content: none !important;
     display: none !important;
     background: none !important;
@@ -118,6 +154,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   }
 }
 
+/* Breakpoint compacto: solo ajusta espaciado y hereda íntegros los fixes geométricos de <=992px. */
 @media (max-width: 640px) {
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     padding-left: var(--sc-category-mobile-padding-inline) !important;
