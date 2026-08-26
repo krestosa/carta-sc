@@ -71,17 +71,15 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   box-shadow: none !important;
 }
 
-/* Breakpoint mayor: la guía gris y el indicador comparten la misma vía del nav, sin borde paralelo en el toolbar. */
+/* Breakpoint mayor: la guía pertenece al contenedor completo; el indicador conserva la coordenada del contenido. */
 @media (min-width: 993px) {
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar {
     border-bottom: 0 !important;
+    box-shadow: inset 0 calc(-1 * var(--sc-border-hairline)) 0 var(--sc-color-border-default) !important;
   }
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .nav-tabsTopShop::before {
-    content: '' !important;
-    display: block !important;
-    bottom: -15px !important;
-    height: var(--sc-border-hairline) !important;
-    background: var(--sc-color-border-default) !important;
+    content: none !important;
+    display: none !important;
   }
   body.sushiShop.sc-catalog-layout-ready .sc-catalog-toolbar .sc-category-indicator {
     bottom: -15px !important;
@@ -98,7 +96,7 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
   }
 }
 
-/* Breakpoint intermedio y móvil: hereda la limpieza global y mueve guía+indicador al mismo scroller. */
+/* Breakpoint intermedio y móvil: la guía ocupa todo el rail, incluidas las zonas de flechas. */
 @media (max-width: 992px) {
   body.sushiShop .fixedTopShop.wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     opacity: 0 !important;
@@ -109,10 +107,10 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
 
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile {
     border-bottom: 0 !important;
-    box-shadow: none !important;
+    box-shadow: inset 0 calc(-1 * var(--sc-border-hairline)) 0 var(--sc-color-border-default) !important;
   }
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
-    box-shadow: inset 0 calc(-1 * var(--sc-category-indicator-height)) 0 var(--sc-color-border-default) !important;
+    box-shadow: none !important;
   }
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-category-indicator {
     bottom: 0 !important;
