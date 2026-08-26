@@ -81,6 +81,16 @@ body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .nav-top-li > a.anchorLink
     opacity: 1 !important;
   }
 
+  /* En móvil las flechas ya delimitan el desborde: elimina gradientes y capas redondeadas que generan artefactos. */
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-left::before,
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile.sc-overflow-right::after,
+  body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .sc-rail-arrow::before {
+    content: none !important;
+    display: none !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+
   /* Igual altura para rail, scroller y targets en móvil. */
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile,
   body.sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
