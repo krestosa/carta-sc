@@ -30,10 +30,14 @@
   -webkit-transform-origin: 0 50%;transform-origin: 0 50%;-webkit-transition: none !important;transition: none !important;will-change: transform;
 }
 
-/* En móvil, la guía gris y el indicador activo comparten exactamente la misma vía inferior. */
+/* En móvil, la guía y el indicador viven en el mismo scroller y comparten exactamente el borde inferior. */
 @media (max-width: 992px) {
   .sushiShop .wtopShopMenuMobile .topShopMenuMobile {
     border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .sushiShop .wtopShopMenuMobile .topShopMenuMobile .topShopMenuMobileScroller {
     box-shadow: inset 0 calc(-1 * var(--sc-category-indicator-height)) 0 var(--sc-color-border-default) !important;
   }
 
